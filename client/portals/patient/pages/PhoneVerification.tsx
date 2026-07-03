@@ -67,29 +67,24 @@ export default function PhoneVerification() {
         {/* Phone Number Verification Section */}
         <div className="mb-8">
           <label className="block text-sm font-semibold text-arx-slate text-center mb-4">
-            Enter the last 4 digits of your phone number beginning with 310
+            Enter the last 4 digits of your phone number beginning with {displayPrefix}
           </label>
 
-          {/* Phone Number Display + Input */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-2xl font-semibold text-arx-slate">
-              {displayPrefix}-
-            </span>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
-              value={lastFourInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isDisabled) {
-                  handleSendCode();
-                }
-              }}
-              placeholder="____"
-              className="w-28 px-0 py-2 text-2xl font-bold text-center border-0 border-b-2 border-arx-borders bg-transparent focus:outline-none focus:border-arx-primary transition-colors placeholder:text-arx-inactive placeholder:opacity-50"
-            />
-          </div>
+          {/* Phone Number Input */}
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            value={lastFourInput}
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isDisabled) {
+                handleSendCode();
+              }
+            }}
+            placeholder="0000"
+            className="w-full px-4 py-4 text-4xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-30 focus:ring-offset-1 transition-all placeholder:text-arx-inactive placeholder:opacity-40"
+          />
 
           {/* Error Message */}
           {error && (
