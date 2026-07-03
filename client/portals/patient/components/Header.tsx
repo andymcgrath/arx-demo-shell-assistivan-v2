@@ -29,6 +29,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
       {
         group: "Enrollment Flow",
         items: [
+          { label: "Phone Verification",   path: "/phone-verification" },
           { label: "Confirm Details",      path: "/confirm-details" },
           { label: "Consent",             path: "/consent" },
           { label: "Signature",           path: "/signature" },
@@ -49,6 +50,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
       {
         group: "Enrollment Flow",
         items: [
+          { label: "Phone Verification",   path: "/phone-verification" },
           { label: "Confirm Details",      path: "/confirm-details" },
           { label: "Consent",             path: "/consent" },
           { label: "Signature",           path: "/signature" },
@@ -70,6 +72,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
       {
         group: "Enrollment Flow",
         items: [
+          { label: "Phone Verification", path: "/phone-verification" },
           { label: "Confirm Details",    path: "/confirm-details" },
           { label: "Consent",           path: "/consent" },
           { label: "Signature",         path: "/signature" },
@@ -105,6 +108,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     {
       group: "Enrollment Flow",
       items: [
+        { label: "Phone Verification", path: "/phone-verification" },
         { label: "Confirm Details",    path: "/confirm-details" },
         { label: "Consent",           path: "/consent" },
         { label: "Signature",         path: "/signature" },
