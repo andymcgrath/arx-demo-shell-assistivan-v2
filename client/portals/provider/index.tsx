@@ -196,8 +196,11 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
 
           <div className="email-body">
             <div className="email-logo">
-              <span className="email-logo__text">Assistivan</span>
-              <span className="email-logo__subtext">Prior Authorization Platform</span>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2F3a7a98e156014cee98b701ac84c6fa2c?format=webp&width=800&height=1200"
+                alt="AssistRx Logo"
+                style={{ maxWidth: "200px", height: "auto", marginBottom: "8px" }}
+              />
             </div>
 
             <div className="email-content">
