@@ -26,6 +26,7 @@ import ChatModal from "./components/ChatModal";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { useWorkflowActor } from "@/engine/WorkflowProvider";
 import { useSelector } from "@xstate/react";
+import { useDemoStore } from "@/store/demoStore";
 
 const DELIVERY_FLOW_PATHS = [
   '/phone-verification',
@@ -82,14 +83,27 @@ function StateDrivenNav() {
     (snapshot) => derivePatientRoute(snapshot.context)
   );
 
+  // Reset All bumps this on every resetDemo() call. A bump means the operator
+  // just reset the workflow to its starting stage, and the portal must snap
+  // back to the correct screen even if it's currently sitting on a page that
+  // the delivery-flow guard below would normally leave alone.
+  const resetNonce = useDemoStore((s) => s.resetNonce);
+  const lastResetNonceRef = useRef(resetNonce);
+
   useEffect(() => {
-    // Don't interrupt delivery/order flows — user may have manually navigated
-    if (DELIVERY_FLOW_PATHS.includes(pathnameRef.current)) return;
+    const isReset = resetNonce !== lastResetNonceRef.current;
+    lastResetNonceRef.current = resetNonce;
+
     // Compare against actual current path, not last-navigated-by-this-hook,
     // so the portal stays in sync even if the user navigated manually within it
     if (pathnameRef.current === targetRoute) return;
+
+    // Don't interrupt delivery/order flows — user may have manually navigated.
+    // A reset overrides this: the screen must always land on the correct step.
+    if (!isReset && DELIVERY_FLOW_PATHS.includes(pathnameRef.current)) return;
+
     navigate(targetRoute, { replace: true });
-  }, [targetRoute, navigate]);
+  }, [targetRoute, navigate, resetNonce]);
 
   return null;
 }
