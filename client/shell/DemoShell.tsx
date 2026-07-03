@@ -687,8 +687,13 @@ export default function DemoShell() {
                       sessionStorage.removeItem('arx-patient-identity');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
-                      // Reset means "start over" — return to the HUB tab
-                      // regardless of which portal was being viewed.
+                      // Reset means "start over" — return to a single-panel
+                      // HUB view. In 2up/3up layouts "panels" is independent
+                      // local state that navigate() alone doesn't touch, so
+                      // the shell could still be showing another portal even
+                      // though the URL moved to /hub. Reset both explicitly.
+                      setLayout("1up");
+                      setPanels([{ portal: "crm" }]);
                       navigate(`/${PORTAL_SLUG.crm}`);
                     }}
                     className="block w-full text-left px-4 py-2.5 text-[12px] font-medium text-white hover:bg-indigo-500/30 border-b border-indigo-400/50 transition-colors"
@@ -792,6 +797,10 @@ export default function DemoShell() {
         onPortalVisibilityChange={setVisiblePortals}
         isOpen={showConfigurator}
         onClose={() => setShowConfigurator(false)}
+        onReset={() => {
+          setLayout("1up");
+          setPanels([{ portal: "crm" }]);
+        }}
       />
     </div>
   );

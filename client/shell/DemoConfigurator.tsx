@@ -23,6 +23,10 @@ export interface ConfiguratorProps {
   onPortalVisibilityChange: (portals: PortalId[]) => void;
   isOpen: boolean;
   onClose: () => void;
+  /** Called on "Reset Everything" so the shell can also reset layout/panels
+   *  back to a single-panel HUB view — navigate() alone won't touch those,
+   *  since they're independent local state in 2up/3up layouts. */
+  onReset?: () => void;
 }
 
 const PORTAL_VISIBILITY_KEY = "arx-demo-portal-visibility";
@@ -33,6 +37,7 @@ export default function DemoConfigurator({
   onPortalVisibilityChange,
   isOpen,
   onClose,
+  onReset,
 }: ConfiguratorProps) {
   const switchWorkflow = useSwitchWorkflow();
   const activeWorkflowId = useActiveWorkflowId();
@@ -80,8 +85,9 @@ export default function DemoConfigurator({
       undoSupport: true,
       showProgress: true,
     });
-    // Reset means "start over" — return to the HUB tab regardless of
-    // which portal was being viewed.
+    // Reset means "start over" — return to a single-panel HUB view,
+    // regardless of which portal or layout was active.
+    onReset?.();
     navigate("/hub");
   };
 
