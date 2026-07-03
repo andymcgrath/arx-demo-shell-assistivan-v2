@@ -22,7 +22,7 @@ export default function PhoneVerification() {
   const displayPrefix = phoneDigitsOnly.slice(3, 6); // Area code (positions 3-5)
 
   const isValidated = lastFourInput.length === 4 && lastFourInput === actualLastFour;
-  const isDisabled = lastFourInput.length < 4;
+  const isDisabled = !isValidated;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4);
