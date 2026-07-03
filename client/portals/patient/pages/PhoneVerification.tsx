@@ -61,13 +61,13 @@ export default function PhoneVerification() {
 
         {/* Subhead */}
         <p className="text-lg text-arx-body-copy text-center mb-6">
-          Let's confirm it's you before we get started.
+          Let's confirm it's you before we start.
         </p>
 
         {/* Phone Number Verification Section */}
         <div className="mb-8">
           <label className="block text-sm font-semibold text-arx-slate text-center mb-4">
-            Confirm the last 4 digits of your phone number
+            Enter the last 4 digits of your phone number beginning with 310
           </label>
 
           {/* Phone Number Display + Input */}
