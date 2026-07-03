@@ -1,0 +1,707 @@
+/* Provider Portal + iAssist Dashboard Styles */
+
+/* ── iAssist Dashboard Variables ─────────────────────────────────────────────── */
+
+.iassist-portal {
+  --primary-teal-600: #007178;
+  --primary-teal-700: #03656B;
+  --primary-teal-500: #1A7F85;
+  --neutral-100: #F8F8F8;
+  --neutral-300: #E8E8E8;
+  --neutral-500: #999;
+  --neutral-600: #6F7276;
+  --neutral-800: #1D1D1D;
+  --orange-800: #D8693A;
+  --orange-200: #FFEADE;
+}
+
+/* ── iAssist Dashboard Scrollbar ────────────────────────────────────────────── */
+
+.iassist-portal ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.iassist-portal ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.iassist-portal ::-webkit-scrollbar-thumb {
+  background: #C4C4C4;
+  border-radius: 4px;
+}
+
+.iassist-portal ::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* ── iAssist Table Styling ──────────────────────────────────────────────────── */
+
+.iassist-portal table {
+  border-collapse: collapse;
+}
+
+.iassist-portal th {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.iassist-portal td {
+  border-bottom: 1px solid var(--neutral-300);
+}
+
+.iassist-portal tr:last-child td {
+  border-bottom: none;
+}
+
+.iassist-portal table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .iassist-portal table {
+    font-size: 12px;
+  }
+
+  .iassist-portal td,
+  .iassist-portal th {
+    padding: 8px 4px !important;
+  }
+}
+
+/* ── iAssist Transitions ────────────────────────────────────────────────────── */
+
+.iassist-portal button {
+  transition: all 0.2s ease-in-out;
+}
+
+.iassist-portal button:hover {
+  transform: translateY(-1px);
+}
+
+/* ── iAssist Input Styling ──────────────────────────────────────────────────── */
+
+.iassist-portal input::placeholder {
+  color: var(--neutral-600);
+}
+
+.iassist-portal input:focus {
+  outline: none;
+}
+
+/* ── iAssist Badge Styling ──────────────────────────────────────────────────── */
+
+.iassist-portal .badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.iassist-portal .badge-warning {
+  background-color: var(--orange-200);
+  color: var(--orange-800);
+}
+
+.iassist-portal .badge-success {
+  background-color: #F0F9F9;
+  color: #035257;
+}
+
+.iassist-portal .badge-error {
+  background-color: #FCE4E4;
+  color: #D02B20;
+}
+
+/* ── iAssist Card Shadow ────────────────────────────────────────────────────── */
+
+.iassist-portal .card-shadow {
+  box-shadow: 0 0 10px rgba(196, 196, 196, 0.3);
+}
+
+/* ── iAssist Header Styling ────────────────────────────────────────────────── */
+
+.iassist-portal header {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ── iAssist Hover Effects ────────────────────────────────────────────────── */
+
+.iassist-portal .hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ── iAssist Sidebar Icon Styling ────────────────────────────────────────── */
+
+.iassist-portal .sidebar-icon {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.iassist-portal .sidebar-icon:hover {
+  opacity: 1;
+}
+
+/* ── iAssist Button Variants ────────────────────────────────────────────── */
+
+.iassist-portal .btn-primary {
+  background-color: var(--primary-teal-600);
+  color: white;
+}
+
+.iassist-portal .btn-primary:hover {
+  background-color: var(--primary-teal-700);
+}
+
+.iassist-portal .btn-secondary {
+  background-color: transparent;
+  color: var(--primary-teal-600);
+  border: 1px solid var(--primary-teal-600);
+}
+
+.iassist-portal .btn-secondary:hover {
+  background-color: var(--primary-teal-600);
+  color: white;
+}
+
+/* ── iAssist Status Indicator ────────────────────────────────────────────── */
+
+.iassist-portal .status-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.iassist-portal .status-dot-completed {
+  background-color: #035257;
+}
+
+.iassist-portal .status-dot-pending {
+  background-color: #9EC4C7;
+}
+
+.iassist-portal .status-dot-warning {
+  background-color: var(--orange-800);
+}
+
+.iassist-portal .status-dot-disabled {
+  background-color: #C4C4C4;
+}
+
+/* ── Provider Portal PA Styling ────────────────────────────────────────────── */
+
+.provider-portal {
+  display: flex;
+  min-height: 100vh;
+  background: #fff;
+  font-family: "Inter", -apple-system, sans-serif;
+}
+
+.provider-sidebar {
+  width: 280px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.provider-sidebar--branded {
+  background: linear-gradient(135deg, #007178 0%, #03656B 100%);
+}
+
+.provider-sidebar__logo {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.provider-sidebar__illustration {
+  margin-top: auto;
+}
+
+.provider-sidebar__illustration img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.provider-portal-wordmark {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.provider-portal-wordmark__title {
+  display: block;
+}
+
+.provider-content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.provider-content--pa {
+  padding: 40px;
+}
+
+/* ── Email Styling ──────────────────────────────────────────────────────── */
+
+.email-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.email-warning {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.email-warning__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.email-warning__text {
+  font-size: 13px;
+  color: #92400e;
+  margin: 0;
+}
+
+.email-client {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.email-header {
+  background: #fff;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.email-header__meta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.email-header__meta:last-child {
+  margin-bottom: 0;
+}
+
+.email-meta__label {
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 60px;
+  margin: 0;
+}
+
+.email-meta__value {
+  color: #1f2937;
+  margin: 0;
+}
+
+.email-body {
+  padding: 40px;
+  background: #fff;
+}
+
+.email-logo {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.email-logo__text {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #007178;
+  margin-bottom: 4px;
+}
+
+.email-logo__subtext {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.email-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.email-greeting {
+  margin-bottom: 16px;
+}
+
+.email-paragraph {
+  margin-bottom: 16px;
+}
+
+.email-paragraph--highlight {
+  background: #f0fdf4;
+  padding: 12px;
+  border-left: 3px solid #22c55e;
+}
+
+.email-list {
+  margin: 16px 0 16px 20px;
+  padding: 0;
+}
+
+.email-list-item {
+  margin-bottom: 8px;
+}
+
+.email-link {
+  color: #007178;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.email-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 16px;
+}
+
+.email-footer {
+  background: #f9fafb;
+  padding: 16px 24px;
+  font-size: 12px;
+  color: #6b7280;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.email-footer-link {
+  color: #007178;
+  text-decoration: underline;
+}
+
+/* ── PA Styling ────────────────────────────────────────────────────────── */
+
+.pa-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
+}
+
+.pa-login-heading {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.pa-login-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.pa-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 32px;
+  max-width: 400px;
+}
+
+.pa-field {
+  position: relative;
+}
+
+.pa-field__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+.pa-field__label--clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #007178;
+}
+
+.pa-field__input {
+  width: 100%;
+  padding: 8px 0;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid #e5e7eb;
+  outline: none;
+  font-family: inherit;
+}
+
+.pa-field__input:focus {
+  border-bottom-color: #007178;
+}
+
+.pa-field__underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #007178;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.pa-field__underline--active {
+  transform: scaleX(1);
+}
+
+.pa-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 24px;
+}
+
+.pa-summary-table {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.pa-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pa-summary-row:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.pa-summary-row__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.pa-summary-label-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pa-summary-row__value {
+  font-size: 13px;
+  color: #374151;
+  margin: 0;
+  text-align: right;
+  flex: 1;
+}
+
+.pa-questions-section {
+  margin-bottom: 32px;
+}
+
+.pa-question {
+  margin-bottom: 32px;
+}
+
+.pa-question__text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.pa-question__options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.pa-radio-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pa-radio-label {
+  font-size: 13px;
+  color: #374151;
+}
+
+.pa-comments-field {
+  margin-top: 24px;
+  position: relative;
+}
+
+.pa-comments-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.pa-comments-input {
+  width: 100%;
+  padding: 8px 0;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid #e5e7eb;
+  outline: none;
+  font-family: inherit;
+}
+
+.pa-comments-input:focus {
+  border-bottom-color: #007178;
+}
+
+.pa-action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.pa-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 24px;
+}
+
+.pa-nav-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pa-btn-primary,
+.pa-btn-secondary,
+.pa-btn-tertiary {
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pa-btn-primary {
+  background: #007178;
+  color: white;
+}
+
+.pa-btn-primary:hover {
+  background: #03656b;
+}
+
+.pa-btn-primary:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+.pa-btn-secondary {
+  background: #f3f4f6;
+  color: #007178;
+}
+
+.pa-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.pa-btn-tertiary {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.pa-btn-tertiary:hover {
+  background: #f9fafb;
+}
+
+/* ── Mobile Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .provider-portal {
+    flex-direction: column;
+  }
+
+  .provider-sidebar {
+    width: 100%;
+    min-height: 180px;
+    padding: 24px 24px 0 24px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .provider-sidebar__illustration {
+    display: none;
+  }
+
+  .provider-content {
+    padding: 32px 24px 40px;
+  }
+
+  .pa-summary-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pa-summary-row__label {
+    min-width: unset;
+  }
+}

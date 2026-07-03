@@ -1,0 +1,848 @@
+/**
+ * arx-demo-shell — global styles
+ *
+ * CSS variables are scoped per-portal so each tab can have its own design
+ * system without conflicting. The shell + CRM use :root defaults.
+ * Patient portal variables live in .portal-patient.
+ * Analytics portal variables live in .portal-analytics.
+ */
+
+/* ── Fonts ───────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Open+Sans:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Shell + CRM defaults (shadcn/ui + Salesforce-ish) ───────────────────── */
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    /* Sidebar (CRM uses this) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ── Patient portal design system (AssistRx / Assistivan brand) ─────────────── */
+@layer base {
+  .portal-patient {
+    /* Brand Colors */
+    --arx-primary: 183 100% 22%;
+    --arx-primary-dark: 184 100% 18%;
+    --arx-primary-80: 183 48% 39%;
+    --arx-primary-30: 184 33% 77%;
+    --arx-secondary: 197 51% 38%;
+    --arx-sky: 181 57% 87%;
+
+    /* Neutrals */
+    --arx-slate: 300 1% 25%;
+    --arx-body-copy: 214 4% 37%;
+    --arx-neutral-800: 0 0% 11%;
+    --arx-neutral-100: 0 0% 97%;
+    --arx-neutral-000: 0 0% 100%;
+
+    /* Functional */
+    --arx-errors: 0 79% 47%;
+    --arx-orange: 33 87% 51%;
+    --arx-links: 209 70% 43%;
+    --arx-optional: 257 32% 43%;
+    --arx-inactive: 0 0% 67%;
+    --arx-borders: 0 0% 88%;
+    --arx-background: 0 0% 95%;
+
+    /* Override shadcn tokens to match patient brand */
+    --background: 0 0% 100%;
+    --foreground: 300 1% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 300 1% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 300 1% 25%;
+    --primary: 170 42% 22%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 197 51% 38%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 210 2% 45%;
+    --accent: 181 57% 87%;
+    --accent-foreground: 300 1% 25%;
+    --destructive: 0 79% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 183 100% 22%;
+
+    font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  }
+}
+
+/* ── iPhone 17 Pro mockup ─────────────────────────────────────────────────── */
+/*  Screen viewport: 393 × 852 pt  (standard iPhone Pro logical resolution)   */
+
+.i17pro {
+  position: relative;
+  width: 421px; /* 393 screen + 14px padding each side */
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #5c5c5e 0%, #3a3a3c 45%, #2c2c2e 100%);
+  border-radius: 54px;
+  padding: 14px;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 0 0 2px rgba(255, 255, 255, 0.06),
+    0 40px 100px rgba(0, 0, 0, 0.65),
+    0 10px 30px rgba(0, 0, 0, 0.4);
+  zoom: 0.88;
+}
+
+/* Physical buttons */
+.i17pro__btn {
+  position: absolute;
+  background: linear-gradient(90deg, #3a3a3c, #4a4a4c);
+  border-radius: 2px;
+}
+.i17pro__btn--action    { left: -3px; top: 116px; width: 4px; height: 32px; border-radius: 2px 0 0 2px; }
+.i17pro__btn--vol-up    { left: -3px; top: 178px; width: 4px; height: 60px; border-radius: 2px 0 0 2px; }
+.i17pro__btn--vol-down  { left: -3px; top: 256px; width: 4px; height: 60px; border-radius: 2px 0 0 2px; }
+.i17pro__btn--power     { right: -3px; top: 194px; width: 4px; height: 80px; border-radius: 0 2px 2px 0; }
+.i17pro__btn--camera-ctrl { right: -3px; top: 310px; width: 4px; height: 50px; border-radius: 0 2px 2px 0; }
+
+/* Screen area */
+.i17pro__screen {
+  width: 393px;
+  height: 852px;
+  background: #fff;
+  border-radius: 42px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Status bar */
+.i17pro__statusbar {
+  flex-shrink: 0;
+  height: 54px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background: #fff;
+  color: #000;
+  z-index: 50;
+}
+
+.i17pro__island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 126px;
+  height: 37px;
+  background: #000;
+  border-radius: 20px;
+}
+
+.i17pro__time {
+  font-size: 15px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.3px;
+  color: #000;
+}
+
+.i17pro__icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #000;
+}
+
+/* Portal content fills remaining height */
+.i17pro__content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Field portal design system (iAssist brand) ─────────────────────── */
+@layer base {
+  .portal-field {
+    /* iAssist Brand Colors */
+    --arx-primary: 183 100% 22%;
+    --arx-primary-dark: 184 100% 18%;
+    --arx-primary-80: 183 48% 39%;
+    --arx-primary-30: 184 33% 77%;
+    --arx-secondary: 197 51% 38%;
+    --arx-sky: 181 57% 87%;
+    --arx-orange: 33 87% 51%;
+    --arx-neutral-100: 0 0% 97%;
+
+    font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  }
+}
+
+/* ── Provider portal (iAssist Prior Authorization) ───────────────────────── */
+.provider-portal {
+  --pa-teal: #007178;
+  --pa-slate: #414042;
+  --pa-grey: #6F7276;
+  --pa-bg: #FDFDFD;
+  --pa-border: #ACACAC;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--pa-bg);
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+/* Sidebar */
+.provider-sidebar {
+  width: 37%;
+  min-width: 260px;
+  background: var(--pa-teal);
+  display: flex;
+  flex-direction: column;
+  padding: 46px 0 0 67px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.provider-sidebar__logo {
+  margin-bottom: 40px;
+}
+
+.provider-portal-wordmark {
+  display: flex;
+  flex-direction: column;
+}
+
+.provider-portal-wordmark__title {
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.provider-sidebar__illustration {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.provider-sidebar__illustration img {
+  width: 100%;
+  max-width: 464px;
+  height: auto;
+  object-fit: contain;
+}
+
+.provider-sidebar__footer {
+  padding: 24px 0 24px 0;
+}
+
+.provider-sidebar__footer img {
+  width: 180px;
+  height: auto;
+}
+
+/* Main content area */
+.provider-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 80px 80px 60px 80px;
+  overflow-y: auto;
+}
+
+.provider-content--pa {
+  padding-top: 60px;
+}
+
+/* Login step */
+.pa-eyebrow {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--pa-slate);
+  margin-bottom: 32px;
+  letter-spacing: 0;
+}
+
+.pa-login-heading {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 800;
+  color: var(--pa-teal);
+  line-height: 1.3;
+  margin-bottom: 32px;
+}
+
+.pa-login-description {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pa-slate);
+  line-height: 1.4;
+  max-width: 480px;
+  margin-bottom: 12px;
+}
+
+.pa-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 40px;
+  max-width: 480px;
+}
+
+.pa-field {
+  position: relative;
+  padding-bottom: 1px;
+}
+
+.pa-field__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pa-grey);
+  margin-bottom: 8px;
+}
+
+.pa-field__label--clickable {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.pa-field__label--clickable:hover {
+  color: var(--pa-teal);
+}
+
+.pa-field__input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--pa-slate);
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  padding: 0 0 8px 0;
+}
+
+.pa-field__underline {
+  height: 1px;
+  background: var(--pa-border);
+  transition: background 0.2s;
+}
+
+.pa-field__underline--active {
+  background: var(--pa-teal);
+}
+
+/* Buttons */
+.pa-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 40px;
+}
+
+.pa-btn-primary {
+  padding: 14px 28px;
+  background: var(--pa-teal);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.16);
+  transition: opacity 0.2s;
+}
+
+.pa-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pa-btn-secondary {
+  padding: 12px 28px;
+  background: #fff;
+  color: var(--pa-teal);
+  border: 1px solid var(--pa-teal);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pa-btn-secondary:hover {
+  background: #f0fafa;
+}
+
+.pa-btn-tertiary {
+  padding: 12px 28px;
+  background: transparent;
+  color: var(--pa-teal);
+  border: none;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  cursor: pointer;
+}
+
+/* PA section title */
+.pa-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pa-teal);
+  margin-bottom: 20px;
+}
+
+/* PA summary table */
+.pa-summary-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.pa-summary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.pa-summary-row__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.pa-summary-label-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pa-slate);
+}
+
+.pa-summary-row__value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pa-slate);
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
+/* PA questions */
+.pa-questions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 20px;
+}
+
+.pa-question {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pa-question__text {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pa-slate);
+  line-height: 1.3;
+  max-width: 560px;
+}
+
+.pa-question__options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pa-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.pa-radio-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.pa-radio-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pa-slate);
+}
+
+/* Comments */
+.pa-comments-field {
+  position: relative;
+  padding-bottom: 1px;
+}
+
+.pa-comments-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pa-slate);
+  margin-bottom: 8px;
+}
+
+.pa-comments-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  color: var(--pa-slate);
+  padding: 0 0 16px 0;
+}
+
+/* Save button with checkmark */
+.pa-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pa-btn-save {
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  border: 1px solid var(--pa-teal);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pa-btn-save:hover {
+  background: #f0fafa;
+}
+
+/* Bottom nav row */
+.pa-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
+  padding-top: 0;
+}
+
+.pa-nav-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Email client styling */
+.email-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.email-warning {
+  background: #fce4d6;
+  border: 1px solid #f5a87a;
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.email-warning__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.email-warning__text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.email-client {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.email-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.email-header__meta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.email-meta__label {
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  min-width: 50px;
+}
+
+.email-meta__value {
+  color: #666;
+  margin: 0;
+  word-break: break-word;
+}
+
+.email-body {
+  padding: 32px;
+  background: #fff;
+}
+
+.email-logo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.email-logo__text {
+  font-size: 20px;
+  font-weight: 800;
+  color: #007178;
+  margin-bottom: 2px;
+}
+
+.email-logo__subtext {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+.email-content {
+  color: #333;
+}
+
+.email-greeting {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.email-paragraph {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.email-paragraph--highlight {
+  font-weight: 600;
+  color: #007178;
+}
+
+.email-list {
+  margin: 16px 0 16px 20px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  list-style: decimal;
+  list-style-position: outside;
+}
+
+.email-list-item {
+  margin-bottom: 8px;
+  margin-left: 20px;
+}
+
+.email-link {
+  color: #007178;
+  text-decoration: underline;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.email-link:hover {
+  color: #005658;
+}
+
+.email-note {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin: 16px 0;
+}
+
+.email-footer {
+  padding: 16px 20px;
+  background: #fafafa;
+  border-top: 1px solid #e5e5e5;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.email-footer-link {
+  color: #007178;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.email-footer-link:hover {
+  color: #005658;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .provider-portal {
+    flex-direction: column;
+  }
+
+  .provider-sidebar {
+    width: 100%;
+    min-height: 180px;
+    padding: 24px 24px 0 24px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .provider-sidebar__illustration {
+    display: none;
+  }
+
+  .provider-sidebar__footer {
+    padding: 16px 0;
+  }
+
+  .provider-content {
+    padding: 32px 24px 40px;
+  }
+
+  .pa-summary-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pa-summary-row__label {
+    min-width: unset;
+  }
+}
+
+/* ── Analytics portal design system (dark navy + teal) ───────────────────── */
+@layer base {
+  .portal-analytics {
+    --navy: 220 55% 10%;
+    --navy-mid: 220 45% 15%;
+    --navy-light: 220 35% 22%;
+    --teal: 172 70% 45%;
+    --teal-dark: 172 70% 35%;
+
+    /* Override shadcn tokens to match dark theme */
+    --background: 220 55% 10%;
+    --foreground: 0 0% 100%;
+    --card: 220 45% 15%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 45% 15%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 172 70% 45%;
+    --primary-foreground: 220 55% 10%;
+    --secondary: 220 35% 22%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 35% 22%;
+    --muted-foreground: 220 20% 65%;
+    --accent: 172 70% 45%;
+    --accent-foreground: 220 55% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 35% 22%;
+    --input: 220 35% 22%;
+    --ring: 172 70% 45%;
+
+    --sidebar-background: 220 55% 8%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 172 70% 45%;
+    --sidebar-primary-foreground: 220 55% 10%;
+    --sidebar-accent: 220 35% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 35% 22%;
+    --sidebar-ring: 172 70% 45%;
+  }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}

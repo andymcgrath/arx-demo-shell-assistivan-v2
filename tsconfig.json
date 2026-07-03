@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./client/*"],
+      "@crm/*": ["./client/portals/crm/*"],
+      "@patient/*": ["./client/portals/patient/*"],
+      "@analytics/*": ["./client/portals/analytics/*"],
+      "@field/*": ["./client/portals/field/*"],
+      "@provider/*": ["./client/portals/provider/*"]
+    }
+  },
+  "include": ["client", "shared"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

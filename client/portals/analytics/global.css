@@ -1,0 +1,155 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Verint dark navy palette */
+    --navy: 220 55% 10%;
+    --navy-mid: 220 45% 15%;
+    --navy-light: 220 35% 22%;
+    --teal: 172 70% 45%;
+    --teal-dark: 172 70% 35%;
+
+    /* Override shadcn tokens to match dark theme */
+    --background: 220 55% 10%;
+    --foreground: 0 0% 100%;
+
+    --card: 220 45% 15%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 220 45% 15%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 172 70% 45%;
+    --primary-foreground: 220 55% 10%;
+
+    --secondary: 220 35% 22%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 35% 22%;
+    --muted-foreground: 220 20% 65%;
+
+    --accent: 172 70% 45%;
+    --accent-foreground: 220 55% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 35% 22%;
+    --input: 220 35% 22%;
+    --ring: 172 70% 45%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 55% 8%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 172 70% 45%;
+    --sidebar-primary-foreground: 220 55% 10%;
+    --sidebar-accent: 220 35% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 35% 22%;
+    --sidebar-ring: 172 70% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}
+
+@layer utilities {
+  .section-animate {
+    opacity: 0;
+    transform: translateY(2rem);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+
+  .section-animate.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .delay-100 { transition-delay: 100ms; }
+  .delay-200 { transition-delay: 200ms; }
+  .delay-300 { transition-delay: 300ms; }
+  .delay-400 { transition-delay: 400ms; }
+  .delay-500 { transition-delay: 500ms; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(32, 201, 176, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(32, 201, 176, 0.5);
+  }
+}
+
+@keyframes waveform {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes slide-down {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 600px;
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
