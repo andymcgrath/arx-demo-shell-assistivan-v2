@@ -506,6 +506,11 @@ export default function DemoShell() {
   const activePanels = layout === "1up" ? [{ portal: urlPortal }] : panels;
 
   const resetActorToStage = useCallback((stage: number) => {
+    // Bump resetNonce so portals with their own navigation guards (e.g. the
+    // patient portal's StateDrivenNav) know this is a reset and force-navigate
+    // to the correct screen, same as the "Reset All" button does.
+    resetDemo();
+
     const actor = getWorkflowActor();
 
     // Always start with a full reset
@@ -556,7 +561,7 @@ export default function DemoShell() {
     if (stage >= 8) {
       actor.send({ type: 'DELIVER_RX', portal: 'crm' });
     }
-  }, []);
+  }, [resetDemo]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -682,6 +687,9 @@ export default function DemoShell() {
                       sessionStorage.removeItem('arx-patient-identity');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
+                      // Reset means "start over" — return to the HUB tab
+                      // regardless of which portal was being viewed.
+                      navigate(`/${PORTAL_SLUG.crm}`);
                     }}
                     className="block w-full text-left px-4 py-2.5 text-[12px] font-medium text-white hover:bg-indigo-500/30 border-b border-indigo-400/50 transition-colors"
                   >

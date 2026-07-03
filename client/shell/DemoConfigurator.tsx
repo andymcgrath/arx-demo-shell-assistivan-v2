@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, ChevronDown } from "lucide-react";
 import { useSwitchWorkflow, useActiveWorkflowId, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useDemoStore } from "@/store/demoStore";
@@ -37,6 +38,7 @@ export default function DemoConfigurator({
   const activeWorkflowId = useActiveWorkflowId();
   const dispatch = useWorkflowDispatch();
   const resetDemo = useDemoStore((s) => s.resetDemo);
+  const navigate = useNavigate();
 
   const [workflows] = useState(workflowRegistry.listWorkflows());
   const [behaviorFlags, setBehaviorFlags] = useState(() => {
@@ -78,6 +80,9 @@ export default function DemoConfigurator({
       undoSupport: true,
       showProgress: true,
     });
+    // Reset means "start over" — return to the HUB tab regardless of
+    // which portal was being viewed.
+    navigate("/hub");
   };
 
   if (!isOpen) return null;
