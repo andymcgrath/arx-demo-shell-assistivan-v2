@@ -290,15 +290,16 @@
 
 .email-header {
   background: #fff;
-  padding: 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .email-header__meta {
   display: flex;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   font-size: 13px;
+  line-height: 1;
 }
 
 .email-header__meta:last-child {
@@ -310,11 +311,13 @@
   color: #6b7280;
   min-width: 60px;
   margin: 0;
+  line-height: 1;
 }
 
 .email-meta__value {
   color: #1f2937;
   margin: 0;
+  line-height: 1;
 }
 
 .email-body {
