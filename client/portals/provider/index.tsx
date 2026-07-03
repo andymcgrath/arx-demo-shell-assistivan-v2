@@ -174,16 +174,11 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
   return (
     <main className="provider-content">
       <div className="email-container">
-        <div className="email-warning">
-          <span className="email-warning__icon">⚠️</span>
-          <p className="email-warning__text">This is an EXTERNAL email. DO NOT open attachments or click links from unknown senders or unexpected emails.</p>
-        </div>
-
         <div className="email-client">
           <div className="email-header">
             <div className="email-header__meta">
               <p className="email-meta__label">From:</p>
-              <p className="email-meta__value">no-reply@assistivan.com</p>
+              <p className="email-meta__value">no-reply@assistrx.com</p>
             </div>
             <div className="email-header__meta">
               <p className="email-meta__label">Sent:</p>
@@ -201,24 +196,27 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
 
           <div className="email-body">
             <div className="email-logo">
-              <span className="email-logo__text">Assistivan</span>
-              <span className="email-logo__subtext">Prior Authorization Platform</span>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2F3a7a98e156014cee98b701ac84c6fa2c?format=webp&width=800&height=1200"
+                alt="AssistRx Logo"
+                style={{ maxWidth: "200px", height: "auto", marginBottom: "8px" }}
+              />
             </div>
 
             <div className="email-content">
               <p className="email-greeting">Dear Dr. Chen,</p>
 
               <p className="email-paragraph">
-                Assistivan has received your request to process a prior authorization for one of your patients. The patient's insurer requires a prior authorization (PA) submitted by their healthcare provider.
+                AssistRx has received your request to process a prior authorization for one of your patients. The patient's insurer requires a prior authorization (PA) submitted by their healthcare provider.
               </p>
 
               <p className="email-paragraph">
-                An electronic PA request form has been automated and prepared for you by Assistivan. To complete and submit the PA follow these simple steps:
+                An electronic PA request form has been automated and prepared for you by AssistRx. To complete and submit the PA follow these simple steps:
               </p>
 
               <ol className="email-list">
                 <li className="email-list-item">
-                  Click <a href="#" className="email-link" onClick={(e) => { e.preventDefault(); onClickLink(); }}>HERE</a> to be redirected to our PA request form, powered by Assistivan.
+                  Click <a href="#" className="email-link" onClick={(e) => { e.preventDefault(); onClickLink(); }}>HERE</a> to be redirected to our PA request form, powered by AssistRx.
                 </li>
                 <li className="email-list-item">
                   Input your NPI and follow the instructions on the form to complete the submission.
@@ -234,7 +232,7 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
               </p>
 
               <p className="email-paragraph">
-                If you are having any issues with this process or need to request a new link, please contact Assistivan at 1-866-424-6935.
+                If you are having any issues with this process or need to request a new link, please contact AssistRx at 1-866-424-6935.
               </p>
             </div>
           </div>

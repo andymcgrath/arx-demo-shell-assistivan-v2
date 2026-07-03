@@ -67,13 +67,6 @@ export default function OTPVerification() {
   return (
     <div className="bg-arx-neutral-100 px-4 py-4 flex items-center justify-center">
       <div className="w-full max-w-sm">
-        {/* Logo Placeholder */}
-        <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-arx-primary to-arx-secondary flex items-center justify-center text-white font-bold text-lg">
-            <MessageCircle size={36} />
-          </div>
-        </div>
-
         {/* Heading */}
         <h1 className="text-3xl font-bold text-arx-slate text-center mb-2">
           Check your texts
