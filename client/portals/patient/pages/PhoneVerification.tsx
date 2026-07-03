@@ -22,7 +22,7 @@ export default function PhoneVerification() {
   const displayPrefix = phoneDigitsOnly.slice(3, 6); // Area code (positions 3-5)
 
   const isValidated = lastFourInput.length === 4 && lastFourInput === actualLastFour;
-  const isDisabled = lastFourInput.length < 4;
+  const isDisabled = !isValidated;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4);
@@ -49,12 +49,10 @@ export default function PhoneVerification() {
   return (
     <div className="bg-arx-neutral-100 px-4 py-4 flex items-center justify-center">
       <div className="w-full max-w-sm">
-        {/* Logo Placeholder */}
-        <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-arx-primary to-arx-secondary flex items-center justify-center text-white font-bold text-lg">
-            <MessageCircle size={36} />
-          </div>
-        </div>
+        {/* Step Indicator */}
+        <p className="text-xs text-arx-inactive text-center mb-6 font-medium">
+          Step 1 of 3
+        </p>
 
         {/* Greeting */}
         <h1 className="text-4xl font-bold text-arx-slate text-center mb-2">
@@ -63,35 +61,30 @@ export default function PhoneVerification() {
 
         {/* Subhead */}
         <p className="text-lg text-arx-body-copy text-center mb-6">
-          Let's confirm it's you before we get started.
+          Let's confirm it's you before we start.
         </p>
 
         {/* Phone Number Verification Section */}
         <div className="mb-8">
           <label className="block text-sm font-semibold text-arx-slate text-center mb-4">
-            Confirm the last 4 digits of your phone number
+            Enter the last 4 digits of your phone number beginning with {displayPrefix}
           </label>
 
-          {/* Phone Number Display + Input */}
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-2xl font-semibold text-arx-slate">
-              {displayPrefix}-
-            </span>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
-              value={lastFourInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isDisabled) {
-                  handleSendCode();
-                }
-              }}
-              placeholder="••••"
-              className="w-28 px-3 py-3 text-2xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-20 transition-colors"
-            />
-          </div>
+          {/* Phone Number Input */}
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            value={lastFourInput}
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isDisabled) {
+                handleSendCode();
+              }
+            }}
+            placeholder="0000"
+            className="w-full px-4 py-4 text-4xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-30 focus:ring-offset-1 transition-all placeholder:text-arx-inactive placeholder:opacity-40"
+          />
 
           {/* Error Message */}
           {error && (
@@ -101,18 +94,25 @@ export default function PhoneVerification() {
           )}
 
           {/* Helper Text */}
-          <p className="text-xs text-arx-inactive text-center mt-3">
-            We'll text a 6-digit code to confirm it's you.
-          </p>
+          {isDisabled && !error && (
+            <p className="text-xs text-arx-inactive text-center mt-3">
+              Enter the last 4 digits to continue
+            </p>
+          )}
+          {!isDisabled && !error && (
+            <p className="text-xs text-arx-inactive text-center mt-3">
+              We'll text a 6-digit code to confirm it's you.
+            </p>
+          )}
         </div>
 
         {/* Primary CTA */}
         <button
           onClick={handleSendCode}
           disabled={isDisabled}
-          className={`w-full font-semibold py-4 px-6 rounded-lg transition-colors mb-4 shadow-sm ${
+          className={`w-full font-semibold py-4 px-6 rounded-lg transition-all shadow-sm mb-6 ${
             isDisabled
-              ? "bg-arx-inactive text-white cursor-not-allowed opacity-50"
+              ? "bg-arx-primary/40 text-white cursor-not-allowed"
               : "bg-arx-primary text-white hover:bg-arx-primary-dark"
           }`}
         >
@@ -120,7 +120,7 @@ export default function PhoneVerification() {
         </button>
 
         {/* Support Link */}
-        <p className="text-xs text-arx-inactive text-center">
+        <p className="text-xs text-arx-inactive/70 text-center">
           Is this the right number?{" "}
           <button className="text-arx-links hover:underline font-medium">
             Get help
