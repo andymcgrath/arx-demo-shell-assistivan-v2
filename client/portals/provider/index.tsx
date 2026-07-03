@@ -174,11 +174,6 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
   return (
     <main className="provider-content">
       <div className="email-container">
-        <div className="email-warning">
-          <span className="email-warning__icon">⚠️</span>
-          <p className="email-warning__text">This is an EXTERNAL email. DO NOT open attachments or click links from unknown senders or unexpected emails.</p>
-        </div>
-
         <div className="email-client">
           <div className="email-header">
             <div className="email-header__meta">
