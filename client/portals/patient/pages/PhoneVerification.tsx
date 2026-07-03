@@ -51,15 +51,8 @@ export default function PhoneVerification() {
       <div className="w-full max-w-sm">
         {/* Step Indicator */}
         <p className="text-xs text-arx-inactive text-center mb-6 font-medium">
-          Step 2 of 4
+          Step 1 of 3
         </p>
-
-        {/* Logo Placeholder */}
-        <div className="flex justify-center mb-4">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-arx-primary to-arx-secondary flex items-center justify-center text-white font-bold text-sm">
-            <MessageCircle size={28} />
-          </div>
-        </div>
 
         {/* Greeting */}
         <h1 className="text-4xl font-bold text-arx-slate text-center mb-2">
@@ -78,7 +71,7 @@ export default function PhoneVerification() {
           </label>
 
           {/* Phone Number Display + Input */}
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-2xl font-semibold text-arx-slate">
               {displayPrefix}-
             </span>
@@ -93,8 +86,8 @@ export default function PhoneVerification() {
                   handleSendCode();
                 }
               }}
-              placeholder="0000"
-              className="w-28 px-3 py-3 text-2xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-30 focus:ring-offset-1 transition-all placeholder:text-arx-inactive placeholder:opacity-40"
+              placeholder="____"
+              className="w-28 px-0 py-2 text-2xl font-bold text-center border-0 border-b-2 border-arx-borders bg-transparent focus:outline-none focus:border-arx-primary transition-colors placeholder:text-arx-inactive placeholder:opacity-50"
             />
           </div>
 
