@@ -49,10 +49,15 @@ export default function PhoneVerification() {
   return (
     <div className="bg-arx-neutral-100 px-4 py-4 flex items-center justify-center">
       <div className="w-full max-w-sm">
+        {/* Step Indicator */}
+        <p className="text-xs text-arx-inactive text-center mb-6 font-medium">
+          Step 2 of 4
+        </p>
+
         {/* Logo Placeholder */}
-        <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-arx-primary to-arx-secondary flex items-center justify-center text-white font-bold text-lg">
-            <MessageCircle size={36} />
+        <div className="flex justify-center mb-4">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-arx-primary to-arx-secondary flex items-center justify-center text-white font-bold text-sm">
+            <MessageCircle size={28} />
           </div>
         </div>
 
@@ -73,7 +78,7 @@ export default function PhoneVerification() {
           </label>
 
           {/* Phone Number Display + Input */}
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <span className="text-2xl font-semibold text-arx-slate">
               {displayPrefix}-
             </span>
@@ -88,8 +93,8 @@ export default function PhoneVerification() {
                   handleSendCode();
                 }
               }}
-              placeholder="••••"
-              className="w-28 px-3 py-3 text-2xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-20 transition-colors"
+              placeholder="0000"
+              className="w-28 px-3 py-3 text-2xl font-bold text-center border-2 border-arx-borders rounded-lg focus:outline-none focus:border-arx-primary focus:ring-2 focus:ring-arx-primary focus:ring-opacity-30 focus:ring-offset-1 transition-all placeholder:text-arx-inactive placeholder:opacity-40"
             />
           </div>
 
@@ -101,18 +106,25 @@ export default function PhoneVerification() {
           )}
 
           {/* Helper Text */}
-          <p className="text-xs text-arx-inactive text-center mt-3">
-            We'll text a 6-digit code to confirm it's you.
-          </p>
+          {isDisabled && !error && (
+            <p className="text-xs text-arx-inactive text-center mt-3">
+              Enter the last 4 digits to continue
+            </p>
+          )}
+          {!isDisabled && !error && (
+            <p className="text-xs text-arx-inactive text-center mt-3">
+              We'll text a 6-digit code to confirm it's you.
+            </p>
+          )}
         </div>
 
         {/* Primary CTA */}
         <button
           onClick={handleSendCode}
           disabled={isDisabled}
-          className={`w-full font-semibold py-4 px-6 rounded-lg transition-colors mb-4 shadow-sm ${
+          className={`w-full font-semibold py-4 px-6 rounded-lg transition-all shadow-sm mb-6 ${
             isDisabled
-              ? "bg-arx-inactive text-white cursor-not-allowed opacity-50"
+              ? "bg-arx-primary/40 text-white cursor-not-allowed"
               : "bg-arx-primary text-white hover:bg-arx-primary-dark"
           }`}
         >
@@ -120,7 +132,7 @@ export default function PhoneVerification() {
         </button>
 
         {/* Support Link */}
-        <p className="text-xs text-arx-inactive text-center">
+        <p className="text-xs text-arx-inactive/70 text-center">
           Is this the right number?{" "}
           <button className="text-arx-links hover:underline font-medium">
             Get help
