@@ -920,7 +920,6 @@ function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () 
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">COA Direct to Patient — Confirmation</p>
-      <PaSummaryTable isSubmitted={true} />
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
@@ -938,11 +937,13 @@ function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () 
         </div>
       </div>
 
-      <div className="pa-action-row">
+      <div className="pa-action-row" style={{ marginBottom: 32 }}>
         <button onClick={onReturnToDashboard} className="pa-btn-primary">
           Return to Dashboard
         </button>
       </div>
+
+      <PaSummaryTable isSubmitted={true} />
     </main>
   );
 }
