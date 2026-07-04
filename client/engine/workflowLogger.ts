@@ -114,6 +114,14 @@ export function logWorkflowInit(
   flowType: string,
   initialData: WorkflowData
 ): void {
+  // Store in persistent log
+  useWorkflowLogStore.getState().addLog({
+    eventType: 'INIT',
+    flowType,
+    changes: {},
+    fullState: initialData,
+  });
+
   console.group(
     `%c[WF INIT] %c${flowType}`,
     `color: ${colors.green}; font-weight: bold`,
