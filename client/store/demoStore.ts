@@ -6,9 +6,13 @@
  * events log, undo snapshots. Components read workflow state via
  * usePersonaState() or useSelector(actor, ...).
  *
- * This store holds only two things:
+ * This store holds only three things:
  *   flowType  — which workflow is active (drives which XState machine to use)
  *   enrollmentFormTabOpen — CRM UI tab state
+ *   resetNonce — bumped on every resetDemo() call. Portals with their own
+ *     internal navigation guards (e.g. the patient portal's StateDrivenNav)
+ *     watch this to force-navigate back to the correct screen on reset, even
+ *     when the guard would otherwise ignore a state-driven navigation.
  *
  * Persisted to sessionStorage so a page refresh restores the active flow.
  * On restore, DemoShell's mount effect calls switchWorkflow() to match the
@@ -405,6 +409,8 @@ import type { FlowType } from '../engine/types';
 export interface DemoState {
   flowType: FlowType;
   enrollmentFormTabOpen: boolean;
+  /** Bumped on every resetDemo() call — see file header comment. */
+  resetNonce: number;
 }
 
 export interface DemoActions {
@@ -420,6 +426,7 @@ export type DemoStore = DemoState & DemoActions;
 export const SEED: DemoState = {
   flowType: "Fax_QS_PA_Approved",
   enrollmentFormTabOpen: false,
+  resetNonce: 0,
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -449,7 +456,7 @@ export const useDemoStore = create<DemoStore>()(
 
       resetDemo(flow): void {
         const targetFlow = flow ?? get().flowType;
-        set({ ...SEED, flowType: targetFlow });
+        set({ ...SEED, flowType: targetFlow, resetNonce: get().resetNonce + 1 });
         resetCurrentWorkflowActor();
       },
     }),

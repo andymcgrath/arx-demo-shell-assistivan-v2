@@ -22,6 +22,10 @@ export interface ConfiguratorProps {
   onPortalVisibilityChange: (portals: PortalId[]) => void;
   isOpen: boolean;
   onClose: () => void;
+  /** Called on "Reset Everything". The shell owns navigation and layout/panel
+   *  state, so it also owns returning to the active flow's canonical opening
+   *  screen (FLOW_START_PORTAL) — this component just triggers it. */
+  onReset?: () => void;
 }
 
 const PORTAL_VISIBILITY_KEY = "arx-demo-portal-visibility";
@@ -32,6 +36,7 @@ export default function DemoConfigurator({
   onPortalVisibilityChange,
   isOpen,
   onClose,
+  onReset,
 }: ConfiguratorProps) {
   const switchWorkflow = useSwitchWorkflow();
   const activeWorkflowId = useActiveWorkflowId();
@@ -78,6 +83,9 @@ export default function DemoConfigurator({
       undoSupport: true,
       showProgress: true,
     });
+    // Reset means "start over" — the shell handles returning to the active
+    // flow's canonical opening screen (navigation + layout/panels).
+    onReset?.();
   };
 
   if (!isOpen) return null;
