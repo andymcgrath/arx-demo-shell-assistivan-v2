@@ -4,10 +4,10 @@ import { logWorkflowStateChange, logWorkflowEvent, logWorkflowInit } from './wor
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: 'Fax_QS_PA_Approved',
-  enrollmentStatus: "none",
+  enrollmentStatus: "invited",
   smsVerified: false,
   otpVerified: false,
-  enrollmentInviteSent: false,
+  enrollmentInviteSent: true,
   enrollmentAcknowledged: false,
   welcomeDismissed: false,
   consentStatus: "pending",
