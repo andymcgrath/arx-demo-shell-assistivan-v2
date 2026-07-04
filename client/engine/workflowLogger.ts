@@ -1,4 +1,5 @@
 import type { WorkflowData, DemoEvent } from './types';
+import { useWorkflowLogStore } from './workflowLogStore';
 
 // Color codes for console output
 const colors = {
@@ -36,7 +37,7 @@ export function logWorkflowStateChange(
   flowType: string
 ): void {
   const timestamp = new Date().toLocaleTimeString();
-  
+
   // Find what changed
   const changes: Record<string, { before: unknown; after: unknown }> = {};
   for (const key in afterData) {
@@ -50,6 +51,14 @@ export function logWorkflowStateChange(
   }
 
   const hasChanges = Object.keys(changes).length > 0;
+
+  // Store in persistent log
+  useWorkflowLogStore.getState().addLog({
+    eventType,
+    flowType,
+    changes,
+    fullState: afterData,
+  });
 
   console.group(
     `%c[WF] %c${eventType}%c @ %c${timestamp}%c (${flowType})`,

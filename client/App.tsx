@@ -16,6 +16,7 @@ import { useDemoStore } from "@/store/demoStore";
 import WorkflowProvider from './engine/WorkflowProvider';
 import { WorkflowProvider as XStateProvider } from '@/providers/WorkflowProvider';
 import { registerWorkflows } from '@/workflows';
+import { WorkflowLogViewer } from '@/components/WorkflowLogViewer';
 
 // Register all workflows at startup
 registerWorkflows();
@@ -72,6 +73,7 @@ function App() {
               <Route path="/:portal" element={<DemoShell />} />
               <Route path="*" element={<Navigate to="/hub" replace />} />
             </Routes>
+            <WorkflowLogViewer />
           </QueryClientProvider>
         </BrowserRouter>
       </XStateProvider>
