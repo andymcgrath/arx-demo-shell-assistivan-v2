@@ -13,6 +13,7 @@ import {
   derivePatientRoute,
 } from './WorkflowEngine';
 import { logWorkflowInit } from './workflowLogger';
+import { observeWorkflowChanges, resetObserver } from './workflowObserver';
 
 type ActorRef = ActorRefFrom<typeof workflowMachine>;
 
@@ -41,10 +42,18 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const snapshot = actor.getSnapshot();
+
+    // Log initial state
     logWorkflowInit(
       snapshot.context.workflowData.flowType,
       snapshot.context.workflowData
     );
+
+    // Reset observer to track changes from this point forward
+    resetObserver();
+
+    // Start observing workflow state changes
+    observeWorkflowChanges(actor);
   }, [actor]);
 
   return (
