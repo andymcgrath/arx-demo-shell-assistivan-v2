@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useCallback } from 'react';
+import { createContext, useContext, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useSelector } from '@xstate/react';
 import type { ActorRefFrom } from 'xstate';
@@ -12,6 +12,7 @@ import {
   getPersonaBadge,
   derivePatientRoute,
 } from './WorkflowEngine';
+import { logWorkflowInit } from './workflowLogger';
 
 type ActorRef = ActorRefFrom<typeof workflowMachine>;
 
@@ -37,6 +38,14 @@ interface DispatchPayload {
 
 export function WorkflowProvider({ children }: { children: ReactNode }) {
   const actor = getWorkflowActor(); // ensures actor is initialized
+
+  useEffect(() => {
+    const snapshot = actor.getSnapshot();
+    logWorkflowInit(
+      snapshot.context.workflowData.flowType,
+      snapshot.context.workflowData
+    );
+  }, [actor]);
 
   return (
     <WorkflowContext.Provider
