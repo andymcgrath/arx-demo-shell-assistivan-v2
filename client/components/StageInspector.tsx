@@ -12,113 +12,26 @@
  * state, scoped to whichever stage is active, because that's what's useful
  * when driving a demo: "what does the data look like right now."
  *
- * Two machines are live in this app (see actorSingleton.ts), so this file
- * knows about both:
- *   - workflowMachine.ts — parallel machine (Fax_QS_PA_Approved, Fax_PAP_Audit,
- *     iAssist_PA_Approved). "Stage" = whichever of its 4 regions
- *     (enrollment / benefitsInquiry / priorAuth / order) hasn't reached its
- *     terminal state yet.
- *   - coaDtp.ts — a single linear chain (CoA_DTP). "Stage" = the current
- *     state node directly.
- * If either machine's states or fields change, update the maps below to match.
+ * Region/stage config and formatting helpers live in
+ * client/engine/stageInspectorConfig.ts, not in this file — see that file's
+ * header comment for why (Fast Refresh / full-reload considerations).
  */
 import { useState } from 'react';
 import { useSelector } from '@xstate/react';
 import { ChevronDown, Copy } from 'lucide-react';
 import { useWorkflowActor, useActiveWorkflowId } from '@/engine/WorkflowProvider';
 import type { WorkflowData } from '@/engine/types';
-
-// ── Parallel "enrollment" machine ────────────────────────────────────────────
-
-type ParallelRegion = 'enrollment' | 'benefitsInquiry' | 'priorAuth' | 'order';
-
-const PARALLEL_REGION_ORDER: ParallelRegion[] = [
-  'enrollment',
-  'benefitsInquiry',
-  'priorAuth',
-  'order',
-];
-
-const PARALLEL_REGION_LABELS: Record<ParallelRegion, string> = {
-  enrollment: 'Enrollment',
-  benefitsInquiry: 'Benefits Investigation',
-  priorAuth: 'Prior Authorization',
-  order: 'Pharmacy & Delivery',
-};
-
-// Node values that mean "this region is done" — the inspector moves on to
-// the next region once the active one hits one of these.
-const PARALLEL_REGION_TERMINAL: Record<ParallelRegion, string[]> = {
-  enrollment: ['consented'],
-  benefitsInquiry: ['complete'],
-  priorAuth: ['approved', 'denied'],
-  order: ['delivered'],
-};
-
-// Only these WorkflowData fields are shown while a given region is active.
-const PARALLEL_REGION_FIELDS: Record<ParallelRegion, (keyof WorkflowData)[]> = {
-  enrollment: [
-    'enrollmentStatus',
-    'enrollmentInviteSent',
-    'smsVerified',
-    'otpVerified',
-    'consentStatus',
-    'enrollmentAcknowledged',
-  ],
-  benefitsInquiry: ['biStatus', 'biResult'],
-  priorAuth: ['paStatus', 'paSubmittedAt', 'paApprovedAt', 'providerPACompleted'],
-  order: [
-    'dispatchStatus',
-    'selectedPharmacy',
-    'pharmacyStatus',
-    'patientShipDate',
-    'cashOfferStatus',
-    'paymentVerified',
-  ],
-};
-
-// ── Linear CoA_DTP machine ────────────────────────────────────────────────────
-
-const COA_STAGES: { state: string; label: string; fields: (keyof WorkflowData)[] }[] = [
-  { state: 'idle', label: 'Awaiting enrollment', fields: ['enrollmentStatus'] },
-  { state: 'enrolled', label: 'Enrolled — awaiting SMS verification', fields: ['enrollmentStatus', 'enrollmentInviteSent', 'smsVerified'] },
-  { state: 'smsVerified', label: 'SMS verified — awaiting OTP', fields: ['smsVerified', 'otpVerified'] },
-  { state: 'otpVerified', label: 'OTP verified — awaiting consent', fields: ['otpVerified', 'consentStatus'] },
-  { state: 'consentConfirmed', label: 'Consent confirmed — ready for BI', fields: ['consentStatus'] },
-  { state: 'biRunning', label: 'Benefits investigation running', fields: ['biStatus'] },
-  { state: 'biComplete', label: 'BI complete — ready for PA', fields: ['biStatus', 'biResult'] },
-  { state: 'paSubmitted', label: 'PA submitted', fields: ['paStatus', 'paSubmittedAt'] },
-  { state: 'paDenied', label: 'PA denied — cash pay offered', fields: ['paStatus', 'cashOfferStatus'] },
-  { state: 'cashOfferSent', label: 'Cash offer sent', fields: ['cashOfferStatus'] },
-  { state: 'paymentProcessed', label: 'Payment processed — verifying', fields: ['cashOfferStatus', 'paymentVerified'] },
-  { state: 'paymentVerified', label: 'Payment verified — needs address', fields: ['paymentVerified', 'dispatchStatus'] },
-  { state: 'addressSet', label: 'Address set — needs ship date', fields: ['dispatchStatus', 'patientShipDate'] },
-  { state: 'shipDateSelected', label: 'Ship date selected — ready to fill', fields: ['patientShipDate'] },
-  { state: 'rxProcessing', label: 'Pharmacy processing', fields: ['pharmacyStatus'] },
-  { state: 'rxReady', label: 'Ready to ship', fields: ['pharmacyStatus'] },
-  { state: 'rxShipped', label: 'Shipped', fields: ['pharmacyStatus'] },
-  { state: 'rxDelivered', label: 'Delivered', fields: ['pharmacyStatus'] },
-];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatValue(v: unknown): string {
-  if (v === null || v === undefined) return '—';
-  if (typeof v === 'boolean') return v ? '✓ true' : '✗ false';
-  if (typeof v === 'object') return JSON.stringify(v);
-  return String(v);
-}
-
-function fieldLabel(key: string): string {
-  return key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-}
-
-const workflowDataEqual = (a: WorkflowData, b: WorkflowData) => {
-  for (const key in a) {
-    if (a[key as keyof WorkflowData] !== b[key as keyof WorkflowData]) return false;
-  }
-  return true;
-};
+import {
+  type ParallelRegion,
+  PARALLEL_REGION_ORDER,
+  PARALLEL_REGION_LABELS,
+  PARALLEL_REGION_TERMINAL,
+  PARALLEL_REGION_FIELDS,
+  COA_STAGES,
+  formatValue,
+  fieldLabel,
+  workflowDataEqual,
+} from '@/engine/stageInspectorConfig';
 
 export function StageInspector() {
   const actor = useWorkflowActor();
