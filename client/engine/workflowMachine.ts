@@ -257,13 +257,13 @@ export const workflowMachine = createMachine(
   },
   {
     actions: {
-      updateEnrollmentPending: assignWithLogging('ENROLL', ({ context }) => ({
+      updateEnrollmentPending: assignWithLogging('REFER', ({ context }) => ({
         workflowData: {
           ...context.workflowData,
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'REFER', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assignWithLogging('INVITE', ({ context }) => ({
