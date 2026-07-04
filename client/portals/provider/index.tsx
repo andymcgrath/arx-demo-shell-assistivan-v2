@@ -4,7 +4,8 @@ import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bell } from "lucide-react";
-import { SAMPLE_PATIENTS } from "@/store/samplePatients";
+import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
+import type { WorkflowData } from "@/engine/types";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
@@ -504,17 +505,57 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 // The search box filters the visible Patients table directly rather than a
 // dropdown overlay, since the point here is "type until only the patient you
 // want remains, then click their row" — matching the fact that only one row
-// (Keanu Reeves) is actually wired to real patient data via usePatientStore.
+// (Keanu Reeves) is actually wired to real patient data via usePersonaState.
+//
+// Only patients with an active Rx show up by default — Keanu starts with
+// none (CoaRxForm is what creates his eRx), so he's hidden from the default
+// view but still findable by name/DOB search. Once ENROLL fires (eRx sent),
+// his real workflow state — not static demo data like everyone else's row —
+// drives his status, and he moves to the top of the default list.
+
+function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
+  if (workflowData.enrollmentStatus === "none") return null;
+  if (workflowData.paStatus === "denied") {
+    return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "completed", "attention", "disabled"] };
+  }
+  if (workflowData.biStatus === "complete") {
+    return { label: "BI Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+  }
+  return { label: "eRx Sent", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
+}
+
+function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {
+  return (
+    <div className="flex items-center gap-2 px-2 py-1 border border-neutral-300 rounded-full bg-white w-fit">
+      {dots.map((d, i) => (
+        <StatusDot key={i} color={d} />
+      ))}
+    </div>
+  );
+}
 
 function CoaDashboard({ onSelect }: { onSelect: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { workflowData } = usePersonaState("provider");
+  const keanuStatus = deriveKeanuStatus(workflowData);
+
+  // Keanu is the only roster entry backed by real state — everyone else is
+  // static demo data. Overlay his live status/active-Rx flag onto his row.
+  const patients = SAMPLE_PATIENTS.map((p) =>
+    p.id === "keanu-reeves" && keanuStatus
+      ? { ...p, hasActiveRx: true, status: keanuStatus }
+      : p
+  );
 
   const query = searchQuery.trim().toLowerCase();
-  const filteredPatients = query
-    ? SAMPLE_PATIENTS.filter(
-        (p) => p.name.toLowerCase().includes(query) || p.dob.includes(query)
-      )
-    : SAMPLE_PATIENTS;
+  const visiblePatients = query
+    ? patients.filter((p) => p.name.toLowerCase().includes(query) || p.dob.includes(query))
+    : patients.filter((p) => p.hasActiveRx);
+
+  // Once Keanu has an active Rx, he surfaces at the top of the list.
+  const sortedPatients = [...visiblePatients].sort((a, b) =>
+    a.id === "keanu-reeves" ? -1 : b.id === "keanu-reeves" ? 1 : 0
+  );
 
   return (
     <div className="coa-dashboard min-h-screen bg-neutral-100 flex">
@@ -594,10 +635,11 @@ function CoaDashboard({ onSelect }: { onSelect: () => void }) {
                 <tr className="border-b border-neutral-300">
                   <th className="text-left p-4 font-bold text-neutral-600 text-sm">Patient</th>
                   <th className="text-left p-4 font-bold text-neutral-600 text-sm">Medication</th>
+                  <th className="text-left p-4 font-bold text-neutral-600 text-sm">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredPatients.map((patient) => (
+                {sortedPatients.map((patient) => (
                   <tr
                     key={patient.id}
                     onClick={onSelect}
@@ -610,11 +652,21 @@ function CoaDashboard({ onSelect }: { onSelect: () => void }) {
                     <td className="p-4">
                       <p className="text-xs font-bold text-neutral-800">{patient.medication}</p>
                     </td>
+                    <td className="p-4">
+                      {patient.status ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <StatusDots dots={patient.status.dots} />
+                          <StatusBadge status={patient.status.label} color={patient.status.color} />
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-500">No Rx yet</p>
+                      )}
+                    </td>
                   </tr>
                 ))}
-                {filteredPatients.length === 0 && (
+                {sortedPatients.length === 0 && (
                   <tr>
-                    <td colSpan={2} className="p-6 text-center text-sm text-neutral-500">
+                    <td colSpan={3} className="p-6 text-center text-sm text-neutral-500">
                       No patients found for "{searchQuery}"
                     </td>
                   </tr>
