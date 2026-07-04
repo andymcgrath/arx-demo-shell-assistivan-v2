@@ -4,9 +4,10 @@ import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bell } from "lucide-react";
+import { SAMPLE_PATIENTS } from "@/store/samplePatients";
 import "./styles.css";
 
-type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-search" | "coa-rx" | "coa-sent";
+type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 
@@ -495,57 +496,135 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
   );
 }
 
-// ── COA Patient Search ──────────────────────────────────────────────────────
+// ── CoAssist Dashboard (WF3 start/end screen) ────────────────────────────────
+//
+// Replaces the old bare "Search Patient" screen. Same teal dashboard pattern
+// as IAssistDashboard below (that one's WF4-only — left untouched here, this
+// is a separate component so WF4 can't be affected by anything in this file).
+// The search box filters the visible Patients table directly rather than a
+// dropdown overlay, since the point here is "type until only the patient you
+// want remains, then click their row" — matching the fact that only one row
+// (Keanu Reeves) is actually wired to real patient data via usePatientStore.
 
-function CoaPatientSearch({ onSelect }: { onSelect: () => void }) {
+function CoaDashboard({ onSelect }: { onSelect: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const patientName = usePatientStore((s) => s.patientName);
-  const patientDob = usePatientStore((s) => s.patientDob);
-  const drugName = usePatientStore((s) => s.drugName);
+
+  const query = searchQuery.trim().toLowerCase();
+  const filteredPatients = query
+    ? SAMPLE_PATIENTS.filter(
+        (p) => p.name.toLowerCase().includes(query) || p.dob.includes(query)
+      )
+    : SAMPLE_PATIENTS;
 
   return (
-    <main className="provider-content">
-      <p className="pa-eyebrow">COA DIRECT TO PATIENT</p>
-      <h1 className="pa-login-heading">Search Patient</h1>
-      <p className="pa-login-description">
-        Find and select the patient for CoA Direct to Patient enrollment.
-      </p>
+    <div className="coa-dashboard min-h-screen bg-neutral-100 flex">
+      {/* Sidebar */}
+      <div className="hidden sm:flex w-[354px] bg-teal-600 text-white flex-col py-6 px-6">
+        <div className="flex items-center gap-3 mb-12">
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
+            alt="CoAssist Logo"
+            className="h-8 w-auto"
+          />
+        </div>
 
-      <div className="pa-field" style={{ marginBottom: 32 }}>
-        <label className="pa-field__label">Search by name or DOB</label>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pa-field__input"
-          placeholder="Enter patient name or date of birth"
-        />
-        <div className={`pa-field__underline ${searchQuery ? "pa-field__underline--active" : ""}`} />
+        <div className="bg-teal-700 rounded-lg p-5 mb-6">
+          <h3 className="font-bold text-lg mb-2">CoA Direct to Patient</h3>
+          <p className="text-sm font-semibold text-teal-100">
+            Search for a patient below to start or resume their CoAssist enrollment.
+          </p>
+        </div>
+
+        <div className="bg-teal-800 rounded-lg p-6 flex-1">
+          <h3 className="font-bold text-lg text-white mb-6">To-Do List</h3>
+          <p className="text-teal-200 text-sm font-semibold text-center opacity-70">This feature is coming soon.</p>
+        </div>
       </div>
 
-      <div style={{ marginTop: 32 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#6F7276", textTransform: "uppercase", marginBottom: 12 }}>RESULTS</p>
-        <button
-          onClick={onSelect}
-          style={{
-            width: "100%",
-            padding: "16px",
-            backgroundColor: "#F5F5F5",
-            border: "1px solid #E0E0E0",
-            borderRadius: 8,
-            cursor: "pointer",
-            textAlign: "left",
-            transition: "background-color 0.2s"
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#EEEEEE"; }}
-          onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "#F5F5F5"; }}
-        >
-          <p style={{ fontWeight: 600, color: "#1C1C1C", margin: "0 0 8px 0" }}>{patientName}</p>
-          <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>DOB: {patientDob}</p>
-          <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>Medication: {drugName}</p>
-        </button>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
+          <Search size={20} className="text-neutral-600 flex-shrink-0" />
+          <div className="flex-1 flex flex-col">
+            <label htmlFor="coa-search-input" className="sr-only">
+              Search for patient by name or date of birth
+            </label>
+            <input
+              id="coa-search-input"
+              type="text"
+              placeholder="Search for patient by name or date of birth"
+              className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 focus:ring-teal-600 focus:ring-inset rounded px-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search patients"
+            />
+          </div>
+          <button
+            className="text-teal-600 font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded px-2 py-1"
+            aria-label="Add new patient"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Add New Patient</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+          <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-teal-600 font-bold text-xs">
+                SC
+              </div>
+              <span className="text-sm font-normal">Dr. Sarah Chen</span>
+            </div>
+            <button
+              className="relative text-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
+              aria-label="Notifications"
+            >
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full" aria-hidden="true" />
+            </button>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto p-4 sm:p-6 bg-neutral-100">
+          <h2 className="text-xl font-normal text-neutral-800 mb-4">Patients</h2>
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-300">
+                  <th className="text-left p-4 font-bold text-neutral-600 text-sm">Patient</th>
+                  <th className="text-left p-4 font-bold text-neutral-600 text-sm">Medication</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPatients.map((patient) => (
+                  <tr
+                    key={patient.id}
+                    onClick={onSelect}
+                    className="border-b border-neutral-300 last:border-b-0 hover:bg-teal-50 cursor-pointer transition-colors"
+                  >
+                    <td className="p-4">
+                      <p className="font-bold text-sm text-neutral-800">{patient.name}</p>
+                      <p className="text-xs text-neutral-500 mt-1">DOB {patient.dob}</p>
+                    </td>
+                    <td className="p-4">
+                      <p className="text-xs font-bold text-neutral-800">{patient.medication}</p>
+                    </td>
+                  </tr>
+                ))}
+                {filteredPatients.length === 0 && (
+                  <tr>
+                    <td colSpan={2} className="p-6 text-center text-sm text-neutral-500">
+                      No patients found for "{searchQuery}"
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -1172,7 +1251,7 @@ export default function ProviderPortal() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('provider');
   const [step, setStep] = useState<Step>(() =>
-    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-search' : 'email'
+    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-dashboard' : 'email'
   );
   const dispatch = useWorkflowDispatch();
   const flowType = workflowData.flowType;
@@ -1189,10 +1268,13 @@ export default function ProviderPortal() {
     if (storeFlowType !== 'CoA_DTP') {
       return;
     }
-    // COA: advance from coa-sent to email when BI completes
-    // biStatus complete is the reliable signal — paStatus may update too fast
+    // CoA_DTP has no more provider-side steps after sending the eRx — return
+    // to the dashboard (WF3's start/end screen) once BI completes.
+    // biStatus complete is the reliable signal — paStatus may update too fast.
+    // (Previously this set 'email', the Fax flow's login screen — a leftover
+    // that doesn't exist in the CoA_DTP flow at all.)
     if (biStatus === 'complete' && step === 'coa-sent') {
-      setStep('email');
+      setStep('coa-dashboard');
     }
   }, [storeFlowType, biStatus, step]);
 
@@ -1207,7 +1289,7 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-search' : 'email');
+    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'email');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
@@ -1408,9 +1490,9 @@ export default function ProviderPortal() {
 
   return (
     <div className="provider-portal">
-      {step !== "email" && step !== "coa-search" && step !== "coa-rx" && step !== "coa-sent" && <BrandSidebar isBranded={isBranded} />}
-      {step === "coa-search" && (
-        <CoaPatientSearch onSelect={() => setStep("coa-rx")} />
+      {step !== "email" && step !== "coa-dashboard" && step !== "coa-rx" && step !== "coa-sent" && <BrandSidebar isBranded={isBranded} />}
+      {step === "coa-dashboard" && (
+        <CoaDashboard onSelect={() => setStep("coa-rx")} />
       )}
       {step === "coa-rx" && (
         <CoaRxForm onSend={() => {
