@@ -1196,6 +1196,20 @@ export default function ProviderPortal() {
     }
   }, [storeFlowType, biStatus, step]);
 
+  // `step` is local UI state with no memory of the outer workflow reset —
+  // it only ever advances forward via the handlers below, so a reset that
+  // clears workflowData would otherwise leave this portal stuck mid-flow
+  // (e.g. on "pa-questions") with none of its own state to match. Force it
+  // back to this flow's starting step on every reset.
+  const resetNonce = useDemoStore((s) => s.resetNonce);
+  const lastResetNonceRef = useRef(resetNonce);
+
+  useEffect(() => {
+    if (resetNonce === lastResetNonceRef.current) return;
+    lastResetNonceRef.current = resetNonce;
+    setStep(storeFlowType === 'CoA_DTP' ? 'coa-search' : 'email');
+  }, [resetNonce, storeFlowType]);
+
   if (isBranded) {
     return <IAssistDashboard />;
   }
