@@ -3,7 +3,7 @@ import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Bell } from "lucide-react";
+import { Search, Plus, Bell, ChevronDown } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
 import "./styles.css";
@@ -682,100 +682,198 @@ function CoaDashboard({ onSelect }: { onSelect: () => void }) {
 
 // ── COA eRx Form ────────────────────────────────────────────────────────────
 
+// "Most common" pins the top of the list; everything else is alphabetical
+// below a divider. Names reuse the ones already established elsewhere in
+// this demo (CRM/iAssist medication cards) where they exist.
+const MEDICATION_MOST_COMMON = ["Assistivan", "Assistimab", "Ramoni", "Voloxivan"];
+const MEDICATION_OTHERS = ["Aficamten", "Assistivox", "Kelvara", "Nolrivex", "Zylodine"];
+
+function MedicationOption({
+  med,
+  selected,
+  onSelect,
+}: {
+  med: string;
+  selected: boolean;
+  onSelect: (v: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      onClick={() => onSelect(med)}
+      style={{
+        display: "block",
+        width: "100%",
+        textAlign: "left",
+        padding: "10px 16px",
+        fontSize: 14,
+        fontWeight: selected ? 700 : 400,
+        color: selected ? "#007178" : "#1C1C1C",
+        background: selected ? "#EEF9F9" : "transparent",
+        border: "none",
+        cursor: "pointer",
+      }}
+      onMouseOver={(e) => {
+        if (!selected) e.currentTarget.style.background = "#F5F5F5";
+      }}
+      onMouseOut={(e) => {
+        if (!selected) e.currentTarget.style.background = "transparent";
+      }}
+    >
+      {med}
+    </button>
+  );
+}
+
+function MedicationSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+    };
+  }, []);
+
+  const select = (med: string) => {
+    onChange(med);
+    setOpen(false);
+  };
+
+  return (
+    <div className="pa-field" style={{ marginBottom: 24, position: "relative" }}>
+      <label className="pa-field__label">Medication</label>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => {
+          if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = setTimeout(() => setOpen(false), 150);
+        }}
+        className="pa-field__input"
+        style={{
+          textAlign: "left",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          background: "none",
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{value}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <div className="pa-field__underline pa-field__underline--active" />
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Select medication"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 4,
+            background: "#fff",
+            border: "1px solid #E0E0E0",
+            borderRadius: 8,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            maxHeight: 300,
+            overflowY: "auto",
+            zIndex: 20,
+          }}
+        >
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6F7276", textTransform: "uppercase", padding: "10px 16px 4px", margin: 0 }}>
+            Most Common
+          </p>
+          {MEDICATION_MOST_COMMON.map((med) => (
+            <MedicationOption key={med} med={med} selected={med === value} onSelect={select} />
+          ))}
+
+          <hr style={{ border: "none", borderTop: "1px solid #E0E0E0", margin: "8px 0" }} />
+
+          {MEDICATION_OTHERS.map((med) => (
+            <MedicationOption key={med} med={med} selected={med === value} onSelect={select} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CoaRxForm({ onSend }: { onSend: () => void }) {
   const [dosage, setDosage] = useState("0.5 mg");
   const [refills, setRefills] = useState("3");
-  const drugName = usePatientStore((s) => s.drugName);
+  // Local to this screen on purpose — not written back to usePatientStore.
+  // That store is the single active patient identity shared by every flow
+  // (including WF1), so changing it here could bleed a WF3-only choice into
+  // other flows. The confirmation screen still shows the seeded drug name.
+  const [medication, setMedication] = useState(usePatientStore.getState().drugName);
+  const patientName = usePatientStore((s) => s.patientName);
+  const patientDob = usePatientStore((s) => s.patientDob);
   const npi = usePatientStore((s) => s.npi);
   const payer = usePatientStore((s) => s.payer);
 
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">COA Direct to Patient — eRx</p>
-      <PaSummaryTable />
+
+      {/* Compact context line — replaces the old checklist + boxed read-only
+          fields, which just repeated the same handful of facts that never
+          change on this screen. */}
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
+          {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
+        </p>
+        <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>
+          Sarah Chen, MD · NPI {npi} · {payer}
+        </p>
+      </div>
 
       <div className="pa-questions-section">
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Drug Name (read-only)</label>
-          <input
-            type="text"
-            value={drugName}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
+        <MedicationSelect value={medication} onChange={setMedication} />
 
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Prescriber (read-only)</label>
-          <input
-            type="text"
-            value="Sarah Chen, MD"
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
-
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">NPI (read-only)</label>
-          <input
-            type="text"
-            value={npi}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
-
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Payer (read-only)</label>
-          <input
-            type="text"
-            value={payer}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <p className="pa-question__text">Dosage</p>
-          <div className="pa-question__options">
-            {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
-              <label key={d} className="pa-radio-option">
-                <button
-                  type="button"
-                  onClick={() => setDosage(d)}
-                  className="pa-radio-btn"
-                  aria-pressed={dosage === d}
-                >
-                  {dosage === d ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
-                </button>
-                <span className="pa-radio-label">{d}</span>
-              </label>
-            ))}
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 240px", marginBottom: 24 }}>
+            <p className="pa-question__text">Dosage</p>
+            <div className="pa-question__options">
+              {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
+                <label key={d} className="pa-radio-option">
+                  <button
+                    type="button"
+                    onClick={() => setDosage(d)}
+                    className="pa-radio-btn"
+                    aria-pressed={dosage === d}
+                  >
+                    {dosage === d ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+                  </button>
+                  <span className="pa-radio-label">{d}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Number of Refills</label>
-          <select
-            value={refills}
-            onChange={(e) => setRefills(e.target.value)}
-            className="pa-field__input"
-            style={{ cursor: "pointer" }}
-          >
-            <option value="0">0</option>
-            <option value="3">3</option>
-            <option value="6">6</option>
-            <option value="11">11</option>
-          </select>
-          <div className="pa-field__underline" />
+          <div style={{ flex: "1 1 160px", marginBottom: 24 }}>
+            <label className="pa-field__label">Number of Refills</label>
+            <select
+              value={refills}
+              onChange={(e) => setRefills(e.target.value)}
+              className="pa-field__input"
+              style={{ cursor: "pointer" }}
+            >
+              <option value="0">0</option>
+              <option value="3">3</option>
+              <option value="6">6</option>
+              <option value="11">11</option>
+            </select>
+            <div className="pa-field__underline" />
+          </div>
         </div>
       </div>
 
