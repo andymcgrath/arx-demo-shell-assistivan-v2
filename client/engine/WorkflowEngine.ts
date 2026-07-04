@@ -189,8 +189,18 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/';
 
   // ── Delivery flow ────────────────────────────────────────────────────
+  // "Schedule delivery now" only while CRM hasn't assigned a dispatch
+  // pharmacy yet. dispatchStatus moves to 'pending_selection' the instant
+  // PA is approved (before anyone's chosen a pharmacy), so that still counts
+  // as "not yet dispatched" here. Once CRM picks a pharmacy (dispatchStatus
+  // 'selected'/'dispatched'), the patient's job here is done — move to
+  // tracking and stay there, even though pharmacyStatus itself doesn't flip
+  // to 'processing' until FILL_RX fires later. OrderTracker already renders
+  // correctly with pharmacyStatus 'none' (step 1 shows "active" not "done").
   if (workflowData.paStatus === 'approved' &&
-      workflowData.pharmacyStatus === 'none')
+      workflowData.pharmacyStatus === 'none' &&
+      (workflowData.dispatchStatus === 'none' ||
+       workflowData.dispatchStatus === 'pending_selection'))
     return '/pa-approved';
 
   // ── Order tracking ───────────────────────────────────────────────────
@@ -201,7 +211,9 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/order-shipped';
 
   if (workflowData.pharmacyStatus === 'processing' ||
-      workflowData.pharmacyStatus === 'ready')
+      workflowData.pharmacyStatus === 'ready' ||
+      workflowData.dispatchStatus === 'selected' ||
+      workflowData.dispatchStatus === 'dispatched')
     return '/order-tracker';
 
   return '/lock-screen';
