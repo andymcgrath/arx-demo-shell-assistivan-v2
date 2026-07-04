@@ -8,8 +8,8 @@ let lastObservedState: WorkflowData | null = null;
 export function observeWorkflowChanges(actor: ActorRefFrom<typeof workflowMachine>) {
   console.log('[WF Observer] Starting observation');
 
-  // Subscribe to ALL state changes from the actor
-  const subscription = actor.subscribe((snapshot) => {
+  // Create the snapshot handler function
+  const handleSnapshot = (snapshot: any) => {
     const currentState = snapshot.context.workflowData;
 
     console.log('[WF Observer] Snapshot received:', currentState);
@@ -47,7 +47,15 @@ export function observeWorkflowChanges(actor: ActorRefFrom<typeof workflowMachin
       console.log('[WF] State changed:', changes);
       lastObservedState = { ...currentState };
     }
-  });
+  };
+
+  // Manually call with current snapshot to set baseline
+  const currentSnapshot = actor.getSnapshot();
+  console.log('[WF Observer] Current snapshot:', currentSnapshot.context.workflowData);
+  handleSnapshot(currentSnapshot);
+
+  // Subscribe to future changes
+  const subscription = actor.subscribe(handleSnapshot);
 
   console.log('[WF Observer] Subscription created:', typeof subscription);
 
