@@ -6,6 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bell, ChevronDown } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
+// Cross-portal import — CoAssist's logo/brand config lives with the patient
+// portal (client/portals/patient/config/branding.ts). @patient/* is Vite's
+// explicit cross-portal alias (see vite.config.ts), separate from the
+// portal-local @/ alias, so this reaches the patient portal's file without
+// touching anything in WF1's code path.
+import ManufacturerLogo from "@patient/components/brand/ManufacturerLogo";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
@@ -744,7 +750,7 @@ function MedicationSelect({ value, onChange }: { value: string; onChange: (v: st
 
   return (
     <div className="pa-field" style={{ marginBottom: 24, position: "relative" }}>
-      <label className="pa-field__label">Medication</label>
+      <label className="pa-field__label">Medication Order</label>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -822,7 +828,10 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
 
   return (
     <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">COA Direct to Patient — eRx</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <ManufacturerLogo variant="colors" className="h-7 w-auto" />
+        <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — ePrescription</p>
+      </div>
 
       {/* Compact context line — replaces the old checklist + boxed read-only
           fields, which just repeated the same handful of facts that never
@@ -832,7 +841,10 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
           {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
         </p>
         <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>
-          Sarah Chen, MD · NPI {npi} · {payer}
+          Provider: Sarah Chen, MD · NPI {npi}
+        </p>
+        <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>
+          Insurance: {payer}
         </p>
       </div>
 
@@ -886,7 +898,7 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
 
 // ── COA Sent Confirmation ────────────────────────────────────────────────────
 
-function CoaSentConfirmation() {
+function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () => void }) {
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
 
@@ -909,6 +921,12 @@ function CoaSentConfirmation() {
           <p style={{ fontSize: 12, color: "#6F7276", margin: "0 0 8px 0" }}>Patient: <strong>{patientName}</strong></p>
           <p style={{ fontSize: 12, color: "#6F7276", margin: "0 0 8px 0" }}>Medication: <strong>{drugName}</strong></p>
         </div>
+      </div>
+
+      <div className="pa-action-row">
+        <button onClick={onReturnToDashboard} className="pa-btn-primary">
+          Return to Dashboard
+        </button>
       </div>
     </main>
   );
@@ -1651,7 +1669,7 @@ export default function ProviderPortal() {
         }} />
       )}
       {step === "coa-sent" && (
-        <CoaSentConfirmation />
+        <CoaSentConfirmation onReturnToDashboard={() => setStep("coa-dashboard")} />
       )}
       {step === "email" && (
         <EmailStep onClickLink={() => setStep("login")} />
