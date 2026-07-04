@@ -3,10 +3,10 @@ import type { MachineContext, DemoEvent, WorkflowData } from './types';
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: 'Fax_QS_PA_Approved',
-  enrollmentStatus: "invited",
+  enrollmentStatus: "none",
   smsVerified: false,
   otpVerified: false,
-  enrollmentInviteSent: true,
+  enrollmentInviteSent: false,
   enrollmentAcknowledged: false,
   welcomeDismissed: false,
   consentStatus: "pending",
@@ -105,7 +105,7 @@ export const workflowMachine = createMachine(
         states: {
           idle: {
             on: {
-              REFER: {
+              ENROLL: {
                 target: 'pending',
                 actions: 'updateEnrollmentPending',
               },
@@ -243,7 +243,7 @@ export const workflowMachine = createMachine(
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'REFER', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assign(({ context }) => ({
