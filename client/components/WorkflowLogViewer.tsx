@@ -13,7 +13,15 @@ export function WorkflowLogViewer() {
   };
 
   return (
-    <div className="fixed bottom-0 right-0 z-40 max-w-lg bg-slate-950 rounded-tl-lg shadow-2xl border-l border-t border-slate-700">
+    <div
+      className="fixed bottom-0 right-0 z-40 max-w-lg rounded-tl-lg shadow-2xl"
+      style={{
+        backgroundColor: '#020617',
+        border: '1px solid #334155',
+        borderRight: 'none',
+        borderBottom: 'none',
+      }}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 text-sm font-medium rounded-tl transition-colors flex items-center justify-between"
@@ -26,9 +34,22 @@ export function WorkflowLogViewer() {
       </button>
 
       {isOpen && (
-        <div className="bg-slate-950 border-t border-slate-700 max-h-96 overflow-y-auto text-xs text-slate-100 font-mono">
-          <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-4 py-2 flex items-center justify-between">
-            <span className="text-slate-200 font-semibold">State Changes</span>
+        <div
+          className="border-t max-h-96 overflow-y-auto text-xs font-mono"
+          style={{
+            backgroundColor: '#020617',
+            color: '#f1f5f9',
+            borderColor: '#475569',
+          }}
+        >
+          <div
+            className="sticky top-0 px-4 py-2 flex items-center justify-between border-b"
+            style={{
+              backgroundColor: '#0f172a',
+              borderColor: '#334155',
+            }}
+          >
+            <span className="font-semibold" style={{ color: '#cbd5e1' }}>State Changes</span>
             <button
               onClick={() => clearLogs()}
               className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors"
