@@ -9,7 +9,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { X, ChevronDown } from "lucide-react";
 import { useSwitchWorkflow, useActiveWorkflowId, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useDemoStore } from "@/store/demoStore";
@@ -23,9 +22,9 @@ export interface ConfiguratorProps {
   onPortalVisibilityChange: (portals: PortalId[]) => void;
   isOpen: boolean;
   onClose: () => void;
-  /** Called on "Reset Everything" so the shell can also reset layout/panels
-   *  back to a single-panel HUB view — navigate() alone won't touch those,
-   *  since they're independent local state in 2up/3up layouts. */
+  /** Called on "Reset Everything". The shell owns navigation and layout/panel
+   *  state, so it also owns returning to the active flow's canonical opening
+   *  screen (FLOW_START_PORTAL) — this component just triggers it. */
   onReset?: () => void;
 }
 
@@ -43,7 +42,6 @@ export default function DemoConfigurator({
   const activeWorkflowId = useActiveWorkflowId();
   const dispatch = useWorkflowDispatch();
   const resetDemo = useDemoStore((s) => s.resetDemo);
-  const navigate = useNavigate();
 
   const [workflows] = useState(workflowRegistry.listWorkflows());
   const [behaviorFlags, setBehaviorFlags] = useState(() => {
@@ -85,10 +83,9 @@ export default function DemoConfigurator({
       undoSupport: true,
       showProgress: true,
     });
-    // Reset means "start over" — return to a single-panel HUB view,
-    // regardless of which portal or layout was active.
+    // Reset means "start over" — the shell handles returning to the active
+    // flow's canonical opening screen (navigation + layout/panels).
     onReset?.();
-    navigate("/hub");
   };
 
   if (!isOpen) return null;

@@ -11,7 +11,7 @@ import { Component, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import DemoShell from "@/shell/DemoShell";
+import DemoShell, { FLOW_START_PORTAL, PORTAL_SLUG } from "@/shell/DemoShell";
 import { useDemoStore } from "@/store/demoStore";
 import WorkflowProvider from './engine/WorkflowProvider';
 import { WorkflowProvider as XStateProvider } from '@/providers/WorkflowProvider';
@@ -28,7 +28,9 @@ function IAssistRedirect() {
 
   useEffect(() => {
     changeFlow("iAssist_PA_Approved");
-    navigate("/provider", { replace: true });
+    // Use the shared start-portal map so this deep link always agrees with
+    // the flow dropdown and Reset — see FLOW_START_PORTAL in DemoShell.tsx.
+    navigate(`/${PORTAL_SLUG[FLOW_START_PORTAL.iAssist_PA_Approved]}`, { replace: true });
   }, [navigate, changeFlow]);
 
   return null;

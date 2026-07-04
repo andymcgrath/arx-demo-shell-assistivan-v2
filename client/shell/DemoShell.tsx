@@ -41,7 +41,7 @@ import IAssistPortal from "@/portals/iassist/index";
 
 export type PortalId = "crm" | "patient" | "analytics" | "field" | "provider" | "iassist";
 
-const PORTAL_SLUG: Record<PortalId, string> = {
+export const PORTAL_SLUG: Record<PortalId, string> = {
   crm: "hub",
   patient: "patient",
   analytics: "analytics",
@@ -57,6 +57,23 @@ const SLUG_TO_PORTAL: Record<string, PortalId> = {
   field: "field",
   provider: "provider",
   iassist: "iassist",
+};
+
+/**
+ * Canonical opening screen per workflow — single source of truth.
+ * Used both when switching to a flow (dropdown) and when resetting while on
+ * that flow, so the two always agree. Previously this was two independent,
+ * inconsistent one-offs: a CoA_DTP-only check in the flow dropdown's
+ * onChange, and a hardcoded "/provider" redirect for iAssist in App.tsx's
+ * IAssistRedirect (which only fired via the /iassist deep link, not the
+ * dropdown). Update this map — not scattered `if (flowType === ...)`
+ * checks — if a workflow's starting portal ever needs to change.
+ */
+export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
+  Fax_QS_PA_Approved: "crm",
+  Fax_PAP_Audit: "crm",
+  CoA_DTP: "provider",
+  iAssist_PA_Approved: "provider",
 };
 
 function getProviderPortalLabel(flowType: string): string {
@@ -639,13 +656,11 @@ export default function DemoShell() {
                   switchFlow(newFlow);
                   // 2. Switch the XState actor, saving its snapshot for the old workflow
                   switchWorkflow(newFlow);
-                  // 3. Auto-navigate to provider portal for COA flow
-                  if (newFlow === "CoA_DTP") {
-                    const providerUrl = getPortals(newFlow).find(p => p.id === "provider")?.id;
-                    if (providerUrl) {
-                      navigate(`/${providerUrl}`);
-                    }
-                  }
+                  // 3. Navigate to this flow's canonical opening screen
+                  setLayout("1up");
+                  const startPortal = FLOW_START_PORTAL[newFlow];
+                  setPanels([{ portal: startPortal }]);
+                  navigate(`/${PORTAL_SLUG[startPortal]}`);
                 }}
                 className="appearance-none text-[11px] bg-white/10 border border-white/20 text-white rounded px-2 py-1.5 pr-6 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-400"
               >
@@ -687,14 +702,15 @@ export default function DemoShell() {
                       sessionStorage.removeItem('arx-patient-identity');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
-                      // Reset means "start over" — return to a single-panel
-                      // HUB view. In 2up/3up layouts "panels" is independent
-                      // local state that navigate() alone doesn't touch, so
-                      // the shell could still be showing another portal even
-                      // though the URL moved to /hub. Reset both explicitly.
+                      // Reset means "start over" — return to this flow's
+                      // canonical opening screen (FLOW_START_PORTAL), as a
+                      // single panel. In 2up/3up layouts "panels" is
+                      // independent local state that navigate() alone
+                      // doesn't touch, so reset both explicitly.
                       setLayout("1up");
-                      setPanels([{ portal: "crm" }]);
-                      navigate(`/${PORTAL_SLUG.crm}`);
+                      const startPortal = FLOW_START_PORTAL[flowType];
+                      setPanels([{ portal: startPortal }]);
+                      navigate(`/${PORTAL_SLUG[startPortal]}`);
                     }}
                     className="block w-full text-left px-4 py-2.5 text-[12px] font-medium text-white hover:bg-indigo-500/30 border-b border-indigo-400/50 transition-colors"
                   >
@@ -799,7 +815,9 @@ export default function DemoShell() {
         onClose={() => setShowConfigurator(false)}
         onReset={() => {
           setLayout("1up");
-          setPanels([{ portal: "crm" }]);
+          const startPortal = FLOW_START_PORTAL[flowType];
+          setPanels([{ portal: startPortal }]);
+          navigate(`/${PORTAL_SLUG[startPortal]}`);
         }}
       />
     </div>
