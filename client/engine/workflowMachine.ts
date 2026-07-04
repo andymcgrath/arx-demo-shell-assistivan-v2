@@ -125,7 +125,7 @@ export const workflowMachine = createMachine(
         states: {
           idle: {
             on: {
-              ENROLL: {
+              REFER: {
                 target: 'pending',
                 actions: 'updateEnrollmentPending',
               },
