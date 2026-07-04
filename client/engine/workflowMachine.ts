@@ -3,27 +3,27 @@ import type { MachineContext, DemoEvent, WorkflowData } from './types';
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: 'Fax_QS_PA_Approved',
-  enrollmentStatus: 'none',
+  enrollmentStatus: "invited",
   smsVerified: false,
   otpVerified: false,
-  enrollmentInviteSent: false,
+  enrollmentInviteSent: true,
   enrollmentAcknowledged: false,
   welcomeDismissed: false,
-  consentStatus: 'pending',
-  paStatus: 'none',
-  cashOfferStatus: 'none',
-  paymentVerified: false,
-  patientShipDate: null,
-  biStatus: 'none',
+  consentStatus: "pending",
+  paStatus: "none",
+  biStatus: "none",
   biResult: null,
-  pharmacyStatus: 'none',
-  dispatchStatus: 'none',
-  qsStatus: 'none',
-  papStatus: 'none',
+  pharmacyStatus: "none",
+  dispatchStatus: "none",
+  qsStatus: "none",
+  papStatus: "none",
   selectedPharmacy: null,
   providerPACompleted: false,
   paSubmittedAt: null,
   paApprovedAt: null,
+  cashOfferStatus: "none",
+  paymentVerified: false,
+  patientShipDate: null,
 };
 
 const initialContext: MachineContext = {
@@ -51,6 +51,7 @@ const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
   const updated = [...snapshots, context];
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
+
 
 export const workflowMachine = createMachine(
   {
@@ -104,7 +105,7 @@ export const workflowMachine = createMachine(
         states: {
           idle: {
             on: {
-              ENROLL: {
+              REFER: {
                 target: 'pending',
                 actions: 'updateEnrollmentPending',
               },
@@ -242,7 +243,7 @@ export const workflowMachine = createMachine(
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'REFER', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assign(({ context }) => ({
