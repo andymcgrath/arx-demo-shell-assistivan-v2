@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { WorkflowData } from './types';
 
 interface LogEntry {
@@ -16,18 +17,26 @@ interface WorkflowLogStore {
   getLogs: () => LogEntry[];
 }
 
-export const useWorkflowLogStore = create<WorkflowLogStore>((set, get) => ({
-  logs: [],
-  addLog: (entry) => {
-    const newEntry: LogEntry = {
-      ...entry,
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    // Keep only the last 50 logs in memory
-    set((state) => ({
-      logs: [...state.logs, newEntry].slice(-50),
-    }));
-  },
-  clear: () => set({ logs: [] }),
-  getLogs: () => get().logs,
-}));
+export const useWorkflowLogStore = create<WorkflowLogStore>()(
+  persist(
+    (set, get) => ({
+      logs: [],
+      addLog: (entry) => {
+        const newEntry: LogEntry = {
+          ...entry,
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        // Keep only the last 50 logs in memory
+        set((state) => ({
+          logs: [...state.logs, newEntry].slice(-50),
+        }));
+      },
+      clear: () => set({ logs: [] }),
+      getLogs: () => get().logs,
+    }),
+    {
+      name: 'arx-workflow-logs',
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
