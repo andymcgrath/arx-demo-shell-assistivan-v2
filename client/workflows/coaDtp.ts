@@ -25,6 +25,8 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paymentVerified: false,
   patientShipDate: null,
   pricingOption: null,
+  paApprovedSmsVerified: false,
+  paApprovedOtpVerified: false,
 }
 
 const initialContext: MachineContext = {
@@ -46,6 +48,8 @@ export const coaDtpMachine = setup({
       | { type: "SUBMIT_PA" }
       | { type: "APPROVE_PA" }
       | { type: "DENY_PA" }
+      | { type: "VERIFY_PA_APPROVED_SMS" }
+      | { type: "VERIFY_PA_APPROVED_OTP" }
       | { type: "SELECT_PRICING_OPTION"; option: "retail" | "mail_order" }
       | { type: "SEND_CASH_OFFER" }
       | { type: "PATIENT_PAYS" }
@@ -144,10 +148,28 @@ export const coaDtpMachine = setup({
         },
       },
     },
-    // ── Approved path: patient picks Retail or Mail Order pricing, then
+    // ── Approved path: mirrors the initial enrollment SMS/OTP beats — patient
+    // gets a new SMS ("PA approved, time to schedule"), taps through, and
+    // re-verifies OTP before reviewing Retail/Mail Order pricing. Then
     // rejoins the same address/ship-date/fill chain the denied+cash-pay
     // path uses below (see pricingSelected → addressSet).
     paApproved: {
+      on: {
+        VERIFY_PA_APPROVED_SMS: {
+          target: "paApprovedSmsVerified",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paApprovedSmsVerified: true }) }),
+        },
+      },
+    },
+    paApprovedSmsVerified: {
+      on: {
+        VERIFY_PA_APPROVED_OTP: {
+          target: "paApprovedOtpVerified",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paApprovedOtpVerified: true }) }),
+        },
+      },
+    },
+    paApprovedOtpVerified: {
       on: {
         SELECT_PRICING_OPTION: {
           target: "pricingSelected",

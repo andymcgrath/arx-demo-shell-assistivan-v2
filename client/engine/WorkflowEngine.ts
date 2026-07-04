@@ -106,21 +106,35 @@ export function derivePatientRoute(state: MachineContext): string {
     if (workflowData.otpVerified && workflowData.consentStatus === 'pending')
       return '/confirm-details';
 
-    // Consent confirmed — waiting for BI/PA to process
+    // Consent confirmed — waiting for BI to finish
     if (workflowData.consentStatus === 'confirmed' &&
         workflowData.biStatus !== 'complete')
       return '/enrollment-complete';
 
-    // BI complete, PA submitted — still waiting
+    // BI complete, but PA hasn't been submitted yet ("PA Required" — the
+    // provider hasn't started it from CoaDashboard) or has been submitted
+    // and is awaiting a decision — still waiting either way.
     if (workflowData.consentStatus === 'confirmed' &&
         workflowData.biStatus === 'complete' &&
-        workflowData.paStatus === 'submitted')
+        (workflowData.paStatus === 'none' || workflowData.paStatus === 'submitted'))
       return '/enrollment-complete';
 
-    // PA approved — schedule delivery, then pick Retail/Mail Order pricing
+    // PA approved — a new SMS/OTP re-verification beat (mirrors the initial
+    // enrollment SMS/OTP), then Retail/Mail Order pricing. This replaces the
+    // old single /pa-approved screen for CoA_DTP.
     if (workflowData.paStatus === 'approved' &&
+        !workflowData.paApprovedSmsVerified)
+      return '/pa-approved-sms';
+
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.paApprovedSmsVerified &&
+        !workflowData.paApprovedOtpVerified)
+      return '/pa-approved-otp';
+
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.paApprovedOtpVerified &&
         workflowData.pricingOption === null)
-      return '/pa-approved';
+      return '/benefit-pricing';
 
     // Pricing chosen — needs address (converges back with the denied+cash-pay
     // chain below once the address is set)

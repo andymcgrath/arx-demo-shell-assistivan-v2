@@ -531,16 +531,22 @@ function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
     return { label: "Dispensing", color: "warning", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
   }
   if (workflowData.paStatus === "approved") {
-    return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "pending", "disabled", "disabled"] };
+    return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
   }
   // Denial → cash-pay is kept in the state machine for demo flexibility, but
   // CoA_DTP's live flow always approves (see coaDtp.ts / CRM Index.tsx), so
   // this is unreachable today.
   if (workflowData.paStatus === "denied") {
-    return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "completed", "attention", "disabled"] };
+    return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] };
   }
-  if (workflowData.paStatus === "submitted" || workflowData.biStatus === "complete") {
-    return { label: "PA Pending", color: "warning", dots: ["completed", "completed", "pending", "disabled", "disabled", "disabled"] };
+  if (workflowData.paStatus === "submitted") {
+    return { label: "PA Submitted", color: "warning", dots: ["completed", "completed", "completed", "pending", "disabled", "disabled"] };
+  }
+  // BI came back needing a PA, but the provider hasn't started it yet —
+  // clicking this row in CoaDashboard takes the HCP straight into PA
+  // questions (no email/login hop, unlike WF1).
+  if (workflowData.biStatus === "complete") {
+    return { label: "PA Required", color: "warning", dots: ["completed", "completed", "pending", "disabled", "disabled", "disabled"] };
   }
   return { label: "Enrolled", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
 }
@@ -555,7 +561,7 @@ function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {
   );
 }
 
-function CoaDashboard({ onSelect }: { onSelect: () => void }) {
+function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const { workflowData } = usePersonaState("provider");
   const keanuStatus = deriveKeanuStatus(workflowData);
@@ -663,7 +669,7 @@ function CoaDashboard({ onSelect }: { onSelect: () => void }) {
                 {sortedPatients.map((patient) => (
                   <tr
                     key={patient.id}
-                    onClick={onSelect}
+                    onClick={() => onSelect(patient.id)}
                     className="border-b border-neutral-300 last:border-b-0 hover:bg-teal-50 cursor-pointer transition-colors"
                   >
                     <td className="p-4">
@@ -937,13 +943,11 @@ function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () 
         </div>
       </div>
 
-      <div className="pa-action-row" style={{ marginBottom: 32 }}>
+      <div className="pa-action-row">
         <button onClick={onReturnToDashboard} className="pa-btn-primary">
           Return to Dashboard
         </button>
       </div>
-
-      <PaSummaryTable isSubmitted={true} />
     </main>
   );
 }
@@ -1676,7 +1680,22 @@ export default function ProviderPortal() {
     <div className="provider-portal">
       {step !== "email" && step !== "coa-dashboard" && step !== "coa-rx" && step !== "coa-sent" && <BrandSidebar isBranded={isBranded} />}
       {step === "coa-dashboard" && (
-        <CoaDashboard onSelect={() => setStep("coa-rx")} />
+        <CoaDashboard onSelect={(patientId) => {
+          if (patientId !== "keanu-reeves") {
+            setStep("coa-rx");
+            return;
+          }
+          if (workflowData.enrollmentStatus === "none") {
+            // No eRx yet — start one.
+            setStep("coa-rx");
+          } else if (workflowData.biStatus === "complete" && workflowData.paStatus === "none") {
+            // "PA Required" — HCP starts PA submission straight from the
+            // dashboard (no email/login hop, unlike WF1).
+            setStep("pa-questions");
+          }
+          // Otherwise (PA submitted/approved, dispensing, delivered) —
+          // nothing to do yet, stay on the dashboard.
+        }} />
       )}
       {step === "coa-rx" && (
         <CoaRxForm onSend={() => {
@@ -1694,11 +1713,16 @@ export default function ProviderPortal() {
         <LoginStep onSubmit={() => setStep("pa-questions")} />
       )}
       {step === "pa-questions" && (
-        <PaQuestionsStep onBack={() => setStep("login")} onCancel={() => setStep("login")} onNext={() => setStep("pa-submitted")} />
+        <PaQuestionsStep
+          onBack={() => setStep(isCoA ? "coa-dashboard" : "login")}
+          onCancel={() => setStep(isCoA ? "coa-dashboard" : "login")}
+          onNext={() => setStep("pa-submitted")}
+        />
       )}
       {step === "pa-submitted" && <PaSubmittedStep onDone={() => {
         if (isCoA) {
-          dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' });
+          // Back to the dashboard — Keanu's row now shows "PA Submitted".
+          setStep("coa-dashboard");
         }
       }} />}
       {step === "income-verify" && (

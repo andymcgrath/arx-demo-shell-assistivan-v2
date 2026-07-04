@@ -579,7 +579,10 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, biStatus, dispatch, isPapFlow]);
 
-  // COA BI auto-complete: RUN_BI → COMPLETE_BI → SUBMIT_PA sequence
+  // COA BI auto-complete: RUN_BI → COMPLETE_BI. PA submission is no longer
+  // automatic here — BI completing surfaces "PA Required" on the provider's
+  // CoaDashboard, and the provider manually starts PA from there (mirrors
+  // WF1's questions flow, minus the email/login hop).
   useEffect(() => {
     if (!isCoaFlow) return;
     if (activeTopTab !== 'BI-14273') return;
@@ -593,14 +596,9 @@ export default function Index() {
         dispatch('COMPLETE_BI', { portal: 'crm' });
       }, 3000) : null;
 
-      const submitPaTimer = biStatus === 'running' ? setTimeout(() => {
-        dispatch('SUBMIT_PA', { portal: 'crm' });
-      }, 5000) : null;
-
       return () => {
         if (runTimer) clearTimeout(runTimer);
         if (completeTimer) clearTimeout(completeTimer);
-        if (submitPaTimer) clearTimeout(submitPaTimer);
       };
     }
   }, [activeTopTab, biStatus, isCoaFlow, dispatch]);
