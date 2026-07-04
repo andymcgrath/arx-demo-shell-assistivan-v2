@@ -1,6 +1,5 @@
 import { createMachine, assign } from 'xstate';
 import type { MachineContext, DemoEvent, WorkflowData } from './types';
-import { logWorkflowStateChange, logWorkflowEvent, logWorkflowInit } from './workflowLogger';
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: 'Fax_QS_PA_Approved',
@@ -53,31 +52,6 @@ const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
 
-// Helper to wrap assign actions with logging
-const assignWithLogging = (
-  eventName: string,
-  assignFn: (input: any) => any
-) => {
-  return assign(({ context, event }: any) => {
-    console.log(`[WF Action] ${eventName} triggered`);
-    const newContext = assignFn({ context, event });
-    const flowType = context.workflowData.flowType;
-
-    try {
-      logWorkflowStateChange(
-        eventName,
-        context.workflowData,
-        newContext.workflowData,
-        flowType
-      );
-      console.log(`[WF Log] ${eventName} logged successfully`);
-    } catch (err) {
-      console.error(`[WF] Error logging ${eventName}:`, err);
-    }
-
-    return newContext;
-  });
-};
 
 export const workflowMachine = createMachine(
   {
@@ -263,7 +237,7 @@ export const workflowMachine = createMachine(
   },
   {
     actions: {
-      updateEnrollmentPending: assignWithLogging('REFER', ({ context }) => ({
+      updateEnrollmentPending: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           enrollmentStatus: 'enrolled',
@@ -272,7 +246,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'REFER', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateEnrollmentInvited: assignWithLogging('INVITE', ({ context }) => ({
+      updateEnrollmentInvited: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           enrollmentStatus: 'enrolled',
@@ -281,7 +255,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'INVITE', 'crm', 2)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateSMSVerified: assignWithLogging('VERIFY_SMS', ({ context }) => ({
+      updateSMSVerified: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           smsVerified: true,
@@ -289,7 +263,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateOTPVerified: assignWithLogging('VERIFY_OTP', ({ context }) => ({
+      updateOTPVerified: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           otpVerified: true,
@@ -297,7 +271,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateConsentConfirmed: assignWithLogging('CONFIRM_CONSENT', ({ context }) => ({
+      updateConsentConfirmed: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           consentStatus: 'confirmed',
@@ -307,7 +281,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateBISubmitted: assignWithLogging('RUN_BI', ({ context }) => ({
+      updateBISubmitted: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           biStatus: 'running',
@@ -315,7 +289,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateBIComplete: assignWithLogging('COMPLETE_BI', ({ context, event }: any) => ({
+      updateBIComplete: assign(({ context, event }: any) => ({
         workflowData: {
           ...context.workflowData,
           biStatus: 'complete',
@@ -324,7 +298,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePASubmitted: assignWithLogging('SUBMIT_PA', ({ context }) => ({
+      updatePASubmitted: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           paStatus: 'submitted',
@@ -333,7 +307,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePAApproved: assignWithLogging('APPROVE_PA', ({ context }) => ({
+      updatePAApproved: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           paStatus: 'approved',
@@ -343,7 +317,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'APPROVE_PA', 'provider', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePharmacyReady: assignWithLogging('READY_RX', ({ context }) => ({
+      updatePharmacyReady: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           pharmacyStatus: 'ready',
@@ -351,7 +325,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'READY_RX', 'field', 10)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePharmacyProcessing: assignWithLogging('FILL_RX', ({ context }) => ({
+      updatePharmacyProcessing: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           pharmacyStatus: 'processing',
@@ -360,7 +334,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'FILL_RX', 'field', 10)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateSelectPharmacy: assignWithLogging('SELECT_PHARMACY', ({ context, event }: any) => ({
+      updateSelectPharmacy: assign(({ context, event }: any) => ({
         workflowData: {
           ...context.workflowData,
           selectedPharmacy: event.pharmacy ?? null,
@@ -369,7 +343,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'SELECT_PHARMACY', 'crm', 5)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateDenyPA: assignWithLogging('DENY_PA', ({ context }) => ({
+      updateDenyPA: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           paStatus: 'denied',
@@ -377,7 +351,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'DENY_PA', 'provider', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePharmacyShipped: assignWithLogging('SHIP_RX', ({ context }) => ({
+      updatePharmacyShipped: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           pharmacyStatus: 'shipped',
@@ -385,7 +359,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'SHIP_RX', 'field', 11)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePharmacyDelivered: assignWithLogging('DELIVER_RX', ({ context }) => ({
+      updatePharmacyDelivered: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           pharmacyStatus: 'delivered',
@@ -393,7 +367,7 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'DELIVER_RX', 'field', 12)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateCompleteProviderPA: assignWithLogging('COMPLETE_PROVIDER_PA', ({ context }) => ({
+      updateCompleteProviderPA: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           providerPACompleted: true,
@@ -402,19 +376,9 @@ export const workflowMachine = createMachine(
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       restoreLastSnapshot: assign(({ context }) => {
-        const beforeData = context.workflowData;
-        if (context._snapshots.length === 0) {
-          console.log('%c[WF] UNDO (no snapshots available)', 'color: #ff6b6b; font-weight: bold');
-          return context;
-        }
+        if (context._snapshots.length === 0) return context;
         const lastSnapshot = context._snapshots[context._snapshots.length - 1];
         const remainingSnapshots = context._snapshots.slice(0, -1);
-        logWorkflowStateChange(
-          'UNDO',
-          beforeData,
-          lastSnapshot.workflowData,
-          context.workflowData.flowType
-        );
         return {
           ...lastSnapshot,
           _snapshots: remainingSnapshots,
