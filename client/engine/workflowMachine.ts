@@ -21,6 +21,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   providerPACompleted: false,
   paSubmittedAt: null,
   paApprovedAt: null,
+  pricingOption: null,
   cashOfferStatus: "none",
   paymentVerified: false,
   patientShipDate: null,

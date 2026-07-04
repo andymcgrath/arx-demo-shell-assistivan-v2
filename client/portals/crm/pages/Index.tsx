@@ -617,17 +617,9 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, paStatus, dispatch]);
 
-  useEffect(() => {
-    if (!isCoaFlow) return;
-    if (activeTopTab !== 'PA-14274') return;
-    if (paStatus !== 'submitted') return;
-
-    const denyTimer = setTimeout(() => {
-      dispatch('DENY_PA', { portal: 'crm' });
-    }, 3000);
-
-    return () => clearTimeout(denyTimer);
-  }, [activeTopTab, paStatus, isCoaFlow, dispatch]);
+  // CoA_DTP's PA always approves (CoAssist is an insurance-covered flow, not
+  // a denial → cash-pay one) — the generic auto-approve effect above already
+  // covers this since it isn't gated to a specific flowType.
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.

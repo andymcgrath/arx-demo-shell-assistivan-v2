@@ -30,6 +30,7 @@ import { useDemoStore } from "@/store/demoStore";
 
 const DELIVERY_FLOW_PATHS = [
   '/phone-verification',
+  '/benefit-pricing',
   '/delivery-address',
   '/delivery-date',
   '/delivery-payment',
@@ -53,6 +54,7 @@ import EnrollmentComplete from "./pages/EnrollmentComplete";
 import PAStatus from "./pages/PAStatus";
 import PADenied from "./pages/PADenied";
 import PAApproved from "./pages/PAApproved";
+import BenefitPricing from "./pages/BenefitPricing";
 import CopayEnroll from "./pages/CopayEnroll";
 import DeliveryAddress from "./pages/DeliveryAddress";
 import DeliveryDate from "./pages/DeliveryDate";
@@ -135,6 +137,7 @@ function PatientRoutes() {
           <Route path="/pa-status"             element={<PAStatus />} />
           <Route path="/pa-denied"             element={<PADenied />} />
           <Route path="/pa-approved"           element={<PAApproved />} />
+          <Route path="/benefit-pricing"       element={<BenefitPricing />} />
           <Route path="/copay-enroll"          element={<CopayEnroll />} />
           <Route path="/delivery-address"      element={<DeliveryAddress />} />
           <Route path="/delivery-date"         element={<DeliveryDate />} />

@@ -117,7 +117,20 @@ export function derivePatientRoute(state: MachineContext): string {
         workflowData.paStatus === 'submitted')
       return '/enrollment-complete';
 
-    // PA denied — cash offer available
+    // PA approved — schedule delivery, then pick Retail/Mail Order pricing
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.pricingOption === null)
+      return '/pa-approved';
+
+    // Pricing chosen — needs address (converges back with the denied+cash-pay
+    // chain below once the address is set)
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.pricingOption !== null &&
+        workflowData.dispatchStatus === 'none')
+      return '/delivery-address';
+
+    // PA denied — cash offer available (kept for demo flexibility; CoA_DTP's
+    // live flow always approves, see coaDtp.ts)
     if (workflowData.paStatus === 'denied' &&
         workflowData.cashOfferStatus === 'none')
       return '/pa-denied';

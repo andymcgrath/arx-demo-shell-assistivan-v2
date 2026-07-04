@@ -24,6 +24,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   cashOfferStatus: "none",
   paymentVerified: false,
   patientShipDate: null,
+  pricingOption: null,
 }
 
 const initialContext: MachineContext = {
@@ -43,7 +44,9 @@ export const coaDtpMachine = setup({
       | { type: "RUN_BI" }
       | { type: "COMPLETE_BI" }
       | { type: "SUBMIT_PA" }
+      | { type: "APPROVE_PA" }
       | { type: "DENY_PA" }
+      | { type: "SELECT_PRICING_OPTION"; option: "retail" | "mail_order" }
       | { type: "SEND_CASH_OFFER" }
       | { type: "PATIENT_PAYS" }
       | { type: "VERIFY_PAYMENT" }
@@ -128,9 +131,43 @@ export const coaDtpMachine = setup({
     },
     paSubmitted: {
       on: {
+        APPROVE_PA: {
+          target: "paApproved",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "approved", paApprovedAt: new Date().toISOString() }) }),
+        },
+        // Kept for demo flexibility — CoA_DTP's live flow always approves
+        // (see CRM Index.tsx), but the denial → cash-offer chain below is
+        // still fully wired if a future scenario needs it.
         DENY_PA: {
           target: "paDenied",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "denied" }) }),
+        },
+      },
+    },
+    // ── Approved path: patient picks Retail or Mail Order pricing, then
+    // rejoins the same address/ship-date/fill chain the denied+cash-pay
+    // path uses below (see pricingSelected → addressSet).
+    paApproved: {
+      on: {
+        SELECT_PRICING_OPTION: {
+          target: "pricingSelected",
+          actions: assign({
+            workflowData: ({ context, event }) => ({
+              ...context.workflowData,
+              pricingOption: event.option,
+              selectedPharmacy: event.option === "retail"
+                ? { name: "CVS Pharmacy #3795" }
+                : { name: "FutureScripts Home Delivery" },
+            }),
+          }),
+        },
+      },
+    },
+    pricingSelected: {
+      on: {
+        PATIENT_SETS_ADDRESS: {
+          target: "addressSet",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
         },
       },
     },

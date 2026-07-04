@@ -521,13 +521,28 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 
 function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   if (workflowData.enrollmentStatus === "none") return null;
+
+  if (workflowData.pharmacyStatus === "delivered") {
+    return { label: "Delivered", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
+  }
+  if (workflowData.pharmacyStatus === "shipped" ||
+      workflowData.pharmacyStatus === "processing" ||
+      workflowData.pharmacyStatus === "ready") {
+    return { label: "Dispensing", color: "warning", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+  }
+  if (workflowData.paStatus === "approved") {
+    return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "pending", "disabled", "disabled"] };
+  }
+  // Denial → cash-pay is kept in the state machine for demo flexibility, but
+  // CoA_DTP's live flow always approves (see coaDtp.ts / CRM Index.tsx), so
+  // this is unreachable today.
   if (workflowData.paStatus === "denied") {
     return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "completed", "attention", "disabled"] };
   }
-  if (workflowData.biStatus === "complete") {
-    return { label: "BI Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+  if (workflowData.paStatus === "submitted" || workflowData.biStatus === "complete") {
+    return { label: "PA Pending", color: "warning", dots: ["completed", "completed", "pending", "disabled", "disabled", "disabled"] };
   }
-  return { label: "eRx Sent", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
+  return { label: "Enrolled", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
 }
 
 function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {

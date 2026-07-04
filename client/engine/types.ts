@@ -34,6 +34,9 @@ export interface WorkflowData {
   providerPACompleted: boolean;
   paSubmittedAt: string | null;
   paApprovedAt: string | null;
+  /** CoA_DTP only: which delivery/pricing path the patient picked on the
+   *  Benefit Pricing screen after PA approval. Unused by other flows. */
+  pricingOption: 'retail' | 'mail_order' | null;
 }
 
 export interface DemoEvent {
