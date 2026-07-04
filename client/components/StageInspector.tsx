@@ -173,19 +173,19 @@ export function StageInspector() {
       </button>
 
       {isOpen && (
-        <div className="bg-slate-900 border-t border-slate-700 max-h-96 w-96 overflow-y-auto text-xs text-slate-200 font-mono">
-          <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center justify-between gap-2">
-            <span className="text-slate-300 font-semibold truncate">{stageLabel}</span>
+        <div className="bg-[#0f172a] border-t border-l border-[#334155] shadow-2xl rounded-tl-lg max-h-96 w-96 overflow-y-auto text-xs text-[#e2e8f0] font-mono">
+          <div className="sticky top-0 bg-[#1e293b] border-b border-[#334155] px-4 py-2 flex items-center justify-between gap-2">
+            <span className="text-[#cbd5e1] font-semibold truncate">{stageLabel}</span>
             <div className="flex items-center gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowAll((v) => !v)}
-                className="text-slate-400 hover:text-slate-200 transition-colors"
+                className="text-[#94a3b8] hover:text-[#e2e8f0] transition-colors"
               >
                 {showAll ? 'This stage only' : 'Show all fields'}
               </button>
               <button
                 onClick={handleCopy}
-                className="text-slate-400 hover:text-slate-200 transition-colors"
+                className="text-[#94a3b8] hover:text-[#e2e8f0] transition-colors"
                 title="Copy full workflow data as JSON"
               >
                 <Copy size={14} />
@@ -194,20 +194,20 @@ export function StageInspector() {
           </div>
 
           {!isCoA && (
-            <div className="px-4 py-2 border-b border-slate-700 flex flex-wrap gap-x-3 gap-y-1">
+            <div className="bg-[#0f172a] px-4 py-2 border-b border-[#334155] flex flex-wrap gap-x-3 gap-y-1">
               {regionSummary.map((r) => (
-                <span key={r.label} className={r.active ? 'text-cyan-400' : 'text-slate-500'}>
+                <span key={r.label} className={r.active ? 'text-cyan-400' : 'text-[#64748b]'}>
                   {r.label}: {r.node}
                 </span>
               ))}
             </div>
           )}
 
-          <div className="divide-y divide-slate-800">
+          <div className="bg-[#0f172a] divide-y divide-[#1e293b]">
             {fieldsToShow.map((key) => (
               <div key={key} className="px-4 py-1.5 flex items-center justify-between gap-3">
-                <span className="text-slate-400">{fieldLabel(key)}</span>
-                <span className="text-slate-100 text-right truncate max-w-[60%]">
+                <span className="text-[#94a3b8]">{fieldLabel(key)}</span>
+                <span className="text-[#f1f5f9] text-right truncate max-w-[60%]">
                   {formatValue(workflowData[key])}
                 </span>
               </div>
