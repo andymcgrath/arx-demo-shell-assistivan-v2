@@ -59,15 +59,21 @@ const assignWithLogging = (
   assignFn: (input: any) => any
 ) => {
   return assign(({ context, event }: any) => {
+    console.log(`[WF Action] ${eventName} triggered`);
     const newContext = assignFn({ context, event });
     const flowType = context.workflowData.flowType;
 
-    logWorkflowStateChange(
-      eventName,
-      context.workflowData,
-      newContext.workflowData,
-      flowType
-    );
+    try {
+      logWorkflowStateChange(
+        eventName,
+        context.workflowData,
+        newContext.workflowData,
+        flowType
+      );
+      console.log(`[WF Log] ${eventName} logged successfully`);
+    } catch (err) {
+      console.error(`[WF] Error logging ${eventName}:`, err);
+    }
 
     return newContext;
   });
