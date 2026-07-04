@@ -20,6 +20,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
+import { useWorkflowLogStore } from "@/engine/workflowLogStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -696,6 +697,7 @@ export default function DemoShell() {
                     onClick={() => {
                       resetDemo();
                       resetPatient();
+                      useWorkflowLogStore.getState().clear();
                       switchWorkflow(flowType);
                       sessionStorage.removeItem('arxWorkflow_v2');
                       sessionStorage.removeItem('arx-demo-shell');
