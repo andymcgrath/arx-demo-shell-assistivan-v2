@@ -17,6 +17,11 @@ import WorkflowProvider from './engine/WorkflowProvider';
 import { WorkflowProvider as XStateProvider } from '@/providers/WorkflowProvider';
 import { registerWorkflows } from '@/workflows';
 import { WorkflowLogViewer } from '@/components/WorkflowLogViewer';
+import { useWorkflowLogStore } from '@/engine/workflowLogStore';
+import { setLogStoreGetter } from '@/engine/workflowLogger';
+
+// Initialize the log store getter at module load time
+setLogStoreGetter(() => useWorkflowLogStore.getState());
 
 // Register all workflows at startup
 registerWorkflows();

@@ -1,5 +1,11 @@
 import type { WorkflowData, DemoEvent } from './types';
-import { useWorkflowLogStore } from './workflowLogStore';
+
+// Import the store dynamically to avoid circular dependencies
+let logStoreGetter: (() => any) | null = null;
+
+export function setLogStoreGetter(getter: () => any) {
+  logStoreGetter = getter;
+}
 
 // Color codes for console output
 const colors = {
@@ -53,12 +59,19 @@ export function logWorkflowStateChange(
   const hasChanges = Object.keys(changes).length > 0;
 
   // Store in persistent log
-  useWorkflowLogStore.getState().addLog({
-    eventType,
-    flowType,
-    changes,
-    fullState: afterData,
-  });
+  try {
+    if (logStoreGetter) {
+      const store = logStoreGetter();
+      store.addLog({
+        eventType,
+        flowType,
+        changes,
+        fullState: afterData,
+      });
+    }
+  } catch (err) {
+    console.error(`[WF] Failed to store log for ${eventType}:`, err);
+  }
 
   console.group(
     `%c[WF] %c${eventType}%c @ %c${timestamp}%c (${flowType})`,
@@ -115,12 +128,19 @@ export function logWorkflowInit(
   initialData: WorkflowData
 ): void {
   // Store in persistent log
-  useWorkflowLogStore.getState().addLog({
-    eventType: 'INIT',
-    flowType,
-    changes: {},
-    fullState: initialData,
-  });
+  try {
+    if (logStoreGetter) {
+      const store = logStoreGetter();
+      store.addLog({
+        eventType: 'INIT',
+        flowType,
+        changes: {},
+        fullState: initialData,
+      });
+    }
+  } catch (err) {
+    console.error(`[WF] Failed to store INIT log:`, err);
+  }
 
   console.group(
     `%c[WF INIT] %c${flowType}`,
