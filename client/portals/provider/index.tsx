@@ -3,7 +3,7 @@ import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Bell, ChevronDown, Users, Receipt, PiggyBank, ClipboardList, BarChart3, ShieldCheck, Ban } from "lucide-react";
+import { Search, Plus, Bell, ChevronDown } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
 // Cross-portal import — CoAssist's logo/brand config lives with the patient
@@ -105,39 +105,14 @@ function BrandSidebar({ isBranded }: { isBranded: boolean }) {
 // ── CoAssist provider nav sidebar ─────────────────────────────────────────────
 // Shared across every CoA_DTP provider screen (dashboard, PA questions, PA
 // submitted, etc.) so the sidebar looks the same no matter which step the
-// HCP is on. Cash Management and Work Queue are shown but disabled — they
-// aren't part of this demo's scope.
-const COA_NAV_ITEMS: { label: string; icon: typeof Users; disabled?: boolean }[] = [
-  { label: "Patient", icon: Users },
-  { label: "Receipt Lookup", icon: Receipt },
-  { label: "Cash Management", icon: PiggyBank, disabled: true },
-  { label: "Work Queue", icon: ClipboardList, disabled: true },
-  { label: "Reporting (V3)", icon: BarChart3 },
-  { label: "Administration", icon: ShieldCheck },
-];
-
+// HCP is on. Just the branded header over the teal panel — no nav list.
 function CoaSidebar() {
   return (
     <div className="hidden sm:flex w-[220px] flex-shrink-0 flex-col">
       <div className="bg-white px-5 py-4">
         <ManufacturerLogo variant="colors" className="h-7 w-auto" />
       </div>
-      <div className="flex-1 bg-teal-600 py-2">
-        {COA_NAV_ITEMS.map(({ label, icon: Icon, disabled }) => (
-          <div
-            key={label}
-            className={`flex items-center justify-between gap-2 px-5 py-3 text-xs font-semibold tracking-wide uppercase ${
-              disabled ? "text-white/40 cursor-not-allowed" : "text-white hover:bg-white/10 cursor-pointer"
-            } transition-colors`}
-          >
-            <span className="flex items-center gap-3">
-              <Icon size={16} className="flex-shrink-0" />
-              {label}
-            </span>
-            {disabled && <Ban size={13} className="flex-shrink-0" />}
-          </div>
-        ))}
-      </div>
+      <div className="flex-1 bg-teal-600" />
     </div>
   );
 }
@@ -425,10 +400,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
     <main className="provider-content provider-content--pa">
       {isCoA ? (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <ManufacturerLogo variant="colors" className="h-7 w-auto" />
-            <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — Prior Authorization</p>
-          </div>
+          <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>Prior Authorization</p>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
               {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
@@ -510,10 +482,7 @@ function PaSubmittedStep({ onDone, isCoA = false }: { onDone: () => void; isCoA?
     <main className="provider-content provider-content--pa">
       {isCoA ? (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <ManufacturerLogo variant="colors" className="h-7 w-auto" />
-            <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — Prior Authorization</p>
-          </div>
+          <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>Prior Authorization</p>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
               {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
