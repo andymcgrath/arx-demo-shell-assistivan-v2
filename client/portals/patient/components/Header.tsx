@@ -45,22 +45,38 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
   }
 
   if (flowType === "CoA_DTP") {
+    // Mirrors coaDtp.ts's actual state chain (see WorkflowEngine's isCoA
+    // routing) rather than the generic enrollment steps other flows use —
+    // this flow's onboarding is SMS + OTP + Consent only, no Signature or
+    // Income Qualification screens exist for it.
     return [
       { label: "Home", path: "/" },
       {
-        group: "Enrollment Flow",
+        group: "Enrollment",
         items: [
-          { label: "Phone Verification",   path: "/phone-verification" },
-          { label: "Confirm Details",      path: "/confirm-details" },
-          { label: "Consent",             path: "/consent" },
-          { label: "Signature",           path: "/signature" },
-          { label: "Income Qualification", path: "/income-qualification" },
-          { label: "Enrollment Complete", path: "/enrollment-complete" },
+          { label: "SMS Verification",         path: "/sms-message" },
+          { label: "OTP Verification",         path: "/otp-verification" },
+          { label: "Confirm Details & Consent", path: "/confirm-details" },
+          { label: "Enrollment Complete",      path: "/enrollment-complete" },
+        ],
+      },
+      {
+        group: "Prior Authorization Approved",
+        items: [
+          { label: "PA Approved — SMS",  path: "/pa-approved-sms" },
+          { label: "PA Approved — OTP",  path: "/pa-approved-otp" },
+          { label: "Benefit Pricing",    path: "/benefit-pricing" },
         ],
       },
       {
         group: `${PROGRAM.name} CoA Direct-to-Patient Order`,
-        items: ORDER_ITEMS,
+        items: [
+          { label: "Delivery Address",   path: "/delivery-address" },
+          { label: "Delivery Date",      path: "/delivery-date" },
+          { label: "Order Tracker",      path: "/order-tracker" },
+          { label: "Order Shipped / In Transit", path: "/order-shipped" },
+          { label: "Medication Delivered", path: "/medication-delivered" },
+        ],
       },
     ];
   }

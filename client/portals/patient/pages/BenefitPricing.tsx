@@ -9,20 +9,30 @@ import { PROGRAM } from "@/config/branding";
  * Shown once PA is approved (see WorkflowEngine's isCoA branch and
  * PAApproved.tsx, which routes here instead of straight to /delivery-address
  * for this flow). Presents the 3 options CoAssist offers once insurance
- * covers the drug: Retail pickup, Mail order, or applying to the Assistivan
- * copay assistance program. Picking Retail/Mail records the choice
- * (SELECT_PRICING_OPTION) and continues into the existing delivery-address
- * flow shared with the rest of the app; Apply routes to the existing
- * /copay-enroll screen.
+ * covers the drug: Retail pickup, Mail order, or the Copay program — a
+ * self-pay option through the CoAssist Pharmacy at a reduced price. Cards
+ * stack vertically with Copay last, since it's a lower-priority fallback to
+ * Retail/Mail. This replaces the old two-step "Apply" banner + separate
+ * /copay-enroll screen (which offered a Savings Card vs. a pricier Self-Pay
+ * tier) — those are now combined into this single $25 option with one
+ * "Enroll" CTA. Retail/Mail record the choice (SELECT_PRICING_OPTION) and
+ * continue into the existing delivery-address flow; Copay records the
+ * choice and payment together (SELECT_SELF_PAY + PATIENT_PAYS +
+ * VERIFY_PAYMENT) so it lands in the same place with no extra payment step.
  */
 
+type PricingKey = "retail" | "mail_order" | "self_pay";
+
 interface PricingOption {
-  key: "retail" | "mail_order";
+  key: PricingKey;
   icon: typeof Store;
   label: string;
   price: number;
-  supply: string;
-  pharmacy: string;
+  cadence?: string;
+  supply?: string;
+  pharmacy?: string;
+  description?: string;
+  cta: string;
 }
 
 const PRICING_OPTIONS: PricingOption[] = [
@@ -33,6 +43,7 @@ const PRICING_OPTIONS: PricingOption[] = [
     price: 50,
     supply: "1.0 mg Dose / 30 days",
     pharmacy: "CVS Pharmacy #3795",
+    cta: "Select",
   },
   {
     key: "mail_order",
@@ -41,6 +52,16 @@ const PRICING_OPTIONS: PricingOption[] = [
     price: 100,
     supply: "1.0 mg Dose / 90 days",
     pharmacy: "FutureScripts Home Delivery",
+    cta: "Select",
+  },
+  {
+    key: "self_pay",
+    icon: Sparkles,
+    label: "Copay Program",
+    price: 25,
+    cadence: "/month",
+    description: `Pay a reduced price by filling through the CoAssist Pharmacy — no separate insurance approval needed for this option.`,
+    cta: "Enroll",
   },
 ];
 
@@ -53,6 +74,23 @@ export default function BenefitPricing() {
     navigate("/delivery-address");
   }
 
+  function enrollInCopay() {
+    // Enrollment and payment happen together in this one click — no
+    // separate Copay Enroll screen or payment form for this path.
+    dispatch("SELECT_SELF_PAY", { portal: "patient" });
+    dispatch("PATIENT_PAYS", { portal: "patient" });
+    dispatch("VERIFY_PAYMENT", { portal: "patient" });
+    navigate("/delivery-address");
+  }
+
+  function handleSelect(key: PricingKey) {
+    if (key === "self_pay") {
+      enrollInCopay();
+    } else {
+      choosePricing(key);
+    }
+  }
+
   return (
     <main className="flex-grow pb-8">
       <div className="max-w-2xl mx-auto px-4 space-y-5">
@@ -62,7 +100,7 @@ export default function BenefitPricing() {
             <h1 className="text-xl font-bold text-arx-slate mb-1">Benefit Pricing</h1>
           </div>
 
-          <div className="px-5 py-5 space-y-5">
+          <div className="px-5 py-5 space-y-4">
             {/* Coverage banner */}
             <div className="rounded-xl p-4 bg-arx-sky border border-arx-borders">
               <p className="font-bold text-base text-arx-slate">
@@ -71,14 +109,14 @@ export default function BenefitPricing() {
               <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>
             </div>
 
-            {/* Retail vs Mail Order — stacks on mobile, side by side from sm up */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Retail, Mail Order, then Copay — stacked vertically */}
+            <div className="flex flex-col gap-4">
               {PRICING_OPTIONS.map((option) => {
                 const Icon = option.icon;
                 return (
                   <button
                     key={option.key}
-                    onClick={() => choosePricing(option.key)}
+                    onClick={() => handleSelect(option.key)}
                     className="text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
                   >
                     <div className="flex items-center gap-2 mb-3">
@@ -87,34 +125,25 @@ export default function BenefitPricing() {
                       </div>
                       <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
                     </div>
-                    <p className="text-2xl font-bold text-arx-slate mb-1">${option.price}</p>
-                    <p className="text-xs text-arx-body-copy">{option.supply}</p>
-                    <p className="text-xs text-arx-body-copy">Pharmacy: {option.pharmacy}</p>
+                    <p className="text-2xl font-bold text-arx-slate mb-1">
+                      ${option.price}
+                      {option.cadence && <span className="text-sm font-semibold">{option.cadence}</span>}
+                    </p>
+                    {option.description ? (
+                      <p className="text-xs text-arx-body-copy">{option.description}</p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-arx-body-copy">{option.supply}</p>
+                        <p className="text-xs text-arx-body-copy">Pharmacy: {option.pharmacy}</p>
+                      </>
+                    )}
                     <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-primary">
-                      <span>Select</span>
+                      <span>{option.cta}</span>
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Copay assistance program banner */}
-            <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center bg-arx-sky flex-shrink-0">
-                  <Sparkles className="w-4 h-4 text-arx-primary" />
-                </div>
-                <p className="text-sm text-arx-body-copy">
-                  You may qualify for $0 out-of-pocket cost. Enroll in the {PROGRAM.drugDisplayName} Assistance Program
-                </p>
-              </div>
-              <button
-                onClick={() => navigate("/copay-enroll")}
-                className="flex-shrink-0 font-semibold text-sm py-2.5 px-5 rounded-lg border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
-              >
-                Apply
-              </button>
             </div>
           </div>
         </div>

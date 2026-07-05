@@ -122,22 +122,14 @@ function CoaSidebar() {
 // ── CoAssist top header ────────────────────────────────────────────────────
 // Same header used on the dashboard (search / Add New Patient / Dr. Sarah
 // Chen / notifications), reused on every other CoA_DTP provider screen for a
-// consistent look. Pages other than the dashboard pass onBack to add a back
-// arrow that returns to it. onSearchChange is optional — only the dashboard
-// actually filters on it; elsewhere the field is just visually consistent.
-function CoaHeader({ onBack, onSearchChange }: { onBack?: () => void; onSearchChange?: (value: string) => void }) {
+// consistent look. Back navigation lives on the individual screen instead of
+// here (see CoaBackButton) — this stays a plain top bar everywhere.
+// onSearchChange is optional — only the dashboard actually filters on it;
+// elsewhere the field is just visually consistent.
+function CoaHeader({ onSearchChange }: { onSearchChange?: (value: string) => void }) {
   const [search, setSearch] = useState("");
   return (
     <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="text-neutral-600 hover:text-teal-600 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
-          aria-label="Back to dashboard"
-        >
-          <ArrowLeft size={20} />
-        </button>
-      )}
       <Search size={20} className="text-neutral-600 flex-shrink-0" />
       <div className="flex-1 flex flex-col">
         <label htmlFor="coa-header-search" className="sr-only">
@@ -180,6 +172,20 @@ function CoaHeader({ onBack, onSearchChange }: { onBack?: () => void; onSearchCh
         </button>
       </div>
     </header>
+  );
+}
+
+// Back navigation for CoA patient-specific screens — lives on the page itself
+// (not the shared header) so it sits next to the content it's backing out of.
+function CoaBackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-sm font-semibold text-neutral-700 bg-neutral-100 border border-neutral-300 rounded-full px-3 py-1.5 mb-4 hover:bg-neutral-200 transition-colors"
+    >
+      <ArrowLeft size={14} />
+      Back
+    </button>
   );
 }
 
@@ -466,6 +472,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
     <main className="provider-content provider-content--pa">
       {isCoA ? (
         <>
+          <CoaBackButton onClick={onBack} />
           <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>Prior Authorization</p>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
@@ -506,16 +513,17 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
           onChange={setQ3}
         />
 
-        <div className="pa-comments-field">
-          <label className="pa-comments-label">Comments:</label>
-          <input
-            type="text"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            className="pa-comments-input"
-          />
-        </div>
-
+        {!isCoA && (
+          <div className="pa-comments-field">
+            <label className="pa-comments-label">Comments:</label>
+            <input
+              type="text"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              className="pa-comments-input"
+            />
+          </div>
+        )}
       </div>
 
       <div className="pa-nav-row">
@@ -531,7 +539,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
 
 // ── Step 4: PA Submitted confirmation ───────────────────────────────────────
 
-function PaSubmittedStep({ onDone, isCoA = false }: { onDone: () => void; isCoA?: boolean }) {
+function PaSubmittedStep({ onDone, onBack, isCoA = false }: { onDone: () => void; onBack?: () => void; isCoA?: boolean }) {
   const dispatch = useWorkflowDispatch();
   const patientName = usePatientStore((s) => s.patientName);
   const patientDob = usePatientStore((s) => s.patientDob);
@@ -548,6 +556,7 @@ function PaSubmittedStep({ onDone, isCoA = false }: { onDone: () => void; isCoA?
     <main className="provider-content provider-content--pa">
       {isCoA ? (
         <>
+          {onBack && <CoaBackButton onClick={onBack} />}
           <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>Prior Authorization</p>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
@@ -908,7 +917,7 @@ function MedicationSelect({ value, onChange }: { value: string; onChange: (v: st
   );
 }
 
-function CoaRxForm({ onSend }: { onSend: () => void }) {
+function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void }) {
   const [dosage, setDosage] = useState("0.5 mg");
   const [refills, setRefills] = useState("3");
   // Local to this screen on purpose — not written back to usePatientStore.
@@ -923,6 +932,7 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
 
   return (
     <main className="provider-content provider-content--pa">
+      <CoaBackButton onClick={onBack} />
       <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>ePrescription</p>
 
       {/* Compact context line — replaces the old checklist + boxed read-only
@@ -990,12 +1000,13 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
 
 // ── COA Sent Confirmation ────────────────────────────────────────────────────
 
-function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () => void }) {
+function CoaSentConfirmation({ onReturnToDashboard, onBack }: { onReturnToDashboard: () => void; onBack: () => void }) {
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
 
   return (
     <main className="provider-content provider-content--pa">
+      <CoaBackButton onClick={onBack} />
       <p className="pa-section-title">eRx Confirmation</p>
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
@@ -1754,16 +1765,22 @@ export default function ProviderPortal() {
           <>
             <CoaSidebar />
             <div className="flex-1 flex flex-col">
-              <CoaHeader onBack={() => setStep("coa-dashboard")} />
+              <CoaHeader />
               <div className="flex-1 overflow-auto">
                 {step === "coa-rx" && (
-                  <CoaRxForm onSend={() => {
-                    dispatch('ENROLL', { portal: 'provider' });
-                    setStep("coa-sent");
-                  }} />
+                  <CoaRxForm
+                    onSend={() => {
+                      dispatch('ENROLL', { portal: 'provider' });
+                      setStep("coa-sent");
+                    }}
+                    onBack={() => setStep("coa-dashboard")}
+                  />
                 )}
                 {step === "coa-sent" && (
-                  <CoaSentConfirmation onReturnToDashboard={() => setStep("coa-dashboard")} />
+                  <CoaSentConfirmation
+                    onReturnToDashboard={() => setStep("coa-dashboard")}
+                    onBack={() => setStep("coa-dashboard")}
+                  />
                 )}
                 {step === "pa-questions" && (
                   <PaQuestionsStep
@@ -1774,7 +1791,11 @@ export default function ProviderPortal() {
                   />
                 )}
                 {step === "pa-submitted" && (
-                  <PaSubmittedStep isCoA={isCoA} onDone={() => setStep("coa-dashboard")} />
+                  <PaSubmittedStep
+                    isCoA={isCoA}
+                    onDone={() => setStep("coa-dashboard")}
+                    onBack={() => setStep("coa-dashboard")}
+                  />
                 )}
               </div>
             </div>
