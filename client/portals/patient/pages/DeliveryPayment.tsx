@@ -101,6 +101,9 @@ export default function DeliveryPayment() {
                     ? COA_SUPPLY_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? PROGRAM.description
                     : PROGRAM.description}
                 </p>
+                {isCoA && workflowData.selectedPharmacy?.name && (
+                  <p className="text-sm mt-0.5 text-arx-body-copy">{workflowData.selectedPharmacy.name}</p>
+                )}
               </div>
 
               {/* Payment summary */}
