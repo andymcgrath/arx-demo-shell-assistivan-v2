@@ -3,7 +3,7 @@ import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Bell, ChevronDown } from "lucide-react";
+import { Search, Plus, Bell, ChevronDown, Users, Receipt, PiggyBank, ClipboardList, BarChart3, ShieldCheck, Ban } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
 // Cross-portal import — CoAssist's logo/brand config lives with the patient
@@ -99,6 +99,46 @@ function BrandSidebar({ isBranded }: { isBranded: boolean }) {
         />
       </div>
     </aside>
+  );
+}
+
+// ── CoAssist provider nav sidebar ─────────────────────────────────────────────
+// Shared across every CoA_DTP provider screen (dashboard, PA questions, PA
+// submitted, etc.) so the sidebar looks the same no matter which step the
+// HCP is on. Cash Management and Work Queue are shown but disabled — they
+// aren't part of this demo's scope.
+const COA_NAV_ITEMS: { label: string; icon: typeof Users; disabled?: boolean }[] = [
+  { label: "Patient", icon: Users },
+  { label: "Receipt Lookup", icon: Receipt },
+  { label: "Cash Management", icon: PiggyBank, disabled: true },
+  { label: "Work Queue", icon: ClipboardList, disabled: true },
+  { label: "Reporting (V3)", icon: BarChart3 },
+  { label: "Administration", icon: ShieldCheck },
+];
+
+function CoaSidebar() {
+  return (
+    <div className="hidden sm:flex w-[220px] flex-shrink-0 flex-col">
+      <div className="bg-white px-5 py-4">
+        <ManufacturerLogo variant="colors" className="h-7 w-auto" />
+      </div>
+      <div className="flex-1 bg-teal-600 py-2">
+        {COA_NAV_ITEMS.map(({ label, icon: Icon, disabled }) => (
+          <div
+            key={label}
+            className={`flex items-center justify-between gap-2 px-5 py-3 text-xs font-semibold tracking-wide uppercase ${
+              disabled ? "text-white/40 cursor-not-allowed" : "text-white hover:bg-white/10 cursor-pointer"
+            } transition-colors`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon size={16} className="flex-shrink-0" />
+              {label}
+            </span>
+            {disabled && <Ban size={13} className="flex-shrink-0" />}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -646,17 +686,7 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
 
   return (
     <div className="coa-dashboard min-h-screen bg-neutral-100 flex">
-      {/* Sidebar — just the CoAssist mark, sized to fit it rather than a
-          wide nav panel now that the intro card and To-Do list are gone. */}
-      <div className="hidden sm:flex w-[160px] bg-teal-600 flex-col items-center justify-start py-6 px-4">
-        <div className="bg-white rounded-lg px-4 py-3">
-          {/* MANUFACTURER (patient portal branding.ts) is CoAssist, the
-              pharmacy — distinct from PROGRAM (Assistivan, the drug). No
-              dedicated white variant exists for this mark yet, so it's
-              placed on a white chip for contrast against the teal panel. */}
-          <ManufacturerLogo variant="colors" className="h-8 w-auto" />
-        </div>
-      </div>
+      <CoaSidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -1727,7 +1757,9 @@ export default function ProviderPortal() {
 
   return (
     <div className="provider-portal">
-      {step !== "email" && step !== "coa-dashboard" && step !== "coa-rx" && step !== "coa-sent" && <BrandSidebar isBranded={isBranded} />}
+      {step !== "email" && step !== "coa-dashboard" && step !== "coa-rx" && step !== "coa-sent" && (
+        isCoA ? <CoaSidebar /> : <BrandSidebar isBranded={isBranded} />
+      )}
       {step === "coa-dashboard" && (
         <CoaDashboard onSelect={(patientId) => {
           if (patientId !== "keanu-reeves") {
