@@ -19,6 +19,16 @@ const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = 
   self_pay: { price: 25, cadence: "/month" },
 };
 
+// Supply duration also depends on the pricing option picked on Benefit
+// Pricing (see BenefitPricing.tsx's PRICING_OPTIONS: Retail is a 30-day
+// fill, Mail Order is 90-day). Copay/self_pay keeps the standard starter
+// dose/supply shown elsewhere in the Copay flow.
+const COA_SUPPLY_BY_OPTION: Record<string, string> = {
+  retail: "1.0 mg Dose · 30-day supply",
+  mail_order: "1.0 mg Dose · 90-day supply",
+  self_pay: PROGRAM.description,
+};
+
 export default function DeliveryPayment() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
@@ -86,7 +96,11 @@ export default function DeliveryPayment() {
               {/* Drug name */}
               <div>
                 <p className="font-bold text-base text-arx-primary">{PROGRAM.drugDisplayName}</p>
-                <p className="text-sm mt-0.5 text-arx-body-copy">{PROGRAM.description}</p>
+                <p className="text-sm mt-0.5 text-arx-body-copy">
+                  {isCoA
+                    ? COA_SUPPLY_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? PROGRAM.description
+                    : PROGRAM.description}
+                </p>
               </div>
 
               {/* Payment summary */}
