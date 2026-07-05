@@ -3,7 +3,7 @@ import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Bell, ChevronDown } from "lucide-react";
+import { Search, Plus, Bell, ChevronDown, ArrowLeft } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
 // Cross-portal import — CoAssist's logo/brand config lives with the patient
@@ -106,14 +106,80 @@ function BrandSidebar({ isBranded }: { isBranded: boolean }) {
 // Shared across every CoA_DTP provider screen (dashboard, PA questions, PA
 // submitted, etc.) so the sidebar looks the same no matter which step the
 // HCP is on. Just the branded header over the teal panel — no nav list.
+// h-14 matches CoaHeader's height exactly, so the white/teal seam on the
+// sidebar lines up with the header's bottom border across the full page.
 function CoaSidebar() {
   return (
     <div className="hidden sm:flex w-[220px] flex-shrink-0 flex-col">
-      <div className="bg-white px-5 py-4">
+      <div className="h-14 flex items-center bg-white px-5">
         <ManufacturerLogo variant="colors" className="h-7 w-auto" />
       </div>
       <div className="flex-1 bg-teal-600" />
     </div>
+  );
+}
+
+// ── CoAssist top header ────────────────────────────────────────────────────
+// Same header used on the dashboard (search / Add New Patient / Dr. Sarah
+// Chen / notifications), reused on every other CoA_DTP provider screen for a
+// consistent look. Pages other than the dashboard pass onBack to add a back
+// arrow that returns to it. onSearchChange is optional — only the dashboard
+// actually filters on it; elsewhere the field is just visually consistent.
+function CoaHeader({ onBack, onSearchChange }: { onBack?: () => void; onSearchChange?: (value: string) => void }) {
+  const [search, setSearch] = useState("");
+  return (
+    <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="text-neutral-600 hover:text-teal-600 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
+          aria-label="Back to dashboard"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      )}
+      <Search size={20} className="text-neutral-600 flex-shrink-0" />
+      <div className="flex-1 flex flex-col">
+        <label htmlFor="coa-header-search" className="sr-only">
+          Search for patient by name or date of birth
+        </label>
+        <input
+          id="coa-header-search"
+          type="text"
+          placeholder="Search for patient by name or date of birth"
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 focus:ring-teal-600 focus:ring-inset rounded px-1"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            onSearchChange?.(e.target.value);
+          }}
+          aria-label="Search patients"
+        />
+      </div>
+      <button
+        className="text-teal-600 font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded px-2 py-1"
+        aria-label="Add new patient"
+      >
+        <Plus size={16} />
+        <span className="hidden sm:inline">Add New Patient</span>
+        <span className="sm:hidden">Add</span>
+      </button>
+      <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+        <div className="hidden sm:flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-teal-600 font-bold text-xs">
+            SC
+          </div>
+          <span className="text-sm font-normal">Dr. Sarah Chen</span>
+        </div>
+        <button
+          className="relative text-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
+          aria-label="Notifications"
+        >
+          <Bell size={20} />
+          <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full" aria-hidden="true" />
+        </button>
+      </div>
+    </header>
   );
 }
 
@@ -659,47 +725,7 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
-          <Search size={20} className="text-neutral-600 flex-shrink-0" />
-          <div className="flex-1 flex flex-col">
-            <label htmlFor="coa-search-input" className="sr-only">
-              Search for patient by name or date of birth
-            </label>
-            <input
-              id="coa-search-input"
-              type="text"
-              placeholder="Search for patient by name or date of birth"
-              className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 focus:ring-teal-600 focus:ring-inset rounded px-1"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search patients"
-            />
-          </div>
-          <button
-            className="text-teal-600 font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded px-2 py-1"
-            aria-label="Add new patient"
-          >
-            <Plus size={16} />
-            <span className="hidden sm:inline">Add New Patient</span>
-            <span className="sm:hidden">Add</span>
-          </button>
-          <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-teal-600 font-bold text-xs">
-                SC
-              </div>
-              <span className="text-sm font-normal">Dr. Sarah Chen</span>
-            </div>
-            <button
-              className="relative text-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full" aria-hidden="true" />
-            </button>
-          </div>
-        </header>
+        <CoaHeader onSearchChange={setSearchQuery} />
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-4 sm:p-6 bg-neutral-100">
@@ -897,10 +923,7 @@ function CoaRxForm({ onSend }: { onSend: () => void }) {
 
   return (
     <main className="provider-content provider-content--pa">
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <ManufacturerLogo variant="colors" className="h-7 w-auto" />
-        <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — ePrescription</p>
-      </div>
+      <p className="pa-section-title" style={{ margin: 0, marginBottom: 16 }}>ePrescription</p>
 
       {/* Compact context line — replaces the old checklist + boxed read-only
           fields, which just repeated the same handful of facts that never
@@ -973,7 +996,7 @@ function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () 
 
   return (
     <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">COA Direct to Patient — Confirmation</p>
+      <p className="pa-section-title">eRx Confirmation</p>
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
@@ -1726,8 +1749,39 @@ export default function ProviderPortal() {
 
   return (
     <div className="provider-portal">
-      {step !== "email" && step !== "coa-dashboard" && step !== "coa-rx" && step !== "coa-sent" && (
-        isCoA ? <CoaSidebar /> : <BrandSidebar isBranded={isBranded} />
+      {step !== "email" && step !== "coa-dashboard" && (
+        isCoA ? (
+          <>
+            <CoaSidebar />
+            <div className="flex-1 flex flex-col">
+              <CoaHeader onBack={() => setStep("coa-dashboard")} />
+              <div className="flex-1 overflow-auto">
+                {step === "coa-rx" && (
+                  <CoaRxForm onSend={() => {
+                    dispatch('ENROLL', { portal: 'provider' });
+                    setStep("coa-sent");
+                  }} />
+                )}
+                {step === "coa-sent" && (
+                  <CoaSentConfirmation onReturnToDashboard={() => setStep("coa-dashboard")} />
+                )}
+                {step === "pa-questions" && (
+                  <PaQuestionsStep
+                    isCoA={isCoA}
+                    onBack={() => setStep("coa-dashboard")}
+                    onCancel={() => setStep("coa-dashboard")}
+                    onNext={() => setStep("pa-submitted")}
+                  />
+                )}
+                {step === "pa-submitted" && (
+                  <PaSubmittedStep isCoA={isCoA} onDone={() => setStep("coa-dashboard")} />
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <BrandSidebar isBranded={isBranded} />
+        )
       )}
       {step === "coa-dashboard" && (
         <CoaDashboard onSelect={(patientId) => {
@@ -1747,37 +1801,23 @@ export default function ProviderPortal() {
           // nothing to do yet, stay on the dashboard.
         }} />
       )}
-      {step === "coa-rx" && (
-        <CoaRxForm onSend={() => {
-          dispatch('ENROLL', { portal: 'provider' });
-          setStep("coa-sent");
-        }} />
-      )}
-      {step === "coa-sent" && (
-        <CoaSentConfirmation onReturnToDashboard={() => setStep("coa-dashboard")} />
-      )}
       {step === "email" && (
         <EmailStep onClickLink={() => setStep("login")} />
       )}
       {step === "login" && (
         <LoginStep onSubmit={() => setStep("pa-questions")} />
       )}
-      {step === "pa-questions" && (
+      {!isCoA && step === "pa-questions" && (
         <PaQuestionsStep
           isCoA={isCoA}
-          onBack={() => setStep(isCoA ? "coa-dashboard" : "login")}
-          onCancel={() => setStep(isCoA ? "coa-dashboard" : "login")}
+          onBack={() => setStep("login")}
+          onCancel={() => setStep("login")}
           onNext={() => setStep("pa-submitted")}
         />
       )}
-      {step === "pa-submitted" && <PaSubmittedStep
+      {!isCoA && step === "pa-submitted" && <PaSubmittedStep
         isCoA={isCoA}
-        onDone={() => {
-          if (isCoA) {
-            // Back to the dashboard — Keanu's row now shows "PA Submitted".
-            setStep("coa-dashboard");
-          }
-        }}
+        onDone={() => {}}
       />}
       {step === "income-verify" && (
         <IncomeVerifyStep onBack={() => setStep("login")} onCancel={() => setStep("login")} onNext={() => setStep("income-submitted")} />
