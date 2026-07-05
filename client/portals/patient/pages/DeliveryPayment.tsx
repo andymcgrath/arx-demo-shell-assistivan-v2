@@ -1,19 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { PROGRAM } from "@/config/branding";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { toast } from "@/hooks/use-toast";
 
 const LIST_PRICE = 575;
 const DISCOUNT = 426;
 const TOTAL = LIST_PRICE - DISCOUNT;
+
+// Reflects whichever price the patient actually picked on Benefit Pricing
+// (see BenefitPricing.tsx's PRICING_OPTIONS) — only self_pay routes here
+// today, but this stays keyed by pricingOption so the right price always
+// shows if that ever changes.
+const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
+  retail: { price: 50, cadence: "" },
+  mail_order: { price: 100, cadence: "" },
+  self_pay: { price: 25, cadence: "/month" },
+};
 
 export default function DeliveryPayment() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
+  const isCoA = flowType === "CoA_DTP";
   const { data: patient } = usePatientCase();
 
   useEffect(() => {
@@ -33,10 +45,82 @@ export default function DeliveryPayment() {
     dispatch("VERIFY_PAYMENT", { portal: "patient" });
     navigate("/delivery-confirmation");
   }
+
+  // Copay enrollment (CoA_DTP) — this screen doubles as the Copay enrollment
+  // step: one Enroll click finishes payment, confirms with a toast, then
+  // hands off to delivery address entry after a beat so the confirmation is
+  // visible.
+  function enrollAndContinue() {
+    dispatch("PATIENT_PAYS", { portal: "patient" });
+    dispatch("VERIFY_PAYMENT", { portal: "patient" });
+    toast({ title: "Enrollment complete", description: "You're enrolled in the Assistivan Copay Program." });
+    setTimeout(() => navigate("/delivery-address"), 1000);
+  }
+
   const [email, setEmail] = useState("");
   const [autoRefill, setAutoRefill] = useState(true);
   const [breakdown, setBreakdown] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+
+  if (isCoA) {
+    const pricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "self_pay"] ?? COA_PRICE_BY_OPTION.self_pay;
+    return (
+      <main className="flex-grow pb-8">
+        <div className="max-w-lg mx-auto px-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+            <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-arx-sky">
+                  <span className="text-xl font-bold text-arx-primary">Rx</span>
+                </div>
+              </div>
+              <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Assistivan Copay Program</h1>
+              <p className="text-sm text-center text-arx-body-copy">
+                You're almost there, {firstName}. Enroll to complete your order.
+              </p>
+            </div>
+
+            <div className="px-5 py-5 space-y-5">
+              {/* Medication name & dosage */}
+              <div>
+                <p className="font-bold text-base text-arx-primary">{PROGRAM.drugDisplayName}</p>
+                <p className="text-sm mt-0.5 text-arx-body-copy">{PROGRAM.description}</p>
+              </div>
+
+              {/* Simplified price */}
+              <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex items-center justify-between">
+                <span className="text-sm font-semibold text-arx-slate">Your price</span>
+                <span className="text-2xl font-bold text-arx-primary">
+                  ${pricing.price}
+                  {pricing.cadence && <span className="text-sm font-semibold">{pricing.cadence}</span>}
+                </span>
+              </div>
+
+              <ul className="space-y-1.5">
+                {[
+                  "No separate insurance approval required",
+                  "Fills through the CoAssist Pharmacy",
+                  "Cancel anytime",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
+                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={enrollAndContinue}
+                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg hover:bg-arx-primary-dark transition-colors"
+              >
+                Enroll
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-grow pb-8">

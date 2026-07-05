@@ -14,11 +14,14 @@ import { PROGRAM } from "@/config/branding";
  * stack vertically with Copay last, since it's a lower-priority fallback to
  * Retail/Mail. This replaces the old two-step "Apply" banner + separate
  * /copay-enroll screen (which offered a Savings Card vs. a pricier Self-Pay
- * tier) — those are now combined into this single $25 option with one
- * "Enroll" CTA. Retail/Mail record the choice (SELECT_PRICING_OPTION) and
- * continue into the existing delivery-address flow; Copay records the
- * choice and payment together (SELECT_SELF_PAY + PATIENT_PAYS +
- * VERIFY_PAYMENT) so it lands in the same place with no extra payment step.
+ * tier) — those are now combined into this single $25 option.
+ *
+ * Retail/Mail record the choice (SELECT_PRICING_OPTION) and go straight
+ * into the existing delivery-address flow, unchanged. Copay only records
+ * the choice here (SELECT_SELF_PAY) and routes to /delivery-payment, which
+ * doubles as the Copay enrollment screen for this flow — payment
+ * (PATIENT_PAYS + VERIFY_PAYMENT) completes there once the patient taps
+ * Enroll, not on this screen.
  */
 
 type PricingKey = "retail" | "mail_order" | "self_pay";
@@ -33,6 +36,7 @@ interface PricingOption {
   pharmacy?: string;
   description?: string;
   cta: string;
+  badge?: string;
 }
 
 const PRICING_OPTIONS: PricingOption[] = [
@@ -57,11 +61,12 @@ const PRICING_OPTIONS: PricingOption[] = [
   {
     key: "self_pay",
     icon: Sparkles,
-    label: "Copay Program",
+    label: "Assistivan Copay Program",
     price: 25,
     cadence: "/month",
     description: `Pay a reduced price by filling through the CoAssist Pharmacy — no separate insurance approval needed for this option.`,
     cta: "Enroll",
+    badge: "Best Value",
   },
 ];
 
@@ -75,12 +80,10 @@ export default function BenefitPricing() {
   }
 
   function enrollInCopay() {
-    // Enrollment and payment happen together in this one click — no
-    // separate Copay Enroll screen or payment form for this path.
+    // Records the selection only — /delivery-payment (the Copay enrollment
+    // screen) handles the actual Enroll/payment step.
     dispatch("SELECT_SELF_PAY", { portal: "patient" });
-    dispatch("PATIENT_PAYS", { portal: "patient" });
-    dispatch("VERIFY_PAYMENT", { portal: "patient" });
-    navigate("/delivery-address");
+    navigate("/delivery-payment");
   }
 
   function handleSelect(key: PricingKey) {
@@ -117,8 +120,13 @@ export default function BenefitPricing() {
                   <button
                     key={option.key}
                     onClick={() => handleSelect(option.key)}
-                    className="text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
+                    className="relative text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
                   >
+                    {option.badge && (
+                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-white text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
+                        {option.badge}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-arx-sky flex-shrink-0">
                         <Icon className="w-4 h-4 text-arx-primary" />
