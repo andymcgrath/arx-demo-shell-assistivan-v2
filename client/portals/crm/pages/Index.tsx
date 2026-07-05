@@ -19,7 +19,6 @@ import {
   RefreshCw,
   ArrowUpDown,
   ArrowUp,
-  Grid3x3,
   Search,
   Star,
   Plus,
@@ -498,10 +497,6 @@ function CaseListView({
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}>
       {/* App bar */}
       <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "#032d60" }}>
-        <Grid3x3 size={18} className="text-white shrink-0" />
-        <span className="text-white font-bold text-[15px] shrink-0">
-          PRODUCT <span className="font-normal opacity-80">| UAT</span>
-        </span>
         <div className="flex-1 flex justify-center">
           <div className="flex items-center gap-2 bg-white/10 rounded px-3 py-1 w-full max-w-sm">
             <Search size={13} className="text-white/70" />
@@ -596,7 +591,7 @@ function CaseListView({
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">Onboarding</td>
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">Initiated</td>
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">Initiated</td>
-                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>powne</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>rosborne</SfLink></td>
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{nowStr}</td>
                   <td className="px-3 py-2 border-b border-[#dddbda]">
                     <ChevronDown size={13} className="text-[#706e6b]" />
