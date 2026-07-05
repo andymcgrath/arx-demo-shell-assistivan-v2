@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
-import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { PROGRAM } from "@/config/branding";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
@@ -10,9 +10,9 @@ const DISCOUNT = 426;
 const TOTAL = LIST_PRICE - DISCOUNT;
 
 // Reflects whichever price the patient actually picked on Benefit Pricing
-// (see BenefitPricing.tsx's PRICING_OPTIONS) — only self_pay routes here
-// today, but this stays keyed by pricingOption so the right price always
-// shows if that ever changes.
+// (see BenefitPricing.tsx's PRICING_OPTIONS). Retail/Mail keep their listed
+// price; self_pay reflects the reduced Copay Program price unlocked at
+// enrollment (/copay-enroll), not the "list" self-pay rate.
 const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
   retail: { price: 50, cadence: "" },
   mail_order: { price: 100, cadence: "" },
@@ -45,20 +45,26 @@ export default function DeliveryPayment() {
     navigate("/delivery-confirmation");
   }
 
-  // Copay enrollment (CoA_DTP) — this screen doubles as the Copay enrollment
-  // step: one Enroll click finishes payment, confirms with a banner, then
-  // hands off to delivery address entry after a beat so the confirmation is
-  // visible. Uses a local banner instead of the app's global Radix Toaster —
-  // that one renders via position:fixed, and inside the phone-mockup frame
-  // (DemoShell's .i17pro__screen) that only reliably lands bottom-right at
-  // sm+ viewport widths, so it was invisible in the narrow phone view. This
-  // banner is scoped to the card itself so it's guaranteed visible.
-  const [showSuccess, setShowSuccess] = useState(false);
-  function enrollAndContinue() {
-    dispatch("PATIENT_PAYS", { portal: "patient" });
-    dispatch("VERIFY_PAYMENT", { portal: "patient" });
-    setShowSuccess(true);
-    setTimeout(() => navigate("/delivery-address"), 1000);
+  // CoA_DTP (isCoA) — final payment step, reached after address + date for
+  // all three pricing options (see DeliveryDate.tsx). Copay enrollment
+  // earlier only unlocked the reduced $25 price; the actual charge happens
+  // here, same point Retail/Mail pay. Only self_pay dispatches
+  // PATIENT_PAYS/VERIFY_PAYMENT — Retail/Mail's cost is handled at the
+  // pharmacy counter, not tracked as a "Cash Offer" in the CRM, so nothing
+  // is dispatched for them here. Uses an in-button loading state
+  // ("Processing...") instead of a toast — position:fixed toasts only
+  // reliably land bottom-right at sm+ viewport widths inside the
+  // phone-mockup frame, so a toast here was invisible in the narrow phone
+  // view.
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  function payAndContinue() {
+    setIsProcessing(true);
+    if (workflowData.pricingOption === "self_pay") {
+      dispatch("PATIENT_PAYS", { portal: "patient" });
+      dispatch("VERIFY_PAYMENT", { portal: "patient" });
+    }
+    setTimeout(() => navigate("/delivery-confirmation"), 1000);
   }
 
   const [email, setEmail] = useState("");
@@ -67,7 +73,7 @@ export default function DeliveryPayment() {
   const [cardOpen, setCardOpen] = useState(false);
 
   if (isCoA) {
-    const pricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "self_pay"] ?? COA_PRICE_BY_OPTION.self_pay;
+    const pricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
     return (
       <main className="flex-grow pb-8">
         <div className="max-w-lg mx-auto px-4">
@@ -78,9 +84,9 @@ export default function DeliveryPayment() {
                   <span className="text-xl font-bold text-arx-primary">Rx</span>
                 </div>
               </div>
-              <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Assistivan Copay Program</h1>
+              <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Payment Information</h1>
               <p className="text-sm text-center text-arx-body-copy">
-                You're almost there, {firstName}. Enroll to complete your order.
+                You're almost there, {firstName}. Confirm payment to complete your order.
               </p>
             </div>
 
@@ -93,44 +99,30 @@ export default function DeliveryPayment() {
 
               {/* Simplified price */}
               <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex items-center justify-between">
-                <span className="text-sm font-semibold text-arx-slate">Your price</span>
+                <span className="text-sm font-semibold text-arx-slate">Total due today</span>
                 <span className="text-2xl font-bold text-arx-primary">
                   ${pricing.price}
                   {pricing.cadence && <span className="text-sm font-semibold">{pricing.cadence}</span>}
                 </span>
               </div>
 
-              <ul className="space-y-1.5">
-                {[
-                  "No separate insurance approval required",
-                  "Fills through the CoAssist Pharmacy",
-                  "Cancel anytime",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-primary" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
               <button
-                onClick={enrollAndContinue}
-                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg hover:bg-arx-primary-dark transition-colors"
+                onClick={payAndContinue}
+                disabled={isProcessing}
+                className="w-full flex items-center justify-center gap-2 bg-arx-primary text-white font-semibold py-3.5 rounded-lg hover:bg-arx-primary-dark transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
               >
-                Enroll
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <span>Pay ${pricing.price}</span>
+                )}
               </button>
             </div>
           </div>
         </div>
-
-        {showSuccess && (
-          <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 pointer-events-none">
-            <div className="pointer-events-auto flex items-center gap-2 bg-arx-slate text-white text-sm font-semibold px-5 py-3 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-4">
-              <CheckCircle className="w-4 h-4 text-arx-primary flex-shrink-0" />
-              <span>Success! You're enrolled in the Assistivan Copay Program.</span>
-            </div>
-          </div>
-        )}
       </main>
     );
   }

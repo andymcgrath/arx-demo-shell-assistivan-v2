@@ -17,11 +17,11 @@ import { PROGRAM } from "@/config/branding";
  * tier) — those are now combined into this single $25 option.
  *
  * Retail/Mail record the choice (SELECT_PRICING_OPTION) and go straight
- * into the existing delivery-address flow, unchanged. Copay only records
- * the choice here (SELECT_SELF_PAY) and routes to /delivery-payment, which
- * doubles as the Copay enrollment screen for this flow — payment
- * (PATIENT_PAYS + VERIFY_PAYMENT) completes there once the patient taps
- * Enroll, not on this screen.
+ * into the existing delivery-address flow, unchanged. Copay routes to a
+ * dedicated /copay-enroll screen instead — enrolling only unlocks the
+ * reduced price, it isn't payment, so nothing is dispatched here yet. The
+ * actual charge happens later at the payment step (after address + date),
+ * same point Retail/Mail reach it, just at the discounted price.
  */
 
 type PricingKey = "retail" | "mail_order" | "self_pay";
@@ -79,16 +79,11 @@ export default function BenefitPricing() {
     navigate("/delivery-address");
   }
 
-  function enrollInCopay() {
-    // Records the selection only — /delivery-payment (the Copay enrollment
-    // screen) handles the actual Enroll/payment step.
-    dispatch("SELECT_SELF_PAY", { portal: "patient" });
-    navigate("/delivery-payment");
-  }
-
   function handleSelect(key: PricingKey) {
     if (key === "self_pay") {
-      enrollInCopay();
+      // Enrollment (and the actual SELECT_SELF_PAY dispatch) happens on the
+      // dedicated screen — this card is just the entry point to it.
+      navigate("/copay-enroll");
     } else {
       choosePricing(key);
     }

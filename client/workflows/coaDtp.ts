@@ -185,18 +185,18 @@ export const coaDtpMachine = setup({
           }),
         },
         // Third option on Benefit Pricing — patient applies to the CoAssist
-        // copay/assistance program instead of picking Retail/Mail. Routes
-        // into the SAME cashOfferSent → paymentProcessed → paymentVerified
-        // chain the denied+cash-pay path uses below, so "Cash Offer" in the
-        // CRM legitimately reflects this progress and converges on
-        // addressSet for free once payment is verified.
+        // Copay Program instead of picking Retail/Mail. Enrollment just
+        // records the choice (unlocks the reduced price) — it is NOT
+        // payment. It joins the same pricingSelected state Retail/Mail use,
+        // so it goes through the identical address/date flow; the actual
+        // charge happens later at the payment step (PATIENT_PAYS/
+        // VERIFY_PAYMENT, handled below in pricingSelected).
         SELECT_SELF_PAY: {
-          target: "cashOfferSent",
+          target: "pricingSelected",
           actions: assign({
             workflowData: ({ context }) => ({
               ...context.workflowData,
               pricingOption: "self_pay",
-              cashOfferStatus: "sent",
               selectedPharmacy: { name: "CoAssist Pharmacy (Self-Pay)" },
             }),
           }),
@@ -208,6 +208,18 @@ export const coaDtpMachine = setup({
         PATIENT_SETS_ADDRESS: {
           target: "addressSet",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
+        },
+        // Real payment for the self-pay/Copay path, fired from the payment
+        // screen after address + date (nothing currently dispatches
+        // PATIENT_SETS_ADDRESS, so the machine is still sitting here at that
+        // point — see DeliveryPayment.tsx). Retail/Mail never dispatch
+        // these, so cashOfferStatus/paymentVerified correctly stay
+        // untouched for them.
+        PATIENT_PAYS: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+        },
+        VERIFY_PAYMENT: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
         },
       },
     },
@@ -249,6 +261,14 @@ export const coaDtpMachine = setup({
           target: "shipDateSelected",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, patientShipDate: new Date().toISOString() }) }),
         },
+        // Defensive duplicate of pricingSelected's payment handlers — same
+        // reasoning, in case address ever does get dispatched for real.
+        PATIENT_PAYS: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+        },
+        VERIFY_PAYMENT: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
+        },
       },
     },
     shipDateSelected: {
@@ -256,6 +276,14 @@ export const coaDtpMachine = setup({
         KICK_OFF_FILL: {
           target: "rxProcessing",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing" }) }),
+        },
+        // Defensive duplicate of pricingSelected's payment handlers — same
+        // reasoning, in case ship date ever does get dispatched for real.
+        PATIENT_PAYS: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+        },
+        VERIFY_PAYMENT: {
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
         },
       },
     },

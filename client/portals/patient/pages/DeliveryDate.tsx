@@ -32,12 +32,11 @@ export default function DeliveryDate() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
-  // CoA_DTP's payment/enrollment (if any) already happened earlier — on
-  // Benefit Pricing for Retail/Mail, or on the Copay enrollment screen
-  // before address entry. Date selection is the last step, so it should
-  // finish the order, not loop back to /delivery-payment (which now shows
-  // the Copay enrollment card and would be wrong to revisit here).
-  const isCoA = flowType === "CoA_DTP";
+  // Copay enrollment only unlocks the reduced price — it isn't payment, so
+  // Copay still needs this payment step just like Retail/Mail (WF1 is the
+  // only flow that skips it; it has its own dedicated payment handling
+  // elsewhere).
+  const skipPayment = isWorkflow1;
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
@@ -88,7 +87,7 @@ export default function DeliveryDate() {
             </div>
 
             <button
-              onClick={() => selected && navigate(isWorkflow1 || isCoA ? "/delivery-confirmation" : "/delivery-payment")}
+              onClick={() => selected && navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment")}
               disabled={!selected}
               className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${selected ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
             >
