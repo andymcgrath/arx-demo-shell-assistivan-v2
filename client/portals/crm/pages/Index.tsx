@@ -689,6 +689,11 @@ export default function Index() {
   const cashOfferStatus = workflowData.cashOfferStatus;
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
+  const pricingOption = workflowData.pricingOption;
+  // Retail/Mail Order are insurance-covered — no cash payment to verify, so
+  // they're ready to dispense as soon as PA is approved. Self-pay/copay
+  // assistance goes through the cash-offer chain and needs paymentVerified.
+  const readyToDispense = paymentVerified || (paStatus === "approved" && (pricingOption === "retail" || pricingOption === "mail_order"));
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
@@ -930,12 +935,18 @@ export default function Index() {
         {
           id: "CO-14281",
           name: "Cash Offer",
-          statusLabel: paStatus === 'approved' ? "Not Applicable"
+          // "Not Applicable" only holds while PA is approved AND the patient
+          // hasn't touched the self-pay/assistance-program option (Retail or
+          // Mail Order chosen instead, or still deciding on Benefit Pricing).
+          // Once cashOfferStatus moves off "none" — patient selected the
+          // CoAssist Self-Pay option on Copay Enroll — this reflects the real
+          // cash-offer/payment progress instead, same as the PA-denied path.
+          statusLabel: paStatus === 'approved' && cashOfferStatus === "none" ? "Not Applicable"
             : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
-          statusDetail: paStatus === 'approved' ? "Not applicable — PA approved, no cash offer needed"
-            : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified" : "Payment received — pending verification",
+          statusDetail: paStatus === 'approved' && cashOfferStatus === "none" ? "Not applicable — Retail or Mail Order selected"
+            : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
           isComplete: paymentVerified,
-          isNotStarted: paStatus === 'approved' ? true : cashOfferStatus === "none",
+          isNotStarted: paStatus === 'approved' && cashOfferStatus === "none" ? true : cashOfferStatus === "none",
           fields: [
             { label: "Offer Status", value: cashOfferStatus === "none" ? null : cashOfferStatus === "sent" ? "Sent" : "Paid" },
             { label: "Payment Verified", value: paymentVerified ? "Yes" : "No" },
@@ -948,7 +959,7 @@ export default function Index() {
           id: "DS-14282",
           name: "Dispense",
           statusLabel: pharmacyStatus === "none" ? "Stage not started" : pharmacyStatus === "processing" ? "Fill In Progress" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered",
-          statusDetail: pharmacyStatus === "none" ? (paStatus === 'approved' ? "Awaiting delivery details" : "Awaiting payment verification") : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
+          statusDetail: pharmacyStatus === "none" ? (readyToDispense ? "Ready to dispense" : "Awaiting payment verification") : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
           isComplete: pharmacyStatus === "delivered",
           isNotStarted: pharmacyStatus === "none",
           fields: [
@@ -1505,9 +1516,9 @@ export default function Index() {
                   <div className="p-4 space-y-3">
                     <button
                       onClick={() => dispatch('KICK_OFF_FILL', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "none" || !paymentVerified}
+                      disabled={pharmacyStatus !== "none" || !readyToDispense}
                       className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: pharmacyStatus !== "none" || !paymentVerified ? "#ccc" : FC_BLUE }}
+                      style={{ background: pharmacyStatus !== "none" || !readyToDispense ? "#ccc" : FC_BLUE }}
                     >
                       Kick Off Fill
                     </button>

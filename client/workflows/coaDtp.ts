@@ -51,6 +51,7 @@ export const coaDtpMachine = setup({
       | { type: "VERIFY_PA_APPROVED_SMS" }
       | { type: "VERIFY_PA_APPROVED_OTP" }
       | { type: "SELECT_PRICING_OPTION"; option: "retail" | "mail_order" }
+      | { type: "SELECT_SELF_PAY" }
       | { type: "SEND_CASH_OFFER" }
       | { type: "PATIENT_PAYS" }
       | { type: "VERIFY_PAYMENT" }
@@ -180,6 +181,23 @@ export const coaDtpMachine = setup({
               selectedPharmacy: event.option === "retail"
                 ? { name: "CVS Pharmacy #3795" }
                 : { name: "FutureScripts Home Delivery" },
+            }),
+          }),
+        },
+        // Third option on Benefit Pricing — patient applies to the CoAssist
+        // copay/assistance program instead of picking Retail/Mail. Routes
+        // into the SAME cashOfferSent → paymentProcessed → paymentVerified
+        // chain the denied+cash-pay path uses below, so "Cash Offer" in the
+        // CRM legitimately reflects this progress and converges on
+        // addressSet for free once payment is verified.
+        SELECT_SELF_PAY: {
+          target: "cashOfferSent",
+          actions: assign({
+            workflowData: ({ context }) => ({
+              ...context.workflowData,
+              pricingOption: "self_pay",
+              cashOfferStatus: "sent",
+              selectedPharmacy: { name: "CoAssist Pharmacy (Self-Pay)" },
             }),
           }),
         },

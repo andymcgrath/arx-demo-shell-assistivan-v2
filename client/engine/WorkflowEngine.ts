@@ -136,8 +136,17 @@ export function derivePatientRoute(state: MachineContext): string {
         workflowData.pricingOption === null)
       return '/benefit-pricing';
 
+    // Self-pay/copay-assistance chosen — needs payment before address (must
+    // be checked before the generic pricingOption rule below, otherwise that
+    // rule would skip straight past payment collection)
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.pricingOption === 'self_pay' &&
+        workflowData.cashOfferStatus === 'sent')
+      return '/delivery-payment';
+
     // Pricing chosen — needs address (converges back with the denied+cash-pay
-    // chain below once the address is set)
+    // chain below once the address is set). Also covers self-pay once
+    // cashOfferStatus flips to 'paid' above.
     if (workflowData.paStatus === 'approved' &&
         workflowData.pricingOption !== null &&
         workflowData.dispatchStatus === 'none')

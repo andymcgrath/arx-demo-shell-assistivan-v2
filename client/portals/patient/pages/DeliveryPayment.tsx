@@ -3,7 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { PROGRAM } from "@/config/branding";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 const LIST_PRICE = 575;
 const DISCOUNT = 426;
@@ -11,6 +11,7 @@ const TOTAL = LIST_PRICE - DISCOUNT;
 
 export default function DeliveryPayment() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const { data: patient } = usePatientCase();
@@ -21,6 +22,17 @@ export default function DeliveryPayment() {
     }
   }, [flowType, navigate]);
   const firstName = patient.patientName.split(" ")[0];
+
+  // Records the payment on the workflow (cashOfferStatus → "paid",
+  // paymentVerified → true) so the CRM's Cash Offer stage and downstream
+  // Dispense actions unlock correctly. No-op on flows whose machine doesn't
+  // define these events (e.g. WF1's Fax_QS_PA_Approved, which redirects away
+  // from this screen above before a patient could ever click Pay).
+  function completePayment() {
+    dispatch("PATIENT_PAYS", { portal: "patient" });
+    dispatch("VERIFY_PAYMENT", { portal: "patient" });
+    navigate("/delivery-confirmation");
+  }
   const [email, setEmail] = useState("");
   const [autoRefill, setAutoRefill] = useState(true);
   const [breakdown, setBreakdown] = useState(false);
@@ -137,7 +149,7 @@ export default function DeliveryPayment() {
 
               {/* Apple Pay */}
               <button
-                onClick={() => navigate("/delivery-confirmation")}
+                onClick={completePayment}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg font-semibold text-white bg-black hover:bg-arx-slate transition-colors"
               >
                 <svg viewBox="0 0 60 26" className="h-5 fill-white" aria-hidden="true">
@@ -169,7 +181,7 @@ export default function DeliveryPayment() {
                       <input type="text" placeholder="CVC" className="flex-1 px-4 py-3 rounded-xl text-sm outline-none border border-arx-borders text-arx-slate focus:border-arx-primary transition-colors" />
                     </div>
                     <button
-                      onClick={() => navigate("/delivery-confirmation")}
+                      onClick={completePayment}
                       className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
                     >
                       Pay ${TOTAL}

@@ -1,18 +1,32 @@
 import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, CreditCard, ShoppingBag, CheckCircle } from "lucide-react";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 export default function CopayEnroll() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
+  const isCoA = flowType === "CoA_DTP";
 
   useEffect(() => {
     if (flowType === "Fax_QS_PA_Approved") {
       navigate("/pa-approved");
     }
   }, [flowType, navigate]);
+
+  function orderViaCoAssist() {
+    if (isCoA) {
+      // Records the self-pay choice and routes into the same cash-offer/
+      // payment chain the CRM already tracks, so "Cash Offer" and Dispense
+      // update correctly once payment is made.
+      dispatch("SELECT_SELF_PAY", { portal: "patient" });
+      navigate("/delivery-payment");
+    } else {
+      navigate("/delivery-address");
+    }
+  }
 
   return (
     <main className="flex-grow pb-8">
@@ -99,7 +113,7 @@ export default function CopayEnroll() {
                 ))}
               </ul>
               <button
-                onClick={() => navigate("/delivery-address")}
+                onClick={orderViaCoAssist}
                 className="w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
               >
                 <span>Order via CoAssist</span>

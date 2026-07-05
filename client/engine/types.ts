@@ -36,7 +36,7 @@ export interface WorkflowData {
   paApprovedAt: string | null;
   /** CoA_DTP only: which delivery/pricing path the patient picked on the
    *  Benefit Pricing screen after PA approval. Unused by other flows. */
-  pricingOption: 'retail' | 'mail_order' | null;
+  pricingOption: 'retail' | 'mail_order' | 'self_pay' | null;
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

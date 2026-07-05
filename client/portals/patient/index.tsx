@@ -33,6 +33,7 @@ const DELIVERY_FLOW_PATHS = [
   '/pa-approved-sms',
   '/pa-approved-otp',
   '/benefit-pricing',
+  '/copay-enroll',
   '/delivery-address',
   '/delivery-date',
   '/delivery-payment',
