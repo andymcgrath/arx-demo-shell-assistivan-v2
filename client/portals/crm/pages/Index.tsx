@@ -652,6 +652,24 @@ export default function Index() {
     }
   }, [enrollmentStatus, navigate]);
 
+  // Once the patient confirms consent there's real work to look at — jump
+  // straight into Keanu's case detail instead of leaving the operator on
+  // the case list. Guarded by a ref so it only fires on that transition,
+  // not every time hubView happens to be "list" while consent is confirmed
+  // (otherwise clicking "Back to Cases" afterward would just get overridden).
+  const autoOpenedOnConsentRef = useRef(false);
+  useEffect(() => {
+    if (workflowData.flowType !== "CoA_DTP") return;
+    if (workflowData.consentStatus === "confirmed") {
+      if (!autoOpenedOnConsentRef.current) {
+        autoOpenedOnConsentRef.current = true;
+        setHubView("detail");
+      }
+    } else {
+      autoOpenedOnConsentRef.current = false;
+    }
+  }, [workflowData.flowType, workflowData.consentStatus]);
+
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
   const phone = usePatientStore((s) => s.phone);

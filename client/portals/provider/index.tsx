@@ -453,8 +453,13 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
 
 // ── Step 4: PA Submitted confirmation ───────────────────────────────────────
 
-function PaSubmittedStep({ onDone }: { onDone: () => void }) {
+function PaSubmittedStep({ onDone, isCoA = false }: { onDone: () => void; isCoA?: boolean }) {
   const dispatch = useWorkflowDispatch();
+  const patientName = usePatientStore((s) => s.patientName);
+  const patientDob = usePatientStore((s) => s.patientDob);
+  const drugName = usePatientStore((s) => s.drugName);
+  const payer = usePatientStore((s) => s.payer);
+  const npi = usePatientStore((s) => s.npi);
 
   const handleDone = () => {
     dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' });
@@ -463,8 +468,33 @@ function PaSubmittedStep({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">Electronic Prior Authorization</p>
-      <PaSummaryTable isSubmitted={true} />
+      {isCoA ? (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <ManufacturerLogo variant="colors" className="h-7 w-auto" />
+            <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — Prior Authorization</p>
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
+              {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>
+              Provider: Sarah Chen, MD · NPI {npi}
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>
+              Insurance: {payer}
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>
+              Medication: {drugName}
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="pa-section-title">Electronic Prior Authorization</p>
+          <PaSummaryTable isSubmitted={true} />
+        </>
+      )}
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
@@ -618,7 +648,7 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
     <div className="coa-dashboard min-h-screen bg-neutral-100 flex">
       {/* Sidebar — just the CoAssist mark, sized to fit it rather than a
           wide nav panel now that the intro card and To-Do list are gone. */}
-      <div className="hidden sm:flex w-[160px] bg-teal-600 flex-col items-center justify-center py-6 px-4">
+      <div className="hidden sm:flex w-[160px] bg-teal-600 flex-col items-center justify-start py-6 px-4">
         <div className="bg-white rounded-lg px-4 py-3">
           {/* MANUFACTURER (patient portal branding.ts) is CoAssist, the
               pharmacy — distinct from PROGRAM (Assistivan, the drug). No
@@ -1739,12 +1769,15 @@ export default function ProviderPortal() {
           onNext={() => setStep("pa-submitted")}
         />
       )}
-      {step === "pa-submitted" && <PaSubmittedStep onDone={() => {
-        if (isCoA) {
-          // Back to the dashboard — Keanu's row now shows "PA Submitted".
-          setStep("coa-dashboard");
-        }
-      }} />}
+      {step === "pa-submitted" && <PaSubmittedStep
+        isCoA={isCoA}
+        onDone={() => {
+          if (isCoA) {
+            // Back to the dashboard — Keanu's row now shows "PA Submitted".
+            setStep("coa-dashboard");
+          }
+        }}
+      />}
       {step === "income-verify" && (
         <IncomeVerifyStep onBack={() => setStep("login")} onCancel={() => setStep("login")} onNext={() => setStep("income-submitted")} />
       )}

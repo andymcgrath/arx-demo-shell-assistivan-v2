@@ -175,7 +175,7 @@ const STEP_LABELS_COA = [
   "eRx Received",
   "Consent",
   "Benefits Investigation",
-  "Cash Offer",
+  "Copay Enrollment",
   "Patient Payment",
   "Dispensing",
   "Delivered",
