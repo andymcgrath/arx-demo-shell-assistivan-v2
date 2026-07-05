@@ -703,7 +703,7 @@ export default function Index() {
           id: "BI-14273",
           name: "Benefits Investigation",
           statusLabel: biStatus === "none" ? "Not Started" : biStatus === "running" ? "Running" : "Complete",
-          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : paStatus === "denied" ? "PA Denied — Cash offer eligible" : "Complete",
+          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : "Complete",
           isComplete: biStatus === "complete",
           isNotStarted: biStatus === "none",
           fields: [],
@@ -715,14 +715,16 @@ export default function Index() {
           name: "Prior Authorization",
           statusLabel: paStatus === 'none' ? "Stage not started"
             : paStatus === 'submitted' ? "Submitted"
+            : paStatus === 'approved' ? "Approved"
             : "Denied",
           statusDetail: paStatus === 'none' ? "Awaiting BI completion"
             : paStatus === 'submitted' ? "Awaiting payer decision"
+            : paStatus === 'approved' ? "PA Approved — pricing options sent to patient"
             : "PA Denied — Patient eligible for cash offer",
-          isComplete: paStatus === 'denied',
+          isComplete: paStatus === 'denied' || paStatus === 'approved',
           isNotStarted: paStatus === 'none',
           fields: [
-            { label: "PA Status", value: paStatus === 'none' ? null : paStatus === 'submitted' ? "Submitted" : "Denied" },
+            { label: "PA Status", value: paStatus === 'none' ? null : paStatus === 'submitted' ? "Submitted" : paStatus === 'approved' ? "Approved" : "Denied" },
           ],
           lastUpdated: paStatus !== 'none' ? new Date().toLocaleDateString() : null,
           lastUpdatedAgo: paStatus !== 'none' ? "today" : null,
@@ -730,10 +732,12 @@ export default function Index() {
         {
           id: "CO-14281",
           name: "Cash Offer",
-          statusLabel: cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
-          statusDetail: cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified" : "Payment received — pending verification",
+          statusLabel: paStatus === 'approved' ? "Not Applicable"
+            : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
+          statusDetail: paStatus === 'approved' ? "Not applicable — PA approved, no cash offer needed"
+            : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified" : "Payment received — pending verification",
           isComplete: paymentVerified,
-          isNotStarted: cashOfferStatus === "none",
+          isNotStarted: paStatus === 'approved' ? true : cashOfferStatus === "none",
           fields: [
             { label: "Offer Status", value: cashOfferStatus === "none" ? null : cashOfferStatus === "sent" ? "Sent" : "Paid" },
             { label: "Payment Verified", value: paymentVerified ? "Yes" : "No" },
@@ -746,7 +750,7 @@ export default function Index() {
           id: "DS-14282",
           name: "Dispense",
           statusLabel: pharmacyStatus === "none" ? "Stage not started" : pharmacyStatus === "processing" ? "Fill In Progress" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered",
-          statusDetail: pharmacyStatus === "none" ? "Awaiting payment verification" : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
+          statusDetail: pharmacyStatus === "none" ? (paStatus === 'approved' ? "Awaiting delivery details" : "Awaiting payment verification") : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
           isComplete: pharmacyStatus === "delivered",
           isNotStarted: pharmacyStatus === "none",
           fields: [

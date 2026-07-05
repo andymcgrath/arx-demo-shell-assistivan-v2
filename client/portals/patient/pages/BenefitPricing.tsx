@@ -106,7 +106,7 @@ export default function BenefitPricing() {
                   <Sparkles className="w-4 h-4 text-arx-primary" />
                 </div>
                 <p className="text-sm text-arx-body-copy">
-                  You may qualify for Foundayo at $0. Enroll in the {PROGRAM.drugDisplayName} Assistance Program
+                  You may qualify for $0 out-of-pocket cost. Enroll in the {PROGRAM.drugDisplayName} Assistance Program
                 </p>
               </div>
               <button

@@ -364,12 +364,17 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-function PaQuestionsStep({ onBack, onCancel, onNext }: { onBack: () => void; onCancel: () => void; onNext: () => void }) {
+function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
   const [q3, setQ3] = useState<string | null>(null);
   const [comments, setComments] = useState("");
   const dispatch = useWorkflowDispatch();
+  const patientName = usePatientStore((s) => s.patientName);
+  const patientDob = usePatientStore((s) => s.patientDob);
+  const drugName = usePatientStore((s) => s.drugName);
+  const payer = usePatientStore((s) => s.payer);
+  const npi = usePatientStore((s) => s.npi);
 
   function handleNext() {
     dispatch('SUBMIT_PA', { source: 'provider_portal', comments, portal: 'provider' });
@@ -378,8 +383,33 @@ function PaQuestionsStep({ onBack, onCancel, onNext }: { onBack: () => void; onC
 
   return (
     <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">Electronic Prior Authorization</p>
-      <PaSummaryTable />
+      {isCoA ? (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <ManufacturerLogo variant="colors" className="h-7 w-auto" />
+            <p className="pa-section-title" style={{ margin: 0 }}>COA Direct to Patient — Prior Authorization</p>
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>
+              {patientName} <span style={{ fontWeight: 400, color: "#6F7276" }}>· {patientDob}</span>
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>
+              Provider: Sarah Chen, MD · NPI {npi}
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>
+              Insurance: {payer}
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>
+              Medication: {drugName}
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="pa-section-title">Electronic Prior Authorization</p>
+          <PaSummaryTable />
+        </>
+      )}
 
       <div className="pa-questions-section">
         <RadioQuestion
@@ -1714,6 +1744,7 @@ export default function ProviderPortal() {
       )}
       {step === "pa-questions" && (
         <PaQuestionsStep
+          isCoA={isCoA}
           onBack={() => setStep(isCoA ? "coa-dashboard" : "login")}
           onCancel={() => setStep(isCoA ? "coa-dashboard" : "login")}
           onNext={() => setStep("pa-submitted")}
