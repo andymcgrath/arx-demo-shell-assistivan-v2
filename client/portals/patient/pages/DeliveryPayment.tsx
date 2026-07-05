@@ -4,7 +4,6 @@ import { usePatientCase } from "@/hooks/usePatientCase";
 import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import { PROGRAM } from "@/config/branding";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { toast } from "@/hooks/use-toast";
 
 const LIST_PRICE = 575;
 const DISCOUNT = 426;
@@ -47,13 +46,18 @@ export default function DeliveryPayment() {
   }
 
   // Copay enrollment (CoA_DTP) — this screen doubles as the Copay enrollment
-  // step: one Enroll click finishes payment, confirms with a toast, then
+  // step: one Enroll click finishes payment, confirms with a banner, then
   // hands off to delivery address entry after a beat so the confirmation is
-  // visible.
+  // visible. Uses a local banner instead of the app's global Radix Toaster —
+  // that one renders via position:fixed, and inside the phone-mockup frame
+  // (DemoShell's .i17pro__screen) that only reliably lands bottom-right at
+  // sm+ viewport widths, so it was invisible in the narrow phone view. This
+  // banner is scoped to the card itself so it's guaranteed visible.
+  const [showSuccess, setShowSuccess] = useState(false);
   function enrollAndContinue() {
     dispatch("PATIENT_PAYS", { portal: "patient" });
     dispatch("VERIFY_PAYMENT", { portal: "patient" });
-    toast({ title: "Enrollment complete", description: "You're enrolled in the Assistivan Copay Program." });
+    setShowSuccess(true);
     setTimeout(() => navigate("/delivery-address"), 1000);
   }
 
@@ -118,6 +122,15 @@ export default function DeliveryPayment() {
             </div>
           </div>
         </div>
+
+        {showSuccess && (
+          <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-2 bg-arx-slate text-white text-sm font-semibold px-5 py-3 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-4">
+              <CheckCircle className="w-4 h-4 text-arx-primary flex-shrink-0" />
+              <span>Success! You're enrolled in the Assistivan Copay Program.</span>
+            </div>
+          </div>
+        )}
       </main>
     );
   }
