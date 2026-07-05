@@ -616,26 +616,15 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
 
   return (
     <div className="coa-dashboard min-h-screen bg-neutral-100 flex">
-      {/* Sidebar */}
-      <div className="hidden sm:flex w-[354px] bg-teal-600 text-white flex-col py-6 px-6">
-        <div className="flex items-center gap-3 mb-12">
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
-            alt="CoAssist Logo"
-            className="h-8 w-auto"
-          />
-        </div>
-
-        <div className="bg-teal-700 rounded-lg p-5 mb-6">
-          <h3 className="font-bold text-lg mb-2">CoA Direct to Patient</h3>
-          <p className="text-sm font-semibold text-teal-100">
-            Search for a patient below to start or resume their CoAssist enrollment.
-          </p>
-        </div>
-
-        <div className="bg-teal-800 rounded-lg p-6 flex-1">
-          <h3 className="font-bold text-lg text-white mb-6">To-Do List</h3>
-          <p className="text-teal-200 text-sm font-semibold text-center opacity-70">This feature is coming soon.</p>
+      {/* Sidebar — just the CoAssist mark, sized to fit it rather than a
+          wide nav panel now that the intro card and To-Do list are gone. */}
+      <div className="hidden sm:flex w-[160px] bg-teal-600 flex-col items-center justify-center py-6 px-4">
+        <div className="bg-white rounded-lg px-4 py-3">
+          {/* MANUFACTURER (patient portal branding.ts) is CoAssist, the
+              pharmacy — distinct from PROGRAM (Assistivan, the drug). No
+              dedicated white variant exists for this mark yet, so it's
+              placed on a white chip for contrast against the teal panel. */}
+          <ManufacturerLogo variant="colors" className="h-8 w-auto" />
         </div>
       </div>
 
