@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
 import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 function isUnavailable(d: Date): boolean {
   const day = d.getDay();
@@ -29,9 +29,11 @@ function formatDate(d: Date) {
 
 export default function DeliveryDate() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
+  const isCoA = flowType === "CoA_DTP";
   // Copay enrollment only unlocks the reduced price — it isn't payment, so
   // Copay still needs this payment step just like Retail/Mail (WF1 is the
   // only flow that skips it; it has its own dedicated payment handling
@@ -40,6 +42,17 @@ export default function DeliveryDate() {
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
+
+  // Records the ship date on the workflow (CoA_DTP only — see
+  // DeliveryAddress.tsx's PATIENT_SETS_ADDRESS for why this matters: without
+  // it the coaDtp actor's real state never reaches shipDateSelected, so a
+  // portal remount falls back to an earlier screen and the CRM's dispense
+  // buttons (gated on that state) never fire.
+  function handleSave() {
+    if (!selected) return;
+    if (isCoA) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment");
+  }
 
   return (
     <main className="flex-grow">
@@ -87,7 +100,7 @@ export default function DeliveryDate() {
             </div>
 
             <button
-              onClick={() => selected && navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment")}
+              onClick={handleSave}
               disabled={!selected}
               className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${selected ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
             >
