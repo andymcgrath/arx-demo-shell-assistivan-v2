@@ -697,6 +697,15 @@ export default function Index() {
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
   const isPapFlow = flowType === "Fax_PAP_Audit";
   const isCoaFlow = flowType === "CoA_DTP";
+  // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
+  // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
+  // (that only happens once the patient confirms their delivery address).
+  // WF1 has no such head start: dispatchStatus === "selected" only once HUB
+  // staff manually pick a pharmacy via the Choose Pharmacy modal. So CoA can
+  // dispatch to pharmacy as soon as one is known; WF1 still needs the
+  // explicit "selected" status.
+  const canDispatchToPharmacy = !!selectedPharmacy && pharmacyStatus === "none" && dispatchStatus !== "dispatched" &&
+    (isCoaFlow || dispatchStatus === "selected");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
@@ -1870,7 +1879,7 @@ export default function Index() {
               <span className="text-[13px] font-semibold text-[#3e3e3c]">
                 {activeStage.name} {activeStage.id}
               </span>
-              {(dispatchStatus === "selected" || pharmacyStatus === "processing") && selectedPharmacy && (
+              {canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -1940,6 +1949,16 @@ export default function Index() {
                       <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "#e8f0fa" }}>
                         <span className="text-[12px] font-semibold" style={{ color: FC_BLUE }}>
                           Shipping…
+                        </span>
+                      </div>
+                    ) : isCoaFlow ? (
+                      // CoA_DTP's pharmacy is auto-assigned at pricing selection
+                      // (see coaDtp.ts) — there's nothing to choose here, so no
+                      // CTA. Dispatching is done from the "Dispatch to Pharmacy"
+                      // button in the header above instead.
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#f5f5f5" }}>
+                        <span className="text-[12px] font-semibold text-[#706e6b]">
+                          Pharmacy assigned — ready to dispatch
                         </span>
                       </div>
                     ) : (
@@ -2305,7 +2324,7 @@ export default function Index() {
                   Approved
                 </span>
               )}
-              {activeStage.id === "TP-14277" && dispatchStatus === "selected" && selectedPharmacy && (
+              {activeStage.id === "TP-14277" && canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
