@@ -171,21 +171,55 @@ const STEP_LABELS_PAP_AUDIT = [
   "PA Approved",
 ];
 
+// "Copay Enrollment" and "Patient Payment" used to be two separate steps,
+// but Benefit Pricing covers Retail/Mail/Copay uniformly now (see
+// BenefitPricing.tsx) — there's no distinct "enrollment" milestone that
+// applies to all three pricing paths, just one "Payment" phase that runs
+// from PA approval through the actual charge. Merged into a single step so
+// the bar doesn't show enrollment as a separate, checkable milestone that
+// doesn't apply to two-thirds of patients.
 const STEP_LABELS_COA = [
   "eRx Received",
   "Consent",
   "Benefits Investigation",
-  "Copay Enrollment",
-  "Patient Payment",
+  "Payment",
   "Dispensing",
   "Delivered",
 ];
 
+// CoA_DTP-specific step calculation — the generic one below was tuned for
+// WF1's fields (dispatchStatus/paStatus meaning "pharmacy dispatch") and,
+// applied to CoA's different fields, jumped straight to a late step number
+// the instant PA was approved — checking off "Payment" (and, before this
+// merge, "Copay Enrollment") before the patient had even opened Benefit
+// Pricing. This mirrors coaDtp.ts's real milestones instead.
+function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>['workflowData']): number {
+  const { pharmacyStatus, biStatus, consentStatus, enrollmentStatus, pricingOption, patientShipDate, paymentVerified } = workflowData;
+  // Retail/Mail have no digital payment to verify (cost is handled at the
+  // pharmacy counter) — they're "paid" as soon as a ship date is set.
+  // Copay/self-pay isn't done until the payment screen actually fires
+  // PATIENT_PAYS/VERIFY_PAYMENT.
+  const paymentDone = patientShipDate !== null && (pricingOption !== 'self_pay' || paymentVerified === true);
+
+  if (pharmacyStatus === 'delivered') return 7;
+  if (pharmacyStatus === 'processing' || pharmacyStatus === 'ready' || pharmacyStatus === 'shipped') return 5;
+  if (paymentDone) return 5;
+  // PA submission/approval, pricing selection, address, and ship date all
+  // happen within this window — bundled into "Payment" since none of them
+  // get their own step in the compact 6-step bar.
+  if (biStatus === 'complete') return 4;
+  if (biStatus === 'running' || biStatus === 'submitted') return 3;
+  if (consentStatus === 'confirmed') return 3;
+  if (enrollmentStatus !== 'none') return 2;
+  return 1;
+}
+
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
+  const isCoaFlow = flowType === "CoA_DTP";
 
-  const workflowStep = (() => {
+  const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
     const d = workflowData.dispatchStatus;
     const pa = workflowData.paStatus;
@@ -210,13 +244,18 @@ function StepBar() {
   const paStatus        = workflowData.paStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
   const STEP_LABELS     = flowType === "Fax_PAP_Audit" ? STEP_LABELS_PAP_AUDIT
-    : flowType === "CoA_DTP" ? STEP_LABELS_COA
+    : isCoaFlow ? STEP_LABELS_COA
     : STEP_LABELS_DEFAULT;
-  const biRunning       = biStatus === "running" && flowType !== "Fax_PAP_Audit";
-  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
-  const rxInTransit     = pharmacyStatus === "processing" && flowType !== "Fax_PAP_Audit";
-  const rxProcessing    = pharmacyStatus === "ready" && flowType !== "Fax_PAP_Audit";
-  const rxShipping      = pharmacyStatus === "shipped" && flowType !== "Fax_PAP_Audit";
+  // These pulsing-ring decorations hardcode step positions tuned for WF1's
+  // 8-step bar (e.g. Prior Authorization always at n===4). CoA's compact
+  // 6-step bar doesn't have matching positions for all of them, so it gets
+  // its own "active" highlight from computeCoaWorkflowStep above instead of
+  // these extra pulses.
+  const biRunning       = biStatus === "running" && flowType !== "Fax_PAP_Audit" && !isCoaFlow;
+  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit" && !isCoaFlow;
+  const rxInTransit     = pharmacyStatus === "processing" && flowType !== "Fax_PAP_Audit" && !isCoaFlow;
+  const rxProcessing    = pharmacyStatus === "ready" && flowType !== "Fax_PAP_Audit" && !isCoaFlow;
+  const rxShipping      = pharmacyStatus === "shipped" && flowType !== "Fax_PAP_Audit" && !isCoaFlow;
 
 
   return (
