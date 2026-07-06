@@ -189,8 +189,13 @@ export function derivePatientRoute(state: MachineContext): string {
     if (workflowData.pharmacyStatus === 'shipped')
       return '/order-shipped';
 
+    // Stay on the tracker for the final "delivered" state too, rather than
+    // handing off to the generic /medication-delivered home-dashboard screen
+    // (guide/prescriptions/chat) that WF1 uses. OrderTracker.tsx already
+    // renders a complete "delivered" state (all 5 steps checked, Delivered
+    // dated) with no CoA-specific changes needed — see buildSteps() there.
     if (workflowData.pharmacyStatus === 'delivered')
-      return '/medication-delivered';
+      return '/order-tracker';
 
     return '/lock-screen';
   }
