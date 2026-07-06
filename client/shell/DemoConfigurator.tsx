@@ -13,6 +13,7 @@ import { X, ChevronDown } from "lucide-react";
 import { useSwitchWorkflow, useActiveWorkflowId, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useDemoStore } from "@/store/demoStore";
 import { workflowRegistry } from "@/engine/WorkflowRegistry";
+import { resetAllWorkflowSnapshots } from "@/engine/actorSingleton";
 import { cn } from "@/lib/utils";
 import type { FlowType } from "@/engine/types";
 
@@ -89,6 +90,11 @@ export default function DemoConfigurator({
   const handleReset = () => {
     dispatch("RESET");
     resetDemo();
+    // sessionStorage.clear() below wipes the persisted copy of every flow's
+    // snapshot, but not the in-memory cache actorSingleton.ts also keeps for
+    // same-session flow switching — clear that too so a stale snapshot for
+    // another flow can't silently resurface later in this session.
+    resetAllWorkflowSnapshots();
     sessionStorage.clear();
     setBehaviorFlags({
       autoAdvance: true,

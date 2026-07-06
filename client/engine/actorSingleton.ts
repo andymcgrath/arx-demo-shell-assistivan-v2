@@ -129,6 +129,26 @@ export function resetCurrentWorkflowActor(): void {
   clearPersistedSnapshot(currentFlowType);
 }
 
+/**
+ * Wipes every flow's saved progress — not just the currently active one.
+ * "Reset All" only reset the current flow's slot; any OTHER flow's snapshot
+ * (in-memory Map entry and its sessionStorage sub-key) survived untouched.
+ * That's how a case's progress from earlier in the session — including one
+ * captured before a machine definition change — could silently resurface
+ * (restored into a machine whose states/events have since changed) the next
+ * time someone switched back to that flow, looking exactly like "the demo
+ * reverted." Call this from any "reset everything" action so switching back
+ * to any flow afterward always starts genuinely fresh.
+ */
+export function resetAllWorkflowSnapshots(): void {
+  actorSnapshots.clear();
+  try {
+    sessionStorage.removeItem(SNAPSHOT_STORAGE_KEY);
+  } catch {
+    // no-op — see persistSnapshot
+  }
+}
+
 function createActorForFlow(
   flowType: FlowType,
   snapshot?: unknown

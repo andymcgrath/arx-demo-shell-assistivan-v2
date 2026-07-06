@@ -21,7 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
-import { getWorkflowActor, switchWorkflow } from "@/engine/actorSingleton";
+import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
@@ -696,6 +696,14 @@ export default function DemoShell() {
                     onClick={() => {
                       resetDemo();
                       resetPatient();
+                      // Wipe every OTHER flow's cached progress too, not just
+                      // the active one — resetDemo()/resetCurrentWorkflowActor
+                      // only clear the current flow's slot, so an older
+                      // (possibly stale or structurally outdated) snapshot for
+                      // another flow could otherwise survive "Reset All" and
+                      // silently resurface the next time someone switched to
+                      // it, looking like the demo had reverted.
+                      resetAllWorkflowSnapshots();
                       switchWorkflow(flowType);
                       sessionStorage.removeItem('arxWorkflow_v2');
                       sessionStorage.removeItem('arx-demo-shell');
