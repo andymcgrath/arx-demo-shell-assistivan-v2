@@ -1,5 +1,13 @@
 import { setup, assign } from "xstate";
-import type { MachineContext, WorkflowData } from "@/engine/types";
+import type { MachineContext, Pharmacy, WorkflowData } from "@/engine/types";
+
+// Full contact details (not just a name) so the CRM's shared "Triage
+// Pharmacy Details" card — reused from WF1's Dispatch to Triage stage, see
+// Index.tsx's STAGES_LIVE — doesn't render blank address/phone fields for
+// CoA_DTP cases.
+const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
+const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
+const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy (Self-Pay)", address: "500 CoAssist Way", city: "Fairview", state: "TX", zip: "75069", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: "CoA_DTP",
@@ -57,7 +65,7 @@ export const coaDtpMachine = setup({
       | { type: "VERIFY_PAYMENT" }
       | { type: "PATIENT_SETS_ADDRESS" }
       | { type: "PATIENT_SELECTS_SHIP_DATE" }
-      | { type: "KICK_OFF_FILL" }
+      | { type: "SELECT_PHARMACY"; pharmacy: Pharmacy }
       | { type: "FILL_RX" }
       | { type: "SHIP_RX" }
       | { type: "DELIVER_RX" }
@@ -178,9 +186,7 @@ export const coaDtpMachine = setup({
             workflowData: ({ context, event }) => ({
               ...context.workflowData,
               pricingOption: event.option,
-              selectedPharmacy: event.option === "retail"
-                ? { name: "CVS Pharmacy #3795" }
-                : { name: "FutureScripts Home Delivery" },
+              selectedPharmacy: event.option === "retail" ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
             }),
           }),
         },
@@ -197,7 +203,7 @@ export const coaDtpMachine = setup({
             workflowData: ({ context }) => ({
               ...context.workflowData,
               pricingOption: "self_pay",
-              selectedPharmacy: { name: "CoAssist Pharmacy (Self-Pay)" },
+              selectedPharmacy: SELF_PAY_PHARMACY,
             }),
           }),
         },
@@ -261,6 +267,22 @@ export const coaDtpMachine = setup({
           target: "shipDateSelected",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, patientShipDate: new Date().toISOString() }) }),
         },
+        // The CRM's Dispatch to Triage tab (TP-14277, reused from WF1 — see
+        // Index.tsx's STAGES_LIVE) shows "Dispatch to Pharmacy" as soon as
+        // dispatchStatus is "selected", which happens here as soon as the
+        // address is set — the patient doesn't have to have picked a ship
+        // date yet for HUB staff to kick off fill. Matches
+        // workflowMachine.ts's updatePharmacyProcessing exactly (pharmacyStatus
+        // + dispatchStatus flip together).
+        FILL_RX: {
+          target: "rxProcessing",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+        },
+        // Lets HUB staff override the auto-assigned pharmacy from the same
+        // "Choose Pharmacy" modal WF1 uses on that tab.
+        SELECT_PHARMACY: {
+          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+        },
         // Defensive duplicate of pricingSelected's payment handlers — same
         // reasoning, in case address ever does get dispatched for real.
         PATIENT_PAYS: {
@@ -273,9 +295,17 @@ export const coaDtpMachine = setup({
     },
     shipDateSelected: {
       on: {
-        KICK_OFF_FILL: {
+        // Same FILL_RX/SELECT_PHARMACY handlers as addressSet — see the
+        // comments there. dispatchStatus is already "selected" by the time
+        // this state is reached, so the CRM behaves identically whether
+        // staff dispatches to pharmacy before or after the patient picks a
+        // ship date.
+        FILL_RX: {
           target: "rxProcessing",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing" }) }),
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+        },
+        SELECT_PHARMACY: {
+          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
         },
         // Defensive duplicate of pricingSelected's payment handlers — same
         // reasoning, in case ship date ever does get dispatched for real.
@@ -287,15 +317,10 @@ export const coaDtpMachine = setup({
         },
       },
     },
+    // Mirrors workflowMachine.ts's order sub-machine exactly (idle →
+    // processing → shipped → delivered, no separate "ready" step — nothing
+    // in either flow's UI ever dispatches a transition into "ready").
     rxProcessing: {
-      on: {
-        FILL_RX: {
-          target: "rxReady",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "ready" }) }),
-        },
-      },
-    },
-    rxReady: {
       on: {
         SHIP_RX: {
           target: "rxShipped",

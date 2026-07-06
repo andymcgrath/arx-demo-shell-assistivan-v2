@@ -690,10 +690,6 @@ export default function Index() {
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
   const pricingOption = workflowData.pricingOption;
-  // Retail/Mail Order are insurance-covered — no cash payment to verify, so
-  // they're ready to dispense as soon as PA is approved. Self-pay/copay
-  // assistance goes through the cash-offer chain and needs paymentVerified.
-  const readyToDispense = paymentVerified || (paStatus === "approved" && (pricingOption === "retail" || pricingOption === "mail_order"));
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
@@ -955,20 +951,12 @@ export default function Index() {
           lastUpdated: cashOfferStatus !== "none" ? new Date().toLocaleDateString() : null,
           lastUpdatedAgo: cashOfferStatus !== "none" ? "today" : null,
         },
-        {
-          id: "DS-14282",
-          name: "Dispense",
-          statusLabel: pharmacyStatus === "none" ? "Stage not started" : pharmacyStatus === "processing" ? "Fill In Progress" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered",
-          statusDetail: pharmacyStatus === "none" ? (readyToDispense ? "Ready to dispense" : "Awaiting payment verification") : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
-          isComplete: pharmacyStatus === "delivered",
-          isNotStarted: pharmacyStatus === "none",
-          fields: [
-            { label: "Pharmacy Status", value: pharmacyStatus === "none" ? null : pharmacyStatus },
-            { label: "Ship Date", value: patientShipDate ? new Date(patientShipDate).toLocaleDateString() : null },
-          ],
-          lastUpdated: pharmacyStatus !== "none" ? new Date().toLocaleDateString() : null,
-          lastUpdatedAgo: pharmacyStatus !== "none" ? "today" : null,
-        },
+        // Dispatch to Triage / Pharmacy Status — reused verbatim from WF1
+        // (tpStage/psStage, computed above) instead of a bespoke CoA-only
+        // "Dispense" stage, so HUB staff see the exact same dispensing UI
+        // regardless of flow.
+        tpStage,
+        psStage,
       ]
     : isPapFlow
     ? STAGES_PAP_AUDIT.map((s) =>
@@ -1473,72 +1461,6 @@ export default function Index() {
                   >
                     Verify Payment
                   </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : activeStage.id === "DS-14282" ? (
-          /* ── Dispense Detail View (COA flow) ────────────────────────── */
-          <div className="p-4 max-w-5xl">
-            <div className="border border-[#dddbda] rounded">
-              <div
-                className="flex items-center gap-3 px-3 border-b border-[#dddbda]"
-                style={{ background: SF_SECTION_BG, minHeight: 36 }}
-              >
-                <div
-                  className="flex items-center justify-center shrink-0"
-                  style={{ width: 24, height: 24, background: pharmacyStatus === "delivered" ? "#2e844a" : FC_BLUE, borderRadius: 5 }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
-                <span className="text-[13px] font-semibold text-[#3e3e3c]">
-                  Dispense — {activeStage.id}
-                </span>
-                <div className="ml-auto flex items-center gap-2">
-                  <div
-                    className="px-2 py-1 rounded text-[11px] font-semibold"
-                    style={{
-                      background: pharmacyStatus === "none" ? "#f5f5f5" : pharmacyStatus === "processing" ? "#e8f0fa" : pharmacyStatus === "ready" ? "#e8f0fa" : pharmacyStatus === "shipped" ? "#e8f0fa" : "#e8f4ef",
-                      color: pharmacyStatus === "none" ? "#706e6b" : pharmacyStatus === "processing" ? FC_BLUE : pharmacyStatus === "ready" ? FC_BLUE : pharmacyStatus === "shipped" ? FC_BLUE : "#2e844a"
-                    }}
-                  >
-                    {pharmacyStatus === "none" ? "Not Started" : pharmacyStatus === "processing" ? "Processing" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-4">
-                {/* Dispense Actions */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="px-3 py-2 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Dispense Actions</span>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <button
-                      onClick={() => dispatch('KICK_OFF_FILL', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "none" || !readyToDispense}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: pharmacyStatus !== "none" || !readyToDispense ? "#ccc" : FC_BLUE }}
-                    >
-                      Kick Off Fill
-                    </button>
-                    <button
-                      onClick={() => dispatch('SHIP_RX', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "processing" && pharmacyStatus !== "ready"}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: (pharmacyStatus !== "processing" && pharmacyStatus !== "ready") ? "#ccc" : FC_BLUE }}
-                    >
-                      Mark Shipped
-                    </button>
-                    <button
-                      onClick={() => dispatch('DELIVER_RX', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "shipped"}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: pharmacyStatus !== "shipped" ? "#ccc" : FC_BLUE }}
-                    >
-                      Mark Delivered
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
