@@ -92,9 +92,11 @@ export function getWorkflowActor() {
   return actorInstance;
 }
 
-/** Maps a FlowType to the machine registry ID. CoA uses its own machine; all others share "enrollment". */
+/** Maps a FlowType to the machine registry ID. CoA and iAssist each have their own dedicated machine; the two Fax flows share "enrollment". */
 function machineIdForFlow(flowType: FlowType): string {
-  return flowType === "CoA_DTP" ? "CoA_DTP" : "enrollment";
+  if (flowType === "CoA_DTP") return "CoA_DTP";
+  if (flowType === "iAssist_PA_Approved") return "iAssist_PA_Approved";
+  return "enrollment";
 }
 
 export function switchWorkflow(flowType: FlowType): void {
