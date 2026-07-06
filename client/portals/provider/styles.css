@@ -674,6 +674,23 @@
   background: #f9fafb;
 }
 
+/* ── Heroic EHR CTA overrides (CoA_DTP provider screens only) ────────────────
+   Applied alongside .pa-btn-primary/.pa-btn-secondary (not replacing them)
+   so every other flow's buttons keep the shared teal untouched — see
+   HEROIC_BLUE in index.tsx for where these get applied. .pa-btn-tertiary
+   has no brand color to override (already neutral gray). */
+.pa-btn-primary--heroic {
+  background: #1E4FD6;
+}
+
+.pa-btn-primary--heroic:hover {
+  background: #15399E;
+}
+
+.pa-btn-secondary--heroic {
+  color: #1E4FD6;
+}
+
 /* ── Mobile Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {

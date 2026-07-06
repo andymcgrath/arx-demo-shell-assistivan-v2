@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bell, ChevronDown, ArrowLeft } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
+import { cn } from "@/lib/utils";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
@@ -561,8 +562,8 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
       <div className="pa-nav-row">
         <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
         <div className="pa-nav-actions">
-          <button onClick={onBack} className="pa-btn-secondary">Back</button>
-          <button onClick={handleNext} className="pa-btn-primary">Next</button>
+          <button onClick={onBack} className={cn("pa-btn-secondary", isCoA && "pa-btn-secondary--heroic")}>Back</button>
+          <button onClick={handleNext} className={cn("pa-btn-primary", isCoA && "pa-btn-primary--heroic")}>Next</button>
         </div>
       </div>
     </main>
@@ -622,7 +623,7 @@ function PaSubmittedStep({ onDone, onBack, isCoA = false }: { onDone: () => void
         <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 32 }}>
           The prior authorization has been submitted successfully. The patient will be notified once a decision is made.
         </p>
-        <button onClick={handleDone} className="pa-btn-secondary">Done</button>
+        <button onClick={handleDone} className={cn("pa-btn-secondary", isCoA && "pa-btn-secondary--heroic")}>Done</button>
       </div>
     </main>
   );
@@ -671,8 +672,8 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
       <div className="pa-nav-row">
         <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
         <div className="pa-nav-actions">
-          <button onClick={onBack} className="pa-btn-secondary">Back</button>
-          <button onClick={handleSubmit} className="pa-btn-primary">Submit Verification</button>
+          <button onClick={onBack} className="pa-btn-secondary pa-btn-secondary--heroic">Back</button>
+          <button onClick={handleSubmit} className="pa-btn-primary pa-btn-primary--heroic">Submit Verification</button>
         </div>
       </div>
     </main>
@@ -1026,7 +1027,7 @@ function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void 
       </div>
 
       <div className="pa-action-row">
-        <button onClick={onSend} className="pa-btn-primary">Send eRx</button>
+        <button onClick={onSend} className="pa-btn-primary pa-btn-primary--heroic">Send eRx</button>
       </div>
     </main>
   );
@@ -1060,7 +1061,7 @@ function CoaSentConfirmation({ onReturnToDashboard, onBack }: { onReturnToDashbo
       </div>
 
       <div className="pa-action-row">
-        <button onClick={onReturnToDashboard} className="pa-btn-primary">
+        <button onClick={onReturnToDashboard} className="pa-btn-primary pa-btn-primary--heroic">
           Return to Dashboard
         </button>
       </div>
@@ -1888,7 +1889,7 @@ export default function ProviderPortal() {
             <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 32 }}>
               The patient's eligibility has been confirmed. The patient portal will be updated and the free drug shipment process can begin.
             </p>
-            <button onClick={() => { dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' }); setStep("login"); }} className="pa-btn-secondary">Done</button>
+            <button onClick={() => { dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' }); setStep("login"); }} className="pa-btn-secondary pa-btn-secondary--heroic">Done</button>
           </div>
         </main>
       )}

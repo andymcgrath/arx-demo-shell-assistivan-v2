@@ -21,7 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
-import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots } from "@/engine/actorSingleton";
+import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
@@ -525,12 +525,18 @@ export default function DemoShell() {
     return () => ro.disconnect();
   }, []);
 
-  // On every mount, sync the XState actor to whichever flowType the demoStore
-  // has restored from sessionStorage. The actor always initialises as "enrollment"
-  // so without this a refresh while on CoA would leave the actor mismatched.
+  // Safety net: sync the XState actor to whichever flowType demoStore has
+  // restored from sessionStorage. getWorkflowActor() (in engine/WorkflowProvider,
+  // which wraps this whole app) now already reads that same persisted
+  // flowType on its very first call, so in the normal case the actor is
+  // already correct by the time this runs and getActiveFlowType() matches
+  // storedFlow — skip the switch entirely rather than needlessly recreating
+  // the actor a second time. Only switches if something left them mismatched.
   useEffect(() => {
     const storedFlow = useDemoStore.getState().flowType;
-    switchWorkflow(storedFlow);
+    if (getActiveFlowType() !== storedFlow) {
+      switchWorkflow(storedFlow);
+    }
   }, []);
 
   // Clear stores on first load of new session (tab opened after session expired)

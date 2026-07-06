@@ -72,6 +72,15 @@ export function useActiveWorkflowId(): FlowType {
   if (!context) {
     throw new Error('useActiveWorkflowId must be used within WorkflowProvider');
   }
+  // getActiveFlowType() is a plain module-level read (actorSingleton.ts's
+  // currentFlowType), not itself reactive — subscribing to the actor
+  // reference forces this hook's caller to re-render exactly when
+  // switchWorkflow() swaps it, which is also the only time currentFlowType
+  // changes. Without this, a component using only this hook (e.g. the
+  // Config drawer's flow dropdown) could keep showing the previous flow
+  // after a switch triggered elsewhere, until something unrelated happened
+  // to re-render it.
+  useActorStore((s) => s.actor);
   return context.getActiveFlowType();
 }
 

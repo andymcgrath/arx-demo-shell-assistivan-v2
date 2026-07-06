@@ -33,6 +33,37 @@ import type { FlowType } from "./types";
 let actorInstance: ReturnType<typeof createActor> | null = null;
 let currentFlowType: FlowType = "Fax_QS_PA_Approved";
 
+// demoStore.ts (zustand + persist) is the source of truth for which flow is
+// active, but actorSingleton.ts can't import it directly — demoStore.ts
+// already imports resetCurrentWorkflowActor from here, and the reverse
+// import would be circular. Reading zustand's own persisted blob directly
+// avoids that without needing a second source of truth.
+//
+// This matters because getWorkflowActor() below used to always default to
+// "Fax_QS_PA_Approved" on its very first call, no matter what flow was
+// actually persisted. That first call happens inside engine/WorkflowProvider
+// during React's initial render — before DemoShell's mount effect (the
+// useEffect that calls switchWorkflow(storedFlow) to correct it) has had a
+// chance to run. Every portal is mounted simultaneously (see DemoShell's
+// display:none panel structure), so on that very first render they were ALL
+// reading from a freshly-created WF1 actor for one render pass, correcting
+// only once the effect fired a moment later. Usually fast enough to be
+// invisible, but landing on this exact window — e.g. Provider and Patient
+// mounting/re-rendering around the same moment — could visibly show WF1
+// data before snapping back, which is what "once in a while, switching
+// from WF3 back to WF1" actually was. Reading the persisted flow up front
+// removes the window entirely instead of racing to correct it after.
+function readPersistedFlowType(): FlowType {
+  try {
+    const raw = sessionStorage.getItem("arx-demo-shell");
+    if (!raw) return "Fax_QS_PA_Approved";
+    const parsed = JSON.parse(raw);
+    return (parsed?.state?.flowType as FlowType) ?? "Fax_QS_PA_Approved";
+  } catch {
+    return "Fax_QS_PA_Approved";
+  }
+}
+
 // Per-flow snapshots keyed by FlowType — each flow has its own save slot.
 // Fast in-memory cache; sessionStorage (below) is the durable backing store.
 const actorSnapshots = new Map<FlowType, unknown>();
@@ -86,7 +117,8 @@ export const useActorStore = create<ActorStore>((set) => ({
 
 export function getWorkflowActor() {
   if (!actorInstance) {
-    actorInstance = createActorForFlow("Fax_QS_PA_Approved");
+    currentFlowType = readPersistedFlowType();
+    actorInstance = createActorForFlow(currentFlowType);
     useActorStore.getState().setActor(actorInstance);
   }
   return actorInstance;
