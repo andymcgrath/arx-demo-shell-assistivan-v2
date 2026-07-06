@@ -67,6 +67,7 @@ export const coaDtpMachine = setup({
       | { type: "PATIENT_SELECTS_SHIP_DATE" }
       | { type: "SELECT_PHARMACY"; pharmacy: Pharmacy }
       | { type: "FILL_RX" }
+      | { type: "READY_RX" }
       | { type: "SHIP_RX" }
       | { type: "DELIVER_RX" }
       | { type: "RESET" },
@@ -341,10 +342,20 @@ export const coaDtpMachine = setup({
         },
       },
     },
-    // Mirrors workflowMachine.ts's order sub-machine exactly (idle →
-    // processing → shipped → delivered, no separate "ready" step — nothing
-    // in either flow's UI ever dispatches a transition into "ready").
+    // Mirrors workflowMachine.ts's order sub-machine exactly: processing →
+    // ready → shipped → delivered. The Pharmacy Status (PS-14278) tab's
+    // "Advance Pharmacy Status" panel — shared verbatim between WF1 and
+    // CoA_DTP — dispatches READY_RX from its "Mark as Received at Pharmacy"
+    // button, so this step is required, not optional.
     rxProcessing: {
+      on: {
+        READY_RX: {
+          target: "rxReady",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "ready" }) }),
+        },
+      },
+    },
+    rxReady: {
       on: {
         SHIP_RX: {
           target: "rxShipped",
