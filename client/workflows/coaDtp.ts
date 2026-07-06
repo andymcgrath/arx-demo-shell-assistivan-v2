@@ -7,7 +7,7 @@ import type { MachineContext, Pharmacy, WorkflowData } from "@/engine/types";
 // CoA_DTP cases.
 const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
 const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
-const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy (Self-Pay)", address: "500 CoAssist Way", city: "Fairview", state: "TX", zip: "75069", phone: "(800) 555-0175" };
+const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: "CoA_DTP",
@@ -215,6 +215,21 @@ export const coaDtpMachine = setup({
           target: "addressSet",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
         },
+        // CoA's pharmacy is already known the moment pricing is chosen (see
+        // SELECT_PRICING_OPTION/SELECT_SELF_PAY above) — well before the
+        // patient sets an address. The CRM's Dispatch to Triage tab lets
+        // staff dispatch to pharmacy as soon as a pharmacy is assigned (see
+        // Index.tsx's canDispatchToPharmacy), so this state needs its own
+        // FILL_RX/SELECT_PHARMACY handlers too, not just addressSet/
+        // shipDateSelected's — otherwise clicking "Dispatch to Pharmacy"
+        // here silently does nothing.
+        FILL_RX: {
+          target: "rxProcessing",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+        },
+        SELECT_PHARMACY: {
+          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+        },
         // Real payment for the self-pay/Copay path, fired from the payment
         // screen after address + date (nothing currently dispatches
         // PATIENT_SETS_ADDRESS, so the machine is still sitting here at that
@@ -258,6 +273,15 @@ export const coaDtpMachine = setup({
         PATIENT_SETS_ADDRESS: {
           target: "addressSet",
           actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
+        },
+        // Same reasoning as pricingSelected's FILL_RX/SELECT_PHARMACY —
+        // pharmacy is already assigned by the time this state is reached.
+        FILL_RX: {
+          target: "rxProcessing",
+          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+        },
+        SELECT_PHARMACY: {
+          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
         },
       },
     },
