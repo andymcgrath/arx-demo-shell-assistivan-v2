@@ -41,13 +41,22 @@ import IAssistPortal from "@/portals/iassist/index";
 
 export type PortalId = "crm" | "patient" | "analytics" | "field" | "provider" | "iassist";
 
+// NOTE: the iAssist portal tab's URL slug is "iassist-hub", NOT "iassist".
+// "/iassist" is a separate, pre-existing top-level deep-link route (see
+// IAssistRedirect in App.tsx) that selects the iAssist flow and redirects
+// here. If this slug were "iassist" it would collide with that route — any
+// navigate("/iassist") from the tab/dropdown/reset below would get
+// intercepted by App.tsx's <Route path="/iassist"> before ever reaching
+// DemoShell, permanently bouncing back through IAssistRedirect instead of
+// rendering the portal (this is exactly what caused the iAssist tab to
+// "reload to HUB" when clicked).
 export const PORTAL_SLUG: Record<PortalId, string> = {
   crm: "hub",
   patient: "patient",
   analytics: "analytics",
   field: "field",
   provider: "provider",
-  iassist: "iassist",
+  iassist: "iassist-hub",
 };
 
 const SLUG_TO_PORTAL: Record<string, PortalId> = {
@@ -56,7 +65,7 @@ const SLUG_TO_PORTAL: Record<string, PortalId> = {
   analytics: "analytics",
   field: "field",
   provider: "provider",
-  iassist: "iassist",
+  "iassist-hub": "iassist",
 };
 
 /**
@@ -73,7 +82,11 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   Fax_QS_PA_Approved: "crm",
   Fax_PAP_Audit: "crm",
   CoA_DTP: "provider",
-  iAssist_PA_Approved: "provider",
+  // "provider" is hidden for iAssist flows (see getPortals below) — the
+  // dedicated "iassist" tab is this flow's dashboard/home, so that's what
+  // switching to this flow, resetting it, or deep-linking via /iassist
+  // should land on.
+  iAssist_PA_Approved: "iassist",
 };
 
 function getProviderPortalLabel(flowType: string): string {
