@@ -202,12 +202,13 @@ const STEP_LABELS_COA = [
 // merge, "Copay Enrollment") before the patient had even opened Benefit
 // Pricing. This mirrors coaDtp.ts's real milestones instead.
 function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>['workflowData']): number {
-  const { pharmacyStatus, biStatus, consentStatus, enrollmentStatus, paStatus, cashOfferStatus, pricingOption, patientShipDate, paymentVerified } = workflowData;
-  // Retail/Mail have no digital payment to verify (cost is handled at the
-  // pharmacy counter) — they're "paid" as soon as a ship date is set.
-  // Copay/self-pay isn't done until the payment screen actually fires
-  // PATIENT_PAYS/VERIFY_PAYMENT.
-  const paymentDone = patientShipDate !== null && (pricingOption !== 'self_pay' || paymentVerified === true);
+  const { pharmacyStatus, biStatus, consentStatus, enrollmentStatus, paStatus, cashOfferStatus, patientShipDate } = workflowData;
+  // No pricing option collects payment through this flow anymore — Retail/
+  // Mail never did (cost is handled at the pharmacy counter), and testing
+  // confirmed Copay/self-pay doesn't either (enrollment at /copay-enroll
+  // only unlocks the reduced price). So a ship date alone means Payment is
+  // done, for all three options uniformly.
+  const paymentDone = patientShipDate !== null;
   // Mirrors WF1's own "pa === 'approved'" threshold below — a denial alone
   // doesn't move things forward (WF1 groups submitted+denied into the same
   // Prior Authorization step); only once the cash-offer alternative is

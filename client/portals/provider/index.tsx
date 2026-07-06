@@ -6,22 +6,47 @@ import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bell, ChevronDown, ArrowLeft } from "lucide-react";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
-// Cross-portal import — CoAssist's logo/brand config lives with the patient
-// portal (client/portals/patient/config/branding.ts). @patient/* is Vite's
-// explicit cross-portal alias (see vite.config.ts), separate from the
-// portal-local @/ alias, so this reaches the patient portal's file without
-// touching anything in WF1's code path.
-import ManufacturerLogo from "@patient/components/brand/ManufacturerLogo";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
 
-// ── SVG icons ─────────────────────────────────────────────────────────────────
+// ── Heroic EHR brand palette ──────────────────────────────────────────────────
+// The Provider portal for CoA_DTP represents the HCP's own EHR system — a
+// different product from CoAssist (the patient-facing app) — so it gets its
+// own name/logo/blue palette here, local to this file. Does not touch the
+// patient portal's branding.ts (CoAssist) or WF1/WF2/WF4's own provider
+// theming (BrandSidebar's iAssist teal, styles.css's --primary-teal-* vars,
+// shared pa-btn-* classes used by every flow).
+const HEROIC_BLUE = "#1E4FD6";
+const HEROIC_BLUE_DARK = "#15399E";
+const HEROIC_BLUE_LIGHT = "#EAF0FE";
 
-function CheckedCircleIcon({ className = "" }: { className?: string }) {
+function HeroicEhrLogo({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true" className="flex-shrink-0">
+        <path d="M14 2L24 6V13C24 19.5 19.8 24.7 14 26C8.2 24.7 4 19.5 4 13V6L14 2Z" fill="#D62B2B" />
+        <path d="M14 2L24 6V13C24 19.5 19.8 24.7 14 26V2Z" fill={HEROIC_BLUE} />
+        <path d="M14 8.5V19.5M8.5 14H19.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+      <span className="text-[15px] leading-none whitespace-nowrap">
+        <span className="font-bold" style={{ color: HEROIC_BLUE }}>Heroic</span>{" "}
+        <span className="font-normal" style={{ color: HEROIC_BLUE }}>EHR</span>
+      </span>
+    </div>
+  );
+}
+
+// ── SVG icons ─────────────────────────────────────────────────────────────────
+// Default color (#007178) matches the shared app-wide teal used by every
+// flow's PA forms. CoA_DTP's Provider-portal-exclusive call sites pass
+// HEROIC_BLUE explicitly; every other call site is unaffected by the prop
+// existing since it just falls back to the same default as before.
+
+function CheckedCircleIcon({ className = "", color = "#007178" }: { className?: string; color?: string }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className}>
-      <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
+      <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={color} />
     </svg>
   );
 }
@@ -34,10 +59,10 @@ function UncheckedCircleIcon({ className = "" }: { className?: string }) {
   );
 }
 
-function RadioCheckedIcon() {
+function RadioCheckedIcon({ color = "#007178" }: { color?: string } = {}) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M0 8C0 3.58125 3.58125 0 8 0C12.4187 0 16 3.58125 16 8C16 12.4187 12.4187 16 8 16C3.58125 16 0 12.4187 0 8ZM8 11C9.65625 11 11 9.65625 11 8C11 6.31563 9.65625 5 8 5C6.31563 5 5 6.31563 5 8C5 9.65625 6.31563 11 8 11Z" fill="#007178" />
+      <path d="M0 8C0 3.58125 3.58125 0 8 0C12.4187 0 16 3.58125 16 8C16 12.4187 12.4187 16 8 16C3.58125 16 0 12.4187 0 8ZM8 11C9.65625 11 11 9.65625 11 8C11 6.31563 9.65625 5 8 5C6.31563 5 5 6.31563 5 8C5 9.65625 6.31563 11 8 11Z" fill={color} />
     </svg>
   );
 }
@@ -102,24 +127,26 @@ function BrandSidebar({ isBranded }: { isBranded: boolean }) {
   );
 }
 
-// ── CoAssist provider nav sidebar ─────────────────────────────────────────────
+// ── Heroic EHR provider nav sidebar ───────────────────────────────────────────
 // Shared across every CoA_DTP provider screen (dashboard, PA questions, PA
 // submitted, etc.) so the sidebar looks the same no matter which step the
-// HCP is on. Just the branded header over the teal panel — no nav list.
-// h-14 matches CoaHeader's height exactly, so the white/teal seam on the
-// sidebar lines up with the header's bottom border across the full page.
+// HCP is on. This represents the HCP's OWN EHR system (Heroic EHR) — not
+// CoAssist, the patient-facing app — so it gets its own logo/blue panel, not
+// CoAssist's teal branding. h-14 matches CoaHeader's height exactly, so the
+// white/blue seam on the sidebar lines up with the header's bottom border
+// across the full page.
 function CoaSidebar() {
   return (
     <div className="hidden sm:flex w-[220px] flex-shrink-0 flex-col">
       <div className="h-14 flex items-center bg-white px-5">
-        <ManufacturerLogo variant="colors" className="h-7 w-auto" />
+        <HeroicEhrLogo />
       </div>
-      <div className="flex-1 bg-teal-600" />
+      <div className="flex-1" style={{ backgroundColor: HEROIC_BLUE }} />
     </div>
   );
 }
 
-// ── CoAssist top header ────────────────────────────────────────────────────
+// ── Heroic EHR top header ──────────────────────────────────────────────────
 // Same header used on the dashboard (search / Add New Patient / Dr. Sarah
 // Chen / notifications), reused on every other CoA_DTP provider screen for a
 // consistent look. Back navigation lives on the individual screen instead of
@@ -139,7 +166,7 @@ function CoaHeader({ onSearchChange }: { onSearchChange?: (value: string) => voi
           id="coa-header-search"
           type="text"
           placeholder="Search for patient by name or date of birth"
-          className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 focus:ring-teal-600 focus:ring-inset rounded px-1"
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 focus:ring-[#1E4FD6] focus:ring-inset rounded px-1"
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -149,7 +176,7 @@ function CoaHeader({ onSearchChange }: { onSearchChange?: (value: string) => voi
         />
       </div>
       <button
-        className="text-teal-600 font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded px-2 py-1"
+        className="text-[#1E4FD6] font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap hover:text-[#15399E] focus:outline-none focus:ring-2 focus:ring-[#1E4FD6] rounded px-2 py-1"
         aria-label="Add new patient"
       >
         <Plus size={16} />
@@ -158,13 +185,13 @@ function CoaHeader({ onSearchChange }: { onSearchChange?: (value: string) => voi
       </button>
       <div className="flex items-center gap-2 sm:gap-4 ml-auto">
         <div className="hidden sm:flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-teal-600 font-bold text-xs">
+          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-[#1E4FD6] font-bold text-xs">
             SC
           </div>
           <span className="text-sm font-normal">Dr. Sarah Chen</span>
         </div>
         <button
-          className="relative text-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 rounded p-1"
+          className="relative text-[#1E4FD6] hover:text-[#15399E] focus:outline-none focus:ring-2 focus:ring-[#1E4FD6] rounded p-1"
           aria-label="Notifications"
         >
           <Bell size={20} />
@@ -191,7 +218,7 @@ function CoaBackButton({ onClick }: { onClick: () => void }) {
 
 // ── PA info summary ───────────────────────────────────────────────────────────
 
-function PaSummaryTable({ isSubmitted = false }: { isSubmitted?: boolean } = {}) {
+function PaSummaryTable({ isSubmitted = false, accentColor = "#007178" }: { isSubmitted?: boolean; accentColor?: string } = {}) {
   const patientName = usePatientStore((s) => s.patientName);
   const patientDob = usePatientStore((s) => s.patientDob);
   const drugName = usePatientStore((s) => s.drugName);
@@ -211,7 +238,7 @@ function PaSummaryTable({ isSubmitted = false }: { isSubmitted?: boolean } = {})
       {paInfoItems.map((item) => (
         <div key={item.label} className="pa-summary-row">
           <div className="pa-summary-row__label">
-            {item.done ? <CheckedCircleIcon /> : <UncheckedCircleIcon />}
+            {item.done ? <CheckedCircleIcon color={accentColor} /> : <UncheckedCircleIcon />}
             <span className="pa-summary-label-text">{item.label}</span>
           </div>
           <p className="pa-summary-row__value">{item.value}</p>
@@ -227,10 +254,12 @@ function RadioQuestion({
   question,
   value,
   onChange,
+  accentColor = "#007178",
 }: {
   question: string;
   value: string | null;
   onChange: (v: string) => void;
+  accentColor?: string;
 }) {
   return (
     <div className="pa-question">
@@ -243,7 +272,7 @@ function RadioQuestion({
             className="pa-radio-btn"
             aria-pressed={value === "yes"}
           >
-            {value === "yes" ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+            {value === "yes" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
           <span className="pa-radio-label">Yes</span>
         </label>
@@ -254,7 +283,7 @@ function RadioQuestion({
             className="pa-radio-btn"
             aria-pressed={value === "no"}
           >
-            {value === "no" ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+            {value === "no" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
           <span className="pa-radio-label">No</span>
         </label>
@@ -501,16 +530,19 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
           question="Does the patient have a confirmed diagnosis of obesity or chronic weight management condition?"
           value={q1}
           onChange={setQ1}
+          accentColor={isCoA ? HEROIC_BLUE : undefined}
         />
         <RadioQuestion
           question="Has the patient tried and failed therapy with other weight loss medications or lifestyle modifications?"
           value={q2}
           onChange={setQ2}
+          accentColor={isCoA ? HEROIC_BLUE : undefined}
         />
         <RadioQuestion
           question="Is the patient's current BMI ≥ 30 kg/m² or ≥ 27 kg/m² with weight-related complications?"
           value={q3}
           onChange={setQ3}
+          accentColor={isCoA ? HEROIC_BLUE : undefined}
         />
 
         {!isCoA && (
@@ -582,7 +614,7 @@ function PaSubmittedStep({ onDone, onBack, isCoA = false }: { onDone: () => void
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
-          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
+          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={isCoA ? HEROIC_BLUE : "#007178"} />
         </svg>
         <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>
           PA Submitted
@@ -610,7 +642,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">Income Verification — CoA Direct to Patient</p>
-      <PaSummaryTable />
+      <PaSummaryTable accentColor={HEROIC_BLUE} />
 
       <div className="pa-questions-section">
         <p style={{ fontSize: 13, color: "#3e3e3c", marginBottom: 16 }}>
@@ -622,7 +654,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
           <div className="pa-question__options">
             <label className="pa-radio-option">
               <button type="button" className="pa-radio-btn" aria-pressed="true" style={{ cursor: "default" }}>
-                <RadioCheckedIcon />
+                <RadioCheckedIcon color={HEROIC_BLUE} />
               </button>
               <span className="pa-radio-label">Yes — Patient confirmed eligible</span>
             </label>
@@ -647,11 +679,13 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
   );
 }
 
-// ── CoAssist Dashboard (WF3 start/end screen) ────────────────────────────────
+// ── Heroic EHR Dashboard (WF3 start/end screen) ───────────────────────────────
 //
-// Replaces the old bare "Search Patient" screen. Same teal dashboard pattern
-// as IAssistDashboard below (that one's WF4-only — left untouched here, this
-// is a separate component so WF4 can't be affected by anything in this file).
+// Replaces the old bare "Search Patient" screen. Represents the HCP's own
+// Heroic EHR system, so it gets the Heroic blue palette, not CoAssist's teal.
+// Same dashboard pattern as IAssistDashboard below (that one's WF4-only —
+// left untouched here, this is a separate component so WF4 can't be
+// affected by anything in this file).
 // The search box filters the visible Patients table directly rather than a
 // dropdown overlay, since the point here is "type until only the patient you
 // want remains, then click their row" — matching the fact that only one row
@@ -753,7 +787,7 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
                   <tr
                     key={patient.id}
                     onClick={() => onSelect(patient.id)}
-                    className="border-b border-neutral-300 last:border-b-0 hover:bg-teal-50 cursor-pointer transition-colors"
+                    className="border-b border-neutral-300 last:border-b-0 hover:bg-[#EAF0FE] cursor-pointer transition-colors"
                   >
                     <td className="p-4">
                       <p className="font-bold text-sm text-neutral-800">{patient.name}</p>
@@ -790,7 +824,7 @@ function CoaDashboard({ onSelect }: { onSelect: (patientId: string) => void }) {
   );
 }
 
-// ── COA eRx Form ────────────────────────────────────────────────────────────
+// ── COA eRx Form (Heroic EHR — the HCP's own EHR, not CoAssist) ─────────────
 
 // "Most common" pins the top of the list; everything else is alphabetical
 // below a divider. Names reuse the ones already established elsewhere in
@@ -820,8 +854,8 @@ function MedicationOption({
         padding: "10px 16px",
         fontSize: 14,
         fontWeight: selected ? 700 : 400,
-        color: selected ? "#007178" : "#1C1C1C",
-        background: selected ? "#EEF9F9" : "transparent",
+        color: selected ? HEROIC_BLUE : "#1C1C1C",
+        background: selected ? HEROIC_BLUE_LIGHT : "transparent",
         border: "none",
         cursor: "pointer",
       }}
@@ -965,7 +999,7 @@ function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void 
                     className="pa-radio-btn"
                     aria-pressed={dosage === d}
                   >
-                    {dosage === d ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+                    {dosage === d ? <RadioCheckedIcon color={HEROIC_BLUE} /> : <RadioUncheckedIcon />}
                   </button>
                   <span className="pa-radio-label">{d}</span>
                 </label>
@@ -998,7 +1032,7 @@ function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void 
   );
 }
 
-// ── COA Sent Confirmation ────────────────────────────────────────────────────
+// ── COA Sent Confirmation (Heroic EHR) ───────────────────────────────────────
 
 function CoaSentConfirmation({ onReturnToDashboard, onBack }: { onReturnToDashboard: () => void; onBack: () => void }) {
   const patientName = usePatientStore((s) => s.patientName);
@@ -1011,7 +1045,7 @@ function CoaSentConfirmation({ onReturnToDashboard, onBack }: { onReturnToDashbo
 
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
-          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
+          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={HEROIC_BLUE} />
         </svg>
         <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>
           eRx sent successfully
@@ -1847,7 +1881,7 @@ export default function ProviderPortal() {
         <main className="provider-content provider-content--pa">
           <p className="pa-section-title">Income Verification — CoA Direct to Patient</p>
           <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
-            <CheckedCircleIcon />
+            <CheckedCircleIcon color={HEROIC_BLUE} />
             <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>
               Income Verified
             </h2>

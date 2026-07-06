@@ -166,15 +166,11 @@ export function derivePatientRoute(state: MachineContext): string {
         workflowData.patientShipDate === null)
       return '/delivery-date';
 
-    // Ship date set — Copay/self-pay still needs to complete the actual
-    // payment step (enrollment only unlocked the reduced price). Retail/Mail
-    // have no digital payment to verify — their cost is handled at the
-    // pharmacy counter — so once they've set a date they're ready to wait
-    // for fill like everyone else, same as the rule below.
-    if (workflowData.patientShipDate !== null &&
-        workflowData.pricingOption === 'self_pay' &&
-        !workflowData.paymentVerified)
-      return '/delivery-payment';
+    // Ship date set — Copay/self-pay does NOT collect payment through this
+    // flow either (enrollment at /copay-enroll only unlocked the reduced
+    // price — confirmed correct after testing, see DeliveryDate.tsx's
+    // skipPayment). So once a date is set, Copay/self-pay is ready to wait
+    // for fill exactly like Retail/Mail, via the rule right below.
 
     // All patient self-service done — waiting for fill
     if (workflowData.patientShipDate !== null &&

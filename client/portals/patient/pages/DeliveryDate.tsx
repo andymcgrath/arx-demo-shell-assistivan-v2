@@ -34,11 +34,12 @@ export default function DeliveryDate() {
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
   const isCoA = flowType === "CoA_DTP";
-  // Copay enrollment only unlocks the reduced price — it isn't payment, so
-  // Copay still needs this payment step just like Retail/Mail (WF1 is the
-  // only flow that skips it; it has its own dedicated payment handling
-  // elsewhere).
-  const skipPayment = isWorkflow1;
+  // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
+  // isn't payment, and testing confirmed Copay doesn't collect payment
+  // through this flow at all, so it now skips /delivery-payment the same
+  // way WF1 does. Retail/Mail are unchanged — they still visit
+  // /delivery-payment as a cost-summary screen (no change requested there).
+  const skipPayment = isWorkflow1 || (isCoA && workflowData.pricingOption === "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
