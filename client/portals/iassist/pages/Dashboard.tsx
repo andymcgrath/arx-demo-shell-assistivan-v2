@@ -18,7 +18,7 @@ import { useState } from "react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useNavigate } from "@/lib/portalRouter";
 import type { WorkflowData } from "@/engine/types";
-import { SAMPLE_PATIENTS, type PatientStatus } from "../data/samplePatients";
+import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
 import { StatusDots, StatusBadge } from "../components/StatusIndicators";
 import IAssistSidebar from "../components/IAssistSidebar";
 import IAssistHeader from "../components/IAssistHeader";

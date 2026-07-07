@@ -36,6 +36,12 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   providerPACompleted: false,
   paSubmittedAt: null,
   paApprovedAt: null,
+  // CoA_DTP-only fields, added to WorkflowData after this file was first
+  // cloned from workflowMachine.ts. Unused by iAssist — kept at their
+  // neutral defaults purely to satisfy the shared WorkflowData type.
+  pricingOption: null,
+  paApprovedSmsVerified: false,
+  paApprovedOtpVerified: false,
   cashOfferStatus: "none",
   paymentVerified: false,
   patientShipDate: null,

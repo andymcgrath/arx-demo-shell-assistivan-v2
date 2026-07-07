@@ -5,8 +5,12 @@
  * badges), not tied to CoA's Heroic blue or iAssist's teal, so no recoloring
  * was needed — only the file location changed, to keep WF4 decoupled from
  * WF3's provider portal file.
+ *
+ * Now that wf3-coassist-v2 is merged in, client/store/samplePatients.ts
+ * (the real, canonical roster) exists on this branch — this imports from
+ * there instead of a local duplicate.
  */
-import type { PatientStatus } from "../data/samplePatients";
+import type { PatientStatus } from "@/store/samplePatients";
 
 export function StatusDot({ color }: { color: string }) {
   return (
