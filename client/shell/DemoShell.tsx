@@ -21,7 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
-import { getWorkflowActor, switchWorkflow } from "@/engine/actorSingleton";
+import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
@@ -184,21 +184,72 @@ const STEP_LABELS_PAP_AUDIT = [
   "PA Approved",
 ];
 
+// "Copay Enrollment" and "Patient Payment" used to be two separate steps,
+// but Benefit Pricing covers Retail/Mail/Copay uniformly now (see
+// BenefitPricing.tsx) — there's no distinct "enrollment" milestone that
+// applies to all three pricing paths, just one "Payment" phase that runs
+// from PA approval through the actual charge. Merged into a single step so
+// the bar doesn't show enrollment as a separate, checkable milestone that
+// doesn't apply to two-thirds of patients.
+// "Prior Authorization" gets its own step (CoA_DTP does go through a real
+// PA submission/approval cycle — see coaDtp.ts's paSubmitted/paApproved
+// states), and the dispense tail reuses WF1's exact four labels since
+// CoA_DTP's rxProcessing/rxReady/rxShipped/rxDelivered states now mirror
+// WF1's order sub-machine one-for-one (see coaDtp.ts's READY_RX handling).
 const STEP_LABELS_COA = [
   "eRx Received",
   "Consent",
   "Benefits Investigation",
-  "Cash Offer",
-  "Patient Payment",
-  "Dispensing",
-  "Delivered",
+  "Prior Authorization",
+  "Payment",
+  "Dispatch to Triage",
+  "Rx Processing",
+  "Rx Shipped",
+  "Medication Delivered",
 ];
+
+// CoA_DTP-specific step calculation — the generic one below was tuned for
+// WF1's fields (dispatchStatus/paStatus meaning "pharmacy dispatch") and,
+// applied to CoA's different fields, jumped straight to a late step number
+// the instant PA was approved — checking off "Payment" (and, before this
+// merge, "Copay Enrollment") before the patient had even opened Benefit
+// Pricing. This mirrors coaDtp.ts's real milestones instead.
+function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>['workflowData']): number {
+  const { pharmacyStatus, biStatus, consentStatus, enrollmentStatus, paStatus, cashOfferStatus, patientShipDate } = workflowData;
+  // No pricing option collects payment through this flow anymore — Retail/
+  // Mail never did (cost is handled at the pharmacy counter), and testing
+  // confirmed Copay/self-pay doesn't either (enrollment at /copay-enroll
+  // only unlocks the reduced price). So a ship date alone means Payment is
+  // done, for all three options uniformly.
+  const paymentDone = patientShipDate !== null;
+  // Mirrors WF1's own "pa === 'approved'" threshold below — a denial alone
+  // doesn't move things forward (WF1 groups submitted+denied into the same
+  // Prior Authorization step); only once the cash-offer alternative is
+  // actually in motion (SEND_CASH_OFFER) does the denied path count as
+  // "PA resolved" and advance into Payment.
+  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
+
+  if (pharmacyStatus === 'delivered') return 10;
+  if (pharmacyStatus === 'shipped') return 8;
+  // Matches WF1's own step bar, which collapses pharmacyStatus
+  // "processing" and "ready" into the same "Rx Processing" step — see the
+  // generic workflowStep calculation below.
+  if (pharmacyStatus === 'processing' || pharmacyStatus === 'ready') return 7;
+  if (paymentDone) return 6;
+  if (paResolved) return 5;
+  if (biStatus === 'complete') return 4;
+  if (biStatus === 'running' || biStatus === 'submitted') return 3;
+  if (consentStatus === 'confirmed') return 3;
+  if (enrollmentStatus !== 'none') return 2;
+  return 1;
+}
 
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
+  const isCoaFlow = flowType === "CoA_DTP";
 
-  const workflowStep = (() => {
+  const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
     const d = workflowData.dispatchStatus;
     const pa = workflowData.paStatus;
@@ -223,13 +274,23 @@ function StepBar() {
   const paStatus        = workflowData.paStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
   const STEP_LABELS     = flowType === "Fax_PAP_Audit" ? STEP_LABELS_PAP_AUDIT
-    : flowType === "CoA_DTP" ? STEP_LABELS_COA
+    : isCoaFlow ? STEP_LABELS_COA
     : STEP_LABELS_DEFAULT;
+  // These pulsing-ring decorations hardcode step positions. CoA_DTP's
+  // 9-step bar now shares WF1's exact Benefits Investigation (n=3) and
+  // Prior Authorization (n=4) positions, so those rings need no per-flow
+  // adjustment. The dispense tail is shifted +1 for CoA (it has an extra
+  // "Payment" step WF1 doesn't), so those two positions are computed below
+  // instead of hardcoded.
   const biRunning       = biStatus === "running" && flowType !== "Fax_PAP_Audit";
   const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
   const rxInTransit     = pharmacyStatus === "processing" && flowType !== "Fax_PAP_Audit";
   const rxProcessing    = pharmacyStatus === "ready" && flowType !== "Fax_PAP_Audit";
   const rxShipping      = pharmacyStatus === "shipped" && flowType !== "Fax_PAP_Audit";
+  // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
+  // pushes everything after it back by one).
+  const rxProcessingStepN = isCoaFlow ? 7 : 6;
+  const rxShippedStepN    = isCoaFlow ? 8 : 7;
 
 
   return (
@@ -238,8 +299,8 @@ function StepBar() {
         const n      = i + 1;
         const done   = workflowStep > n;
         const active = workflowStep === n;
-        // Connector between step 2→3 pulses while BI is running; step 4→5 while PA is processing; step 5→6 while rx is processing; step 6→7 while shipping
-        const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || ((rxInTransit || rxProcessing) && n === 5) || (rxShipping && n === 6);
+        // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
+        const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
         return (
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-0.5 relative">
@@ -251,16 +312,16 @@ function StepBar() {
               {paProcessing && n === 4 && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
-              {/* Pulsing ring behind the step-6 dot while rx is in transit */}
-              {rxInTransit && n === 6 && (
+              {/* Pulsing ring behind the Rx Processing dot while rx is in transit */}
+              {rxInTransit && n === rxProcessingStepN && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
-              {/* Pulsing ring behind the step-6 dot while rx is processing */}
-              {rxProcessing && n === 6 && (
+              {/* Pulsing ring behind the Rx Processing dot while rx is processing */}
+              {rxProcessing && n === rxProcessingStepN && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
-              {/* Pulsing ring behind the step-7 dot while rx is shipping */}
-              {rxShipping && n === 7 && (
+              {/* Pulsing ring behind the Rx Shipped dot while rx is shipping */}
+              {rxShipping && n === rxShippedStepN && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
               <div
@@ -270,9 +331,9 @@ function StepBar() {
                   active && "bg-white/30 text-white border-white scale-110",
                   biRunning && n === 3 && "border-white/60 text-white/60",
                   paProcessing && n === 4 && "border-white/60 text-white/60",
-                  (rxInTransit || rxProcessing) && n === 6 && "border-white/60 text-white/60",
-                  rxShipping && n === 7 && "border-white/60 text-white/60",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === 6) && !(rxShipping && n === 7) && "bg-transparent text-white/40 border-white/25"
+                  (rxInTransit || rxProcessing) && n === rxProcessingStepN && "border-white/60 text-white/60",
+                  rxShipping && n === rxShippedStepN && "border-white/60 text-white/60",
+                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "bg-transparent text-white/40 border-white/25"
                 )}
               >
                 {done ? "✓" : n}
@@ -284,12 +345,12 @@ function StepBar() {
                   done   && "text-white/70",
                   biRunning && n === 3 && "text-white/60 animate-pulse",
                   paProcessing && n === 4 && "text-white/60 animate-pulse",
-                  (rxInTransit || rxProcessing) && n === 6 && "text-white/60 animate-pulse",
-                  rxShipping && n === 7 && "text-white/60 animate-pulse",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === 6) && !(rxShipping && n === 7) && "text-white/30"
+                  (rxInTransit || rxProcessing) && n === rxProcessingStepN && "text-white/60 animate-pulse",
+                  rxShipping && n === rxShippedStepN && "text-white/60 animate-pulse",
+                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "text-white/30"
                 )}
               >
-                {biRunning && n === 3 ? "Running…" : paProcessing && n === 4 ? "Pending…" : rxInTransit && n === 6 ? "In Transit…" : rxProcessing && n === 6 ? "Processing…" : rxShipping && n === 7 ? "Shipping…" : label}
+                {biRunning && n === 3 ? "Running…" : paProcessing && n === 4 ? "Pending…" : rxInTransit && n === rxProcessingStepN ? "In Transit…" : rxProcessing && n === rxProcessingStepN ? "Processing…" : rxShipping && n === rxShippedStepN ? "Shipping…" : label}
               </span>
             </div>
             {i < STEP_LABELS.length - 1 && (
@@ -370,7 +431,6 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
             height: `calc(100vh - ${headerHeight}px)`,
-            willChange: "contents",
           }}
         >
           <div className="i17pro">
@@ -381,8 +441,19 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
             <div className="i17pro__btn i17pro__btn--power" />
             <div className="i17pro__btn i17pro__btn--camera-ctrl" />
 
-            {/* Screen */}
-            <div className="i17pro__screen" style={{ transform: "translateZ(0)", willChange: "transform" }}>
+            {/*
+             * Screen — translateZ(0) stays: it's load-bearing for the fixed
+             * header's stacking context (see box comment above). willChange
+             * is dropped: this panel sits `display:none` for most of the
+             * session while other tabs are active, and a will-change-promoted
+             * layer that's been hidden a long time can flash a stale cached
+             * frame (this element's very first paint, back when the actor
+             * was still in its default/pre-enrollment state — i.e. the
+             * lock-screen route) for a frame before repainting current
+             * content when the tab is reactivated. Dropping the hint avoids
+             * that flash; the stacking context itself is unaffected.
+             */}
+            <div className="i17pro__screen" style={{ transform: "translateZ(0)" }}>
               {/* Status bar + Dynamic Island */}
               <div className="i17pro__statusbar" aria-hidden="true">
                 <span className="i17pro__time">9:41</span>
@@ -420,7 +491,6 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
           style={{
             height: `calc(100vh - ${headerHeight}px)`,
             transform: "translateZ(0)",
-            willChange: "contents",
           }}
         >
           <PortalComponent id={portal} flowType={flowType} />
@@ -468,12 +538,18 @@ export default function DemoShell() {
     return () => ro.disconnect();
   }, []);
 
-  // On every mount, sync the XState actor to whichever flowType the demoStore
-  // has restored from sessionStorage. The actor always initialises as "enrollment"
-  // so without this a refresh while on CoA would leave the actor mismatched.
+  // Safety net: sync the XState actor to whichever flowType demoStore has
+  // restored from sessionStorage. getWorkflowActor() (in engine/WorkflowProvider,
+  // which wraps this whole app) now already reads that same persisted
+  // flowType on its very first call, so in the normal case the actor is
+  // already correct by the time this runs and getActiveFlowType() matches
+  // storedFlow — skip the switch entirely rather than needlessly recreating
+  // the actor a second time. Only switches if something left them mismatched.
   useEffect(() => {
     const storedFlow = useDemoStore.getState().flowType;
-    switchWorkflow(storedFlow);
+    if (getActiveFlowType() !== storedFlow) {
+      switchWorkflow(storedFlow);
+    }
   }, []);
 
   // Clear stores on first load of new session (tab opened after session expired)
@@ -709,6 +785,14 @@ export default function DemoShell() {
                     onClick={() => {
                       resetDemo();
                       resetPatient();
+                      // Wipe every OTHER flow's cached progress too, not just
+                      // the active one — resetDemo()/resetCurrentWorkflowActor
+                      // only clear the current flow's slot, so an older
+                      // (possibly stale or structurally outdated) snapshot for
+                      // another flow could otherwise survive "Reset All" and
+                      // silently resurface the next time someone switched to
+                      // it, looking like the demo had reverted.
+                      resetAllWorkflowSnapshots();
                       switchWorkflow(flowType);
                       sessionStorage.removeItem('arxWorkflow_v2');
                       sessionStorage.removeItem('arx-demo-shell');

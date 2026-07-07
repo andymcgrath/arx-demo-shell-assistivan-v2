@@ -106,18 +106,47 @@ export function derivePatientRoute(state: MachineContext): string {
     if (workflowData.otpVerified && workflowData.consentStatus === 'pending')
       return '/confirm-details';
 
-    // Consent confirmed — waiting for BI/PA to process
+    // Consent confirmed — waiting for BI to finish
     if (workflowData.consentStatus === 'confirmed' &&
         workflowData.biStatus !== 'complete')
       return '/enrollment-complete';
 
-    // BI complete, PA submitted — still waiting
+    // BI complete, but PA hasn't been submitted yet ("PA Required" — the
+    // provider hasn't started it from CoaDashboard) or has been submitted
+    // and is awaiting a decision — still waiting either way.
     if (workflowData.consentStatus === 'confirmed' &&
         workflowData.biStatus === 'complete' &&
-        workflowData.paStatus === 'submitted')
+        (workflowData.paStatus === 'none' || workflowData.paStatus === 'submitted'))
       return '/enrollment-complete';
 
-    // PA denied — cash offer available
+    // PA approved — a new SMS/OTP re-verification beat (mirrors the initial
+    // enrollment SMS/OTP), then Retail/Mail Order pricing. This replaces the
+    // old single /pa-approved screen for CoA_DTP.
+    if (workflowData.paStatus === 'approved' &&
+        !workflowData.paApprovedSmsVerified)
+      return '/pa-approved-sms';
+
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.paApprovedSmsVerified &&
+        !workflowData.paApprovedOtpVerified)
+      return '/pa-approved-otp';
+
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.paApprovedOtpVerified &&
+        workflowData.pricingOption === null)
+      return '/benefit-pricing';
+
+    // Pricing chosen (Retail, Mail, or Copay enrollment) — needs address.
+    // Copay enrollment only unlocks the reduced price; the actual charge
+    // happens later at the payment step (after address + date, see
+    // DeliveryDate.tsx / DeliveryPayment.tsx), same as Retail/Mail.
+    if (workflowData.paStatus === 'approved' &&
+        workflowData.pricingOption !== null &&
+        workflowData.dispatchStatus === 'none')
+      return '/delivery-address';
+
+    // PA denied — cash offer available (kept for demo flexibility; CoA_DTP's
+    // live flow always approves, see coaDtp.ts)
     if (workflowData.paStatus === 'denied' &&
         workflowData.cashOfferStatus === 'none')
       return '/pa-denied';
@@ -137,6 +166,12 @@ export function derivePatientRoute(state: MachineContext): string {
         workflowData.patientShipDate === null)
       return '/delivery-date';
 
+    // Ship date set — Copay/self-pay does NOT collect payment through this
+    // flow either (enrollment at /copay-enroll only unlocked the reduced
+    // price — confirmed correct after testing, see DeliveryDate.tsx's
+    // skipPayment). So once a date is set, Copay/self-pay is ready to wait
+    // for fill exactly like Retail/Mail, via the rule right below.
+
     // All patient self-service done — waiting for fill
     if (workflowData.patientShipDate !== null &&
         workflowData.pharmacyStatus === 'none')
@@ -150,8 +185,13 @@ export function derivePatientRoute(state: MachineContext): string {
     if (workflowData.pharmacyStatus === 'shipped')
       return '/order-shipped';
 
+    // Stay on the tracker for the final "delivered" state too, rather than
+    // handing off to the generic /medication-delivered home-dashboard screen
+    // (guide/prescriptions/chat) that WF1 uses. OrderTracker.tsx already
+    // renders a complete "delivered" state (all 5 steps checked, Delivered
+    // dated) with no CoA-specific changes needed — see buildSteps() there.
     if (workflowData.pharmacyStatus === 'delivered')
-      return '/medication-delivered';
+      return '/order-tracker';
 
     return '/lock-screen';
   }

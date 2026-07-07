@@ -3,16 +3,38 @@ import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { PROGRAM } from "@/config/branding";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 const LIST_PRICE = 575;
 const DISCOUNT = 426;
 const TOTAL = LIST_PRICE - DISCOUNT;
 
+// Reflects whichever price the patient actually picked on Benefit Pricing
+// (see BenefitPricing.tsx's PRICING_OPTIONS). Retail/Mail keep their listed
+// price; self_pay reflects the reduced Copay Program price unlocked at
+// enrollment (/copay-enroll), not the "list" self-pay rate.
+const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
+  retail: { price: 50, cadence: "" },
+  mail_order: { price: 100, cadence: "" },
+  self_pay: { price: 25, cadence: "/month" },
+};
+
+// Supply duration also depends on the pricing option picked on Benefit
+// Pricing (see BenefitPricing.tsx's PRICING_OPTIONS: Retail is a 30-day
+// fill, Mail Order is 90-day). Copay/self_pay keeps the standard starter
+// dose/supply shown elsewhere in the Copay flow.
+const COA_SUPPLY_BY_OPTION: Record<string, string> = {
+  retail: "1.0 mg Dose · 30-day supply",
+  mail_order: "1.0 mg Dose · 90-day supply",
+  self_pay: PROGRAM.description,
+};
+
 export default function DeliveryPayment() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
+  const isCoA = flowType === "CoA_DTP";
   const { data: patient } = usePatientCase();
 
   useEffect(() => {
@@ -21,10 +43,36 @@ export default function DeliveryPayment() {
     }
   }, [flowType, navigate]);
   const firstName = patient.patientName.split(" ")[0];
+
+  // One shared layout (Apple Pay + expandable Pay-with-Card) for every flow —
+  // matches the existing payment screen design. Only the price summary
+  // section differs: CoA_DTP shows a single "Total due today" reflecting the
+  // pricing option picked on Benefit Pricing (see COA_PRICE_BY_OPTION);
+  // everything else keeps the original List Price/Discount breakdown.
+  //
+  // Records the payment on the workflow (cashOfferStatus → "paid",
+  // paymentVerified → true) so the CRM's Cash Offer stage and downstream
+  // Dispense actions unlock correctly. For CoA_DTP, only the self_pay
+  // (Copay) option is tracked as a Cash Offer — Retail/Mail Order cost is
+  // handled at the pharmacy counter, so nothing is dispatched for them here.
+  // No-op on flows whose machine doesn't define these events (e.g. WF1's
+  // Fax_QS_PA_Approved, which redirects away from this screen above before a
+  // patient could ever click Pay).
+  function completePayment() {
+    if (!isCoA || workflowData.pricingOption === "self_pay") {
+      dispatch("PATIENT_PAYS", { portal: "patient" });
+      dispatch("VERIFY_PAYMENT", { portal: "patient" });
+    }
+    navigate("/delivery-confirmation");
+  }
+
   const [email, setEmail] = useState("");
   const [autoRefill, setAutoRefill] = useState(true);
   const [breakdown, setBreakdown] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+
+  const coaPricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
+  const cardTotalLabel = isCoA ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
 
   return (
     <main className="flex-grow pb-8">
@@ -40,7 +88,7 @@ export default function DeliveryPayment() {
               </div>
               <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Payment Information</h1>
               <p className="text-sm text-center text-arx-body-copy">
-                You're almost there, {firstName}. Please review and confirm the order.
+                You're almost there, {firstName}. {isCoA ? "Confirm payment to complete your order." : "Please review and confirm the order."}
               </p>
             </div>
 
@@ -48,54 +96,71 @@ export default function DeliveryPayment() {
               {/* Drug name */}
               <div>
                 <p className="font-bold text-base text-arx-primary">{PROGRAM.drugDisplayName}</p>
-                <p className="text-sm mt-0.5 text-arx-body-copy">{PROGRAM.description}</p>
+                <p className="text-sm mt-0.5 text-arx-body-copy">
+                  {isCoA
+                    ? COA_SUPPLY_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? PROGRAM.description
+                    : PROGRAM.description}
+                </p>
+                {isCoA && workflowData.selectedPharmacy?.name && (
+                  <p className="text-sm mt-0.5 text-arx-body-copy">{workflowData.selectedPharmacy.name}</p>
+                )}
               </div>
 
               {/* Payment summary */}
-              <div>
-                <p className="font-bold text-sm mb-3 text-arx-slate">Payment summary</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-arx-body-copy">List Price</span>
-                    <span className="text-arx-slate">${LIST_PRICE.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-arx-body-copy">Patient Access Program Discount</span>
-                    <span className="text-arx-primary font-semibold">-${DISCOUNT.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-start pt-2 border-t border-arx-borders">
-                    <div>
-                      <p className="font-bold text-base text-arx-slate">Total due today</p>
-                      <p className="text-sm mt-0.5 text-arx-body-copy">30-day supply</p>
-                    </div>
-                    <span className="font-bold text-base text-arx-slate">${TOTAL.toFixed(2)}</span>
-                  </div>
+              {isCoA ? (
+                <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex items-center justify-between">
+                  <span className="text-sm font-semibold text-arx-slate">Total due today</span>
+                  <span className="text-2xl font-bold text-arx-primary">
+                    ${coaPricing.price}
+                    {coaPricing.cadence && <span className="text-sm font-semibold">{coaPricing.cadence}</span>}
+                  </span>
                 </div>
-
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-semibold text-arx-primary">You saved ${DISCOUNT}</span>
-                  <button
-                    onClick={() => setBreakdown(v => !v)}
-                    className="flex items-center gap-1 text-xs font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors"
-                  >
-                    {breakdown ? "hide" : "view"} full breakdown
-                    {breakdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-
-                {breakdown && (
-                  <div className="mt-2 p-3 rounded-lg text-xs space-y-1 bg-arx-neutral-100 text-arx-body-copy">
+              ) : (
+                <div>
+                  <p className="font-bold text-sm mb-3 text-arx-slate">Payment summary</p>
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>CoAssist Self-Pay (0.8 mg starter)</span>
-                      <span>$149.00</span>
+                      <span className="text-arx-body-copy">List Price</span>
+                      <span className="text-arx-slate">${LIST_PRICE.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Patient Access Program Discount applied</span>
-                      <span className="text-arx-primary">-$426.00</span>
+                      <span className="text-arx-body-copy">Patient Access Program Discount</span>
+                      <span className="text-arx-primary font-semibold">-${DISCOUNT.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-start pt-2 border-t border-arx-borders">
+                      <div>
+                        <p className="font-bold text-base text-arx-slate">Total due today</p>
+                        <p className="text-sm mt-0.5 text-arx-body-copy">30-day supply</p>
+                      </div>
+                      <span className="font-bold text-base text-arx-slate">${TOTAL.toFixed(2)}</span>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm font-semibold text-arx-primary">You saved ${DISCOUNT}</span>
+                    <button
+                      onClick={() => setBreakdown(v => !v)}
+                      className="flex items-center gap-1 text-xs font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors"
+                    >
+                      {breakdown ? "hide" : "view"} full breakdown
+                      {breakdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {breakdown && (
+                    <div className="mt-2 p-3 rounded-lg text-xs space-y-1 bg-arx-neutral-100 text-arx-body-copy">
+                      <div className="flex justify-between">
+                        <span>CoAssist Self-Pay (0.8 mg starter)</span>
+                        <span>$149.00</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Patient Access Program Discount applied</span>
+                        <span className="text-arx-primary">-$426.00</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Receipt email */}
               <div>
@@ -137,7 +202,7 @@ export default function DeliveryPayment() {
 
               {/* Apple Pay */}
               <button
-                onClick={() => navigate("/delivery-confirmation")}
+                onClick={completePayment}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg font-semibold text-white bg-black hover:bg-arx-slate transition-colors"
               >
                 <svg viewBox="0 0 60 26" className="h-5 fill-white" aria-hidden="true">
@@ -169,10 +234,10 @@ export default function DeliveryPayment() {
                       <input type="text" placeholder="CVC" className="flex-1 px-4 py-3 rounded-xl text-sm outline-none border border-arx-borders text-arx-slate focus:border-arx-primary transition-colors" />
                     </div>
                     <button
-                      onClick={() => navigate("/delivery-confirmation")}
+                      onClick={completePayment}
                       className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
                     >
-                      Pay ${TOTAL}
+                      Pay ${cardTotalLabel}
                     </button>
                   </div>
                 )}

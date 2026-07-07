@@ -5,6 +5,7 @@ import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
+import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { FileText } from "lucide-react";
 import {
   ChevronDown,
@@ -18,6 +19,10 @@ import {
   RefreshCw,
   ArrowUpDown,
   ArrowUp,
+  Search,
+  Star,
+  Plus,
+  Bell,
 } from "lucide-react";
 
 const SF_BLUE = "#0070d2";
@@ -455,6 +460,170 @@ const SPECIALTY_PHARMACIES: PharmacyOption[] = [
   { name: "PharMerica Specialty", address: "333 Wellness Ave", city: "Sarasota", state: "FL", zip: "34236", phone: "(941) 555-0123" },
 ];
 
+// ─── My Cases list (CoA_DTP default screen) ─────────────────────────────────
+//
+// Mimics a Salesforce Service Console "My Cases" list view. This is what the
+// CoA_DTP CRM/HUB shows before Keanu's eRx is submitted — a realistic-looking
+// caseload with no active case yet. Once ENROLL fires, his row appears at
+// the top; clicking it opens the existing case-detail tab strip (unchanged).
+// Gated entirely behind isCoaFlow in Index() below — WF1/WF2/WF4 keep their
+// current always-detail-view behavior.
+
+function CaseListView({
+  keanuCaseNumber,
+  onOpenKeanuCase,
+}: {
+  keanuCaseNumber: string | null;
+  onOpenKeanuCase: () => void;
+}) {
+  const patientName = usePatientStore((s) => s.patientName);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-US");
+  const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const nowStr = `${dateStr} ${timeStr}`;
+
+  const columns = [
+    "Case Number",
+    "Account Name",
+    "Date/Time Opened",
+    "Service Type",
+    "Case Status",
+    "Case Sub-Status",
+    "Case Owner Alias",
+    "Last Modified Date",
+  ];
+
+  return (
+    <div className="min-h-screen bg-white" style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}>
+      {/* App bar */}
+      <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "#032d60" }}>
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center gap-2 bg-white/10 rounded px-3 py-1 w-full max-w-sm">
+            <Search size={13} className="text-white/70" />
+            <span className="text-white/70 text-[12px]">Search...</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 text-white/80">
+          <Star size={15} />
+          <Plus size={15} />
+          <Bell size={15} />
+        </div>
+      </div>
+
+      {/* Cases tab */}
+      <div className="border-b border-[#dddbda] flex items-end px-2" style={{ background: "#f3f2f2", minHeight: 40 }}>
+        <div
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dddbda] border-b-0"
+          style={{ borderRadius: "4px 4px 0 0", marginBottom: -1, boxShadow: "0 -1px 3px rgba(0,0,0,0.08)" }}
+        >
+          <span className="text-[12px] font-semibold text-[#3e3e3c]">Cases</span>
+        </div>
+      </div>
+
+      <div className="p-4">
+        {/* List header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[11px] text-[#706e6b] mb-0.5">Cases</div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[20px] font-bold text-[#3e3e3c]">My Cases</h1>
+              <ChevronDown size={16} className="text-[#706e6b]" />
+              <Pencil size={13} className="text-[#706e6b]" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <SfButton>Change Owner</SfButton>
+            <SfButton>Printable View</SfButton>
+          </div>
+        </div>
+
+        {/* List toolbar */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[12px] text-[#706e6b]">
+            {SAMPLE_COA_CASES.length + (keanuCaseNumber ? 1 : 0)} items • Sorted by Case Number • Updated a few seconds ago
+          </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 border border-[#dddbda] rounded px-2 py-1 w-56">
+              <Search size={12} className="text-[#706e6b]" />
+              <span className="text-[12px] text-[#706e6b]">Search this list...</span>
+            </div>
+            <button className="p-1.5 hover:bg-[#f3f3f3] rounded border border-[#dddbda]">
+              <Settings size={13} className="text-[#706e6b]" />
+            </button>
+            <button className="p-1.5 hover:bg-[#f3f3f3] rounded border border-[#dddbda]">
+              <RefreshCw size={13} className="text-[#706e6b]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="border border-[#dddbda] rounded overflow-x-auto">
+          <table className="w-full text-[12px]" style={{ minWidth: 900 }}>
+            <thead>
+              <tr style={{ background: SF_SECTION_BG }}>
+                <th className="px-3 py-2 border-b border-[#dddbda] w-8">
+                  <input type="checkbox" />
+                </th>
+                {columns.map((col) => (
+                  <th key={col} className="text-left px-3 py-2 text-[11px] text-[#706e6b] font-medium border-b border-[#dddbda] whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      {col}
+                      <ArrowUpDown size={10} className="text-[#706e6b]" />
+                    </div>
+                  </th>
+                ))}
+                <th className="border-b border-[#dddbda] w-8" />
+              </tr>
+            </thead>
+            <tbody>
+              {keanuCaseNumber && (
+                <tr
+                  onClick={onOpenKeanuCase}
+                  className="cursor-pointer hover:bg-teal-50 transition-colors"
+                  style={{ background: "#e8f6f6" }}
+                >
+                  <td className="px-3 py-2 border-b border-[#dddbda]">
+                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
+                  </td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{keanuCaseNumber}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{patientName}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{nowStr}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">Onboarding</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">Initiated</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">Initiated</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>rosborne</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{nowStr}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]">
+                    <ChevronDown size={13} className="text-[#706e6b]" />
+                  </td>
+                </tr>
+              )}
+              {SAMPLE_COA_CASES.map((c) => (
+                <tr key={c.caseNumber} className="hover:bg-[#f3f3f3] transition-colors">
+                  <td className="px-3 py-2 border-b border-[#dddbda]">
+                    <input type="checkbox" />
+                  </td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{c.caseNumber}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{c.accountName}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{c.dateOpened}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{c.serviceType}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">{c.caseStatus}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">{c.caseSubStatus}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{c.ownerAlias}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{c.lastModified}</td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]">
+                    <ChevronDown size={13} className="text-[#706e6b]" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Index() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('crm');
@@ -466,11 +635,40 @@ export default function Index() {
     (snapshot) => snapshot.context.workflowData.enrollmentStatus
   );
 
+  // WF3's default screen — a "My Cases" list (mirrors a real Salesforce
+  // Service Console) rather than jumping straight into a case-detail view.
+  // Keanu's case appears in that list once his eRx is submitted, but the
+  // operator still has to click it to open the detail tabs below.
+  const [hubView, setHubView] = useState<"list" | "detail">(() =>
+    useDemoStore.getState().flowType === "CoA_DTP" ? "list" : "detail"
+  );
+
   useEffect(() => {
     if (enrollmentStatus === 'none') {
       navigate('/');
+      if (useDemoStore.getState().flowType === "CoA_DTP") {
+        setHubView("list");
+      }
     }
   }, [enrollmentStatus, navigate]);
+
+  // Once the patient confirms consent there's real work to look at — jump
+  // straight into Keanu's case detail instead of leaving the operator on
+  // the case list. Guarded by a ref so it only fires on that transition,
+  // not every time hubView happens to be "list" while consent is confirmed
+  // (otherwise clicking "Back to Cases" afterward would just get overridden).
+  const autoOpenedOnConsentRef = useRef(false);
+  useEffect(() => {
+    if (workflowData.flowType !== "CoA_DTP") return;
+    if (workflowData.consentStatus === "confirmed") {
+      if (!autoOpenedOnConsentRef.current) {
+        autoOpenedOnConsentRef.current = true;
+        setHubView("detail");
+      }
+    } else {
+      autoOpenedOnConsentRef.current = false;
+    }
+  }, [workflowData.flowType, workflowData.consentStatus]);
 
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
@@ -491,6 +689,7 @@ export default function Index() {
   const cashOfferStatus = workflowData.cashOfferStatus;
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
+  const pricingOption = workflowData.pricingOption;
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
@@ -498,6 +697,15 @@ export default function Index() {
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
   const isPapFlow = flowType === "Fax_PAP_Audit";
   const isCoaFlow = flowType === "CoA_DTP";
+  // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
+  // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
+  // (that only happens once the patient confirms their delivery address).
+  // WF1 has no such head start: dispatchStatus === "selected" only once HUB
+  // staff manually pick a pharmacy via the Choose Pharmacy modal. So CoA can
+  // dispatch to pharmacy as soon as one is known; WF1 still needs the
+  // explicit "selected" status.
+  const canDispatchToPharmacy = !!selectedPharmacy && pharmacyStatus === "none" && dispatchStatus !== "dispatched" &&
+    (isCoaFlow || dispatchStatus === "selected");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
@@ -579,7 +787,10 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, biStatus, dispatch, isPapFlow]);
 
-  // COA BI auto-complete: RUN_BI → COMPLETE_BI → SUBMIT_PA sequence
+  // COA BI auto-complete: RUN_BI → COMPLETE_BI. PA submission is no longer
+  // automatic here — BI completing surfaces "PA Required" on the provider's
+  // CoaDashboard, and the provider manually starts PA from there (mirrors
+  // WF1's questions flow, minus the email/login hop).
   useEffect(() => {
     if (!isCoaFlow) return;
     if (activeTopTab !== 'BI-14273') return;
@@ -593,14 +804,9 @@ export default function Index() {
         dispatch('COMPLETE_BI', { portal: 'crm' });
       }, 3000) : null;
 
-      const submitPaTimer = biStatus === 'running' ? setTimeout(() => {
-        dispatch('SUBMIT_PA', { portal: 'crm' });
-      }, 5000) : null;
-
       return () => {
         if (runTimer) clearTimeout(runTimer);
         if (completeTimer) clearTimeout(completeTimer);
-        if (submitPaTimer) clearTimeout(submitPaTimer);
       };
     }
   }, [activeTopTab, biStatus, isCoaFlow, dispatch]);
@@ -617,17 +823,9 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, paStatus, dispatch]);
 
-  useEffect(() => {
-    if (!isCoaFlow) return;
-    if (activeTopTab !== 'PA-14274') return;
-    if (paStatus !== 'submitted') return;
-
-    const denyTimer = setTimeout(() => {
-      dispatch('DENY_PA', { portal: 'crm' });
-    }, 3000);
-
-    return () => clearTimeout(denyTimer);
-  }, [activeTopTab, paStatus, isCoaFlow, dispatch]);
+  // CoA_DTP's PA always approves (CoAssist is an insurance-covered flow, not
+  // a denial → cash-pay one) — the generic auto-approve effect above already
+  // covers this since it isn't gated to a specific flowType.
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.
@@ -713,7 +911,7 @@ export default function Index() {
           id: "BI-14273",
           name: "Benefits Investigation",
           statusLabel: biStatus === "none" ? "Not Started" : biStatus === "running" ? "Running" : "Complete",
-          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : paStatus === "denied" ? "PA Denied — Cash offer eligible" : "Complete",
+          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : "Complete",
           isComplete: biStatus === "complete",
           isNotStarted: biStatus === "none",
           fields: [],
@@ -725,14 +923,16 @@ export default function Index() {
           name: "Prior Authorization",
           statusLabel: paStatus === 'none' ? "Stage not started"
             : paStatus === 'submitted' ? "Submitted"
+            : paStatus === 'approved' ? "Approved"
             : "Denied",
           statusDetail: paStatus === 'none' ? "Awaiting BI completion"
             : paStatus === 'submitted' ? "Awaiting payer decision"
+            : paStatus === 'approved' ? "PA Approved — pricing options sent to patient"
             : "PA Denied — Patient eligible for cash offer",
-          isComplete: paStatus === 'denied',
+          isComplete: paStatus === 'denied' || paStatus === 'approved',
           isNotStarted: paStatus === 'none',
           fields: [
-            { label: "PA Status", value: paStatus === 'none' ? null : paStatus === 'submitted' ? "Submitted" : "Denied" },
+            { label: "PA Status", value: paStatus === 'none' ? null : paStatus === 'submitted' ? "Submitted" : paStatus === 'approved' ? "Approved" : "Denied" },
           ],
           lastUpdated: paStatus !== 'none' ? new Date().toLocaleDateString() : null,
           lastUpdatedAgo: paStatus !== 'none' ? "today" : null,
@@ -740,10 +940,18 @@ export default function Index() {
         {
           id: "CO-14281",
           name: "Cash Offer",
-          statusLabel: cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
-          statusDetail: cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified" : "Payment received — pending verification",
+          // "Not Applicable" only holds while PA is approved AND the patient
+          // hasn't touched the self-pay/assistance-program option (Retail or
+          // Mail Order chosen instead, or still deciding on Benefit Pricing).
+          // Once cashOfferStatus moves off "none" — patient selected the
+          // CoAssist Self-Pay option on Copay Enroll — this reflects the real
+          // cash-offer/payment progress instead, same as the PA-denied path.
+          statusLabel: paStatus === 'approved' && cashOfferStatus === "none" ? "Not Applicable"
+            : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
+          statusDetail: paStatus === 'approved' && cashOfferStatus === "none" ? "Not applicable — Retail or Mail Order selected"
+            : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
           isComplete: paymentVerified,
-          isNotStarted: cashOfferStatus === "none",
+          isNotStarted: paStatus === 'approved' && cashOfferStatus === "none" ? true : cashOfferStatus === "none",
           fields: [
             { label: "Offer Status", value: cashOfferStatus === "none" ? null : cashOfferStatus === "sent" ? "Sent" : "Paid" },
             { label: "Payment Verified", value: paymentVerified ? "Yes" : "No" },
@@ -752,20 +960,12 @@ export default function Index() {
           lastUpdated: cashOfferStatus !== "none" ? new Date().toLocaleDateString() : null,
           lastUpdatedAgo: cashOfferStatus !== "none" ? "today" : null,
         },
-        {
-          id: "DS-14282",
-          name: "Dispense",
-          statusLabel: pharmacyStatus === "none" ? "Stage not started" : pharmacyStatus === "processing" ? "Fill In Progress" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered",
-          statusDetail: pharmacyStatus === "none" ? "Awaiting payment verification" : pharmacyStatus === "processing" ? "Filling prescription" : pharmacyStatus === "ready" ? "Ready to ship" : pharmacyStatus === "shipped" ? "In transit to patient" : "Delivered to patient",
-          isComplete: pharmacyStatus === "delivered",
-          isNotStarted: pharmacyStatus === "none",
-          fields: [
-            { label: "Pharmacy Status", value: pharmacyStatus === "none" ? null : pharmacyStatus },
-            { label: "Ship Date", value: patientShipDate ? new Date(patientShipDate).toLocaleDateString() : null },
-          ],
-          lastUpdated: pharmacyStatus !== "none" ? new Date().toLocaleDateString() : null,
-          lastUpdatedAgo: pharmacyStatus !== "none" ? "today" : null,
-        },
+        // Dispatch to Triage / Pharmacy Status — reused verbatim from WF1
+        // (tpStage/psStage, computed above) instead of a bespoke CoA-only
+        // "Dispense" stage, so HUB staff see the exact same dispensing UI
+        // regardless of flow.
+        tpStage,
+        psStage,
       ]
     : isPapFlow
     ? STAGES_PAP_AUDIT.map((s) =>
@@ -824,11 +1024,25 @@ export default function Index() {
 
   const activeStage = STAGES_LIVE.find((s) => s.id === activeTopTab);
 
+  if (isCoaFlow && hubView === "list") {
+    return (
+      <CaseListView
+        keanuCaseNumber={enrollmentStatus !== "none" ? caseNumber : null}
+        onOpenKeanuCase={() => setHubView("detail")}
+      />
+    );
+  }
+
   return (
     <div
       className="min-h-screen bg-white"
       style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}
     >
+      {isCoaFlow && (
+        <div className="px-3 py-1.5 border-b border-[#dddbda] bg-[#f3f3f3]">
+          <SfLink onClick={() => setHubView("list")}>← Back to Cases</SfLink>
+        </div>
+      )}
       {/* ── Row 1: Patient Tab Strip ─────────────────────────────────────────── */}
       <div
         className="border-b border-[#dddbda] flex items-end px-2 overflow-x-auto gap-1 overflow-y-hidden"
@@ -1260,72 +1474,6 @@ export default function Index() {
               </div>
             </div>
           </div>
-        ) : activeStage.id === "DS-14282" ? (
-          /* ── Dispense Detail View (COA flow) ────────────────────────── */
-          <div className="p-4 max-w-5xl">
-            <div className="border border-[#dddbda] rounded">
-              <div
-                className="flex items-center gap-3 px-3 border-b border-[#dddbda]"
-                style={{ background: SF_SECTION_BG, minHeight: 36 }}
-              >
-                <div
-                  className="flex items-center justify-center shrink-0"
-                  style={{ width: 24, height: 24, background: pharmacyStatus === "delivered" ? "#2e844a" : FC_BLUE, borderRadius: 5 }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
-                <span className="text-[13px] font-semibold text-[#3e3e3c]">
-                  Dispense — {activeStage.id}
-                </span>
-                <div className="ml-auto flex items-center gap-2">
-                  <div
-                    className="px-2 py-1 rounded text-[11px] font-semibold"
-                    style={{
-                      background: pharmacyStatus === "none" ? "#f5f5f5" : pharmacyStatus === "processing" ? "#e8f0fa" : pharmacyStatus === "ready" ? "#e8f0fa" : pharmacyStatus === "shipped" ? "#e8f0fa" : "#e8f4ef",
-                      color: pharmacyStatus === "none" ? "#706e6b" : pharmacyStatus === "processing" ? FC_BLUE : pharmacyStatus === "ready" ? FC_BLUE : pharmacyStatus === "shipped" ? FC_BLUE : "#2e844a"
-                    }}
-                  >
-                    {pharmacyStatus === "none" ? "Not Started" : pharmacyStatus === "processing" ? "Processing" : pharmacyStatus === "ready" ? "Ready" : pharmacyStatus === "shipped" ? "Shipped" : "Delivered"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-4">
-                {/* Dispense Actions */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="px-3 py-2 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Dispense Actions</span>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <button
-                      onClick={() => dispatch('KICK_OFF_FILL', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "none" || !paymentVerified}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: pharmacyStatus !== "none" || !paymentVerified ? "#ccc" : FC_BLUE }}
-                    >
-                      Kick Off Fill
-                    </button>
-                    <button
-                      onClick={() => dispatch('SHIP_RX', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "processing" && pharmacyStatus !== "ready"}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: (pharmacyStatus !== "processing" && pharmacyStatus !== "ready") ? "#ccc" : FC_BLUE }}
-                    >
-                      Mark Shipped
-                    </button>
-                    <button
-                      onClick={() => dispatch('DELIVER_RX', { portal: 'crm' })}
-                      disabled={pharmacyStatus !== "shipped"}
-                      className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: pharmacyStatus !== "shipped" ? "#ccc" : FC_BLUE }}
-                    >
-                      Mark Delivered
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         ) : isCoaFlow && activeStage.id === "PA-14274" && paStatus === "denied" ? (
           /* ── COA PA Denial Detail View (mirrors approval structure) ──────── */
           <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
@@ -1731,7 +1879,7 @@ export default function Index() {
               <span className="text-[13px] font-semibold text-[#3e3e3c]">
                 {activeStage.name} {activeStage.id}
               </span>
-              {(dispatchStatus === "selected" || pharmacyStatus === "processing") && selectedPharmacy && (
+              {canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -1801,6 +1949,16 @@ export default function Index() {
                       <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "#e8f0fa" }}>
                         <span className="text-[12px] font-semibold" style={{ color: FC_BLUE }}>
                           Shipping…
+                        </span>
+                      </div>
+                    ) : isCoaFlow ? (
+                      // CoA_DTP's pharmacy is auto-assigned at pricing selection
+                      // (see coaDtp.ts) — there's nothing to choose here, so no
+                      // CTA. Dispatching is done from the "Dispatch to Pharmacy"
+                      // button in the header above instead.
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#f5f5f5" }}>
+                        <span className="text-[12px] font-semibold text-[#706e6b]">
+                          Pharmacy assigned — ready to dispatch
                         </span>
                       </div>
                     ) : (
@@ -2166,7 +2324,7 @@ export default function Index() {
                   Approved
                 </span>
               )}
-              {activeStage.id === "TP-14277" && dispatchStatus === "selected" && selectedPharmacy && (
+              {activeStage.id === "TP-14277" && canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
