@@ -587,7 +587,7 @@ export default function NewCasePatient() {
 
             <div className="flex justify-end pb-8">
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/new-case/medication")}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
               >
                 Next
