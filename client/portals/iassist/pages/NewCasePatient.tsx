@@ -12,14 +12,41 @@
  * (address, phone, email, additional contact), and prescriber are all
  * pre-populated as data a practice would already have on file. Consent and
  * income verification are left blank — those are live actions/attestations
- * captured fresh for each new case, not stored patient-profile data. All
- * pre-filled values are synthetic demo content, not real PII.
+ * captured fresh for each new case, not stored patient-profile data.
+ *
+ * Name, DOB, phone, email, and address are seeded from usePatientStore
+ * (PATIENT_SEED — Keanu Reeves) so this step shows the same patient the user
+ * just searched for / selected on the Dashboard, instead of an unrelated
+ * decoy identity. Fields not modeled in that store (sex, height/weight, SSN
+ * last 4, language, allergies, additional contact, prescriber) stay as
+ * static synthetic demo content, not real PII.
  */
 import { useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X, Plus, Trash2, Upload } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
+import { usePatientStore } from "@/store/patientStore";
+
+/** "Keanu Reeves" -> { first: "Keanu", last: "Reeves" } */
+function splitName(fullName: string) {
+  const [first, ...rest] = fullName.trim().split(/\s+/);
+  return { first: first ?? "", last: rest.join(" ") };
+}
+
+/** "09/02/1964" (MM/DD/YYYY) -> "1964-09-02" for a <input type="date"> */
+function toIsoDob(mmddyyyy: string) {
+  const [mm, dd, yyyy] = mmddyyyy.split("/");
+  if (!mm || !dd || !yyyy) return "";
+  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+}
+
+/** "123 Main Street, Orlando, FL 32801" -> { addr1, city, state, zip } */
+function parseDeliveryAddress(address: string) {
+  const [addr1 = "", city = "", stateZip = ""] = address.split(",").map((s) => s.trim());
+  const [state = "", zip = ""] = stateZip.split(/\s+/);
+  return { addr1, city, state, zip };
+}
 
 type SignSource = "patient" | "guardian" | "skip";
 type ConsentMethod = "now" | "email" | "text";
@@ -158,18 +185,24 @@ function SignaturePad({ onChange }: { onChange: (hasSignature: boolean) => void 
 
 export default function NewCasePatient() {
   const navigate = useNavigate();
+  const patient = usePatientStore();
+  const { first: patientFirst, last: patientLast } = splitName(patient.patientName);
+  const deliveryAddr = parseDeliveryAddress(patient.deliveryAddress);
+
   const [showAddedBanner, setShowAddedBanner] = useState(true);
 
-  // Demographics — pre-populated as "on file" demo data (synthetic, not real PII)
-  const [firstName, setFirstName] = useState("Diane");
-  const [lastName, setLastName] = useState("Castillo");
-  const [dob, setDob] = useState("1958-03-22");
-  const [sex, setSex] = useState("female");
+  // Demographics — name/DOB seeded from the selected patient (usePatientStore);
+  // sex/height/weight/SSN aren't modeled in that store, so they stay as
+  // static synthetic "on file" demo data.
+  const [firstName, setFirstName] = useState(patientFirst);
+  const [lastName, setLastName] = useState(patientLast);
+  const [dob, setDob] = useState(toIsoDob(patient.patientDob));
+  const [sex, setSex] = useState("male");
   const [heightUnit, setHeightUnit] = useState<"in" | "cm">("in");
   const [weightUnit, setWeightUnit] = useState<"lbs" | "kg">("lbs");
-  const [height, setHeight] = useState("5' 4\"");
-  const [weight, setWeight] = useState("162");
-  const [ssnLast4, setSsnLast4] = useState("4821");
+  const [height, setHeight] = useState("6' 1\"");
+  const [weight, setWeight] = useState("195");
+  const [ssnLast4, setSsnLast4] = useState("7734");
 
   // Language & allergies — pre-populated as "on file" demo data
   const [language, setLanguage] = useState("english");
@@ -177,23 +210,23 @@ export default function NewCasePatient() {
   const [hasAllergies, setHasAllergies] = useState("yes");
   const [allergies, setAllergies] = useState("Penicillin, Sulfa drugs");
 
-  // Address — pre-populated as "on file" demo data (synthetic, not real PII)
-  const [addr1, setAddr1] = useState("482 Birchwood Lane");
-  const [showAddr2, setShowAddr2] = useState(true);
-  const [addr2, setAddr2] = useState("Unit 3B");
-  const [city, setCity] = useState("Hartford");
-  const [stateVal, setStateVal] = useState("Connecticut");
-  const [zip, setZip] = useState("06103");
+  // Address — seeded from the selected patient's deliveryAddress on file
+  const [addr1, setAddr1] = useState(deliveryAddr.addr1);
+  const [showAddr2, setShowAddr2] = useState(false);
+  const [addr2, setAddr2] = useState("");
+  const [city, setCity] = useState(deliveryAddr.city);
+  const [stateVal, setStateVal] = useState(deliveryAddr.state);
+  const [zip, setZip] = useState(deliveryAddr.zip);
 
-  // Contact — pre-populated as "on file" demo data (synthetic, not real PII)
-  const [email, setEmail] = useState("diane.castillo@example.com");
+  // Contact — phone/email seeded from the selected patient on file
+  const [email, setEmail] = useState(patient.email);
   const [phones, setPhones] = useState<PhoneEntry[]>([
-    { id: crypto.randomUUID(), number: "(860) 555-0148", type: "Cell", bestTime: "Afternoon (12:00 pm - 4:00 pm)", leaveMessage: "Yes" },
+    { id: crypto.randomUUID(), number: patient.phone, type: "Cell", bestTime: "Afternoon (12:00 pm - 4:00 pm)", leaveMessage: "Yes" },
   ]);
-  const [showAdditionalContact, setShowAdditionalContact] = useState(true);
-  const [altFirstName, setAltFirstName] = useState("Robert");
-  const [altLastName, setAltLastName] = useState("Castillo");
-  const [altRelationship, setAltRelationship] = useState("Spouse");
+  const [showAdditionalContact, setShowAdditionalContact] = useState(false);
+  const [altFirstName, setAltFirstName] = useState("");
+  const [altLastName, setAltLastName] = useState("");
+  const [altRelationship, setAltRelationship] = useState("");
   const [altRelationshipOther, setAltRelationshipOther] = useState("");
 
   // Prescriber — the patient's known/assigned prescriber, on file
