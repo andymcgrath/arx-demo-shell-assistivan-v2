@@ -7,8 +7,13 @@
  * status machines. Case-creation is a data-entry UI concern, separate from
  * the pharmacy-status parallel machine iAssist.ts models.
  *
- * All field values are blank by default — no sample/placeholder identity
- * data is pre-filled, only placeholder *text* in inputs.
+ * This models a known/returning patient: demographic profile (name, DOB,
+ * sex, height/weight, SSN last 4, language, allergies), contact info
+ * (address, phone, email, additional contact), and prescriber are all
+ * pre-populated as data a practice would already have on file. Consent and
+ * income verification are left blank — those are live actions/attestations
+ * captured fresh for each new case, not stored patient-profile data. All
+ * pre-filled values are synthetic demo content, not real PII.
  */
 import { useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
@@ -155,42 +160,44 @@ export default function NewCasePatient() {
   const navigate = useNavigate();
   const [showAddedBanner, setShowAddedBanner] = useState(true);
 
-  // Demographics
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
-  const [sex, setSex] = useState("");
+  // Demographics — pre-populated as "on file" demo data (synthetic, not real PII)
+  const [firstName, setFirstName] = useState("Diane");
+  const [lastName, setLastName] = useState("Castillo");
+  const [dob, setDob] = useState("1958-03-22");
+  const [sex, setSex] = useState("female");
   const [heightUnit, setHeightUnit] = useState<"in" | "cm">("in");
   const [weightUnit, setWeightUnit] = useState<"lbs" | "kg">("lbs");
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
-  const [ssnLast4, setSsnLast4] = useState("");
+  const [height, setHeight] = useState("5' 4\"");
+  const [weight, setWeight] = useState("162");
+  const [ssnLast4, setSsnLast4] = useState("4821");
 
-  // Language & allergies
-  const [language, setLanguage] = useState("");
+  // Language & allergies — pre-populated as "on file" demo data
+  const [language, setLanguage] = useState("english");
   const [otherLanguage, setOtherLanguage] = useState("");
-  const [hasAllergies, setHasAllergies] = useState("");
-  const [allergies, setAllergies] = useState("");
+  const [hasAllergies, setHasAllergies] = useState("yes");
+  const [allergies, setAllergies] = useState("Penicillin, Sulfa drugs");
 
-  // Address
-  const [addr1, setAddr1] = useState("");
-  const [showAddr2, setShowAddr2] = useState(false);
-  const [addr2, setAddr2] = useState("");
-  const [city, setCity] = useState("");
-  const [stateVal, setStateVal] = useState("");
-  const [zip, setZip] = useState("");
+  // Address — pre-populated as "on file" demo data (synthetic, not real PII)
+  const [addr1, setAddr1] = useState("482 Birchwood Lane");
+  const [showAddr2, setShowAddr2] = useState(true);
+  const [addr2, setAddr2] = useState("Unit 3B");
+  const [city, setCity] = useState("Hartford");
+  const [stateVal, setStateVal] = useState("Connecticut");
+  const [zip, setZip] = useState("06103");
 
-  // Contact
-  const [email, setEmail] = useState("");
-  const [phones, setPhones] = useState<PhoneEntry[]>([emptyPhone()]);
-  const [showAdditionalContact, setShowAdditionalContact] = useState(false);
-  const [altFirstName, setAltFirstName] = useState("");
-  const [altLastName, setAltLastName] = useState("");
-  const [altRelationship, setAltRelationship] = useState("");
+  // Contact — pre-populated as "on file" demo data (synthetic, not real PII)
+  const [email, setEmail] = useState("diane.castillo@example.com");
+  const [phones, setPhones] = useState<PhoneEntry[]>([
+    { id: crypto.randomUUID(), number: "(860) 555-0148", type: "Cell", bestTime: "Afternoon (12:00 pm - 4:00 pm)", leaveMessage: "Yes" },
+  ]);
+  const [showAdditionalContact, setShowAdditionalContact] = useState(true);
+  const [altFirstName, setAltFirstName] = useState("Robert");
+  const [altLastName, setAltLastName] = useState("Castillo");
+  const [altRelationship, setAltRelationship] = useState("Spouse");
   const [altRelationshipOther, setAltRelationshipOther] = useState("");
 
-  // Prescriber
-  const [prescriber, setPrescriber] = useState("");
+  // Prescriber — the patient's known/assigned prescriber, on file
+  const [prescriber, setPrescriber] = useState("1");
 
   // Consent
   const [signSource, setSignSource] = useState<SignSource>("patient");
@@ -224,7 +231,7 @@ export default function NewCasePatient() {
         {/* Header */}
         <header className="bg-white border-b border-[#E8E8E8] px-4 sm:px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <IAssistLogo className="h-6 w-auto hidden sm:block" />
+            <IAssistLogo className="h-6 w-auto" />
             <button
               onClick={() => navigate("/")}
               className="text-[#6F7276] hover:text-[#1D1D1D] focus:outline-none"
@@ -254,6 +261,10 @@ export default function NewCasePatient() {
 
             {/* Demographics */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#1D1D1D]">Demographics</h2>
+                <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="First Name">
                   <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={inputCls} />
@@ -340,7 +351,10 @@ export default function NewCasePatient() {
 
             {/* Address */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
-              <h2 className="text-base font-semibold text-[#1D1D1D]">Address</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#1D1D1D]">Address</h2>
+                <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
+              </div>
               <Field label="Address Line 1">
                 <input value={addr1} onChange={(e) => setAddr1(e.target.value)} placeholder="Street address" className={inputCls} />
               </Field>
@@ -368,7 +382,10 @@ export default function NewCasePatient() {
 
             {/* Contact Method */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
-              <h2 className="text-base font-semibold text-[#1D1D1D]">Contact Method</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#1D1D1D]">Contact Method</h2>
+                <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
+              </div>
               <Field label="Email Address" optional>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className={inputCls} />
               </Field>
@@ -445,7 +462,10 @@ export default function NewCasePatient() {
               ) : (
                 <div className="border-t border-[#F0F0F0] pt-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-[#1D1D1D]">Additional Contact</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-[#1D1D1D]">Additional Contact</h3>
+                      <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
+                    </div>
                     <button type="button" onClick={() => setShowAdditionalContact(false)} className="text-xs font-semibold text-[#999] hover:text-[#D02B20]">
                       Delete contact
                     </button>
@@ -480,6 +500,9 @@ export default function NewCasePatient() {
 
             {/* Prescriber */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
+              </div>
               <Field label="Who is the patient's prescriber?">
                 <select value={prescriber} onChange={(e) => setPrescriber(e.target.value)} className={`${inputCls} appearance-none`}>
                   <option value="">Select prescriber</option>

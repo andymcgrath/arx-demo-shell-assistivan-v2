@@ -20,6 +20,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
+import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { X, Info, Plus } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
@@ -65,6 +66,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 export default function NewCaseRx() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
 
   // Read-only summary values carried in from earlier steps — sample/spec
   // placeholder content, per the file-header note above.
@@ -107,7 +109,13 @@ export default function NewCaseRx() {
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
 
+  // Completing (or skipping) the last wizard step is this demo's stand-in for
+  // "case submitted" — dispatching ENROLL flips the live-wired sample patient
+  // (Keanu Reeves) out of enrollmentStatus "none" so he surfaces on the
+  // Dashboard's active-patient list, same event CoaRxForm's onSend dispatches
+  // on WF3 (client/portals/provider/index.tsx).
   function finishCase() {
+    dispatch("ENROLL", { portal: "provider" });
     navigate("/");
   }
 
@@ -118,7 +126,7 @@ export default function NewCaseRx() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-[#E8E8E8] px-4 sm:px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <IAssistLogo className="h-6 w-auto hidden sm:block" />
+            <IAssistLogo className="h-6 w-auto" />
             <button onClick={() => navigate("/")} className="text-[#6F7276] hover:text-[#1D1D1D] focus:outline-none" aria-label="Close and return to dashboard">
               <X size={20} />
             </button>
@@ -287,7 +295,7 @@ export default function NewCaseRx() {
                 onClick={finishCase}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
               >
-                Next
+                Submit
               </button>
             </div>
           </div>
