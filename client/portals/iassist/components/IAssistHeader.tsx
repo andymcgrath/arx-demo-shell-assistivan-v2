@@ -12,15 +12,17 @@
 import { useState } from "react";
 import { Search, Plus, Bell } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
-import { IASSIST_TEAL, IASSIST_TEAL_DARK, IAssistLogo } from "./IAssistSidebar";
+import { IASSIST_TEAL, IASSIST_TEAL_DARK } from "./IAssistSidebar";
 
+// No IAssistLogo here — this header is only ever rendered next to
+// IAssistSidebar (Dashboard.tsx), which already shows the logo in its own
+// top-left logo bar. Adding it here too duplicated it in the same view.
 export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (value: string) => void }) {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   return (
     <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
-      <IAssistLogo className="h-6 w-auto flex-shrink-0 hidden sm:block" />
       <Search size={20} className="text-neutral-600 flex-shrink-0" />
       <div className="flex-1 flex flex-col">
         <label htmlFor="iassist-header-search" className="sr-only">
