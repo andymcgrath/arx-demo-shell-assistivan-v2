@@ -70,7 +70,7 @@ export default function NewCaseRx() {
 
   // Read-only summary values carried in from earlier steps — sample/spec
   // placeholder content, per the file-header note above.
-  const prescriber = "1234567890, James Kodaak";
+  const prescriber = "1234567890, Sarah Chen, MD";
   const medicationName = "ASSISTIVAN 80 UNIT/ML INJECTION GEL 5 ML";
   const ndc = "123456789";
   const icd10 = "270.0: Nephrotic Syndrome";

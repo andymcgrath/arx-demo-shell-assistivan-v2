@@ -539,7 +539,7 @@ export default function NewCasePatient() {
               <Field label="Who is the patient's prescriber?">
                 <select value={prescriber} onChange={(e) => setPrescriber(e.target.value)} className={`${inputCls} appearance-none`}>
                   <option value="">Select prescriber</option>
-                  <option value="1">1234567890, James Kodaak</option>
+                  <option value="1">1234567890, Sarah Chen, MD</option>
                 </select>
               </Field>
             </section>
