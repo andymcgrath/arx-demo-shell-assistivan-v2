@@ -18,6 +18,7 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
+import { IAssistLogo } from "../components/IAssistSidebar";
 
 type PharmacyMode = "standard" | "soc" | "ldd";
 
@@ -122,6 +123,7 @@ export default function NewCaseMedication() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-[#E8E8E8] px-4 sm:px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
+            <IAssistLogo className="h-6 w-auto hidden sm:block" />
             <button
               onClick={() => navigate("/")}
               className="text-[#6F7276] hover:text-[#1D1D1D] focus:outline-none"
@@ -301,7 +303,7 @@ export default function NewCaseMedication() {
 
             <div className="flex justify-end pb-8">
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/new-case/insurance")}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
               >
                 Next

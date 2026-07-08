@@ -12,6 +12,10 @@ import { PortalRouter, Routes, Route } from "@/lib/portalRouter";
 import Dashboard from "./pages/Dashboard";
 import NewCasePatient from "./pages/NewCasePatient";
 import NewCaseMedication from "./pages/NewCaseMedication";
+import NewCaseInsurance from "./pages/NewCaseInsurance";
+import NewCaseClinical from "./pages/NewCaseClinical";
+import NewCasePA from "./pages/NewCasePA";
+import NewCaseRx from "./pages/NewCaseRx";
 
 export default function IAssistPortal() {
   return (
@@ -20,6 +24,10 @@ export default function IAssistPortal() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/new-case/patient" element={<NewCasePatient />} />
         <Route path="/new-case/medication" element={<NewCaseMedication />} />
+        <Route path="/new-case/insurance" element={<NewCaseInsurance />} />
+        <Route path="/new-case/clinical" element={<NewCaseClinical />} />
+        <Route path="/new-case/pa" element={<NewCasePA />} />
+        <Route path="/new-case/rx" element={<NewCaseRx />} />
       </Routes>
     </PortalRouter>
   );
