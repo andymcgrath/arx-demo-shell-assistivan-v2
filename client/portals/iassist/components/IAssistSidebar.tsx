@@ -5,12 +5,17 @@
  * panel, nothing else — matching CoaDashboard's minimal sidebar rather than
  * the earlier "High five" / "To-Do List" mockup this portal had before.
  */
+import iassistLogoAsset from "../assets/iassist-logo.png";
+
 export const IASSIST_TEAL = "#007178";
 export const IASSIST_TEAL_DARK = "#03656B";
 export const IASSIST_TEAL_LIGHT = "#EEF9F9";
 
-const IASSIST_LOGO_URL =
-  "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2F85024768bb364ddda8d2365469c3ce76?format=webp&width=800&height=1200";
+// Real color wordmark (teal "iAssist" + orange/teal dot), provided directly
+// by the user and bundled locally — the prior CDN asset rendered white and
+// was invisible against the white header background outside of Builder's
+// preview (which apparently applies its own background behind CDN images).
+const IASSIST_LOGO_URL = iassistLogoAsset;
 
 /**
  * Shared iAssist wordmark — used in this sidebar, IAssistHeader (Dashboard),

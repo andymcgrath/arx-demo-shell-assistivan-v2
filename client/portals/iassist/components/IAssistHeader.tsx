@@ -20,7 +20,7 @@ export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (va
 
   return (
     <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
-      <IAssistLogo className="h-6 w-auto flex-shrink-0" />
+      <IAssistLogo className="h-6 w-auto flex-shrink-0 hidden sm:block" />
       <Search size={20} className="text-neutral-600 flex-shrink-0" />
       <div className="flex-1 flex flex-col">
         <label htmlFor="iassist-header-search" className="sr-only">

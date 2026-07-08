@@ -231,7 +231,7 @@ export default function NewCasePatient() {
         {/* Header */}
         <header className="bg-white border-b border-[#E8E8E8] px-4 sm:px-8 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <IAssistLogo className="h-6 w-auto" />
+            <IAssistLogo className="h-6 w-auto hidden sm:block" />
             <button
               onClick={() => navigate("/")}
               className="text-[#6F7276] hover:text-[#1D1D1D] focus:outline-none"
