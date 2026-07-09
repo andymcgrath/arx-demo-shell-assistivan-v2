@@ -19,24 +19,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { Info, X } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-import { useCaseWizardStore } from "@/store/caseWizardStore";
-
-const MEDICATION_OPTIONS = [
-  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789",
-  "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML",
-  "Ramoni 20MG ORAL TABLET 30 EA",
-  "Voloxivan 5MG/ML INJECTION 10ML VIAL",
-];
-
-// JCode/CPT pairs keyed by medication — prefills Step 2's billing code fields
-// as soon as a medication is picked, instead of leaving them blank for the
-// user to look up manually.
-const MEDICATION_CODES: Record<string, { jcode: string; cptCode: string }> = {
-  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789": { jcode: "J8499", cptCode: "99070" },
-  "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML": { jcode: "J3590", cptCode: "96401" },
-  "Ramoni 20MG ORAL TABLET 30 EA": { jcode: "J8499", cptCode: "99070" },
-  "Voloxivan 5MG/ML INJECTION 10ML VIAL": { jcode: "J3490", cptCode: "96413" },
-};
+import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/store/caseWizardStore";
 
 const FORM_OPTIONS = ["Tablet", "Capsule", "Oral Solution", "Injection", "Infusion"];
 

@@ -15,14 +15,26 @@
  * same as CoA — everyone else is static decoy data from ../data/samplePatients.
  */
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useNavigate } from "@/lib/portalRouter";
 import type { WorkflowData } from "@/engine/types";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
-import { useCaseWizardStore } from "@/store/caseWizardStore";
+import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/store/caseWizardStore";
 import { StatusDots, StatusBadge } from "../components/StatusIndicators";
-import IAssistSidebar from "../components/IAssistSidebar";
+import IAssistSidebar, { IASSIST_TEAL } from "../components/IAssistSidebar";
 import IAssistHeader from "../components/IAssistHeader";
+
+// Commonly Prescribed row — a second, medication-first way to start a case
+// (vs. the Patients table's patient-first way). Starting from here seeds
+// the medication choice into caseWizardStore so it's already reflected by
+// the time the wizard reaches Medication Details, instead of defaulting to
+// whatever's first in the dropdown.
+const COMMONLY_PRESCRIBED = [
+  { medication: MEDICATION_OPTIONS[0], label: "Assistivan", color: IASSIST_TEAL },
+  { medication: MEDICATION_OPTIONS[1], label: "ASSISTIMAB", color: "#2563EB" },
+  { medication: MEDICATION_OPTIONS[3], label: "Voloxivan", color: "#7C3AED" },
+];
 
 // Ported from CoaDashboard's deriveKeanuStatus — reads only the generic
 // WorkflowData fields (enrollmentStatus/pharmacyStatus/paStatus/biStatus)
@@ -58,11 +70,19 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
+  const setMedication = useCaseWizardStore((s) => s.setMedication);
 
   function openCaseWizard() {
     // Starting the wizard from a roster row is this demo's stand-in for
     // starting a new case — clear prior answers so they don't leak in.
     resetCaseWizard();
+    navigate("/new-case/patient");
+  }
+
+  function startWithMedication(medication: string) {
+    resetCaseWizard();
+    const codes = MEDICATION_CODES[medication];
+    setMedication({ medication, jcode: codes?.jcode ?? "", cptCode: codes?.cptCode ?? "" });
     navigate("/new-case/patient");
   }
   // "provider" persona id used only for tagging events dispatched from this
@@ -80,7 +100,9 @@ export default function Dashboard() {
 
   const query = searchQuery.trim().toLowerCase();
   const visiblePatients = query
-    ? patients.filter((p) => p.name.toLowerCase().includes(query) || p.dob.includes(query))
+    ? patients.filter(
+        (p) => p.name.toLowerCase().includes(query) || p.dob.includes(query) || p.medication.toLowerCase().includes(query)
+      )
     : patients.filter((p) => p.hasActiveRx);
 
   // Once Keanu has an active Rx, he surfaces at the top of the list.
@@ -96,6 +118,24 @@ export default function Dashboard() {
         <IAssistHeader onSearchChange={setSearchQuery} />
 
         <div className="flex-1 overflow-auto p-4 sm:p-6 bg-neutral-100">
+          <h2 className="text-xl font-normal text-neutral-800 mb-4">Commonly Prescribed</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {COMMONLY_PRESCRIBED.map((med) => (
+              <div key={med.medication} className="bg-white rounded-lg shadow-sm p-6 flex items-center justify-between gap-3">
+                <span className="text-lg font-bold" style={{ color: med.color }}>{med.label}</span>
+                <button
+                  type="button"
+                  onClick={() => startWithMedication(med.medication)}
+                  className="text-white text-sm font-semibold rounded-full pl-4 pr-3 py-2 flex items-center gap-1 hover:opacity-90 flex-shrink-0"
+                  style={{ backgroundColor: med.color }}
+                  aria-label={`Start a case for ${med.label}`}
+                >
+                  Start <ChevronRight size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+
           <h2 className="text-xl font-normal text-neutral-800 mb-4">Patients</h2>
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <table className="w-full">

@@ -35,12 +35,12 @@ export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (va
       <Search size={20} className="text-neutral-600 flex-shrink-0" />
       <div className="flex-1 flex flex-col">
         <label htmlFor="iassist-header-search" className="sr-only">
-          Search for patient by name or date of birth
+          Search for patient or medication
         </label>
         <input
           id="iassist-header-search"
           type="text"
-          placeholder="Search for patient by name or date of birth"
+          placeholder="Search for patient or medication"
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-600 focus:ring-2 rounded px-1"
           style={{ ["--tw-ring-color" as any]: IASSIST_TEAL }}
           value={search}
@@ -48,7 +48,7 @@ export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (va
             setSearch(e.target.value);
             onSearchChange?.(e.target.value);
           }}
-          aria-label="Search patients"
+          aria-label="Search for patient or medication"
         />
       </div>
       <button

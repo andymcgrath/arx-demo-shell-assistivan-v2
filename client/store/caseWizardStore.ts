@@ -69,6 +69,27 @@ export function prescriberNameById(id: string) {
   return PRESCRIBER_OPTIONS.find((p) => p.id === id)?.name ?? "";
 }
 
+// Medication directory — shared between Step 2 (Medication Details, where
+// it's picked/edited) and the Dashboard's "Commonly Prescribed" row (which
+// seeds a medication choice before Step 2 is ever visited).
+export const MEDICATION_OPTIONS = [
+  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789",
+  "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML",
+  "Ramoni 20MG ORAL TABLET 30 EA",
+  "Voloxivan 5MG/ML INJECTION 10ML VIAL",
+];
+
+// JCode/CPT pairs keyed by medication — prefills Step 2's billing code
+// fields as soon as a medication is picked (from Step 2's own dropdown, or
+// from the Dashboard's Commonly Prescribed row), instead of leaving them
+// blank for the user to look up manually.
+export const MEDICATION_CODES: Record<string, { jcode: string; cptCode: string }> = {
+  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789": { jcode: "J8499", cptCode: "99070" },
+  "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML": { jcode: "J3590", cptCode: "96401" },
+  "Ramoni 20MG ORAL TABLET 30 EA": { jcode: "J8499", cptCode: "99070" },
+  "Voloxivan 5MG/ML INJECTION 10ML VIAL": { jcode: "J3490", cptCode: "96413" },
+};
+
 export type SignSource = "patient" | "guardian" | "skip";
 export type ConsentMethod = "now" | "email" | "text";
 
@@ -254,9 +275,9 @@ function buildInitialState() {
   };
 
   const medication: MedicationData = {
-    medication: "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789",
-    jcode: "J8499",
-    cptCode: "99070",
+    medication: MEDICATION_OPTIONS[0],
+    jcode: MEDICATION_CODES[MEDICATION_OPTIONS[0]].jcode,
+    cptCode: MEDICATION_CODES[MEDICATION_OPTIONS[0]].cptCode,
     form: "",
     quantity: "",
     daysSupply: "",
