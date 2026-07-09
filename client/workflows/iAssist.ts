@@ -14,7 +14,16 @@
  */
 
 import { createMachine, assign } from 'xstate';
-import type { MachineContext, DemoEvent, WorkflowData } from '@/engine/types';
+import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from '@/engine/types';
+
+// Same contact details coaDtp.ts uses for its Retail/Mail/Self-Pay options —
+// BenefitPricing.tsx's PRICING_OPTIONS card already hardcodes "CVS Pharmacy
+// #3795" / "FutureScripts Home Delivery" as display text for BOTH flows (it's
+// a shared component), so selectedPharmacy needs to match those exact
+// pharmacies for iAssist too, not a different demo pharmacy.
+const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
+const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
+const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: 'iAssist_PA_Approved',
@@ -36,9 +45,16 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   providerPACompleted: false,
   paSubmittedAt: null,
   paApprovedAt: null,
-  // CoA_DTP-only fields, added to WorkflowData after this file was first
-  // cloned from workflowMachine.ts. Unused by iAssist — kept at their
-  // neutral defaults purely to satisfy the shared WorkflowData type.
+  // Post-PA scheduling fields, originally added for CoA_DTP — now also
+  // driven by iAssist's own PA-approved SMS/OTP + pricing/address/date chain
+  // below (see the root-level VERIFY_PA_APPROVED_SMS/OTP, SELECT_PRICING_OPTION,
+  // SELECT_SELF_PAY, PATIENT_SETS_ADDRESS, PATIENT_SELECTS_SHIP_DATE handlers),
+  // which replicates coaDtp.ts's approved-path stages exactly. iAssist never
+  // denies PA, so the paDenied/cashOfferSent/paymentProcessed branch CoA_DTP
+  // also has is intentionally NOT replicated here — cashOfferStatus stays at
+  // its neutral default except for the self-pay PATIENT_PAYS/VERIFY_PAYMENT
+  // handlers below, which mirror CoA's pricingSelected/addressSet/
+  // shipDateSelected states exactly.
   pricingOption: null,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
@@ -117,6 +133,37 @@ export const iAssistMachine = createMachine(
       },
       DELIVER_RX: {
         actions: 'updatePharmacyDelivered',
+      },
+      // ── Post-PA-approval scheduling chain, replicated exactly from
+      // coaDtp.ts's approved path (paApproved -> paApprovedSmsVerified ->
+      // paApprovedOtpVerified -> pricingSelected -> addressSet ->
+      // shipDateSelected). Root-level action-only handlers, same pattern as
+      // SELECT_PHARMACY/READY_RX above — nothing here needs its own nested
+      // state node since every consumer (derivePatientRoute, CRM Index.tsx)
+      // reads workflowData fields, not raw state paths.
+      VERIFY_PA_APPROVED_SMS: {
+        actions: 'updatePaApprovedSmsVerified',
+      },
+      VERIFY_PA_APPROVED_OTP: {
+        actions: 'updatePaApprovedOtpVerified',
+      },
+      SELECT_PRICING_OPTION: {
+        actions: 'updateSelectPricingOption',
+      },
+      SELECT_SELF_PAY: {
+        actions: 'updateSelectSelfPay',
+      },
+      PATIENT_SETS_ADDRESS: {
+        actions: 'updatePatientSetsAddress',
+      },
+      PATIENT_SELECTS_SHIP_DATE: {
+        actions: 'updatePatientSelectsShipDate',
+      },
+      PATIENT_PAYS: {
+        actions: 'updatePatientPays',
+      },
+      VERIFY_PAYMENT: {
+        actions: 'updateVerifyPayment',
       },
     },
     states: {
@@ -418,6 +465,75 @@ export const iAssistMachine = createMachine(
           pharmacyStatus: 'delivered',
         },
         events: [...context.events, createEvent(context, 'DELIVER_RX', 'field', 12)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      // ── Post-PA-approval scheduling actions, mirroring coaDtp.ts's
+      // paApprovedSmsVerified/paApprovedOtpVerified/pricingSelected/
+      // addressSet/shipDateSelected context updates field-for-field.
+      updatePaApprovedSmsVerified: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          paApprovedSmsVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_SMS', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePaApprovedOtpVerified: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          paApprovedOtpVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_OTP', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateSelectPricingOption: assign(({ context, event }: any) => ({
+        workflowData: {
+          ...context.workflowData,
+          pricingOption: event.option,
+          selectedPharmacy: event.option === 'retail' ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
+        },
+        events: [...context.events, createEvent(context, 'SELECT_PRICING_OPTION', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateSelectSelfPay: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          pricingOption: 'self_pay',
+          selectedPharmacy: SELF_PAY_PHARMACY,
+        },
+        events: [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePatientSetsAddress: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          dispatchStatus: 'selected',
+        },
+        events: [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePatientSelectsShipDate: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          patientShipDate: new Date().toISOString(),
+        },
+        events: [...context.events, createEvent(context, 'PATIENT_SELECTS_SHIP_DATE', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePatientPays: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          cashOfferStatus: 'paid',
+        },
+        events: [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateVerifyPayment: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          paymentVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateCompleteProviderPA: assign(({ context }) => ({

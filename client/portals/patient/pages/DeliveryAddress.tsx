@@ -43,22 +43,25 @@ export default function DeliveryAddress() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const isCoA = workflowData.flowType === "CoA_DTP";
+  const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));
 
-  // Records the address on the workflow (CoA_DTP only — dispatchStatus →
-  // "selected"). Previously nothing dispatched this at all, so the coaDtp
-  // actor's real state never left "pricingSelected": derivePatientRoute's
-  // rule for "pricingOption set, dispatchStatus none → /delivery-address"
-  // then matched forever, and any remount of the patient portal (switching
-  // layout, opening a CRM tab) recomputed the initial route from scratch and
-  // sent an already-progressed patient straight back to this screen. It also
-  // meant the CRM's Kick Off Fill button — only reachable once the machine
-  // is in the addressSet/shipDateSelected states — silently did nothing.
+  // Records the address on the workflow (CoA_DTP and iAssist only —
+  // dispatchStatus → "selected"). Previously nothing dispatched this at all,
+  // so the coaDtp actor's real state never left "pricingSelected":
+  // derivePatientRoute's rule for "pricingOption set, dispatchStatus none →
+  // /delivery-address" then matched forever, and any remount of the patient
+  // portal (switching layout, opening a CRM tab) recomputed the initial
+  // route from scratch and sent an already-progressed patient straight back
+  // to this screen. It also meant the CRM's Kick Off Fill button — only
+  // reachable once the machine is in the addressSet/shipDateSelected states
+  // — silently did nothing. iAssist replicates this exactly (see iAssist.ts's
+  // updatePatientSetsAddress).
   function handleContinue() {
     if (!valid) return;
-    if (isCoA) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (isCoA || isIAssist) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     navigate("/delivery-date");
   }
 

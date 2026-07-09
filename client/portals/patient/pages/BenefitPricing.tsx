@@ -4,11 +4,14 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { PROGRAM } from "@/config/branding";
 
 /**
- * Benefit Pricing — CoA_DTP only.
+ * Benefit Pricing — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
+ * screen exactly, see WorkflowEngine.ts's derivePatientRoute and iAssist.ts's
+ * updateSelectPricingOption/updateSelectSelfPay). WF1 (Fax_QS_PA_Approved)
+ * never routes here.
  *
- * Shown once PA is approved (see WorkflowEngine's isCoA branch and
+ * Shown once PA is approved (see WorkflowEngine's isCoA/iAssist branches and
  * PAApproved.tsx, which routes here instead of straight to /delivery-address
- * for this flow). Presents the 3 options CoAssist offers once insurance
+ * for CoA_DTP). Presents the 3 options CoAssist offers once insurance
  * covers the drug: Retail pickup, Mail order, or the Copay program — a
  * self-pay option through the CoAssist Pharmacy at a reduced price. Cards
  * stack vertically with Copay last, since it's a lower-priority fallback to

@@ -3,7 +3,10 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { ChevronLeft, Mic } from "lucide-react";
 
 /**
- * PA Approved SMS — CoA_DTP only.
+ * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
+ * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
+ * iAssist.ts's updatePaApprovedSmsVerified). WF1 (Fax_QS_PA_Approved) never
+ * routes here.
  *
  * A second "text message" beat, separate from the original enrollment SMS
  * (SMSMessage.tsx, untouched — this is a new dedicated screen so WF1's

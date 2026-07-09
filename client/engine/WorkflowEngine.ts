@@ -228,6 +228,46 @@ export function derivePatientRoute(state: MachineContext): string {
       workflowData.paStatus !== 'approved')
     return '/';
 
+  // ── iAssist post-PA-approval: replicates CoA_DTP's approved-path
+  // scheduling chain exactly (SMS/OTP re-verify -> pricing -> address ->
+  // ship date -> fill/ship/deliver). iAssist never denies PA (see
+  // iAssist.ts), so unlike the isCoA branch above this never needs the
+  // paDenied/cashOfferSent/paymentProcessed detour — only the self-pay
+  // PATIENT_PAYS/VERIFY_PAYMENT beat (reached the same way CoA's
+  // pricingSelected/addressSet/shipDateSelected states reach it). WF1
+  // (Fax_QS_PA_Approved) is untouched — it keeps the generic /pa-approved
+  // screen further below.
+  if (flowType === 'iAssist_PA_Approved' && workflowData.paStatus === 'approved') {
+    if (!workflowData.paApprovedSmsVerified) return '/pa-approved-sms';
+
+    if (!workflowData.paApprovedOtpVerified) return '/pa-approved-otp';
+
+    if (workflowData.pricingOption === null) return '/benefit-pricing';
+
+    if (workflowData.dispatchStatus === 'none' ||
+        workflowData.dispatchStatus === 'pending_selection')
+      return '/delivery-address';
+
+    if (workflowData.patientShipDate === null) return '/delivery-date';
+
+    // Retail/Mail Order cost is handled at the pharmacy counter, same as
+    // CoA — only self-pay collects payment through this screen.
+    if (workflowData.pricingOption === 'self_pay' && !workflowData.paymentVerified)
+      return '/delivery-payment';
+
+    if (workflowData.pharmacyStatus === 'none') return '/enrollment-complete';
+
+    if (workflowData.pharmacyStatus === 'processing' ||
+        workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
+
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    // Stay on the tracker for "delivered" too, same as CoA — see the isCoA
+    // branch's comment above for why.
+    return '/order-tracker';
+  }
+
   // ── Delivery flow ────────────────────────────────────────────────────
   // "Schedule delivery now" only while CRM hasn't assigned a dispatch
   // pharmacy yet. dispatchStatus moves to 'pending_selection' the instant

@@ -34,24 +34,26 @@ export default function DeliveryDate() {
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
   const isCoA = flowType === "CoA_DTP";
+  const isIAssist = flowType === "iAssist_PA_Approved";
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
   // isn't payment, and testing confirmed Copay doesn't collect payment
   // through this flow at all, so it now skips /delivery-payment the same
   // way WF1 does. Retail/Mail are unchanged — they still visit
   // /delivery-payment as a cost-summary screen (no change requested there).
-  const skipPayment = isWorkflow1 || (isCoA && workflowData.pricingOption === "self_pay");
+  // iAssist replicates this exactly (same self_pay-only gate).
+  const skipPayment = isWorkflow1 || ((isCoA || isIAssist) && workflowData.pricingOption === "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
 
-  // Records the ship date on the workflow (CoA_DTP only — see
+  // Records the ship date on the workflow (CoA_DTP and iAssist only — see
   // DeliveryAddress.tsx's PATIENT_SETS_ADDRESS for why this matters: without
-  // it the coaDtp actor's real state never reaches shipDateSelected, so a
-  // portal remount falls back to an earlier screen and the CRM's dispense
-  // buttons (gated on that state) never fire.
+  // it the coaDtp/iAssist actor's real state never reaches shipDateSelected,
+  // so a portal remount falls back to an earlier screen and the CRM's
+  // dispense buttons (gated on that state) never fire.
   function handleSave() {
     if (!selected) return;
-    if (isCoA) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    if (isCoA || isIAssist) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
     navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment");
   }
 

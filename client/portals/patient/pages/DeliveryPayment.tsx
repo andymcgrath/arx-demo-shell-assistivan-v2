@@ -35,6 +35,11 @@ export default function DeliveryPayment() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isCoA = flowType === "CoA_DTP";
+  const isIAssist = flowType === "iAssist_PA_Approved";
+  // iAssist replicates CoA's exact pricing display (Total due today card)
+  // instead of WF1's List Price/Discount breakdown, since iAssist now also
+  // sets pricingOption via Benefit Pricing.
+  const usesCoaPricingDisplay = isCoA || isIAssist;
   const { data: patient } = usePatientCase();
 
   useEffect(() => {
@@ -52,14 +57,14 @@ export default function DeliveryPayment() {
   //
   // Records the payment on the workflow (cashOfferStatus → "paid",
   // paymentVerified → true) so the CRM's Cash Offer stage and downstream
-  // Dispense actions unlock correctly. For CoA_DTP, only the self_pay
-  // (Copay) option is tracked as a Cash Offer — Retail/Mail Order cost is
-  // handled at the pharmacy counter, so nothing is dispatched for them here.
-  // No-op on flows whose machine doesn't define these events (e.g. WF1's
-  // Fax_QS_PA_Approved, which redirects away from this screen above before a
-  // patient could ever click Pay).
+  // Dispense actions unlock correctly. For CoA_DTP and iAssist, only the
+  // self_pay (Copay) option is tracked as a Cash Offer — Retail/Mail Order
+  // cost is handled at the pharmacy counter, so nothing is dispatched for
+  // them here. No-op on flows whose machine doesn't define these events
+  // (e.g. WF1's Fax_QS_PA_Approved, which redirects away from this screen
+  // above before a patient could ever click Pay).
   function completePayment() {
-    if (!isCoA || workflowData.pricingOption === "self_pay") {
+    if ((!isCoA && !isIAssist) || workflowData.pricingOption === "self_pay") {
       dispatch("PATIENT_PAYS", { portal: "patient" });
       dispatch("VERIFY_PAYMENT", { portal: "patient" });
     }
@@ -72,7 +77,7 @@ export default function DeliveryPayment() {
   const [cardOpen, setCardOpen] = useState(false);
 
   const coaPricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
-  const cardTotalLabel = isCoA ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
+  const cardTotalLabel = usesCoaPricingDisplay ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
 
   return (
     <main className="flex-grow pb-8">
@@ -88,7 +93,7 @@ export default function DeliveryPayment() {
               </div>
               <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Payment Information</h1>
               <p className="text-sm text-center text-arx-body-copy">
-                You're almost there, {firstName}. {isCoA ? "Confirm payment to complete your order." : "Please review and confirm the order."}
+                You're almost there, {firstName}. {usesCoaPricingDisplay ? "Confirm payment to complete your order." : "Please review and confirm the order."}
               </p>
             </div>
 
@@ -97,17 +102,17 @@ export default function DeliveryPayment() {
               <div>
                 <p className="font-bold text-base text-arx-primary">{PROGRAM.drugDisplayName}</p>
                 <p className="text-sm mt-0.5 text-arx-body-copy">
-                  {isCoA
+                  {usesCoaPricingDisplay
                     ? COA_SUPPLY_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? PROGRAM.description
                     : PROGRAM.description}
                 </p>
-                {isCoA && workflowData.selectedPharmacy?.name && (
+                {usesCoaPricingDisplay && workflowData.selectedPharmacy?.name && (
                   <p className="text-sm mt-0.5 text-arx-body-copy">{workflowData.selectedPharmacy.name}</p>
                 )}
               </div>
 
               {/* Payment summary */}
-              {isCoA ? (
+              {usesCoaPricingDisplay ? (
                 <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex items-center justify-between">
                   <span className="text-sm font-semibold text-arx-slate">Total due today</span>
                   <span className="text-2xl font-bold text-arx-primary">

@@ -3,7 +3,10 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 /**
- * PA Approved OTP — CoA_DTP only.
+ * PA Approved OTP — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
+ * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
+ * iAssist.ts's updatePaApprovedOtpVerified). WF1 (Fax_QS_PA_Approved) never
+ * routes here.
  *
  * A second identity check after PA approval, separate from the original
  * enrollment OTP (OTPVerification.tsx, untouched — this is a dedicated

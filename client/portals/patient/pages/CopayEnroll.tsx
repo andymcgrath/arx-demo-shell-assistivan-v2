@@ -9,6 +9,7 @@ export default function CopayEnroll() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isCoA = flowType === "CoA_DTP";
+  const isIAssist = flowType === "iAssist_PA_Approved";
 
   useEffect(() => {
     if (flowType === "Fax_QS_PA_Approved") {
@@ -26,7 +27,7 @@ export default function CopayEnroll() {
     navigate("/delivery-address");
   }
 
-  if (isCoA) {
+  if (isCoA || isIAssist) {
     return (
       <main className="flex-grow pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
