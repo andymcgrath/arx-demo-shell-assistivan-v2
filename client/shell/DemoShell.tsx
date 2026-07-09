@@ -880,7 +880,13 @@ export default function DemoShell() {
                       resetAllWorkflowSnapshots();
                       switchWorkflow(flowType);
                       sessionStorage.removeItem('arxWorkflow_v2');
-                      sessionStorage.removeItem('arx-demo-shell');
+                      // NOTE: do NOT removeItem('arx-demo-shell') here — resetDemo()
+                      // above already wrote the correct flowType into that key via
+                      // zustand's own persisted set(). Wiping it afterward leaves the
+                      // store with nothing to rehydrate from, so any reload before the
+                      // next write (e.g. a dev-server HMR reload) silently falls back
+                      // to WF1. This was the root cause of "workflow flips back to
+                      // WF1" reports.
                       sessionStorage.removeItem('arx-patient-identity');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
@@ -932,7 +938,10 @@ export default function DemoShell() {
                       key={stage}
                       onClick={() => {
                         resetActorToStage(stage);
-                        sessionStorage.removeItem('arx-demo-shell');
+                        // See "Reset All" button above: resetActorToStage() already
+                        // persists the correct flowType via resetDemo(); don't wipe
+                        // 'arx-demo-shell' afterward or a reload before the next
+                        // write reverts the workflow to WF1.
                         sessionStorage.removeItem('arx-patient-identity');
                         sessionStorage.removeItem('arxWorkflow_v2');
                         setShowStageReset(false);

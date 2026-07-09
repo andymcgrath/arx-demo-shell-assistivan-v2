@@ -57,22 +57,15 @@ function readPersistedFlowType(): FlowType {
   try {
     const raw = sessionStorage.getItem("arx-demo-shell");
     if (!raw) {
-      // TEMP DIAGNOSTIC — see getWorkflowActor()/switchWorkflow() below.
-      // This branch defaulting to WF1 when it shouldn't (i.e. sessionStorage
-      // genuinely has no "arx-demo-shell" key at the moment this runs) would
-      // point straight at the "CRM tab reverts to WF1" bug.
-      console.warn("[actorSingleton] readPersistedFlowType: no 'arx-demo-shell' key in sessionStorage, defaulting to WF1", new Error().stack);
       return "Fax_QS_PA_Approved";
     }
     const parsed = JSON.parse(raw);
     const flowType = parsed?.state?.flowType as FlowType | undefined;
     if (!flowType) {
-      console.warn("[actorSingleton] readPersistedFlowType: parsed sessionStorage but found no state.flowType, defaulting to WF1", parsed, new Error().stack);
       return "Fax_QS_PA_Approved";
     }
     return flowType;
   } catch (e) {
-    console.warn("[actorSingleton] readPersistedFlowType: failed to parse sessionStorage, defaulting to WF1", e, new Error().stack);
     return "Fax_QS_PA_Approved";
   }
 }
@@ -131,13 +124,6 @@ export const useActorStore = create<ActorStore>((set) => ({
 export function getWorkflowActor() {
   if (!actorInstance) {
     currentFlowType = readPersistedFlowType();
-    // TEMP DIAGNOSTIC — this branch should only ever run ONCE per page
-    // load (actorInstance starts null and is immediately reassigned here).
-    // If this ever logs mid-session — e.g. right after clicking a portal
-    // tab — something is nulling out actorInstance unexpectedly, which
-    // would explain the actor (and the UI reading it) briefly reverting to
-    // whatever readPersistedFlowType() resolves to.
-    console.warn(`[actorSingleton] getWorkflowActor: creating actor cold-start for ${currentFlowType}`, new Error().stack);
     actorInstance = createActorForFlow(currentFlowType);
     useActorStore.getState().setActor(actorInstance);
   }
@@ -152,11 +138,6 @@ function machineIdForFlow(flowType: FlowType): string {
 }
 
 export function switchWorkflow(flowType: FlowType): void {
-  // TEMP DIAGNOSTIC — logs every caller of switchWorkflow with a stack
-  // trace, so if this ever fires with "Fax_QS_PA_Approved" right after a
-  // plain portal-tab click (rather than the flow dropdown/Reset), the
-  // trace pinpoints exactly which effect/handler called it.
-  console.warn(`[actorSingleton] switchWorkflow(${flowType}) — currently ${currentFlowType}`, new Error().stack);
   const machineId = machineIdForFlow(flowType);
   const machine = workflowRegistry.getWorkflow(machineId);
   if (!machine) {
