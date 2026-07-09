@@ -17,7 +17,7 @@ export default function PAApproved() {
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
   return (
-    <main className="flex-grow pb-8">
+    <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Approved card */}

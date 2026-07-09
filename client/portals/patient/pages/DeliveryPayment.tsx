@@ -80,7 +80,7 @@ export default function DeliveryPayment() {
   const cardTotalLabel = usesCoaPricingDisplay ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
 
   return (
-    <main className="flex-grow pb-8">
+    <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4">
           <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
 

@@ -29,7 +29,7 @@ export default function CopayEnroll() {
 
   if (isCoA || isIAssist) {
     return (
-      <main className="flex-grow pb-8">
+      <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start gap-3 mb-3">
@@ -72,7 +72,7 @@ export default function CopayEnroll() {
   }
 
   return (
-    <main className="flex-grow pb-8">
+    <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
