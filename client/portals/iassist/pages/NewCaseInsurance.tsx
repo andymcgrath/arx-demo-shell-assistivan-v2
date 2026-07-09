@@ -36,7 +36,7 @@ interface FoundInsurance {
 const FOUND_INSURANCES: FoundInsurance[] = [
   {
     id: "cvs-caremark",
-    payer: "CVS Caremark Pharmacy",
+    payer: "CVS Caremark New York",
     planType: "Commercial",
     rxBin: "003858",
     rxPcn: "A4",
