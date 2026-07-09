@@ -244,10 +244,38 @@ function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>
   return 1;
 }
 
+// iAssist-specific step completion — unlike WF1/WF2/CoA (where consent,
+// BI, and PA naturally happen in that order, so a single "how far along"
+// number works), iAssist's Rx submission auto-completes BI and auto-submits
+// PA immediately (see iAssist.ts's ENROLL handlers on those regions),
+// independent of and often well ahead of the patient's own SMS/OTP/consent
+// progress. A single scalar workflowStep can't represent "PA already
+// submitted, but the patient hasn't consented yet" — the generic threshold
+// calc below would (wrongly) mark Patient Enrolled/Benefits Investigation as
+// done just because a later field advanced. Each step here is judged only
+// by its own field, so the bar can show gaps instead of lying about them.
+function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, paStatus, dispatchStatus, pharmacyStatus } = workflowData;
+  const dispatched = dispatchStatus === 'selected' || dispatchStatus === 'dispatched';
+  const pastDispatch = pharmacyStatus === 'processing' || pharmacyStatus === 'ready' || pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered';
+  return [
+    enrollmentStatus !== 'none',                 // 1 Referral Received
+    consentStatus === 'confirmed',                // 2 Patient Enrolled — real consent, not just an invite sent
+    biStatus === 'complete',                      // 3 Benefits Investigation
+    paStatus === 'approved',                      // 4 Prior Authorization — "submitted" alone isn't done yet
+    dispatched || pastDispatch,                   // 5 Dispatch to Triage
+    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 6 Rx Processing
+    pharmacyStatus === 'delivered',                // 7 Rx Shipped
+    pharmacyStatus === 'delivered',                // 8 Medication Delivered
+  ];
+}
+
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
   const isCoaFlow = flowType === "CoA_DTP";
+  const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  const iAssistStepDone = isIAssistFlow ? computeIAssistStepDone(workflowData) : null;
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
@@ -297,8 +325,14 @@ function StepBar() {
     <div className="flex items-center gap-0 px-6 py-2">
       {STEP_LABELS.map((label, i) => {
         const n      = i + 1;
-        const done   = workflowStep > n;
-        const active = workflowStep === n;
+        const done   = iAssistStepDone ? iAssistStepDone[i] : workflowStep > n;
+        // With independent per-step completion, "active" (the single
+        // highlighted step) is the earliest one not yet done — later steps
+        // that raced ahead (e.g. PA already submitted) get their own
+        // pulsing-ring treatment below instead of the bold "active" ring.
+        const active = iAssistStepDone
+          ? !iAssistStepDone[i] && iAssistStepDone.slice(0, i).every(Boolean)
+          : workflowStep === n;
         // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
         const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
         return (
@@ -357,7 +391,7 @@ function StepBar() {
               <div
                 className={cn(
                   "h-px flex-1 mx-1 mb-3 transition-all overflow-hidden relative",
-                  workflowStep > n ? "bg-white/60" : "bg-white/15"
+                  done ? "bg-white/60" : "bg-white/15"
                 )}
               >
                 {connectorRunning && (

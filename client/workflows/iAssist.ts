@@ -177,6 +177,16 @@ export const iAssistMachine = createMachine(
                 guard: 'canRunBI',
                 actions: 'updateBISubmitted',
               },
+              // iAssist completes BI the moment the eRx is submitted, same
+              // ENROLL dispatch that auto-submits PA below — iAssist runs
+              // its own benefits investigation instantly rather than
+              // waiting on the patient consent RUN_BI normally requires.
+              // Jumping straight to 'complete' (not 'submitted') skips the
+              // "Running..." visual, since there's no real wait to show.
+              ENROLL: {
+                target: 'complete',
+                actions: 'updateBIComplete',
+              },
             },
           },
           submitted: {
