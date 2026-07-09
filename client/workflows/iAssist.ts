@@ -125,8 +125,20 @@ export const iAssistMachine = createMachine(
         states: {
           idle: {
             on: {
+              // WF1's CRM-driven flow treats "enrolled" and "invited" as two
+              // separate manual clicks (see useEnrollPatient.ts) — ENROLL
+              // goes to 'pending', then a separate INVITE event moves to
+              // 'invited'. iAssist has no such second step: Rx submission
+              // (finishCase's ENROLL dispatch) already sends the welcome
+              // text in the same moment (enrollmentInviteSent is set true by
+              // updateEnrollmentPending below), so it must land directly in
+              // 'invited' — otherwise the region is stuck in 'pending'
+              // forever (nothing in the iAssist flow ever dispatches INVITE)
+              // and VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT — all only handled
+              // from 'invited' onward — get silently ignored no matter how
+              // correctly the patient walks through those screens.
               ENROLL: {
-                target: 'pending',
+                target: 'invited',
                 actions: 'updateEnrollmentPending',
               },
             },

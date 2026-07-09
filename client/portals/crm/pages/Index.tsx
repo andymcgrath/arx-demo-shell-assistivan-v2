@@ -1052,15 +1052,6 @@ export default function Index() {
       className="min-h-screen bg-white"
       style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}
     >
-      {/* TEMP DIAGNOSTIC — tracking down "EA-14272 stuck on Pending after
-          consent confirms" bug. workflowData.flowType (what this component's
-          isIAssistFlow/isFaxFlow checks actually use) vs demoStore's flowType
-          (what the top dropdown displays) are read from two different
-          sources — if they ever disagree, this line will show it directly in
-          a screenshot instead of requiring devtools. Remove once resolved. */}
-      <div style={{ background: "#fef08a", color: "#78350f", fontSize: 11, fontFamily: "monospace", padding: "3px 8px", borderBottom: "2px solid #ca8a04" }}>
-        DEBUG — actor.flowType: <b>{flowType}</b> | demoStore.flowType: <b>{useDemoStore.getState().flowType}</b> | consentStatus: <b>{consentStatus}</b> | biStatus: <b>{biStatus}</b> | paStatus: <b>{paStatus}</b> | enrollmentInviteSent: <b>{String(workflowData.enrollmentInviteSent)}</b>
-      </div>
       {isCoaFlow && (
         <div className="px-3 py-1.5 border-b border-[#dddbda] bg-[#f3f3f3]">
           <SfLink onClick={() => setHubView("list")}>← Back to Cases</SfLink>
