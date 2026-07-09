@@ -1,8 +1,8 @@
 /**
  * NewCasePatient — Step 1 (Patient) of the iAssist eRx case-creation wizard.
  *
- * Built from the "Step 1 (Patient).pdf" Figma spec. This is a self-contained,
- * local-state form — it does not touch the shared XState workflow machine or
+ * Built from the "Step 1 (Patient).pdf" Figma spec. This is a self-contained
+ * form — it does not touch the shared XState workflow machine or
  * WorkflowEngine routing, so it can't affect WF1/WF2/WF3 or the CoA/iAssist
  * status machines. Case-creation is a data-entry UI concern, separate from
  * the pharmacy-status parallel machine iAssist.ts models.
@@ -14,51 +14,20 @@
  * income verification are left blank — those are live actions/attestations
  * captured fresh for each new case, not stored patient-profile data.
  *
- * Name, DOB, phone, email, and address are seeded from usePatientStore
- * (PATIENT_SEED — Keanu Reeves) so this step shows the same patient the user
- * just searched for / selected on the Dashboard, instead of an unrelated
- * decoy identity. Fields not modeled in that store (sex, height/weight, SSN
- * last 4, language, allergies, additional contact, prescriber) stay as
- * static synthetic demo content, not real PII.
+ * Fields live in caseWizardStore (Zustand + sessionStorage), same pattern as
+ * patientStore.ts, so the wizard's Back button doesn't throw away answers
+ * (see that store's file header for the fuller rationale). Name/DOB/phone/
+ * email/address default from PATIENT_SEED (Keanu Reeves) so this step shows
+ * the same patient the user just searched for / selected on the Dashboard.
  */
 import { useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X, Plus, Trash2, Upload } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-import { usePatientStore } from "@/store/patientStore";
+import { useCaseWizardStore, PRESCRIBER_OPTIONS, type PhoneEntry, type SignSource, type ConsentMethod } from "@/store/caseWizardStore";
 
-/** "Keanu Reeves" -> { first: "Keanu", last: "Reeves" } */
-function splitName(fullName: string) {
-  const [first, ...rest] = fullName.trim().split(/\s+/);
-  return { first: first ?? "", last: rest.join(" ") };
-}
-
-/** "09/02/1964" (MM/DD/YYYY) -> "1964-09-02" for a <input type="date"> */
-function toIsoDob(mmddyyyy: string) {
-  const [mm, dd, yyyy] = mmddyyyy.split("/");
-  if (!mm || !dd || !yyyy) return "";
-  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-}
-
-/** "123 Main Street, Orlando, FL 32801" -> { addr1, city, state, zip } */
-function parseDeliveryAddress(address: string) {
-  const [addr1 = "", city = "", stateZip = ""] = address.split(",").map((s) => s.trim());
-  const [state = "", zip = ""] = stateZip.split(/\s+/);
-  return { addr1, city, state, zip };
-}
-
-type SignSource = "patient" | "guardian" | "skip";
-type ConsentMethod = "now" | "email" | "text";
 type SignatureMode = "type" | "draw";
-
-interface PhoneEntry {
-  id: string;
-  number: string;
-  type: "Cell" | "Home" | "Work";
-  bestTime: string;
-  leaveMessage: "Yes" | "No";
-}
 
 function emptyPhone(): PhoneEntry {
   return { id: crypto.randomUUID(), number: "", type: "Cell", bestTime: "", leaveMessage: "Yes" };
@@ -185,75 +154,21 @@ function SignaturePad({ onChange }: { onChange: (hasSignature: boolean) => void 
 
 export default function NewCasePatient() {
   const navigate = useNavigate();
-  const patient = usePatientStore();
-  const { first: patientFirst, last: patientLast } = splitName(patient.patientName);
-  const deliveryAddr = parseDeliveryAddress(patient.deliveryAddress);
+  const patient = useCaseWizardStore((s) => s.patient);
+  const setPatient = useCaseWizardStore((s) => s.setPatient);
 
   const [showAddedBanner, setShowAddedBanner] = useState(true);
 
-  // Demographics — name/DOB seeded from the selected patient (usePatientStore);
-  // sex/height/weight/SSN aren't modeled in that store, so they stay as
-  // static synthetic "on file" demo data.
-  const [firstName, setFirstName] = useState(patientFirst);
-  const [lastName, setLastName] = useState(patientLast);
-  const [dob, setDob] = useState(toIsoDob(patient.patientDob));
-  const [sex, setSex] = useState("male");
-  const [heightUnit, setHeightUnit] = useState<"in" | "cm">("in");
-  const [weightUnit, setWeightUnit] = useState<"lbs" | "kg">("lbs");
-  const [height, setHeight] = useState("6' 1\"");
-  const [weight, setWeight] = useState("195");
-  const [ssnLast4, setSsnLast4] = useState("7734");
-
-  // Language & allergies — pre-populated as "on file" demo data
-  const [language, setLanguage] = useState("english");
-  const [otherLanguage, setOtherLanguage] = useState("");
-  const [hasAllergies, setHasAllergies] = useState("yes");
-  const [allergies, setAllergies] = useState("Penicillin, Sulfa drugs");
-
-  // Address — seeded from the selected patient's deliveryAddress on file
-  const [addr1, setAddr1] = useState(deliveryAddr.addr1);
-  const [showAddr2, setShowAddr2] = useState(false);
-  const [addr2, setAddr2] = useState("");
-  const [city, setCity] = useState(deliveryAddr.city);
-  const [stateVal, setStateVal] = useState(deliveryAddr.state);
-  const [zip, setZip] = useState(deliveryAddr.zip);
-
-  // Contact — phone/email seeded from the selected patient on file
-  const [email, setEmail] = useState(patient.email);
-  const [phones, setPhones] = useState<PhoneEntry[]>([
-    { id: crypto.randomUUID(), number: patient.phone, type: "Cell", bestTime: "Afternoon (12:00 pm - 4:00 pm)", leaveMessage: "Yes" },
-  ]);
-  const [showAdditionalContact, setShowAdditionalContact] = useState(false);
-  const [altFirstName, setAltFirstName] = useState("");
-  const [altLastName, setAltLastName] = useState("");
-  const [altRelationship, setAltRelationship] = useState("");
-  const [altRelationshipOther, setAltRelationshipOther] = useState("");
-
-  // Prescriber — the patient's known/assigned prescriber, on file
-  const [prescriber, setPrescriber] = useState("1");
-
-  // Consent
-  const [signSource, setSignSource] = useState<SignSource>("patient");
-  const [guardianFirst, setGuardianFirst] = useState("");
-  const [guardianLast, setGuardianLast] = useState("");
-  const [consentMethod, setConsentMethod] = useState<ConsentMethod>("now");
-  const [phiAgreed, setPhiAgreed] = useState(false);
-  const [hasSignature, setHasSignature] = useState(false);
-
-  // Income verification
-  const [householdSize, setHouseholdSize] = useState("");
-  const [householdIncome, setHouseholdIncome] = useState("");
-
   function updatePhone(id: string, patch: Partial<PhoneEntry>) {
-    setPhones((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    setPatient({ phones: patient.phones.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   }
 
   function addPhone() {
-    setPhones((prev) => [...prev, emptyPhone()]);
+    setPatient({ phones: [...patient.phones, emptyPhone()] });
   }
 
   function removePhone(id: string) {
-    setPhones((prev) => (prev.length > 1 ? prev.filter((p) => p.id !== id) : prev));
+    setPatient({ phones: patient.phones.length > 1 ? patient.phones.filter((p) => p.id !== id) : patient.phones });
   }
 
   return (
@@ -300,17 +215,17 @@ export default function NewCasePatient() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="First Name">
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={inputCls} />
+                  <input value={patient.firstName} onChange={(e) => setPatient({ firstName: e.target.value })} placeholder="First name" className={inputCls} />
                 </Field>
                 <Field label="Last Name">
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={inputCls} />
+                  <input value={patient.lastName} onChange={(e) => setPatient({ lastName: e.target.value })} placeholder="Last name" className={inputCls} />
                 </Field>
                 <Field label="Date of Birth">
-                  <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputCls} />
+                  <input type="date" value={patient.dob} onChange={(e) => setPatient({ dob: e.target.value })} className={inputCls} />
                 </Field>
                 <Field label="Sex">
                   <div className="flex items-center gap-1.5">
-                    <select value={sex} onChange={(e) => setSex(e.target.value)} className={`${inputCls} appearance-none`}>
+                    <select value={patient.sex} onChange={(e) => setPatient({ sex: e.target.value })} className={`${inputCls} appearance-none`}>
                       <option value="">Select</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -322,8 +237,8 @@ export default function NewCasePatient() {
                 </Field>
                 <Field label="Height">
                   <div className="flex gap-2">
-                    <input value={height} onChange={(e) => setHeight(e.target.value)} placeholder={heightUnit === "in" ? "5' 7\"" : "cm"} className={inputCls} />
-                    <select value={heightUnit} onChange={(e) => setHeightUnit(e.target.value as "in" | "cm")} className="rounded-lg border border-[#D9D9D9] px-2 text-sm">
+                    <input value={patient.height} onChange={(e) => setPatient({ height: e.target.value })} placeholder={patient.heightUnit === "in" ? "5' 7\"" : "cm"} className={inputCls} />
+                    <select value={patient.heightUnit} onChange={(e) => setPatient({ heightUnit: e.target.value as "in" | "cm" })} className="rounded-lg border border-[#D9D9D9] px-2 text-sm">
                       <option value="in">Inches (in)</option>
                       <option value="cm">Centimeters (cm)</option>
                     </select>
@@ -331,8 +246,8 @@ export default function NewCasePatient() {
                 </Field>
                 <Field label="Weight">
                   <div className="flex gap-2">
-                    <input value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="0" className={inputCls} />
-                    <select value={weightUnit} onChange={(e) => setWeightUnit(e.target.value as "lbs" | "kg")} className="rounded-lg border border-[#D9D9D9] px-2 text-sm">
+                    <input value={patient.weight} onChange={(e) => setPatient({ weight: e.target.value })} placeholder="0" className={inputCls} />
+                    <select value={patient.weightUnit} onChange={(e) => setPatient({ weightUnit: e.target.value as "lbs" | "kg" })} className="rounded-lg border border-[#D9D9D9] px-2 text-sm">
                       <option value="lbs">Pounds (lbs)</option>
                       <option value="kg">Kilograms (kg)</option>
                     </select>
@@ -340,43 +255,43 @@ export default function NewCasePatient() {
                 </Field>
                 <Field label="Last 4 of SSN">
                   <input
-                    value={ssnLast4}
+                    value={patient.ssnLast4}
                     maxLength={4}
-                    onChange={(e) => setSsnLast4(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setPatient({ ssnLast4: e.target.value.replace(/\D/g, "") })}
                     placeholder="1234"
                     className={inputCls}
                   />
                 </Field>
                 <Field label="Preferred Language">
-                  <select value={language} onChange={(e) => setLanguage(e.target.value)} className={`${inputCls} appearance-none`}>
+                  <select value={patient.language} onChange={(e) => setPatient({ language: e.target.value })} className={`${inputCls} appearance-none`}>
                     <option value="">Select</option>
                     <option value="english">English</option>
                     <option value="spanish">Spanish</option>
                     <option value="other">Other</option>
                   </select>
                 </Field>
-                {language === "other" && (
+                {patient.language === "other" && (
                   <Field label="Other Language">
-                    <input value={otherLanguage} onChange={(e) => setOtherLanguage(e.target.value)} placeholder="Enter language" className={inputCls} />
+                    <input value={patient.otherLanguage} onChange={(e) => setPatient({ otherLanguage: e.target.value })} placeholder="Enter language" className={inputCls} />
                   </Field>
                 )}
                 <Field label="Does patient have allergies?">
-                  <select value={hasAllergies} onChange={(e) => setHasAllergies(e.target.value)} className={`${inputCls} appearance-none`}>
+                  <select value={patient.hasAllergies} onChange={(e) => setPatient({ hasAllergies: e.target.value })} className={`${inputCls} appearance-none`}>
                     <option value="">Select</option>
                     <option value="yes">Yes</option>
                     <option value="no">No</option>
                   </select>
                 </Field>
-                {hasAllergies === "yes" && (
+                {patient.hasAllergies === "yes" && (
                   <Field label="Known Allergies">
                     <input
-                      value={allergies}
+                      value={patient.allergies}
                       maxLength={100}
-                      onChange={(e) => setAllergies(e.target.value)}
+                      onChange={(e) => setPatient({ allergies: e.target.value })}
                       placeholder='Separate with a ","'
                       className={inputCls}
                     />
-                    <span className="text-xs text-[#999] mt-1 block text-right">{allergies.length}/100</span>
+                    <span className="text-xs text-[#999] mt-1 block text-right">{patient.allergies.length}/100</span>
                   </Field>
                 )}
               </div>
@@ -389,26 +304,26 @@ export default function NewCasePatient() {
                 <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
               </div>
               <Field label="Address Line 1">
-                <input value={addr1} onChange={(e) => setAddr1(e.target.value)} placeholder="Street address" className={inputCls} />
+                <input value={patient.addr1} onChange={(e) => setPatient({ addr1: e.target.value })} placeholder="Street address" className={inputCls} />
               </Field>
-              {!showAddr2 ? (
-                <button type="button" onClick={() => setShowAddr2(true)} className="text-sm font-semibold text-[#007178] flex items-center gap-1 hover:underline">
+              {!patient.showAddr2 ? (
+                <button type="button" onClick={() => setPatient({ showAddr2: true })} className="text-sm font-semibold text-[#007178] flex items-center gap-1 hover:underline">
                   <Plus size={14} /> Add apartment, suite, etc.
                 </button>
               ) : (
                 <Field label="Address Line 2" optional>
-                  <input value={addr2} onChange={(e) => setAddr2(e.target.value)} placeholder="Apartment, suite, etc." className={inputCls} />
+                  <input value={patient.addr2} onChange={(e) => setPatient({ addr2: e.target.value })} placeholder="Apartment, suite, etc." className={inputCls} />
                 </Field>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="City">
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className={inputCls} />
+                  <input value={patient.city} onChange={(e) => setPatient({ city: e.target.value })} placeholder="City" className={inputCls} />
                 </Field>
                 <Field label="State">
-                  <input value={stateVal} onChange={(e) => setStateVal(e.target.value)} placeholder="State" className={inputCls} />
+                  <input value={patient.state} onChange={(e) => setPatient({ state: e.target.value })} placeholder="State" className={inputCls} />
                 </Field>
                 <Field label="Zip Code">
-                  <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="Zip code" className={inputCls} />
+                  <input value={patient.zip} onChange={(e) => setPatient({ zip: e.target.value })} placeholder="Zip code" className={inputCls} />
                 </Field>
               </div>
             </section>
@@ -420,10 +335,10 @@ export default function NewCasePatient() {
                 <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
               </div>
               <Field label="Email Address" optional>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className={inputCls} />
+                <input type="email" value={patient.email} onChange={(e) => setPatient({ email: e.target.value })} placeholder="name@example.com" className={inputCls} />
               </Field>
 
-              {phones.map((phone) => (
+              {patient.phones.map((phone) => (
                 <div key={phone.id} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end border-t border-[#F0F0F0] pt-4 first:border-t-0 first:pt-0">
                   <Field label="Phone Number">
                     <input
@@ -467,7 +382,7 @@ export default function NewCasePatient() {
                         <option value="No">No</option>
                       </select>
                     </Field>
-                    {phones.length > 1 && (
+                    {patient.phones.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removePhone(phone.id)}
@@ -484,10 +399,10 @@ export default function NewCasePatient() {
                 <Plus size={14} /> Add phone number
               </button>
 
-              {!showAdditionalContact ? (
+              {!patient.showAdditionalContact ? (
                 <button
                   type="button"
-                  onClick={() => setShowAdditionalContact(true)}
+                  onClick={() => setPatient({ showAdditionalContact: true })}
                   className="text-sm font-semibold text-[#007178] flex items-center gap-1 hover:underline border-t border-[#F0F0F0] pt-4"
                 >
                   <Plus size={14} /> Add additional contact
@@ -499,19 +414,19 @@ export default function NewCasePatient() {
                       <h3 className="text-sm font-semibold text-[#1D1D1D]">Additional Contact</h3>
                       <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
                     </div>
-                    <button type="button" onClick={() => setShowAdditionalContact(false)} className="text-xs font-semibold text-[#999] hover:text-[#D02B20]">
+                    <button type="button" onClick={() => setPatient({ showAdditionalContact: false })} className="text-xs font-semibold text-[#999] hover:text-[#D02B20]">
                       Delete contact
                     </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field label="First Name">
-                      <input value={altFirstName} onChange={(e) => setAltFirstName(e.target.value)} placeholder="First name" className={inputCls} />
+                      <input value={patient.altFirstName} onChange={(e) => setPatient({ altFirstName: e.target.value })} placeholder="First name" className={inputCls} />
                     </Field>
                     <Field label="Last Name">
-                      <input value={altLastName} onChange={(e) => setAltLastName(e.target.value)} placeholder="Last name" className={inputCls} />
+                      <input value={patient.altLastName} onChange={(e) => setPatient({ altLastName: e.target.value })} placeholder="Last name" className={inputCls} />
                     </Field>
                     <Field label="Relationship to Patient">
-                      <select value={altRelationship} onChange={(e) => setAltRelationship(e.target.value)} className={`${inputCls} appearance-none`}>
+                      <select value={patient.altRelationship} onChange={(e) => setPatient({ altRelationship: e.target.value })} className={`${inputCls} appearance-none`}>
                         <option value="">Select</option>
                         <option>Spouse</option>
                         <option>Sibling</option>
@@ -521,9 +436,9 @@ export default function NewCasePatient() {
                         <option value="Other">Other</option>
                       </select>
                     </Field>
-                    {altRelationship === "Other" && (
+                    {patient.altRelationship === "Other" && (
                       <Field label="Other">
-                        <input value={altRelationshipOther} onChange={(e) => setAltRelationshipOther(e.target.value)} placeholder="Relationship" className={inputCls} />
+                        <input value={patient.altRelationshipOther} onChange={(e) => setPatient({ altRelationshipOther: e.target.value })} placeholder="Relationship" className={inputCls} />
                       </Field>
                     )}
                   </div>
@@ -537,9 +452,11 @@ export default function NewCasePatient() {
                 <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">On file</span>
               </div>
               <Field label="Who is the patient's prescriber?">
-                <select value={prescriber} onChange={(e) => setPrescriber(e.target.value)} className={`${inputCls} appearance-none`}>
+                <select value={patient.prescriber} onChange={(e) => setPatient({ prescriber: e.target.value })} className={`${inputCls} appearance-none`}>
                   <option value="">Select prescriber</option>
-                  <option value="1">1234567890, Sarah Chen, MD</option>
+                  {PRESCRIBER_OPTIONS.map((p) => (
+                    <option key={p.id} value={p.id}>{p.npi}, {p.name}</option>
+                  ))}
                 </select>
               </Field>
             </section>
@@ -557,24 +474,24 @@ export default function NewCasePatient() {
                   ["skip", "Skip Signature"],
                 ] as [SignSource, string][]).map(([val, label]) => (
                   <label key={val} className="flex items-center gap-2 text-sm text-[#1D1D1D]">
-                    <input type="radio" name="signSource" checked={signSource === val} onChange={() => setSignSource(val)} className="accent-[#007178]" />
+                    <input type="radio" name="signSource" checked={patient.signSource === val} onChange={() => setPatient({ signSource: val })} className="accent-[#007178]" />
                     {label}
                   </label>
                 ))}
               </div>
 
-              {signSource === "guardian" && (
+              {patient.signSource === "guardian" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="First Name">
-                    <input value={guardianFirst} onChange={(e) => setGuardianFirst(e.target.value)} placeholder="Guardian/legal rep first name" className={inputCls} />
+                    <input value={patient.guardianFirst} onChange={(e) => setPatient({ guardianFirst: e.target.value })} placeholder="Guardian/legal rep first name" className={inputCls} />
                   </Field>
                   <Field label="Last Name">
-                    <input value={guardianLast} onChange={(e) => setGuardianLast(e.target.value)} placeholder="Guardian/legal rep last name" className={inputCls} />
+                    <input value={patient.guardianLast} onChange={(e) => setPatient({ guardianLast: e.target.value })} placeholder="Guardian/legal rep last name" className={inputCls} />
                   </Field>
                 </div>
               )}
 
-              {signSource !== "skip" && (
+              {patient.signSource !== "skip" && (
                 <>
                   <p className="text-sm font-semibold text-[#1D1D1D]">How do they want to complete the iAssist consent?</p>
                   <div className="flex flex-col gap-2">
@@ -584,13 +501,13 @@ export default function NewCasePatient() {
                       ["text", "Via Text"],
                     ] as [ConsentMethod, string][]).map(([val, label]) => (
                       <label key={val} className="flex items-center gap-2 text-sm text-[#1D1D1D]">
-                        <input type="radio" name="consentMethod" checked={consentMethod === val} onChange={() => setConsentMethod(val)} className="accent-[#007178]" />
+                        <input type="radio" name="consentMethod" checked={patient.consentMethod === val} onChange={() => setPatient({ consentMethod: val })} className="accent-[#007178]" />
                         {label}
                       </label>
                     ))}
                   </div>
 
-                  {consentMethod === "text" && (
+                  {patient.consentMethod === "text" && (
                     <div className="bg-[#F8F8F8] border border-[#E8E8E8] rounded-lg p-3 text-xs text-[#6F7276]">
                       <strong>Disclaimer</strong> — By selecting "via text", the patient agrees to receive text messages to
                       obtain program consent. Message frequency may vary. Message & data rates may apply. The patient can
@@ -605,14 +522,14 @@ export default function NewCasePatient() {
                     providers and suppliers who provide my medications dispensed by [Manufacturer/pharmacy].
                   </div>
                   <label className="flex items-center gap-2 text-sm text-[#1D1D1D]">
-                    <input type="checkbox" checked={phiAgreed} onChange={(e) => setPhiAgreed(e.target.checked)} className="accent-[#007178]" />
+                    <input type="checkbox" checked={patient.phiAgreed} onChange={(e) => setPatient({ phiAgreed: e.target.checked })} className="accent-[#007178]" />
                     I agree
                   </label>
 
-                  {consentMethod === "now" && (
+                  {patient.consentMethod === "now" && (
                     <div>
                       <p className="text-sm font-semibold text-[#1D1D1D] mb-2">Signature</p>
-                      <SignaturePad onChange={setHasSignature} />
+                      <SignaturePad onChange={(hasSignature) => setPatient({ hasSignature })} />
                     </div>
                   )}
                 </>
@@ -624,10 +541,10 @@ export default function NewCasePatient() {
               <h2 className="text-base font-semibold text-[#1D1D1D]">Income Verification</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Household Size">
-                  <input value={householdSize} onChange={(e) => setHouseholdSize(e.target.value.replace(/\D/g, ""))} placeholder="Including Patient" className={inputCls} />
+                  <input value={patient.householdSize} onChange={(e) => setPatient({ householdSize: e.target.value.replace(/\D/g, "") })} placeholder="Including Patient" className={inputCls} />
                 </Field>
                 <Field label="Annual Household Income">
-                  <input value={householdIncome} onChange={(e) => setHouseholdIncome(e.target.value.replace(/[^\d]/g, ""))} placeholder="Based on household size" className={inputCls} />
+                  <input value={patient.householdIncome} onChange={(e) => setPatient({ householdIncome: e.target.value.replace(/[^\d]/g, "") })} placeholder="Based on household size" className={inputCls} />
                 </Field>
               </div>
               <div>

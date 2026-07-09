@@ -17,6 +17,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { X, Upload, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 
 // Full ICD-10 reference list surfaced by the diagnosis search below, grouped
 // by clinical area. "Other" holds the original three demo codes this step
@@ -155,15 +156,11 @@ function YesNoQuestion({
 
 export default function NewCaseClinical() {
   const navigate = useNavigate();
+  const clinical = useCaseWizardStore((s) => s.clinical);
+  const setClinical = useCaseWizardStore((s) => s.setClinical);
 
-  // Diagnosis
+  // Diagnosis search box — transient, not persisted (query text, not an answer)
   const [icdSearch, setIcdSearch] = useState("");
-  const [selectedIcd, setSelectedIcd] = useState("");
-  const [diagnosisDate, setDiagnosisDate] = useState("");
-
-  // Yes/No questions
-  const [priorTherapy, setPriorTherapy] = useState<"yes" | "no" | "">("");
-  const [contraindications, setContraindications] = useState<"yes" | "no" | "">("");
 
   const filteredIcd = icdSearch.trim()
     ? ICD10_GROUPS
@@ -234,7 +231,7 @@ export default function NewCaseClinical() {
                           key={c.code}
                           type="button"
                           onClick={() => {
-                            setSelectedIcd(`${c.code} — ${c.label}`);
+                            setClinical({ selectedIcd: `${c.code} — ${c.label}` });
                             setIcdSearch("");
                           }}
                           className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
@@ -246,22 +243,22 @@ export default function NewCaseClinical() {
                   ))}
                 </div>
               )}
-              {selectedIcd ? (
+              {clinical.selectedIcd ? (
                 <p className="text-sm text-[#1D1D1D]">
-                  <span className="font-semibold">Selected: </span>{selectedIcd}
+                  <span className="font-semibold">Selected: </span>{clinical.selectedIcd}
                 </p>
               ) : (
                 <p className="text-xs text-[#999]">ICD-10 Code Skipped</p>
               )}
               <Field label="Date of Diagnosis" optional>
-                <input type="date" value={diagnosisDate} onChange={(e) => setDiagnosisDate(e.target.value)} className={inputCls} />
+                <input type="date" value={clinical.diagnosisDate} onChange={(e) => setClinical({ diagnosisDate: e.target.value })} className={inputCls} />
               </Field>
             </section>
 
             {/* Clinical questions */}
             <section className="bg-white rounded-xl p-6 space-y-5" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
-              <YesNoQuestion question="Has the patient tried and failed a prior therapy for this condition?" value={priorTherapy} onChange={setPriorTherapy} />
-              <YesNoQuestion question="Are there any known contraindications?" optional value={contraindications} onChange={setContraindications} />
+              <YesNoQuestion question="Has the patient tried and failed a prior therapy for this condition?" value={clinical.priorTherapy} onChange={(v) => setClinical({ priorTherapy: v })} />
+              <YesNoQuestion question="Are there any known contraindications?" optional value={clinical.contraindications} onChange={(v) => setClinical({ contraindications: v })} />
             </section>
 
             {/* Documents */}

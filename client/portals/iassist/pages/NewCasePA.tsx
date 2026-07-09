@@ -17,7 +17,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { X, Search, Star, Upload, AlertTriangle, Loader2 } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-import { useCaseWizardStore } from "@/store/caseWizardStore";
+import { useCaseWizardStore, isoDateToMmddyyyy } from "@/store/caseWizardStore";
 
 type PAState = "search" | "loading" | "found" | "notfound";
 
@@ -109,16 +109,17 @@ export default function NewCasePA() {
   // Insurance selected back in Step 3 (Insurance) — prefills Payer details
   // below instead of leaving it as a disconnected free-text section.
   const selectedInsurance = useCaseWizardStore((s) => s.selectedInsurance);
+  // Diagnosis selected back in Step 4 (Clinical) — prefills Diagnosis /
+  // Treatment Start Date below the same way.
+  const clinical = useCaseWizardStore((s) => s.clinical);
+  const pa = useCaseWizardStore((s) => s.pa);
+  const setPA = useCaseWizardStore((s) => s.setPA);
 
-  const [dynamicAnswers, setDynamicAnswers] = useState<Record<number, "yes" | "no" | "">>({});
-  const [lmn, setLmn] = useState<"yes" | "no" | "">("");
-  const [contactName, setContactName] = useState(
-    selectedInsurance ? `${selectedInsurance.payer} Prior Authorization Department` : ""
-  );
-  const [diagnosis, setDiagnosis] = useState("");
-  const [treatmentStart, setTreatmentStart] = useState("");
-  const [treatmentPlan, setTreatmentPlan] = useState("");
-  const [reasonForPrescribing, setReasonForPrescribing] = useState("");
+  const derivedContactName = selectedInsurance ? `${selectedInsurance.payer} Prior Authorization Department` : "";
+  const derivedDiagnosis = clinical.selectedIcd.includes("—")
+    ? clinical.selectedIcd.split("—")[1]?.trim() ?? ""
+    : clinical.selectedIcd;
+  const derivedTreatmentStart = clinical.diagnosisDate ? isoDateToMmddyyyy(clinical.diagnosisDate) : "";
 
   const filteredForms = formSearch.trim()
     ? SAMPLE_FORMS.filter((f) => f.toLowerCase().includes(formSearch.toLowerCase()))
@@ -229,11 +230,11 @@ export default function NewCasePA() {
                     <YesNoQuestion
                       key={i}
                       question={q}
-                      value={dynamicAnswers[i] ?? ""}
-                      onChange={(v) => setDynamicAnswers((prev) => ({ ...prev, [i]: v }))}
+                      value={pa.dynamicAnswers[i] ?? ""}
+                      onChange={(v) => setPA({ dynamicAnswers: { ...pa.dynamicAnswers, [i]: v } })}
                     />
                   ))}
-                  <YesNoQuestion question="Letter of Medical Necessity" value={lmn} onChange={setLmn} />
+                  <YesNoQuestion question="Letter of Medical Necessity" value={pa.lmn} onChange={(v) => setPA({ lmn: v })} />
                 </section>
 
                 <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
@@ -251,33 +252,43 @@ export default function NewCasePA() {
                     <p className="text-xs text-[#999]">No insurance was selected in Step 3 (Insurance).</p>
                   )}
                   <Field label="Insurance Contact Name or Department">
-                    <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="e.g. Prior Auth Department" className={inputCls} />
+                    <input
+                      value={pa.contactName || derivedContactName}
+                      onChange={(e) => setPA({ contactName: e.target.value })}
+                      placeholder="e.g. Prior Auth Department"
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="Diagnosis">
-                    <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} placeholder="e.g. Rheumatoid arthritis" className={inputCls} />
+                    <input
+                      value={pa.diagnosis || derivedDiagnosis}
+                      onChange={(e) => setPA({ diagnosis: e.target.value })}
+                      placeholder="e.g. Rheumatoid arthritis"
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="Treatment Start Date">
                     <input
-                      value={treatmentStart}
-                      onChange={(e) => setTreatmentStart(e.target.value)}
+                      value={pa.treatmentStart || derivedTreatmentStart}
+                      onChange={(e) => setPA({ treatmentStart: e.target.value })}
                       placeholder="mm/dd/yyyy"
                       className={inputCls}
                     />
                   </Field>
                   <Field label="Current Treatment Plan" optional>
                     <textarea
-                      value={treatmentPlan}
-                      onChange={(e) => setTreatmentPlan(e.target.value.slice(0, 210))}
+                      value={pa.treatmentPlan}
+                      onChange={(e) => setPA({ treatmentPlan: e.target.value.slice(0, 210) })}
                       rows={3}
                       className={`${inputCls} resize-none`}
                       placeholder="Describe the patient's current treatment plan"
                     />
-                    <p className="text-xs text-[#999] text-right mt-1">{treatmentPlan.length}/210</p>
+                    <p className="text-xs text-[#999] text-right mt-1">{pa.treatmentPlan.length}/210</p>
                   </Field>
                   <Field label="Reason for Prescribing" optional>
                     <textarea
-                      value={reasonForPrescribing}
-                      onChange={(e) => setReasonForPrescribing(e.target.value)}
+                      value={pa.reasonForPrescribing}
+                      onChange={(e) => setPA({ reasonForPrescribing: e.target.value })}
                       rows={3}
                       className={`${inputCls} resize-none`}
                       placeholder="Describe the clinical rationale for this prescription"

@@ -12,12 +12,12 @@
  * demo-only toggle so a presenter can show any of the three without waiting
  * on a fake timer.
  */
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { X, Plus, Trash2, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-import { useCaseWizardStore } from "@/store/caseWizardStore";
+import { useCaseWizardStore, type ManualInsurance } from "@/store/caseWizardStore";
 
 type SearchState = "searching" | "found" | "none";
 type InsuranceKind = "medical" | "pharmacy";
@@ -61,22 +61,6 @@ const MEDICAL_INSURANCE_TYPES = ["Medicare", "Commercial", "Medicaid", "Other"];
 const PHARMACY_PLAN_TYPES = ["Commercial", "Unknown", "AIDS Drug Assistance Program", "Durable Medical Equipment", "Government", "Managed Care Medicaid"];
 const RELATIONSHIP_OPTIONS = ["Self (Patient)", "Spouse", "Parent", "Child (Dependent)", "Other"];
 const COB_OPTIONS = ["Primary", "Secondary", "Tertiary", "Quaternary", "Other"];
-
-interface ManualInsurance {
-  id: string;
-  kind: InsuranceKind;
-  companyName: string;
-  type: string;
-  groupNumber: string;
-  memberId: string;
-  relationship: string;
-  cardholderDob: string;
-  cardholderFirst: string;
-  cardholderLast: string;
-  phone: string;
-  fax: string;
-  cob: string;
-}
 
 function emptyManualInsurance(kind: InsuranceKind): ManualInsurance {
   return {
@@ -223,11 +207,10 @@ const ALL_FOUND_INSURANCES = [...FOUND_INSURANCES, ON_FILE_INSURANCE];
 
 export default function NewCaseInsurance() {
   const navigate = useNavigate();
+  const insurance = useCaseWizardStore((s) => s.insurance);
+  const setInsurance = useCaseWizardStore((s) => s.setInsurance);
   const setSelectedInsurance = useCaseWizardStore((s) => s.setSelectedInsurance);
-  const [searchState, setSearchState] = useState<SearchState>("found");
-  const [preferredId, setPreferredId] = useState(FOUND_INSURANCES[0]?.id ?? "");
-  const [manualInsurances, setManualInsurances] = useState<ManualInsurance[]>([]);
-  const [notInsured, setNotInsured] = useState(false);
+  const { searchState, preferredId, manualInsurances, notInsured } = insurance;
 
   // Carry whichever insurance is actually selected forward to caseWizardStore
   // so Step 5's Payer details section can prefill from it instead of being a
@@ -257,16 +240,15 @@ export default function NewCaseInsurance() {
   }, [searchState, preferredId, manualInsurances, notInsured, setSelectedInsurance]);
 
   function addManualInsurance(kind: InsuranceKind) {
-    setManualInsurances((prev) => [...prev, emptyManualInsurance(kind)]);
-    setNotInsured(false);
+    setInsurance({ manualInsurances: [...manualInsurances, emptyManualInsurance(kind)], notInsured: false });
   }
 
   function updateManualInsurance(id: string, patch: Partial<ManualInsurance>) {
-    setManualInsurances((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+    setInsurance({ manualInsurances: manualInsurances.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
   }
 
   function removeManualInsurance(id: string) {
-    setManualInsurances((prev) => prev.filter((m) => m.id !== id));
+    setInsurance({ manualInsurances: manualInsurances.filter((m) => m.id !== id) });
   }
 
   return (
@@ -305,7 +287,7 @@ export default function NewCaseInsurance() {
                 <button
                   key={val}
                   type="button"
-                  onClick={() => setSearchState(val)}
+                  onClick={() => setInsurance({ searchState: val })}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
                     searchState === val ? "bg-white text-[#007178] shadow-sm" : "text-[#6F7276]"
                   }`}
@@ -332,11 +314,11 @@ export default function NewCaseInsurance() {
 
                 <h2 className="text-sm font-semibold text-[#1D1D1D]">Found Insurance</h2>
                 {FOUND_INSURANCES.map((ins) => (
-                  <InsuranceCard key={ins.id} insurance={ins} selected={preferredId === ins.id} onSelect={() => setPreferredId(ins.id)} />
+                  <InsuranceCard key={ins.id} insurance={ins} selected={preferredId === ins.id} onSelect={() => setInsurance({ preferredId: ins.id })} />
                 ))}
 
                 <h2 className="text-sm font-semibold text-[#1D1D1D] pt-2">On File Insurance</h2>
-                <InsuranceCard insurance={ON_FILE_INSURANCE} selected={preferredId === ON_FILE_INSURANCE.id} onSelect={() => setPreferredId(ON_FILE_INSURANCE.id)} onEdit={() => {}} />
+                <InsuranceCard insurance={ON_FILE_INSURANCE} selected={preferredId === ON_FILE_INSURANCE.id} onSelect={() => setInsurance({ preferredId: ON_FILE_INSURANCE.id })} onEdit={() => {}} />
 
                 <p className="text-xs text-[#999]">
                   This will be saved in the patient's profile. We only save insurance added by you, not us — we
@@ -376,10 +358,7 @@ export default function NewCaseInsurance() {
                     <input
                       type="checkbox"
                       checked={notInsured}
-                      onChange={(e) => {
-                        setNotInsured(e.target.checked);
-                        if (e.target.checked) setManualInsurances([]);
-                      }}
+                      onChange={(e) => setInsurance({ notInsured: e.target.checked, manualInsurances: e.target.checked ? [] : manualInsurances })}
                       className="accent-[#007178]"
                     />
                     Patient Not Insured

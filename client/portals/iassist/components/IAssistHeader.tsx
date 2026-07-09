@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Search, Plus, Bell } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { IASSIST_TEAL, IASSIST_TEAL_DARK } from "./IAssistSidebar";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 
 // No IAssistLogo here — this header is only ever rendered next to
 // IAssistSidebar (Dashboard.tsx), which already shows the logo in its own
@@ -20,6 +21,14 @@ import { IASSIST_TEAL, IASSIST_TEAL_DARK } from "./IAssistSidebar";
 export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (value: string) => void }) {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
+
+  function startNewCase() {
+    // Clear out any in-progress answers from a previous case before
+    // launching the wizard fresh.
+    resetCaseWizard();
+    navigate("/new-case/patient");
+  }
 
   return (
     <header className="relative bg-white border-b border-neutral-300 h-14 flex items-center px-4 sm:px-8 gap-4">
@@ -43,7 +52,7 @@ export default function IAssistHeader({ onSearchChange }: { onSearchChange?: (va
         />
       </div>
       <button
-        onClick={() => navigate("/new-case/patient")}
+        onClick={startNewCase}
         className="font-semibold text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap focus:outline-none rounded px-2 py-1"
         style={{ color: IASSIST_TEAL }}
         onMouseEnter={(e) => (e.currentTarget.style.color = IASSIST_TEAL_DARK)}

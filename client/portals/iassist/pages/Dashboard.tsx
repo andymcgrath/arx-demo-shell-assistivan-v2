@@ -19,6 +19,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useNavigate } from "@/lib/portalRouter";
 import type { WorkflowData } from "@/engine/types";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 import { StatusDots, StatusBadge } from "../components/StatusIndicators";
 import IAssistSidebar from "../components/IAssistSidebar";
 import IAssistHeader from "../components/IAssistHeader";
@@ -56,6 +57,14 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
+
+  function openCaseWizard() {
+    // Starting the wizard from a roster row is this demo's stand-in for
+    // starting a new case — clear prior answers so they don't leak in.
+    resetCaseWizard();
+    navigate("/new-case/patient");
+  }
   // "provider" persona id used only for tagging events dispatched from this
   // screen (there are none yet) — usePersonaState reads whichever actor is
   // currently active (iAssist's, since this only renders on WF4), so this
@@ -101,7 +110,7 @@ export default function Dashboard() {
                 {sortedPatients.map((patient) => (
                   <tr
                     key={patient.id}
-                    onClick={() => navigate("/new-case/patient")}
+                    onClick={openCaseWizard}
                     className="border-b border-neutral-300 last:border-b-0 hover:bg-[#EEF9F9] cursor-pointer transition-colors"
                   >
                     <td className="p-4">

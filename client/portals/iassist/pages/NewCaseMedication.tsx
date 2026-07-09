@@ -3,9 +3,10 @@
  * case-creation wizard.
  *
  * Built from the "Step 2 (Med Details).pdf" Figma spec. Like Step 1, this is
- * a self-contained, local-state form with no ties to the shared XState
- * workflow machine — case-creation data entry is separate from the
- * pharmacy-status parallel machine iAssist.ts models.
+ * a self-contained form with no ties to the shared XState workflow
+ * machine — case-creation data entry is separate from the pharmacy-status
+ * parallel machine iAssist.ts models. Fields live in caseWizardStore so
+ * Back/Next preserve answers (see that store's file header).
  *
  * The spec shows three different pharmacy sub-flows depending on the
  * medication/client config (standard search, Site of Care for buy-and-bill
@@ -14,13 +15,11 @@
  * a mode switcher — consistent with this app's existing pattern of letting
  * the presenter pick which state to show (e.g. the shell's stage-jump menu).
  */
-import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-
-type PharmacyMode = "standard" | "soc" | "ldd";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 
 const MEDICATION_OPTIONS = [
   "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789",
@@ -67,35 +66,13 @@ const inputCls =
 
 export default function NewCaseMedication() {
   const navigate = useNavigate();
-
-  const [medication, setMedication] = useState(MEDICATION_OPTIONS[0]);
-  const [jcode, setJcode] = useState(MEDICATION_CODES[MEDICATION_OPTIONS[0]]?.jcode ?? "");
-  const [cptCode, setCptCode] = useState(MEDICATION_CODES[MEDICATION_OPTIONS[0]]?.cptCode ?? "");
-  const [form, setForm] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [daysSupply, setDaysSupply] = useState("");
+  const med = useCaseWizardStore((s) => s.medication);
+  const setMedication = useCaseWizardStore((s) => s.setMedication);
 
   function handleMedicationChange(value: string) {
-    setMedication(value);
     const codes = MEDICATION_CODES[value];
-    setJcode(codes?.jcode ?? "");
-    setCptCode(codes?.cptCode ?? "");
+    setMedication({ medication: value, jcode: codes?.jcode ?? "", cptCode: codes?.cptCode ?? "" });
   }
-
-  const [pharmacyMode, setPharmacyMode] = useState<PharmacyMode>("standard");
-
-  // Preferred pharmacy (dropdown — see STANDARD_PHARMACY_OPTIONS comment above)
-  const [selectedPharmacy, setSelectedPharmacy] = useState(STANDARD_PHARMACY_OPTIONS[0]);
-  const [zip, setZip] = useState("");
-
-  // Site of Care
-  const [siteOfCare, setSiteOfCare] = useState("");
-  const [hopdNpi, setHopdNpi] = useState("");
-  const [tin, setTin] = useState("");
-  const [specialtyPharmacy, setSpecialtyPharmacy] = useState<"yes" | "no" | "">("");
-
-  // Limited Distribution
-  const [lddPharmacy, setLddPharmacy] = useState(LDD_PHARMACIES[0]);
 
   return (
     <div className="iassist-portal min-h-screen bg-[#F8F8F8] flex font-['Open_Sans']">
@@ -130,7 +107,7 @@ export default function NewCaseMedication() {
               </div>
 
               <Field label="Medication Name">
-                <select value={medication} onChange={(e) => handleMedicationChange(e.target.value)} className={`${inputCls} appearance-none`}>
+                <select value={med.medication} onChange={(e) => handleMedicationChange(e.target.value)} className={`${inputCls} appearance-none`}>
                   {MEDICATION_OPTIONS.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
@@ -139,15 +116,15 @@ export default function NewCaseMedication() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="JCode" optional>
-                  <input value={jcode} onChange={(e) => setJcode(e.target.value)} placeholder="JCode" className={inputCls} />
+                  <input value={med.jcode} onChange={(e) => setMedication({ jcode: e.target.value })} placeholder="JCode" className={inputCls} />
                 </Field>
                 <Field label="CPT Code" optional>
-                  <input value={cptCode} onChange={(e) => setCptCode(e.target.value)} placeholder="CPT Code" className={inputCls} />
+                  <input value={med.cptCode} onChange={(e) => setMedication({ cptCode: e.target.value })} placeholder="CPT Code" className={inputCls} />
                 </Field>
               </div>
 
               <Field label="Form">
-                <select value={form} onChange={(e) => setForm(e.target.value)} className={`${inputCls} appearance-none`}>
+                <select value={med.form} onChange={(e) => setMedication({ form: e.target.value })} className={`${inputCls} appearance-none`}>
                   <option value="">Select form</option>
                   {FORM_OPTIONS.map((f) => (
                     <option key={f} value={f}>{f}</option>
@@ -157,10 +134,10 @@ export default function NewCaseMedication() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Quantity">
-                  <input value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} placeholder="0" className={inputCls} />
+                  <input value={med.quantity} onChange={(e) => setMedication({ quantity: e.target.value.replace(/\D/g, "") })} placeholder="0" className={inputCls} />
                 </Field>
                 <Field label="Days Supply">
-                  <input value={daysSupply} onChange={(e) => setDaysSupply(e.target.value.replace(/\D/g, ""))} placeholder="0" className={inputCls} />
+                  <input value={med.daysSupply} onChange={(e) => setMedication({ daysSupply: e.target.value.replace(/\D/g, "") })} placeholder="0" className={inputCls} />
                 </Field>
               </div>
             </section>
@@ -181,13 +158,13 @@ export default function NewCaseMedication() {
                   ["standard", "Preferred Pharmacy"],
                   ["soc", "Site of Care"],
                   ["ldd", "Limited Distribution"],
-                ] as [PharmacyMode, string][]).map(([val, label]) => (
+                ] as [typeof med.pharmacyMode, string][]).map(([val, label]) => (
                   <button
                     key={val}
                     type="button"
-                    onClick={() => setPharmacyMode(val)}
+                    onClick={() => setMedication({ pharmacyMode: val })}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                      pharmacyMode === val ? "bg-white text-[#007178] shadow-sm" : "text-[#6F7276]"
+                      med.pharmacyMode === val ? "bg-white text-[#007178] shadow-sm" : "text-[#6F7276]"
                     }`}
                   >
                     {label}
@@ -195,10 +172,10 @@ export default function NewCaseMedication() {
                 ))}
               </div>
 
-              {pharmacyMode === "standard" && (
+              {med.pharmacyMode === "standard" && (
                 <div className="space-y-4">
                   <Field label="Preferred Pharmacy">
-                    <select value={selectedPharmacy} onChange={(e) => setSelectedPharmacy(e.target.value)} className={`${inputCls} appearance-none`}>
+                    <select value={med.selectedPharmacy} onChange={(e) => setMedication({ selectedPharmacy: e.target.value })} className={`${inputCls} appearance-none`}>
                       {STANDARD_PHARMACY_OPTIONS.map((p) => (
                         <option key={p} value={p}>{p}</option>
                       ))}
@@ -206,8 +183,8 @@ export default function NewCaseMedication() {
                   </Field>
                   <Field label="Zip Code" optional>
                     <input
-                      value={zip}
-                      onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
+                      value={med.zip}
+                      onChange={(e) => setMedication({ zip: e.target.value.replace(/\D/g, "") })}
                       placeholder="Enter zip code"
                       maxLength={5}
                       className={`${inputCls} w-36`}
@@ -216,17 +193,17 @@ export default function NewCaseMedication() {
                 </div>
               )}
 
-              {pharmacyMode === "soc" && (
+              {med.pharmacyMode === "soc" && (
                 <div className="space-y-4">
                   <div className="bg-[#FFF7ED] border border-[#FDE7C7] rounded-lg p-3 text-xs text-[#92400E] flex gap-2">
                     <Info size={14} className="flex-shrink-0 mt-0.5" />
                     Site of Care applies only to buy-and-bill products (e.g. SYFOVRE).
                   </div>
                   <Field label="Single NDC Medication Name">
-                    <input value={medication} disabled className={`${inputCls} bg-neutral-50 text-[#6F7276]`} />
+                    <input value={med.medication} disabled className={`${inputCls} bg-neutral-50 text-[#6F7276]`} />
                   </Field>
                   <Field label="Site of Care">
-                    <select value={siteOfCare} onChange={(e) => setSiteOfCare(e.target.value)} className={`${inputCls} appearance-none`}>
+                    <select value={med.siteOfCare} onChange={(e) => setMedication({ siteOfCare: e.target.value })} className={`${inputCls} appearance-none`}>
                       <option value="">Select</option>
                       {SITE_OF_CARE_OPTIONS.map((s) => (
                         <option key={s} value={s}>{s}</option>
@@ -235,10 +212,10 @@ export default function NewCaseMedication() {
                   </Field>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field label="HOPD NPI">
-                      <input value={hopdNpi} onChange={(e) => setHopdNpi(e.target.value.replace(/\D/g, ""))} placeholder="1245319599" className={inputCls} />
+                      <input value={med.hopdNpi} onChange={(e) => setMedication({ hopdNpi: e.target.value.replace(/\D/g, "") })} placeholder="1245319599" className={inputCls} />
                     </Field>
                     <Field label="TIN">
-                      <input value={tin} onChange={(e) => setTin(e.target.value)} placeholder="12-1234567" className={inputCls} />
+                      <input value={med.tin} onChange={(e) => setMedication({ tin: e.target.value })} placeholder="12-1234567" className={inputCls} />
                     </Field>
                   </div>
                   <div>
@@ -246,7 +223,7 @@ export default function NewCaseMedication() {
                     <div className="flex gap-4">
                       {(["yes", "no"] as const).map((v) => (
                         <label key={v} className="flex items-center gap-2 text-sm text-[#1D1D1D] capitalize">
-                          <input type="radio" name="specialtyPharmacy" checked={specialtyPharmacy === v} onChange={() => setSpecialtyPharmacy(v)} className="accent-[#007178]" />
+                          <input type="radio" name="specialtyPharmacy" checked={med.specialtyPharmacy === v} onChange={() => setMedication({ specialtyPharmacy: v })} className="accent-[#007178]" />
                           {v}
                         </label>
                       ))}
@@ -255,14 +232,14 @@ export default function NewCaseMedication() {
                 </div>
               )}
 
-              {pharmacyMode === "ldd" && (
+              {med.pharmacyMode === "ldd" && (
                 <div className="space-y-4">
                   <div className="bg-[#F8F8F8] border border-[#E8E8E8] rounded-lg p-3 text-xs text-[#6F7276] leading-relaxed">
                     This medication has a limited pharmacy network. If you select a pharmacy not provided in the
                     limited network, it may result in a delay.
                   </div>
                   <Field label="Limited Distribution Pharmacies">
-                    <select value={lddPharmacy} onChange={(e) => setLddPharmacy(e.target.value)} className={`${inputCls} appearance-none`}>
+                    <select value={med.lddPharmacy} onChange={(e) => setMedication({ lddPharmacy: e.target.value })} className={`${inputCls} appearance-none`}>
                       {LDD_PHARMACIES.map((p) => (
                         <option key={p} value={p}>{p}</option>
                       ))}
@@ -270,7 +247,7 @@ export default function NewCaseMedication() {
                   </Field>
                   <button
                     type="button"
-                    onClick={() => setPharmacyMode("standard")}
+                    onClick={() => setMedication({ pharmacyMode: "standard" })}
                     className="text-sm font-semibold text-[#007178] hover:underline"
                   >
                     Select a preferred pharmacy instead
