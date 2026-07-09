@@ -683,13 +683,22 @@ export default function DemoShell() {
         actor.send({ type: 'APPROVE_PA', portal: 'crm' });
       }
       if (stage >= 5) {
+        // Matches iAssist.ts's SELF_PAY_PHARMACY exactly — the iAssist case
+        // wizard's own Medication step defaults "Preferred Pharmacy" to
+        // CoAssist (AssistRx's own specialty pharmacy, see
+        // NewCaseMedication.tsx's STANDARD_PHARMACY_OPTIONS), and a real
+        // walkthrough of the post-PA-approval scheduling chain lands on the
+        // same CoAssist Pharmacy whenever the patient picks the Assistivan
+        // Copay Program option. The stage-jump ladder should land on the
+        // identical pharmacy, not a different placeholder (previously
+        // "Accredo Health Group Inc.", copy-pasted from WF1's ladder below).
         const pharmacy = {
-          name: 'Accredo Health Group Inc.',
-          address: '789 Pharma Ave',
-          city: 'Tampa',
+          name: 'CoAssist Pharmacy',
+          address: '2400 Sand Lake Road, Suite 200',
+          city: 'Orlando',
           state: 'FL',
-          zip: '33602',
-          phone: '(813) 555-5678',
+          zip: '32809',
+          phone: '(800) 555-0175',
         };
         actor.send({
           type: 'SELECT_PHARMACY',

@@ -458,6 +458,12 @@ interface PharmacyOption {
 }
 
 const SPECIALTY_PHARMACIES: PharmacyOption[] = [
+  // Leads the list — AssistRx's own specialty pharmacy, same contact details
+  // iAssist.ts's SELF_PAY_PHARMACY and the case wizard's "Preferred Pharmacy"
+  // default (NewCaseMedication.tsx) already use, so HUB staff manually
+  // overriding the pharmacy here can pick the same CoAssist Pharmacy the
+  // rest of the flow lands on by default.
+  { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" },
   { name: "Biologics", address: "456 Specialty Lane", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-1234" },
   { name: "Accredo Health Group Inc.", address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
   { name: "CVS Specialty", address: "321 Medication Blvd", city: "Jacksonville", state: "FL", zip: "32099", phone: "(904) 555-9012" },
