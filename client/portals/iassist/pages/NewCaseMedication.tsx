@@ -16,7 +16,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { Info, X, Search } from "lucide-react";
+import { Info, X } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 
@@ -29,27 +29,26 @@ const MEDICATION_OPTIONS = [
   "Voloxivan 5MG/ML INJECTION 10ML VIAL",
 ];
 
+// JCode/CPT pairs keyed by medication — prefills Step 2's billing code fields
+// as soon as a medication is picked, instead of leaving them blank for the
+// user to look up manually.
+const MEDICATION_CODES: Record<string, { jcode: string; cptCode: string }> = {
+  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789": { jcode: "J8499", cptCode: "99070" },
+  "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML": { jcode: "J3590", cptCode: "96401" },
+  "Ramoni 20MG ORAL TABLET 30 EA": { jcode: "J8499", cptCode: "99070" },
+  "Voloxivan 5MG/ML INJECTION 10ML VIAL": { jcode: "J3490", cptCode: "96413" },
+};
+
 const FORM_OPTIONS = ["Tablet", "Capsule", "Oral Solution", "Injection", "Infusion"];
 
 const LDD_PHARMACIES = ["Accredo", "Amber", "Centerwell", "CVS", "Maxor", "Optum", "Walgreens"];
 
 const SITE_OF_CARE_OPTIONS = ["Hospital Outpatient Department", "Four Oaks Clinic", "Patient Home", "Prescriber Office"];
 
-interface PharmacyResult {
-  name: string;
-  address: string;
-}
-
-const STANDARD_PHARMACIES: PharmacyResult[] = [
-  { name: "CVS Pharmacy", address: "412 Main St, Warrior AL 35180" },
-  { name: "Accredo", address: "Specialty Pharmacy" },
-];
-
-const WALGREENS_RESULTS: PharmacyResult[] = [
-  { name: "Walgreens Pharmacy Inc", address: "219 Main St, Warrior AL 35180" },
-  { name: "Walgreens Pharmacy", address: "606 N. Brindlee Mtn Parkway, Arab, AL 35016" },
-  { name: "Walgreens Pharmacy", address: "3100 Hough Rd, Florence, AL 35630" },
-];
+// A 2-result "search" wasn't worth the UI — this is a straight preferred-
+// pharmacy dropdown instead, same pattern as the Limited Distribution list.
+// CoAssist (AssistRx's own specialty pharmacy) leads the list.
+const STANDARD_PHARMACY_OPTIONS = ["CoAssist", "CVS Pharmacy", "Accredo", "Walgreens Pharmacy"];
 
 function Field({ label, optional, children }: { label: string; optional?: boolean; children: React.ReactNode }) {
   return (
@@ -66,46 +65,28 @@ function Field({ label, optional, children }: { label: string; optional?: boolea
 const inputCls =
   "w-full rounded-lg border border-[#D9D9D9] px-3 py-2.5 text-sm text-[#1D1D1D] outline-none focus:ring-2 focus:ring-[#007178] focus:border-[#007178] placeholder:text-[#999]";
 
-function PharmacySearchResults({ results, onSelect, selected }: { results: PharmacyResult[]; onSelect: (name: string) => void; selected: string }) {
-  return (
-    <div className="space-y-2 mt-3">
-      {results.map((p) => (
-        <label
-          key={p.name + p.address}
-          className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-colors ${
-            selected === p.name ? "border-[#007178] bg-[#EEF9F9]" : "border-[#D9D9D9] hover:bg-neutral-50"
-          }`}
-        >
-          <input type="radio" name="pharmacy" checked={selected === p.name} onChange={() => onSelect(p.name)} className="mt-1 accent-[#007178]" />
-          <span>
-            <span className="block text-sm font-semibold text-[#1D1D1D]">{p.name}</span>
-            <span className="block text-xs text-[#6F7276]">{p.address}</span>
-          </span>
-        </label>
-      ))}
-    </div>
-  );
-}
-
 export default function NewCaseMedication() {
   const navigate = useNavigate();
 
   const [medication, setMedication] = useState(MEDICATION_OPTIONS[0]);
-  const [jcode, setJcode] = useState("");
-  const [cptCode, setCptCode] = useState("");
+  const [jcode, setJcode] = useState(MEDICATION_CODES[MEDICATION_OPTIONS[0]]?.jcode ?? "");
+  const [cptCode, setCptCode] = useState(MEDICATION_CODES[MEDICATION_OPTIONS[0]]?.cptCode ?? "");
   const [form, setForm] = useState("");
   const [quantity, setQuantity] = useState("");
   const [daysSupply, setDaysSupply] = useState("");
 
+  function handleMedicationChange(value: string) {
+    setMedication(value);
+    const codes = MEDICATION_CODES[value];
+    setJcode(codes?.jcode ?? "");
+    setCptCode(codes?.cptCode ?? "");
+  }
+
   const [pharmacyMode, setPharmacyMode] = useState<PharmacyMode>("standard");
 
-  // Standard search
-  const [pharmacySearch, setPharmacySearch] = useState("");
+  // Preferred pharmacy (dropdown — see STANDARD_PHARMACY_OPTIONS comment above)
+  const [selectedPharmacy, setSelectedPharmacy] = useState(STANDARD_PHARMACY_OPTIONS[0]);
   const [zip, setZip] = useState("");
-  const [selectedPharmacy, setSelectedPharmacy] = useState("");
-  const searchResults = pharmacySearch.trim()
-    ? WALGREENS_RESULTS.filter((p) => p.name.toLowerCase().includes(pharmacySearch.toLowerCase()))
-    : STANDARD_PHARMACIES;
 
   // Site of Care
   const [siteOfCare, setSiteOfCare] = useState("");
@@ -149,7 +130,7 @@ export default function NewCaseMedication() {
               </div>
 
               <Field label="Medication Name">
-                <select value={medication} onChange={(e) => setMedication(e.target.value)} className={`${inputCls} appearance-none`}>
+                <select value={medication} onChange={(e) => handleMedicationChange(e.target.value)} className={`${inputCls} appearance-none`}>
                   {MEDICATION_OPTIONS.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
@@ -197,7 +178,7 @@ export default function NewCaseMedication() {
               {/* Demo-only mode switcher — see file header comment */}
               <div className="flex gap-1 bg-[#F0F0F0] rounded-lg p-0.5 w-fit">
                 {([
-                  ["standard", "Pharmacy Search"],
+                  ["standard", "Preferred Pharmacy"],
                   ["soc", "Site of Care"],
                   ["ldd", "Limited Distribution"],
                 ] as [PharmacyMode, string][]).map(([val, label]) => (
@@ -215,17 +196,15 @@ export default function NewCaseMedication() {
               </div>
 
               {pharmacyMode === "standard" && (
-                <div>
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
-                      <input
-                        value={pharmacySearch}
-                        onChange={(e) => setPharmacySearch(e.target.value)}
-                        placeholder="Search for pharmacy"
-                        className={`${inputCls} pl-9`}
-                      />
-                    </div>
+                <div className="space-y-4">
+                  <Field label="Preferred Pharmacy">
+                    <select value={selectedPharmacy} onChange={(e) => setSelectedPharmacy(e.target.value)} className={`${inputCls} appearance-none`}>
+                      {STANDARD_PHARMACY_OPTIONS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Zip Code" optional>
                     <input
                       value={zip}
                       onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
@@ -233,8 +212,7 @@ export default function NewCaseMedication() {
                       maxLength={5}
                       className={`${inputCls} w-36`}
                     />
-                  </div>
-                  <PharmacySearchResults results={searchResults} onSelect={setSelectedPharmacy} selected={selectedPharmacy} />
+                  </Field>
                 </div>
               )}
 
@@ -301,7 +279,13 @@ export default function NewCaseMedication() {
               )}
             </section>
 
-            <div className="flex justify-end pb-8">
+            <div className="flex justify-between pb-8">
+              <button
+                onClick={() => navigate("/new-case/patient")}
+                className="text-sm font-semibold text-[#6F7276] border border-[#D9D9D9] rounded-full px-6 py-3 hover:bg-neutral-50"
+              >
+                Back
+              </button>
               <button
                 onClick={() => navigate("/new-case/insurance")}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"

@@ -18,9 +18,96 @@ import { X, Upload, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 
-const LINE_OF_THERAPY_OPTIONS = ["First line", "Second line", "Third line or later", "Treatment naive"];
-
-const PRIOR_THERAPY_OPTIONS = ["Methotrexate", "Corticosteroids", "NSAIDs", "Biologic therapy", "Other"];
+// Full ICD-10 reference list surfaced by the diagnosis search below, grouped
+// by clinical area. "Other" holds the original three demo codes this step
+// shipped with before the fuller list was added.
+const ICD10_GROUPS: { category: string; codes: { code: string; label: string }[] }[] = [
+  {
+    category: "Other",
+    codes: [
+      { code: "M06.9", label: "Rheumatoid arthritis, unspecified" },
+      { code: "L40.0", label: "Psoriasis vulgaris" },
+      { code: "K50.90", label: "Crohn's disease, unspecified" },
+    ],
+  },
+  {
+    category: "Respiratory",
+    codes: [
+      { code: "J02.9", label: "Acute pharyngitis, unspecified" },
+      { code: "J06.9", label: "Acute upper respiratory infection, unspecified" },
+      { code: "J20.9", label: "Acute bronchitis, unspecified" },
+      { code: "J22", label: "Unspecified acute lower respiratory infection" },
+      { code: "J30.9", label: "Allergic rhinitis, unspecified" },
+      { code: "J32.9", label: "Chronic sinusitis, unspecified" },
+      { code: "J40", label: "Bronchitis, not specified as acute or chronic" },
+      { code: "J44.9", label: "COPD, unspecified" },
+      { code: "J45.909", label: "Unspecified asthma, uncomplicated" },
+    ],
+  },
+  {
+    category: "Cardiovascular",
+    codes: [
+      { code: "I10", label: "Hypertension" },
+      { code: "I25.10", label: "Atherosclerotic heart disease of native coronary artery without angina" },
+      { code: "I48.91", label: "Unspecified atrial fibrillation" },
+      { code: "I50.9", label: "Heart failure, unspecified" },
+      { code: "R00.0", label: "Tachycardia, unspecified" },
+      { code: "R00.1", label: "Bradycardia, unspecified" },
+    ],
+  },
+  {
+    category: "Endocrine / Metabolic",
+    codes: [
+      { code: "E11.9", label: "Type 2 diabetes mellitus without complications" },
+      { code: "E11.65", label: "Type 2 diabetes mellitus with hyperglycemia" },
+      { code: "E78.5", label: "Hyperlipidemia, unspecified" },
+      { code: "E78.00", label: "Pure hypercholesterolemia, unspecified" },
+    ],
+  },
+  {
+    category: "Gastrointestinal",
+    codes: [
+      { code: "K21.0", label: "GERD with esophagitis" },
+      { code: "K21.9", label: "GERD without esophagitis" },
+      { code: "K30", label: "Functional dyspepsia" },
+      { code: "K59.00", label: "Constipation, unspecified" },
+      { code: "R10.9", label: "Unspecified abdominal pain" },
+    ],
+  },
+  {
+    category: "Musculoskeletal / Pain",
+    codes: [
+      { code: "M54.5", label: "Low back pain" },
+      { code: "M54.6", label: "Pain in thoracic spine" },
+      { code: "M79.1", label: "Myalgia" },
+      { code: "M25.50", label: "Pain in unspecified joint" },
+      { code: "M25.511", label: "Pain in right shoulder" },
+      { code: "M25.512", label: "Pain in left shoulder" },
+      { code: "M25.561", label: "Pain in right knee" },
+      { code: "M25.562", label: "Pain in left knee" },
+    ],
+  },
+  {
+    category: "Mental Health",
+    codes: [
+      { code: "F32.9", label: "Major depressive disorder, single episode, unspecified" },
+      { code: "F33.0", label: "Major depressive disorder, recurrent, mild" },
+      { code: "F41.1", label: "Generalized anxiety disorder" },
+      { code: "F40.10", label: "Social anxiety disorder, unspecified" },
+      { code: "F17.200", label: "Nicotine dependence, cigarettes, uncomplicated" },
+    ],
+  },
+  {
+    category: "Common Z Codes (Status / History / Screening)",
+    codes: [
+      { code: "Z79.4", label: "Long term (current) use of insulin" },
+      { code: "Z79.899", label: "Other long term (current) drug therapy" },
+      { code: "Z85.43", label: "Personal history of malignant neoplasm of breast" },
+      { code: "Z95.1", label: "Presence of aortocoronary bypass graft" },
+      { code: "Z96.651", label: "Presence of right hip prosthetic joint" },
+    ],
+  },
+];
 
 function Field({ label, optional, children }: { label: string; optional?: boolean; children: React.ReactNode }) {
   return (
@@ -77,27 +164,19 @@ export default function NewCaseClinical() {
   // Yes/No questions
   const [priorTherapy, setPriorTherapy] = useState<"yes" | "no" | "">("");
   const [contraindications, setContraindications] = useState<"yes" | "no" | "">("");
-  const [labsAvailable, setLabsAvailable] = useState<"yes" | "no" | "">("");
 
-  // Dropdowns
-  const [lineOfTherapy, setLineOfTherapy] = useState("");
-  const [priorTherapies, setPriorTherapies] = useState<string[]>([]);
-  const [otherTherapy, setOtherTherapy] = useState("");
-
-  // Paired short inputs
-  const [labValue, setLabValue] = useState("");
-  const [labDate, setLabDate] = useState("");
-
-  const ICD_RESULTS = ["M06.9 — Rheumatoid arthritis, unspecified", "L40.0 — Psoriasis vulgaris", "K50.90 — Crohn's disease, unspecified"];
   const filteredIcd = icdSearch.trim()
-    ? ICD_RESULTS.filter((r) => r.toLowerCase().includes(icdSearch.toLowerCase()))
-    : ICD_RESULTS;
-
-  function togglePriorTherapy(option: string) {
-    setPriorTherapies((prev) => (prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]));
-  }
-
-  const priorTherapiesDisplay = [...priorTherapies.filter((o) => o !== "Other"), ...(priorTherapies.includes("Other") && otherTherapy ? [otherTherapy] : [])].join(", ");
+    ? ICD10_GROUPS
+        .map((g) => ({
+          ...g,
+          codes: g.codes.filter(
+            (c) =>
+              c.code.toLowerCase().includes(icdSearch.toLowerCase()) ||
+              c.label.toLowerCase().includes(icdSearch.toLowerCase())
+          ),
+        }))
+        .filter((g) => g.codes.length > 0)
+    : [];
 
   return (
     <div className="iassist-portal min-h-screen bg-[#F8F8F8] flex font-['Open_Sans']">
@@ -145,20 +224,25 @@ export default function NewCaseClinical() {
                 </div>
               </Field>
               {icdSearch && (
-                <div className="border border-[#D9D9D9] rounded-lg divide-y divide-[#F0F0F0]">
+                <div className="border border-[#D9D9D9] rounded-lg divide-y divide-[#F0F0F0] max-h-72 overflow-auto">
                   {filteredIcd.length === 0 && <p className="p-3 text-xs text-[#999]">No matches found</p>}
-                  {filteredIcd.map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => {
-                        setSelectedIcd(r);
-                        setIcdSearch("");
-                      }}
-                      className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
-                    >
-                      {r}
-                    </button>
+                  {filteredIcd.map((g) => (
+                    <div key={g.category}>
+                      <p className="px-3 pt-2 pb-1 text-xs font-semibold text-[#6F7276] bg-[#F8F8F8]">{g.category}</p>
+                      {g.codes.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => {
+                            setSelectedIcd(`${c.code} — ${c.label}`);
+                            setIcdSearch("");
+                          }}
+                          className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
+                        >
+                          <span className="font-semibold">{c.code}</span> — {c.label}
+                        </button>
+                      ))}
+                    </div>
                   ))}
                 </div>
               )}
@@ -178,48 +262,6 @@ export default function NewCaseClinical() {
             <section className="bg-white rounded-xl p-6 space-y-5" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
               <YesNoQuestion question="Has the patient tried and failed a prior therapy for this condition?" value={priorTherapy} onChange={setPriorTherapy} />
               <YesNoQuestion question="Are there any known contraindications?" optional value={contraindications} onChange={setContraindications} />
-              <YesNoQuestion question="Are recent labs available for this patient?" optional value={labsAvailable} onChange={setLabsAvailable} />
-
-              <Field label="Line of Therapy">
-                <select value={lineOfTherapy} onChange={(e) => setLineOfTherapy(e.target.value)} className={`${inputCls} appearance-none`}>
-                  <option value="">Select</option>
-                  {LINE_OF_THERAPY_OPTIONS.map((o) => (
-                    <option key={o} value={o}>{o}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <div>
-                <span className="text-sm font-semibold text-[#1D1D1D] mb-1.5 block">Prior Therapies Tried</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-[#D9D9D9] rounded-lg p-3">
-                  {PRIOR_THERAPY_OPTIONS.map((o) => (
-                    <label key={o} className="flex items-center gap-2 text-sm text-[#1D1D1D]">
-                      <input type="checkbox" checked={priorTherapies.includes(o)} onChange={() => togglePriorTherapy(o)} className="accent-[#007178]" />
-                      {o}
-                    </label>
-                  ))}
-                </div>
-                {priorTherapies.includes("Other") && (
-                  <input
-                    value={otherTherapy}
-                    onChange={(e) => setOtherTherapy(e.target.value)}
-                    placeholder="Specify other therapy"
-                    className={`${inputCls} mt-2`}
-                  />
-                )}
-                {priorTherapiesDisplay && (
-                  <p className="text-xs text-[#6F7276] mt-2">Selected: {priorTherapiesDisplay}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Most Recent Lab Value" optional>
-                  <input value={labValue} onChange={(e) => setLabValue(e.target.value)} placeholder="e.g. 7.2" className={inputCls} />
-                </Field>
-                <Field label="Lab Date" optional>
-                  <input type="date" value={labDate} onChange={(e) => setLabDate(e.target.value)} className={inputCls} />
-                </Field>
-              </div>
             </section>
 
             {/* Documents */}
@@ -235,7 +277,13 @@ export default function NewCaseClinical() {
               </div>
             </section>
 
-            <div className="flex justify-end pb-8">
+            <div className="flex justify-between pb-8">
+              <button
+                onClick={() => navigate("/new-case/insurance")}
+                className="text-sm font-semibold text-[#6F7276] border border-[#D9D9D9] rounded-full px-6 py-3 hover:bg-neutral-50"
+              >
+                Back
+              </button>
               <button
                 onClick={() => navigate("/new-case/pa")}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"

@@ -290,7 +290,13 @@ export default function NewCaseRx() {
               </div>
             </section>
 
-            <div className="flex justify-end pb-8">
+            <div className="flex justify-between pb-8">
+              <button
+                onClick={() => navigate("/new-case/pa")}
+                className="text-sm font-semibold text-[#6F7276] border border-[#D9D9D9] rounded-full px-6 py-3 hover:bg-neutral-50"
+              >
+                Back
+              </button>
               <button
                 onClick={finishCase}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"

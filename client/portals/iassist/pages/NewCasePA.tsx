@@ -17,6 +17,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { X, Search, Star, Upload, AlertTriangle, Loader2 } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 
 type PAState = "search" | "loading" | "found" | "notfound";
 
@@ -27,9 +28,9 @@ const SAMPLE_FORMS = [
 ];
 
 const DYNAMIC_QUESTIONS = [
-  "Has the patient tried and failed a preferred alternative therapy for this condition? Please describe the therapies tried and outcomes in detail, up to 250 characters.",
-  "Is this prescription being written for an FDA-approved indication? If not, please describe the off-label use being requested, up to 250 characters.",
-  "Does the patient have any diagnosed conditions that would contraindicate this therapy? Please describe, up to 250 characters.",
+  "Has the patient tried and failed a preferred alternative therapy for this condition?",
+  "Is this prescription being written for an FDA-approved indication?",
+  "Does the patient have any diagnosed conditions that would contraindicate this therapy?",
 ];
 
 function Field({ label, optional, children }: { label: string; optional?: boolean; children: React.ReactNode }) {
@@ -105,9 +106,15 @@ export default function NewCasePA() {
   const [formSearch, setFormSearch] = useState("");
   const selectedForm = SAMPLE_FORMS[0];
 
+  // Insurance selected back in Step 3 (Insurance) — prefills Payer details
+  // below instead of leaving it as a disconnected free-text section.
+  const selectedInsurance = useCaseWizardStore((s) => s.selectedInsurance);
+
   const [dynamicAnswers, setDynamicAnswers] = useState<Record<number, "yes" | "no" | "">>({});
   const [lmn, setLmn] = useState<"yes" | "no" | "">("");
-  const [contactName, setContactName] = useState("");
+  const [contactName, setContactName] = useState(
+    selectedInsurance ? `${selectedInsurance.payer} Prior Authorization Department` : ""
+  );
   const [diagnosis, setDiagnosis] = useState("");
   const [treatmentStart, setTreatmentStart] = useState("");
   const [treatmentPlan, setTreatmentPlan] = useState("");
@@ -231,6 +238,18 @@ export default function NewCasePA() {
 
                 <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
                   <h2 className="text-base font-semibold text-[#1D1D1D]">Payer details</h2>
+                  {selectedInsurance ? (
+                    <div className="border border-[#D9D9D9] rounded-lg p-3">
+                      <p className="text-sm font-semibold text-[#1D1D1D]">{selectedInsurance.payer}</p>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 mt-1 text-xs text-[#6F7276]">
+                        <span>Plan Type {selectedInsurance.planType || "—"}</span>
+                        <span>Member ID {selectedInsurance.memberId || "—"}</span>
+                        <span>PBM Phone {selectedInsurance.pbmPhone || "—"}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#999]">No insurance was selected in Step 3 (Insurance).</p>
+                  )}
                   <Field label="Insurance Contact Name or Department">
                     <input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="e.g. Prior Auth Department" className={inputCls} />
                   </Field>
@@ -278,16 +297,24 @@ export default function NewCasePA() {
                   </div>
                 </section>
 
-                <div className="flex justify-end gap-3 pb-8">
-                  <button className="text-sm font-semibold text-[#007178] border border-[#007178] rounded-full px-6 py-3 hover:bg-[#EEF9F9]">
-                    Save Answers
-                  </button>
+                <div className="flex justify-between pb-8">
                   <button
-                    onClick={() => navigate("/new-case/rx")}
-                    className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
+                    onClick={() => navigate("/new-case/clinical")}
+                    className="text-sm font-semibold text-[#6F7276] border border-[#D9D9D9] rounded-full px-6 py-3 hover:bg-neutral-50"
                   >
-                    Next
+                    Back
                   </button>
+                  <div className="flex gap-3">
+                    <button className="text-sm font-semibold text-[#007178] border border-[#007178] rounded-full px-6 py-3 hover:bg-[#EEF9F9]">
+                      Save Answers
+                    </button>
+                    <button
+                      onClick={() => navigate("/new-case/rx")}
+                      className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               </>
             )}

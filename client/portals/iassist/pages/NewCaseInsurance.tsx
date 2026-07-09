@@ -12,11 +12,12 @@
  * demo-only toggle so a presenter can show any of the three without waiting
  * on a fake timer.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { X, Plus, Trash2, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
 
 type SearchState = "searching" | "found" | "none";
 type InsuranceKind = "medical" | "pharmacy";
@@ -218,12 +219,42 @@ function ManualInsuranceForm({
   );
 }
 
+const ALL_FOUND_INSURANCES = [...FOUND_INSURANCES, ON_FILE_INSURANCE];
+
 export default function NewCaseInsurance() {
   const navigate = useNavigate();
+  const setSelectedInsurance = useCaseWizardStore((s) => s.setSelectedInsurance);
   const [searchState, setSearchState] = useState<SearchState>("found");
   const [preferredId, setPreferredId] = useState(FOUND_INSURANCES[0]?.id ?? "");
   const [manualInsurances, setManualInsurances] = useState<ManualInsurance[]>([]);
   const [notInsured, setNotInsured] = useState(false);
+
+  // Carry whichever insurance is actually selected forward to caseWizardStore
+  // so Step 5's Payer details section can prefill from it instead of being a
+  // disconnected free-text section.
+  useEffect(() => {
+    if (searchState === "none") {
+      if (notInsured || manualInsurances.length === 0) {
+        setSelectedInsurance(null);
+        return;
+      }
+      const m = manualInsurances[manualInsurances.length - 1];
+      setSelectedInsurance({
+        payer: m.companyName || "Manually added insurance",
+        planType: m.type,
+        memberId: m.memberId,
+        pbmPhone: m.phone,
+      });
+      return;
+    }
+
+    const picked = ALL_FOUND_INSURANCES.find((ins) => ins.id === preferredId);
+    setSelectedInsurance(
+      picked
+        ? { payer: picked.payer, planType: picked.planType, memberId: picked.memberId, pbmPhone: picked.pbmPhone }
+        : null
+    );
+  }, [searchState, preferredId, manualInsurances, notInsured, setSelectedInsurance]);
 
   function addManualInsurance(kind: InsuranceKind) {
     setManualInsurances((prev) => [...prev, emptyManualInsurance(kind)]);
@@ -362,7 +393,13 @@ export default function NewCaseInsurance() {
               </section>
             )}
 
-            <div className="flex justify-end pb-8">
+            <div className="flex justify-between pb-8">
+              <button
+                onClick={() => navigate("/new-case/medication")}
+                className="text-sm font-semibold text-[#6F7276] border border-[#D9D9D9] rounded-full px-6 py-3 hover:bg-neutral-50"
+              >
+                Back
+              </button>
               <button
                 onClick={() => navigate("/new-case/clinical")}
                 className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
