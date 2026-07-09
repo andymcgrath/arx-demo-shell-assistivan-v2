@@ -83,7 +83,9 @@ export default function Dashboard() {
     resetCaseWizard();
     const codes = MEDICATION_CODES[medication];
     setMedication({ medication, jcode: codes?.jcode ?? "", cptCode: codes?.cptCode ?? "" });
-    navigate("/new-case/patient");
+    // Medication-first entry doesn't know which patient yet — route through
+    // the patient search screen instead of jumping straight to Step 1.
+    navigate("/new-case/patient-search");
   }
   // "provider" persona id used only for tagging events dispatched from this
   // screen (there are none yet) — usePersonaState reads whichever actor is
