@@ -56,8 +56,8 @@ export default function FieldPortal() {
   const patientState = usePatientStore();
 
   // Workflow state from actor (via useDemoState)
-  const biStatus = state.bi_status;
   const paStatus = state.pa_status;
+  const consentStatus = state.consent_status;
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -213,12 +213,16 @@ export default function FieldPortal() {
 
   const dynamicCases: Case[] = [];
 
-  // Missing Information task - always visible with status reflecting workflow
+  // "Missing Information" task - created in the CRM on eRx submission,
+  // closed once the patient completes enrollment (consentStatus flips to
+  // "confirmed" — the same field the HUB's own EA-14272 stage uses to mark
+  // "Enrollment Completed"). Not gated on biStatus, since iAssist can reach
+  // full enrollment via the patient consent flow independent of BI.
   dynamicCases.push({
     id: 1,
     refId: "Missing Information",
     related: "Patient",
-    status: biStatus === "complete" ? "Closed" : "Open",
+    status: consentStatus === "confirmed" ? "Closed" : "Open",
     date: "Jun 14, 2026",
     dueDate: "Jun 14, 2026",
     eid: "EI-56342",
@@ -230,13 +234,16 @@ export default function FieldPortal() {
     gender: "Male",
     subStatus: "--None--",
     createdBy: "CaseAssist Update",
-    completeDatetime: biStatus === "complete" ? "Jun 14, 2026" : "---",
+    completeDatetime: consentStatus === "confirmed" ? "Jun 14, 2026" : "---",
     priority: "High",
     description: "Gather missing patient information for enrollment"
   });
 
-  // Prior Authorization Requested task - shown when BI is complete
-  if (biStatus === "complete") {
+  // "Prior Authorization Requested" task - created once PA has been
+  // submitted (paStatus !== "none"), closed on Approval. Keyed off paStatus
+  // rather than biStatus so iAssist's auto-submitted PA (which can happen
+  // before BI ever runs) still surfaces this task.
+  if (paStatus !== "none") {
     dynamicCases.push({
       id: 2,
       refId: "Prior Authorization Requested",

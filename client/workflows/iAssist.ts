@@ -201,6 +201,17 @@ export const iAssistMachine = createMachine(
                 guard: 'canSubmitPA',
                 actions: 'updatePASubmitted',
               },
+              // iAssist auto-submits PA the moment the eRx is submitted
+              // (finishCase's ENROLL dispatch) — iAssist runs BI and PA
+              // submission itself, so this doesn't wait on the normal
+              // biStatus==='complete' guard SUBMIT_PA uses. The parallel
+              // 'enrollment' region handles the same ENROLL event for its
+              // own transition; this is a second, independent handler for
+              // that event in a different region, not a replacement.
+              ENROLL: {
+                target: 'submitted',
+                actions: 'updatePASubmitted',
+              },
             },
           },
           submitted: {

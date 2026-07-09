@@ -697,6 +697,7 @@ export default function Index() {
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
   const isPapFlow = flowType === "Fax_PAP_Audit";
   const isCoaFlow = flowType === "CoA_DTP";
+  const isIAssistFlow = flowType === "iAssist_PA_Approved";
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).
@@ -853,7 +854,7 @@ export default function Index() {
       : { id: "PA-14274", name: "Prior Authorization", statusLabel: "Denied", statusDetail: "PA Denied — Appeal initiated", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
 
   const eaStage: Stage = consentStatus !== "confirmed"
-    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" }
+    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" }
     : { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Complete", statusDetail: "Enrollment Completed", isComplete: true, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" };
 
   const biCompleteDetail = isPapFlow

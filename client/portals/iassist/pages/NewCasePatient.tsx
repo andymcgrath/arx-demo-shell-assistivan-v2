@@ -157,8 +157,6 @@ export default function NewCasePatient() {
   const patient = useCaseWizardStore((s) => s.patient);
   const setPatient = useCaseWizardStore((s) => s.setPatient);
 
-  const [showAddedBanner, setShowAddedBanner] = useState(true);
-
   function updatePhone(id: string, patch: Partial<PhoneEntry>) {
     setPatient({ phones: patient.phones.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   }
@@ -196,16 +194,6 @@ export default function NewCasePatient() {
 
         <div className="flex-1 overflow-auto p-4 sm:p-8">
           <div className="max-w-3xl mx-auto space-y-6">
-            {showAddedBanner && (
-              <div className="flex items-start gap-3 bg-[#1A7F85] text-white rounded-lg p-4">
-                <p className="flex-1 text-sm font-semibold">
-                  Patient will be added to your patient list when you're done.
-                </p>
-                <button onClick={() => setShowAddedBanner(false)} aria-label="Dismiss" className="text-white/80 hover:text-white">
-                  <X size={16} />
-                </button>
-              </div>
-            )}
 
             {/* Demographics */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
