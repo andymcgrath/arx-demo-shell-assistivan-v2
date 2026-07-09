@@ -328,7 +328,7 @@ function StepBar() {
           vs what the HUB page sees. Remove once the EA-14272 staleness bug
           is resolved. */}
       <div style={{ background: "#fef08a", color: "#78350f", fontSize: 11, fontFamily: "monospace", padding: "3px 8px" }}>
-        DEBUG (StepBar) — demoStore.flowType: <b>{flowType}</b> | actor.flowType: <b>{workflowData.flowType}</b> | consentStatus: <b>{workflowData.consentStatus}</b> | biStatus: <b>{workflowData.biStatus}</b> | paStatus: <b>{workflowData.paStatus}</b>
+        DEBUG (StepBar) — demoStore.flowType: <b>{flowType}</b> | actor.flowType: <b>{workflowData.flowType}</b> | consentStatus: <b>{workflowData.consentStatus}</b> | biStatus: <b>{workflowData.biStatus}</b> | paStatus: <b>{workflowData.paStatus}</b> | isIAssistFlow: <b>{String(isIAssistFlow)}</b> | iAssistStepDone: <b>{JSON.stringify(iAssistStepDone)}</b> | workflowStep(legacy): <b>{workflowStep}</b>
       </div>
     <div className="flex items-center gap-0 px-6 py-2">
       {STEP_LABELS.map((label, i) => {
