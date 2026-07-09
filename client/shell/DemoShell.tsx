@@ -538,6 +538,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 
 export default function DemoShell() {
   const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
+  const isIAssistFlow = flowType === "iAssist_PA_Approved";
   const resetPatient = usePatientStore((s) => s.reset);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
@@ -656,6 +657,54 @@ export default function DemoShell() {
     // Always start with a full reset
     actor.send({ type: 'RESET' });
 
+    if (isIAssistFlow) {
+      // iAssist's own ladder — a single ENROLL now auto-completes BI and
+      // auto-submits PA in parallel (see iAssist.ts's benefitsInquiry/
+      // priorAuth ENROLL handlers), so this can't reuse WF1/WF2's ladder,
+      // which treats "ENROLL", "BI complete", and "PA submitted" as three
+      // separate, sequential stages. Stage 2 collapses all three of
+      // iAssist's automated side effects (BI complete, PA submitted,
+      // welcome text sent) into one jump — that's the whole point of
+      // iAssist automation. Patient Enrolled moves to stage 3 and is
+      // dispatched independently, since consent doesn't ride along with
+      // ENROLL — the patient still has to actually do SMS/OTP/consent.
+      if (stage >= 2) {
+        actor.send({ type: 'ENROLL', portal: 'provider' });
+      }
+      if (stage >= 3) {
+        actor.send({ type: 'INVITE', portal: 'crm' });
+        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
+        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
+      }
+      if (stage >= 4) {
+        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
+      }
+      if (stage >= 5) {
+        const pharmacy = {
+          name: 'Accredo Health Group Inc.',
+          address: '789 Pharma Ave',
+          city: 'Tampa',
+          state: 'FL',
+          zip: '33602',
+          phone: '(813) 555-5678',
+        };
+        actor.send({
+          type: 'SELECT_PHARMACY',
+          portal: 'crm',
+          pharmacy
+        });
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 6) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+      }
+      return;
+    }
+
     // Walk the actor forward to the target stage
     // Each stage builds on the previous
     if (stage >= 2) {
@@ -701,7 +750,7 @@ export default function DemoShell() {
     if (stage >= 8) {
       actor.send({ type: 'DELIVER_RX', portal: 'crm' });
     }
-  }, [resetDemo]);
+  }, [resetDemo, isIAssistFlow]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -855,6 +904,16 @@ export default function DemoShell() {
                       { stage: 4, label: "First Dispense" },
                       { stage: 5, label: "Audit Initiated" },
                       { stage: 6, label: "PA Approved" },
+                    ]
+                    : isIAssistFlow
+                    ? [
+                      { stage: 1, label: "Referral Received" },
+                      { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
+                      { stage: 3, label: "Patient Enrolled" },
+                      { stage: 4, label: "PA Approved" },
+                      { stage: 5, label: "Dispatch to Triage" },
+                      { stage: 6, label: "Rx Shipped" },
+                      { stage: 7, label: "Medication Delivered" },
                     ]
                     : [
                       { stage: 1, label: "Referral Received" },

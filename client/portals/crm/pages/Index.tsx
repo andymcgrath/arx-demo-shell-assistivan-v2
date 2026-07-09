@@ -364,6 +364,14 @@ function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClick?: (st
   const isRunning = stage.statusLabel === "Running";
   const isInProgress = stage.statusLabel === "In Progress";
   const isSubmitted = stage.statusLabel === "Submitted";
+  // Active + waiting: the stage has actually started (not blocked on an
+  // earlier stage, so not isNotStarted) but hasn't resolved yet (not
+  // isComplete) — e.g. EA "Pending - Welcome message sent", BI "Running",
+  // PA "Submitted - Awaiting Approval", PA "Letter sent". Terminal states
+  // like "Not needed"/"Not Applicable" are modeled as isComplete: true, and
+  // stages genuinely blocked upstream are isNotStarted: true, so neither
+  // gets this treatment.
+  const isActiveWaiting = !stage.isComplete && !stage.isNotStarted;
   const iconBg = stage.isNotStarted ? "#9a9a9a" : FC_BLUE;
   const statusColor = stage.isComplete
     ? "#2e844a"
@@ -376,7 +384,7 @@ function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClick?: (st
   return (
     <div
       className="py-3 border-b border-[#dddbda] last:border-b-0"
-      style={(isRunning || isInProgress || isSubmitted) ? { background: "linear-gradient(90deg, #f0f7ff 0%, #fff 100%)" } : undefined}
+      style={isActiveWaiting ? { background: "linear-gradient(90deg, #f0f7ff 0%, #fff 100%)" } : undefined}
     >
       <div className="flex items-start gap-2.5">
         <div
@@ -718,7 +726,12 @@ export default function Index() {
   const [activeRightTab, setActiveRightTab] = useState("quick-answers");
   const [caseSummaryCollapsed, setCaseSummaryCollapsed] = useState(false);
   const [stagesCollapsed, setStagesCollapsed] = useState(false);
-  const [openStageTabs, setOpenStageTabs] = useState<Stage[]>([]);
+  // Stores IDs, not Stage objects — a Stage object snapshot from the moment
+  // a tab was opened would go stale the instant workflowData changed again
+  // (e.g. EA-14272 opened before patient consent, still showing "Pending"
+  // afterward). The tab strip below re-looks each ID up in the live
+  // STAGES_LIVE array every render, same pattern as `activeStage`.
+  const [openStageTabs, setOpenStageTabs] = useState<string[]>([]);
   const [openBipcTabs, setOpenBipcTabs] = useState<string[]>([]);
   const [bipcParentTabs, setBipcParentTabs] = useState<Record<string, string>>({});
   const [activeTopTab, setActiveTopTab] = useState<string>("keanu");
@@ -999,7 +1012,7 @@ export default function Index() {
 
   const handleOpenStage = (stage: Stage) => {
     setOpenStageTabs((prev) =>
-      prev.some((s) => s.id === stage.id) ? prev : [...prev, stage]
+      prev.includes(stage.id) ? prev : [...prev, stage.id]
     );
     setActiveTopTab(stage.id);
     scrollToTop();
@@ -1019,7 +1032,7 @@ export default function Index() {
       paCompletionScheduledRef.current = false;
     }
     e.stopPropagation();
-    setOpenStageTabs((prev) => prev.filter((s) => s.id !== stageId));
+    setOpenStageTabs((prev) => prev.filter((id) => id !== stageId));
     if (activeTopTab === stageId) setActiveTopTab("keanu");
   };
 
@@ -1080,7 +1093,9 @@ export default function Index() {
         </div>
 
         {/* Dynamic stage tabs */}
-        {openStageTabs.map((stage) => {
+        {openStageTabs.map((stageId) => {
+          const stage = STAGES_LIVE.find((s) => s.id === stageId);
+          if (!stage) return null;
           const isActive = activeTopTab === stage.id;
           const stageIconBg = stage.isNotStarted ? "#9a9a9a" : FC_BLUE;
           return (

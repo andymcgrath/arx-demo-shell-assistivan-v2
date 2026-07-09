@@ -445,17 +445,25 @@ export const useDemoStore = create<DemoStore>()(
       },
 
       changeFlow(flow): void {
+        // TEMP DIAGNOSTIC — see actorSingleton.ts's switchWorkflow for the
+        // matching log. Remove once the "CRM tab visually reverts to WF1"
+        // bug is caught with a real stack trace. If this ever logs a flow
+        // change nobody intended (e.g. firing from a plain tab click), the
+        // trace below is the smoking gun.
+        console.warn(`[demoStore] changeFlow(${flow}) — was ${get().flowType}`, new Error().stack);
         set({ flowType: flow });
       },
 
       switchFlow(newFlow): void {
         // Actor snapshot save/restore is handled by actorSingleton.switchWorkflow —
         // we only need to track the active flow name here for bootstrapping.
+        console.warn(`[demoStore] switchFlow(${newFlow}) — was ${get().flowType}`, new Error().stack);
         set({ flowType: newFlow });
       },
 
       resetDemo(flow): void {
         const targetFlow = flow ?? get().flowType;
+        console.warn(`[demoStore] resetDemo(${flow ?? "<current>"}) — resolved to ${targetFlow}, was ${get().flowType}`, new Error().stack);
         set({ ...SEED, flowType: targetFlow, resetNonce: get().resetNonce + 1 });
         resetCurrentWorkflowActor();
       },
