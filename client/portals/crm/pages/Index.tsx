@@ -980,25 +980,33 @@ export default function Index() {
         {
           id: "CO-14281",
           name: "Cash Offer",
-          // "Not Applicable" only holds while PA is approved AND the patient
-          // hasn't touched the self-pay/assistance-program option (Retail or
-          // Mail Order chosen instead, or still deciding on Benefit Pricing).
-          // Once cashOfferStatus moves off "none" — patient selected the
-          // CoAssist Self-Pay option on Copay Enroll — this reflects the real
-          // cash-offer/payment progress instead, same as the PA-denied path.
-          statusLabel: paStatus === 'approved' && cashOfferStatus === "none" ? "Not Applicable"
+          // Approved-PA path: once the patient has picked a pricing option
+          // AND scheduled delivery (pricingOption + patientShipDate both
+          // set), this stage is done — either because Retail/Mail Order was
+          // chosen (nothing to collect here — charged at the pharmacy
+          // counter) or because the Copay Program was chosen (self_pay never
+          // dispatches PATIENT_PAYS/VERIFY_PAYMENT in this flow — see
+          // DeliveryDate.tsx's skipPayment — so cashOfferStatus/
+          // paymentVerified never fire for Copay and can't be the completion
+          // signal here). Before scheduling finishes, it's just not started.
+          //
+          // PA-denied path is unchanged — cashOfferStatus/paymentVerified
+          // still drive Offer Sent/Paid there, same as before.
+          statusLabel: paStatus === 'approved' && pricingOption !== null && !!patientShipDate ? "Complete"
             : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
-          statusDetail: paStatus === 'approved' && cashOfferStatus === "none" ? "Not applicable — Retail or Mail Order selected"
+          statusDetail: paStatus === 'approved' && pricingOption !== null && !!patientShipDate
+            ? (pricingOption === "self_pay" ? "Complete — Copay Selected" : "Complete — Retail or Mail Order Selected")
+            : paStatus === 'approved' ? "Awaiting price selection and scheduling"
             : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
-          isComplete: paymentVerified,
-          isNotStarted: paStatus === 'approved' && cashOfferStatus === "none" ? true : cashOfferStatus === "none",
+          isComplete: (paStatus === 'approved' && pricingOption !== null && !!patientShipDate) || paymentVerified,
+          isNotStarted: paStatus === 'approved' ? (pricingOption === null || !patientShipDate) : cashOfferStatus === "none",
           fields: [
             { label: "Offer Status", value: cashOfferStatus === "none" ? null : cashOfferStatus === "sent" ? "Sent" : "Paid" },
             { label: "Payment Verified", value: paymentVerified ? "Yes" : "No" },
             { label: "Ship Date", value: patientShipDate ? new Date(patientShipDate).toLocaleDateString() : null },
           ],
-          lastUpdated: cashOfferStatus !== "none" ? new Date().toLocaleDateString() : null,
-          lastUpdatedAgo: cashOfferStatus !== "none" ? "today" : null,
+          lastUpdated: cashOfferStatus !== "none" || patientShipDate ? new Date().toLocaleDateString() : null,
+          lastUpdatedAgo: cashOfferStatus !== "none" || patientShipDate ? "today" : null,
         },
         // Dispatch to Triage / Pharmacy Status — reused verbatim from WF1
         // (tpStage/psStage, computed above) instead of a bespoke CoA-only
