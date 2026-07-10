@@ -21,6 +21,10 @@ import { StageInspector } from '@/components/StageInspector';
 // Register all workflows at startup
 registerWorkflows();
 
+// Toggle to bring StageInspector back — kept mounted-but-hidden behind this
+// flag rather than removed, so re-enabling it later is a one-line change.
+const SHOW_STAGE_INSPECTOR = false;
+
 // Debug: check sessionStorage contents
 
 function IAssistRedirect() {
@@ -73,7 +77,7 @@ function App() {
               <Route path="/:portal" element={<DemoShell />} />
               <Route path="*" element={<Navigate to="/hub" replace />} />
             </Routes>
-            <StageInspector />
+            {SHOW_STAGE_INSPECTOR && <StageInspector />}
           </QueryClientProvider>
         </BrowserRouter>
       </XStateProvider>
