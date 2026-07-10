@@ -995,7 +995,7 @@ export default function Index() {
           statusLabel: paStatus === 'approved' && pricingOption !== null && !!patientShipDate ? "Complete"
             : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
           statusDetail: paStatus === 'approved' && pricingOption !== null && !!patientShipDate
-            ? (pricingOption === "self_pay" ? "Complete — Copay Selected" : "Complete — Retail or Mail Order Selected")
+            ? (pricingOption === "self_pay" ? "Copay Selected" : "Retail or Mail Order Selected")
             : paStatus === 'approved' ? "Awaiting price selection and scheduling"
             : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
           isComplete: (paStatus === 'approved' && pricingOption !== null && !!patientShipDate) || paymentVerified,
