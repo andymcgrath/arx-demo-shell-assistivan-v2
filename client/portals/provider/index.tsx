@@ -2064,15 +2064,22 @@ export default function ProviderPortal() {
     if (storeFlowType !== 'CoA_DTP') {
       return;
     }
-    // CoA_DTP has no more provider-side steps after sending the eRx — return
-    // to the dashboard (WF3's start/end screen) once BI completes.
-    // biStatus complete is the reliable signal — paStatus may update too fast.
-    // (Previously this set 'email', the Fax flow's login screen — a leftover
-    // that doesn't exist in the CoA_DTP flow at all.)
-    if (biStatus === 'complete' && step === 'coa-sent') {
-      setStep('coa-dashboard');
+    // BI completing means "PA Required" just appeared — skip the idle EHR
+    // chart entirely and go straight to the AssistRx PA request email/
+    // letter (same email/login/PA-form steps WF1 uses — see
+    // CoaProviderExperience). Flow: Send eRx → patient completes enrollment
+    // → BI: PA Required → provider sees the letter, with no idle chart or
+    // manual "Start Prior Auth" click in between.
+    // Covers both landing spots BI can finish while the provider is on:
+    // right after sending the eRx (still on "coa-sent") and having already
+    // clicked back to the idle chart before BI finished ("coa-dashboard").
+    // paStatus === 'none' keeps this from refiring once a PA exists —
+    // biStatus stays "complete" indefinitely, so that guard is load-bearing,
+    // not just an optimization.
+    if (biStatus === 'complete' && paStatus === 'none' && (step === 'coa-sent' || step === 'coa-dashboard')) {
+      setStep('email');
     }
-  }, [storeFlowType, biStatus, step]);
+  }, [storeFlowType, biStatus, paStatus, step]);
 
   // `step` is local UI state with no memory of the outer workflow reset —
   // it only ever advances forward via the handlers below, so a reset that
