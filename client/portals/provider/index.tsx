@@ -833,8 +833,8 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">Electronic Prior Authorization</p>
-      <PaSummaryTable />
       {questions}
+      <PaSummaryTable />
       <div className="pa-nav-row">
         <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
         <div className="pa-nav-actions">
