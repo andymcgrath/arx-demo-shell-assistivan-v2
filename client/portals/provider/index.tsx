@@ -14,6 +14,14 @@ import type { WorkflowData } from "@/engine/types";
 // isCoA branch in ProviderPortal below). Not a copy; if WF4's Dashboard
 // changes, this picks it up automatically.
 import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
+// Dashboard calls useNavigate() from portalRouter, which throws unless it's
+// mounted under a <PortalRouter> — WF4's own portal (client/portals/iassist/
+// index.tsx) supplies that wrapper, but the provider portal here doesn't, so
+// we provide our own when rendering Dashboard directly. Note: this is an
+// isolated router with no routes registered for "/new-case/*" (the case
+// wizard), so clicking a patient row here won't navigate anywhere — a known
+// limitation of reusing WF4's dashboard outside its own portal.
+import { PortalRouter } from "@/lib/portalRouter";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
@@ -2111,7 +2119,11 @@ export default function ProviderPortal() {
   // mattering once we're here.
   if (isCoA) {
     if (paStatus !== 'none') {
-      return <IAssistDashboardPage />;
+      return (
+        <PortalRouter initialPath="/">
+          <IAssistDashboardPage />
+        </PortalRouter>
+      );
     }
     return (
       <CoaProviderExperience
