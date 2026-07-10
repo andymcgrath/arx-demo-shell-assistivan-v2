@@ -1078,6 +1078,35 @@ function CoaProviderExperience({
   // comment above PHARMACIES for why this isn't dispatched to the engine.
   const [pharmacy, setPharmacy] = useState<PharmacyOption | null>(null);
 
+  // PA requests now arrive the same way WF1 delivers them — an external
+  // AssistRx email + hosted "Verify & Complete" PA form — instead of a form
+  // embedded in the Heroic EHR chart. So these four steps render WF1's own
+  // full-page experience (EmailStep/LoginStep/PaQuestionsStep/
+  // PaSubmittedStep, all isCoA={false}, same as WF1 uses them) with no chart
+  // chrome at all, and the provider only lands back in the EHR once PA
+  // Submitted's Done fires. This only reuses the shared step components —
+  // it doesn't change what WF1 itself renders with them.
+  if (step === "email" || step === "login" || step === "pa-questions" || step === "pa-submitted") {
+    return (
+      <div className="provider-portal">
+        {step !== "email" && <BrandSidebar isBranded={false} />}
+        {step === "email" && <EmailStep onClickLink={() => setStep("login")} />}
+        {step === "login" && <LoginStep onSubmit={() => setStep("pa-questions")} />}
+        {step === "pa-questions" && (
+          <PaQuestionsStep
+            isCoA={false}
+            onBack={() => setStep("login")}
+            onCancel={() => setStep("login")}
+            onNext={() => setStep("pa-submitted")}
+          />
+        )}
+        {step === "pa-submitted" && (
+          <PaSubmittedStep isCoA={false} onDone={() => setStep("coa-dashboard")} />
+        )}
+      </div>
+    );
+  }
+
   let content: React.ReactNode;
   if (step === "coa-rx") {
     content = (
@@ -1093,19 +1122,8 @@ function CoaProviderExperience({
     );
   } else if (step === "coa-sent") {
     content = <CoaSentConfirmation pharmacy={pharmacy} onReturnToDashboard={() => setStep("coa-dashboard")} />;
-  } else if (step === "pa-questions") {
-    content = (
-      <PaQuestionsStep
-        isCoA
-        onBack={() => setStep("coa-dashboard")}
-        onCancel={() => setStep("coa-dashboard")}
-        onNext={() => setStep("pa-submitted")}
-      />
-    );
-  } else if (step === "pa-submitted") {
-    content = <PaSubmittedStep isCoA onDone={() => setStep("coa-dashboard")} />;
   } else {
-    content = <PrescriptionsIdlePanel status={keanuStatus} pharmacy={pharmacy} onStartPA={() => setStep("pa-questions")} />;
+    content = <PrescriptionsIdlePanel status={keanuStatus} pharmacy={pharmacy} onStartPA={() => setStep("email")} />;
   }
 
   return (
