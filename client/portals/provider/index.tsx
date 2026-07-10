@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
+// WF4's own dashboard — reused as-is for CoA_DTP's post-PA screen (see the
+// isCoA branch in ProviderPortal below). Not a copy; if WF4's Dashboard
+// changes, this picks it up automatically.
+import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
 import "./styles.css";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
@@ -762,13 +766,12 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
   const [q3, setQ3] = useState<string | null>(null);
-  const [comments, setComments] = useState("");
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
   const payer = usePatientStore((s) => s.payer);
 
   function handleNext() {
-    dispatch('SUBMIT_PA', { source: 'provider_portal', comments, portal: 'provider' });
+    dispatch('SUBMIT_PA', { source: 'provider_portal', portal: 'provider' });
     onNext();
   }
 
@@ -792,18 +795,6 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
         onChange={setQ3}
         accentColor={isCoA ? HEROIC_BLUE : undefined}
       />
-
-      {!isCoA && (
-        <div className="pa-comments-field">
-          <label className="pa-comments-label">Comments:</label>
-          <input
-            type="text"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            className="pa-comments-input"
-          />
-        </div>
-      )}
     </div>
   );
 
@@ -2101,11 +2092,22 @@ export default function ProviderPortal() {
 
   // CoA_DTP gets its own dedicated render path — the full Heroic EHR chart
   // shell, entered directly on Keanu's chart (no separate patient-list
-  // screen). This is checked before the generic providerPACompleted block
-  // below so CoA_DTP never falls into that WF1/WF2-oriented "Recent
-  // Submissions" screen; it stays in the chart the whole time, showing PA/eRx
-  // status inline in Recommendations > Prescriptions instead.
+  // screen), for everything up through the PA request/response. This is
+  // checked before the generic providerPACompleted block below so CoA_DTP
+  // never falls into that WF1/WF2-oriented "Recent Submissions" screen.
+  //
+  // Once the PA is submitted — providerPACompleted flips true — we stop
+  // showing the Heroic EHR entirely and switch to WF4's own iAssist
+  // Dashboard (client/portals/iassist/pages/Dashboard.tsx) instead, with
+  // Keanu surfaced at the top via that page's own live-status lookup
+  // (usePersonaState reads whichever actor is active, so it picks up
+  // CoA_DTP's workflowData here the same way it reads iAssist's on WF4).
+  // This durably persists across remounts/tab switches — it isn't tied to
+  // the `step` state machine below, which stops mattering once we're here.
   if (isCoA) {
+    if (providerPACompleted) {
+      return <IAssistDashboardPage />;
+    }
     return (
       <CoaProviderExperience
         step={step}
