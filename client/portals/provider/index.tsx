@@ -2096,16 +2096,21 @@ export default function ProviderPortal() {
   // checked before the generic providerPACompleted block below so CoA_DTP
   // never falls into that WF1/WF2-oriented "Recent Submissions" screen.
   //
-  // Once the PA is submitted — providerPACompleted flips true — we stop
-  // showing the Heroic EHR entirely and switch to WF4's own iAssist
-  // Dashboard (client/portals/iassist/pages/Dashboard.tsx) instead, with
-  // Keanu surfaced at the top via that page's own live-status lookup
-  // (usePersonaState reads whichever actor is active, so it picks up
-  // CoA_DTP's workflowData here the same way it reads iAssist's on WF4).
-  // This durably persists across remounts/tab switches — it isn't tied to
-  // the `step` state machine below, which stops mattering once we're here.
+  // Once a PA exists — paStatus !== 'none' — we stop showing the Heroic EHR
+  // entirely and switch to WF4's own iAssist Dashboard (client/portals/
+  // iassist/pages/Dashboard.tsx) instead, with Keanu surfaced at the top via
+  // that page's own live-status lookup (usePersonaState reads whichever
+  // actor is active, so it picks up CoA_DTP's workflowData here the same way
+  // it reads iAssist's on WF4). Deliberately keyed on paStatus, not
+  // providerPACompleted — that flag only flips when the provider clicks
+  // "Done" on the PA Submitted screen themselves, so if PA resolves some
+  // other way (e.g. watched it get approved from the CRM tab instead), it
+  // would never fire and the chart would keep showing. paStatus is durable
+  // and persists across remounts/tab switches regardless of how the PA got
+  // there — it isn't tied to the `step` state machine below, which stops
+  // mattering once we're here.
   if (isCoA) {
-    if (providerPACompleted) {
+    if (paStatus !== 'none') {
       return <IAssistDashboardPage />;
     }
     return (
