@@ -649,19 +649,18 @@ export default function Index() {
     (snapshot) => snapshot.context.workflowData.enrollmentStatus
   );
 
-  // WF3's default screen — a "My Cases" list (mirrors a real Salesforce
-  // Service Console) rather than jumping straight into a case-detail view.
-  // Keanu's case appears in that list once his eRx is submitted, but the
-  // operator still has to click it to open the detail tabs below.
-  const [hubView, setHubView] = useState<"list" | "detail">(() =>
-    useDemoStore.getState().flowType === "CoA_DTP" ? "list" : "detail"
-  );
+  // WF3 used to default to a "My Cases" list (mirrors a real Salesforce
+  // Service Console) rather than jumping straight into a case-detail view —
+  // now it opens straight on Keanu's case detail like every other flow. The
+  // list is still fully wired (CasesList below, reachable via "← Back to
+  // Cases" once hubView flips to "list"), just no longer the entry point.
+  const [hubView, setHubView] = useState<"list" | "detail">("detail");
 
   useEffect(() => {
     if (enrollmentStatus === 'none') {
       navigate('/');
       if (useDemoStore.getState().flowType === "CoA_DTP") {
-        setHubView("list");
+        setHubView("detail");
       }
     }
   }, [enrollmentStatus, navigate]);
@@ -887,7 +886,7 @@ export default function Index() {
       : { id: "PA-14274", name: "Prior Authorization", statusLabel: "Denied", statusDetail: "PA Denied — Appeal initiated", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
 
   const eaStage: Stage = consentStatus !== "confirmed"
-    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" }
+    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : isCoaFlow ? "SMS sent — awaiting patient consent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" }
     : { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Complete", statusDetail: "Enrollment Completed", isComplete: true, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" };
 
   const biCompleteDetail = isPapFlow
@@ -941,6 +940,13 @@ export default function Index() {
 
   const STAGES_LIVE: Stage[] = isCoaFlow
     ? [
+        // SMS/consent is sent automatically in CoA_DTP — same "active,
+        // waiting on something automatic" shape as WF4's EA-14272 welcome
+        // message, so it gets the same blue StageCard treatment (see
+        // StageCard's isActiveWaiting) instead of jumping straight to a
+        // gray, not-started Benefits Investigation card with no stage
+        // shown for the step the breadcrumb is actually sitting on.
+        eaStage,
         {
           id: "BI-14273",
           name: "Benefits Investigation",
