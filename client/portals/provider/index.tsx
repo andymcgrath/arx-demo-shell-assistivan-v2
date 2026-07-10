@@ -1012,7 +1012,15 @@ function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {
 // with its live status (derived straight from workflowData, same source
 // every other CoA_DTP portal reads) and, once a PA is actually required, a
 // button to start it.
-function PrescriptionsIdlePanel({ status, onStartPA }: { status: PatientStatus | null; onStartPA: () => void }) {
+function PrescriptionsIdlePanel({
+  status,
+  pharmacy,
+  onStartPA,
+}: {
+  status: PatientStatus | null;
+  pharmacy: PharmacyOption | null;
+  onStartPA: () => void;
+}) {
   const drugName = usePatientStore((s) => s.drugName);
 
   if (!status) {
@@ -1031,6 +1039,9 @@ function PrescriptionsIdlePanel({ status, onStartPA }: { status: PatientStatus |
       <div>
         <p style={{ fontWeight: 700, fontSize: 14, color: "#1C1C1C", margin: "0 0 4px 0" }}>{drugName}</p>
         <p style={{ fontSize: 12, color: "#6F7276", margin: 0 }}>Ordering Provider: Sarah Chen, MD</p>
+        {pharmacy && (
+          <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>Dispensing Pharmacy: {pharmacy.name}</p>
+        )}
       </div>
       <div className="flex items-center gap-3 flex-wrap">
         <StatusDots dots={status.dots} />
@@ -1063,11 +1074,16 @@ function CoaProviderExperience({
   const keanuStatus = deriveKeanuStatus(workflowData);
   const isIdle = step === "coa-dashboard";
   const canAddRx = isIdle && !keanuStatus;
+  // Local to the provider portal, like CoaRxForm's dosage/refills — see the
+  // comment above PHARMACIES for why this isn't dispatched to the engine.
+  const [pharmacy, setPharmacy] = useState<PharmacyOption | null>(null);
 
   let content: React.ReactNode;
   if (step === "coa-rx") {
     content = (
       <CoaRxForm
+        pharmacy={pharmacy}
+        onPharmacyChange={setPharmacy}
         onSend={() => {
           dispatch('ENROLL', { portal: 'provider' });
           setStep("coa-sent");
@@ -1076,7 +1092,7 @@ function CoaProviderExperience({
       />
     );
   } else if (step === "coa-sent") {
-    content = <CoaSentConfirmation onReturnToDashboard={() => setStep("coa-dashboard")} />;
+    content = <CoaSentConfirmation pharmacy={pharmacy} onReturnToDashboard={() => setStep("coa-dashboard")} />;
   } else if (step === "pa-questions") {
     content = (
       <PaQuestionsStep
@@ -1089,7 +1105,7 @@ function CoaProviderExperience({
   } else if (step === "pa-submitted") {
     content = <PaSubmittedStep isCoA onDone={() => setStep("coa-dashboard")} />;
   } else {
-    content = <PrescriptionsIdlePanel status={keanuStatus} onStartPA={() => setStep("pa-questions")} />;
+    content = <PrescriptionsIdlePanel status={keanuStatus} pharmacy={pharmacy} onStartPA={() => setStep("pa-questions")} />;
   }
 
   return (
@@ -1226,7 +1242,185 @@ function MedicationSelect({ value, onChange }: { value: string; onChange: (v: st
   );
 }
 
-function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void }) {
+// ── Dispensing pharmacy search/select ────────────────────────────────────────
+//
+// Mirrors the CRM's SPECIALTY_PHARMACIES list (client/portals/crm/pages/
+// Index.tsx) so the same pharmacy names/addresses show up whether staff pick
+// one there or the prescriber picks one here — kept as its own local copy
+// rather than a shared import, matching this file's existing practice of not
+// reaching into other portals (see HEROIC_BLUE's comment above).
+//
+// This is UI-only, like dosage/refills below — NOT dispatched to the CoA_DTP
+// state machine. Checked coaDtp.ts: SELECT_PHARMACY is only handled from
+// "pricingSelected" onward, and the patient's own Retail/Mail/Self-Pay choice
+// there always overwrites selectedPharmacy anyway — so a dispatch from this,
+// the very first step of the flow, would either no-op or get silently
+// clobbered later. Surfacing the prescriber's pick here (and on the eRx-sent
+// confirmation) is honest about being a demo-only touch, not a real
+// downstream effect.
+interface PharmacyOption {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+}
+
+const PHARMACIES: PharmacyOption[] = [
+  { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" },
+  { name: "Biologics", address: "456 Specialty Lane", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-1234" },
+  { name: "Accredo Health Group Inc.", address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
+  { name: "CVS Specialty", address: "321 Medication Blvd", city: "Jacksonville", state: "FL", zip: "32099", phone: "(904) 555-9012" },
+  { name: "Walgreens Specialty", address: "654 Drug St", city: "Miami", state: "FL", zip: "33101", phone: "(305) 555-3456" },
+  { name: "AllianceRx Walgreens Prime", address: "987 Medicine Way", city: "Fort Lauderdale", state: "FL", zip: "33301", phone: "(954) 555-7890" },
+  { name: "Optum Specialty Pharmacy", address: "111 Health Lane", city: "Clearwater", state: "FL", zip: "33755", phone: "(727) 555-2345" },
+  { name: "Shields Health Solutions", address: "222 Care Dr", city: "St. Petersburg", state: "FL", zip: "33701", phone: "(727) 555-6789" },
+  { name: "PharMerica Specialty", address: "333 Wellness Ave", city: "Sarasota", state: "FL", zip: "34236", phone: "(941) 555-0123" },
+];
+
+function PharmacySelect({
+  value,
+  onChange,
+}: {
+  value: PharmacyOption | null;
+  onChange: (p: PharmacyOption) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+    };
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const results = q
+    ? PHARMACIES.filter((p) => p.name.toLowerCase().includes(q) || p.city.toLowerCase().includes(q))
+    : PHARMACIES;
+
+  const select = (p: PharmacyOption) => {
+    onChange(p);
+    setQuery("");
+    setOpen(false);
+  };
+
+  if (value && !open) {
+    return (
+      <div className="pa-field" style={{ marginBottom: 24 }}>
+        <label className="pa-field__label">Dispensing Pharmacy</label>
+        <div
+          className="flex items-center justify-between"
+          style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 12px" }}
+        >
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1C", margin: 0 }}>{value.name}</p>
+            <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>
+              {value.address}, {value.city}, {value.state} {value.zip} · {value.phone}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            style={{ color: HEROIC_BLUE, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0, marginLeft: 12 }}
+          >
+            Change
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pa-field" style={{ marginBottom: 24, position: "relative" }}>
+      <label className="pa-field__label">Dispensing Pharmacy</label>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = setTimeout(() => setOpen(false), 150);
+        }}
+        placeholder="Search pharmacy by name or city…"
+        className="pa-field__input"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      />
+      <div className={`pa-field__underline ${query ? "pa-field__underline--active" : ""}`} />
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Select dispensing pharmacy"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 4,
+            background: "#fff",
+            border: "1px solid #E0E0E0",
+            borderRadius: 8,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            maxHeight: 260,
+            overflowY: "auto",
+            zIndex: 20,
+          }}
+        >
+          {results.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9CA3AF", padding: "12px 16px", margin: 0 }}>
+              No pharmacies found for "{query}"
+            </p>
+          ) : (
+            results.map((p) => (
+              <button
+                key={p.name}
+                type="button"
+                role="option"
+                aria-selected={value?.name === p.name}
+                onClick={() => select(p)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "8px 16px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: value?.name === p.name ? HEROIC_BLUE_LIGHT : "transparent",
+                }}
+                onMouseOver={(e) => {
+                  if (value?.name !== p.name) e.currentTarget.style.background = "#F5F5F5";
+                }}
+                onMouseOut={(e) => {
+                  if (value?.name !== p.name) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1C", margin: 0 }}>{p.name}</p>
+                <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>{p.city}, {p.state}</p>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoaRxForm({
+  pharmacy,
+  onPharmacyChange,
+  onSend,
+  onBack,
+}: {
+  pharmacy: PharmacyOption | null;
+  onPharmacyChange: (p: PharmacyOption) => void;
+  onSend: () => void;
+  onBack: () => void;
+}) {
   const [dosage, setDosage] = useState("0.5 mg");
   const [refills, setRefills] = useState("3");
   // Local to this screen on purpose — not written back to usePatientStore.
@@ -1290,10 +1484,19 @@ function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void 
             <div className="pa-field__underline" />
           </div>
         </div>
+
+        <PharmacySelect value={pharmacy} onChange={onPharmacyChange} />
       </div>
 
       <div className="pa-action-row">
-        <button onClick={onSend} className="pa-btn-primary pa-btn-primary--heroic">Send eRx</button>
+        <button
+          onClick={onSend}
+          disabled={!pharmacy}
+          className="pa-btn-primary pa-btn-primary--heroic"
+          title={pharmacy ? undefined : "Select a dispensing pharmacy first"}
+        >
+          Send eRx
+        </button>
       </div>
     </div>
   );
@@ -1301,7 +1504,13 @@ function CoaRxForm({ onSend, onBack }: { onSend: () => void; onBack: () => void 
 
 // ── COA Sent Confirmation (Heroic EHR) ───────────────────────────────────────
 
-function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () => void }) {
+function CoaSentConfirmation({
+  pharmacy,
+  onReturnToDashboard,
+}: {
+  pharmacy: PharmacyOption | null;
+  onReturnToDashboard: () => void;
+}) {
   const drugName = usePatientStore((s) => s.drugName);
 
   return (
@@ -1316,7 +1525,12 @@ function CoaSentConfirmation({ onReturnToDashboard }: { onReturnToDashboard: () 
         The patient will receive a consent text shortly.
       </p>
       <div style={{ backgroundColor: "#F5F5F5", padding: 16, borderRadius: 8, textAlign: "left", marginTop: 16, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
-        <p style={{ fontSize: 12, color: "#6F7276", margin: 0 }}>Medication: <strong>{drugName}</strong></p>
+        <p style={{ fontSize: 12, color: "#6F7276", margin: pharmacy ? "0 0 8px 0" : 0 }}>Medication: <strong>{drugName}</strong></p>
+        {pharmacy && (
+          <p style={{ fontSize: 12, color: "#6F7276", margin: 0 }}>
+            Pharmacy: <strong>{pharmacy.name}</strong> — {pharmacy.city}, {pharmacy.state}
+          </p>
+        )}
       </div>
 
       <div className="pa-action-row" style={{ justifyContent: "center" }}>

@@ -441,7 +441,7 @@ const RIGHT_TABS = [
 const FAX_DOCUMENTS = [
   {
     fileId: "FAX-2026-00431",
-    fileName: "Enrollment_Form_KDixon_051526.pdf",
+    fileName: "Enrollment_Form_KReeves_051526.pdf",
     dateReceived: "May 15, 2026",
     type: "Enrollment Form",
     pages: 3,
@@ -690,6 +690,20 @@ export default function Index() {
   const payer = usePatientStore((s) => s.payer);
   const caseNumber = usePatientStore((s) => s.caseNumber);
   const deliveryAddress = usePatientStore((s) => s.deliveryAddress);
+  const patientDob = usePatientStore((s) => s.patientDob);
+  const patientEmail = usePatientStore((s) => s.email);
+  const npi = usePatientStore((s) => s.npi);
+  const patientInitials = patientName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+  const patientFirstName = patientName.split(" ")[0] ?? patientName;
+  const patientLastName = patientName.split(" ").slice(1).join(" ") || patientName;
+  // deliveryAddress is stored as a single "Street, City, State ZIP" string —
+  // split it into the pieces the mock enrollment form displays separately.
+  const [deliveryAddressStreet, ...deliveryAddressRest] = deliveryAddress.split(", ");
+  const deliveryAddressCityStateZip = deliveryAddressRest.join(", ");
 
   const flowType = workflowData.flowType;
   const consentStatus = workflowData.consentStatus;
@@ -1068,7 +1082,7 @@ export default function Index() {
         className="border-b border-[#dddbda] flex items-end px-2 overflow-x-auto gap-1 overflow-y-hidden"
         style={{ background: "#f3f2f2", minHeight: 42 }}
       >
-        {/* Keanu Dixon tab */}
+        {/* Active patient tab — identity sourced live from usePatientStore */}
         <div
           className="flex items-center gap-2 px-3 py-2 border border-[#dddbda] cursor-pointer select-none shrink-0 transition-colors"
           style={{
@@ -1087,11 +1101,11 @@ export default function Index() {
             className="flex items-center justify-center rounded-full text-white text-[10px] font-bold shrink-0"
             style={{ width: 20, height: 20, background: "linear-gradient(135deg, #2dbcbb 0%, #16818a 100%)" }}
           >
-            KD
+            {patientInitials}
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-[12px] font-semibold text-[#3e3e3c] whitespace-nowrap">Keanu Dixon</span>
-            <span className="text-[10px] text-[#706e6b]">DOB: 09/19/1981</span>
+            <span className="text-[12px] font-semibold text-[#3e3e3c] whitespace-nowrap">{patientName}</span>
+            <span className="text-[10px] text-[#706e6b]">DOB: {patientDob}</span>
           </div>
           <button className="ml-1 p-0.5 rounded hover:bg-[#e5e5e5] transition-colors">
             <X size={11} className="text-[#706e6b]" />
@@ -1260,7 +1274,7 @@ export default function Index() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-[12px] text-[#706e6b]">
-              <span>Enrollment_Form_KDixon_051526.pdf</span>
+              <span>Enrollment_Form_KReeves_051526.pdf</span>
               <span>·</span>
               <span>5 pages</span>
               <span>·</span>
@@ -1284,7 +1298,7 @@ export default function Index() {
                   <span className="ml-auto text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: "#e8f4ef", color: "#2e844a" }}>Signed</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
-                  <FieldRow label="Patient Signature" value="Keanu Dixon" />
+                  <FieldRow label="Patient Signature" value={patientName} />
                   <FieldRow label="Relationship to Patient" value="Self" />
                   <FieldRow label="Date Signed" value="05/20/2026" />
                 </div>
@@ -1297,15 +1311,15 @@ export default function Index() {
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Patient Information</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
-                  <FieldRow label="First Name" value="Keanu" />
-                  <FieldRow label="Last Name" value="Dixon" />
-                  <FieldRow label="Date of Birth" value="09/19/1981" />
+                  <FieldRow label="First Name" value={patientFirstName} />
+                  <FieldRow label="Last Name" value={patientLastName} />
+                  <FieldRow label="Date of Birth" value={patientDob} />
                   <FieldRow label="Sex" value="M" />
-                  <FieldRow label="Mobile Phone" value="(555) 867-5309" />
+                  <FieldRow label="Mobile Phone" value={phone} />
                   <FieldRow label="Preferred Contact" value="Mobile" />
-                  <FieldRow label="Shipping Address" value="742 Lakewood Drive" />
-                  <FieldRow label="City, State, ZIP" value="Orlando, FL 32801" />
-                  <FieldRow label="Email" value="keanu.dixon@gmail.com" isLink />
+                  <FieldRow label="Shipping Address" value={deliveryAddressStreet} />
+                  <FieldRow label="City, State, ZIP" value={deliveryAddressCityStateZip} />
+                  <FieldRow label="Email" value={patientEmail} isLink />
                   <FieldRow label="OK to Leave Voicemail" value="Yes" />
                   <FieldRow label="Best Time" value="Morning" />
                   <FieldRow label="Preferred Language" value="English" />
@@ -1313,10 +1327,10 @@ export default function Index() {
                 <div className="px-4 pb-2">
                   <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1 mt-1">Alternate Contact</div>
                   <div className="grid grid-cols-2 gap-x-4">
-                    <FieldRow label="Name" value="Maria Dixon" />
+                    <FieldRow label="Name" value={`Maria ${patientLastName}`} />
                     <FieldRow label="Relationship" value="Spouse" />
                     <FieldRow label="Phone" value="(555) 867-5310" />
-                    <FieldRow label="Email" value="maria.dixon@gmail.com" isLink />
+                    <FieldRow label="Email" value={`maria.${patientLastName.toLowerCase()}@gmail.com`} isLink />
                     <FieldRow label="OK to Discuss" value="Yes" />
                   </div>
                 </div>
@@ -1333,7 +1347,7 @@ export default function Index() {
                   <div className="grid grid-cols-2 gap-x-4">
                     <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
                     <FieldRow label="Phone" value="(800) 477-3736" />
-                    <FieldRow label="Policy / Member ID" value="BCB-KD-298341" />
+                    <FieldRow label="Policy / Member ID" value="BCB-KR-298341" />
                     <FieldRow label="Rx BIN" value="610415" />
                     <FieldRow label="Rx PCN" value="ADV" />
                   </div>
@@ -1341,7 +1355,7 @@ export default function Index() {
                   <div className="grid grid-cols-2 gap-x-4">
                     <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
                     <FieldRow label="Phone" value="(800) 477-3736" />
-                    <FieldRow label="Policy / Member ID" value="BCB-KD-298341" />
+                    <FieldRow label="Policy / Member ID" value="BCB-KR-298341" />
                   </div>
                 </div>
               </div>
@@ -1389,7 +1403,7 @@ export default function Index() {
                   <FieldRow label="Address" value="1800 Medical Park Dr, Orlando, FL 32803" />
                   <FieldRow label="Phone" value="(407) 885-9999" />
                   <FieldRow label="Fax" value="(407) 885-9998" />
-                  <FieldRow label="NPI" value="1245378901" />
+                  <FieldRow label="NPI" value={npi} />
                   <FieldRow label="State License #" value="ME78901" />
                   <FieldRow label="Office Contact" value="Jennifer Torres" />
                   <FieldRow label="Email" value="scheduling@orlandopulm.com" isLink />
@@ -1415,10 +1429,10 @@ export default function Index() {
             {/* Right panel — original PDF */}
             <div className="flex flex-col" style={{ flex: 1 }}>
               <div className="flex items-center justify-between px-4 py-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                <span className="text-[12px] font-semibold text-[#3e3e3c]">Original Fax — Enrollment_Form_KDixon_051526.pdf</span>
+                <span className="text-[12px] font-semibold text-[#3e3e3c]">Original Fax — Enrollment_Form_KReeves_051526.pdf</span>
                 <a
                   href="/enrollment-form.pdf"
-                  download="Enrollment_Form_KDixon_051526.pdf"
+                  download="Enrollment_Form_KReeves_051526.pdf"
                   className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[#0176d3] hover:bg-[#f0f7ff] transition-colors"
                 >
                   Download
@@ -1665,7 +1679,7 @@ export default function Index() {
                   </div>
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
-                      <FieldRow label="Patient" value="Keanu Reeves" isLink />
+                      <FieldRow label="Patient" value={patientName} isLink />
                       <FieldRow label="Case" value="00056249" isLink />
                       <FieldRow label="Prescriber Notes" value="Requires prior authorization for coverage" />
                       <FieldRow label="Stage Age (Business Hours)" value="2 hours, 15 minutes" />
@@ -2441,7 +2455,7 @@ export default function Index() {
                   <div>
                     <FieldRow label="BI Product Coverage Name" value={activeTopTab} />
                     <FieldRow label="Benefit Investigation Result" value="BIR-0431" isLink />
-                    <FieldRow label="Payer" value="United Healthcare" />
+                    <FieldRow label="Payer" value={payer} />
                     <FieldRow label="Payer Type" value={isPapFlow ? "No Insurance" : "Commercial"} />
                     <FieldRow label="Status" value="Active" />
                     <FieldRow label="Internal Comments" value="" />
@@ -2563,7 +2577,7 @@ export default function Index() {
                 {!caseSummaryCollapsed && (
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                     <div>
-                      <FieldRow label="Account Name" value="Keanu Dixon" isLink />
+                      <FieldRow label="Account Name" value={patientName} isLink />
                       <FieldRow label="Service Type" value="Patient Solutions" isLink />
                       <FieldRow label="Case Type" value="Onboarding" />
                       <FieldRow label="Referral Source" value="HCP" />
@@ -2989,7 +3003,7 @@ export default function Index() {
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PAYER</div>
-                    <div className="text-[13px] text-[#3e3e3c]">United Healthcare</div>
+                    <div className="text-[13px] text-[#3e3e3c]">{payer}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">CARE</div>
