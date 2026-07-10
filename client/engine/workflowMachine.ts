@@ -17,6 +17,8 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   dispatchStatus: "none",
   qsStatus: "none",
   papStatus: "none",
+  papSmsSent: false,
+  incomeStatus: "none",
   selectedPharmacy: null,
   providerPACompleted: false,
   paSubmittedAt: null,
@@ -67,10 +69,32 @@ export const workflowMachine = createMachine(
       },
       RESET: {
         target: '#arxWorkflow',
-        actions: assign(() => ({
-          workflowData: { ...INITIAL_WORKFLOW_DATA },
+        // Keep the actor's own current flowType — INITIAL_WORKFLOW_DATA's
+        // flowType is just a static fallback for the (shared, flow-agnostic)
+        // "enrollment" machine, not a real default. Spreading it wholesale
+        // here would silently flip a PAP session back to WF1 on Reset.
+        actions: assign(({ context }) => ({
+          workflowData: { ...INITIAL_WORKFLOW_DATA, flowType: context.workflowData.flowType },
           events: [],
           _snapshots: [],
+        })),
+      },
+      // Corrective, internal-only action — see actorSingleton.ts's
+      // createActorForFlow. The "enrollment" machine (shared by WF1/WF2) has
+      // no way to know which of the two it's actually running as, since its
+      // static INITIAL_WORKFLOW_DATA.flowType is hardcoded to
+      // 'Fax_QS_PA_Approved'. actorSingleton sends this right after creating
+      // (or restoring) the actor so workflowData.flowType actually matches
+      // the flow the user selected, instead of every isPapFlow-style check
+      // silently reading WF1 defaults. Deliberately doesn't touch
+      // events/_snapshots — this isn't a demo action, just a correction.
+      SET_FLOW_TYPE: {
+        actions: assign(({ context, event }: any) => ({
+          ...context,
+          workflowData: {
+            ...context.workflowData,
+            flowType: event.flowType,
+          },
         })),
       },
       COMPLETE_PROVIDER_PA: {
@@ -100,6 +124,16 @@ export const workflowMachine = createMachine(
       },
       DELIVER_RX: {
         actions: 'updatePharmacyDelivered',
+      },
+      // Fax_PAP_Audit (WF2/PAP) only — BI comes back no_insurance, CRM texts
+      // the patient an income-check link (Fulfillment/BI stage action), then
+      // the patient's eIncome check result flips PAP to "active" and opens
+      // dispatch the same way PA approval does for other flows.
+      SEND_PAP_SMS: {
+        actions: 'updatePapSmsSent',
+      },
+      VERIFY_INCOME: {
+        actions: 'updateIncomeVerified',
       },
     },
     states: {
@@ -376,6 +410,29 @@ export const workflowMachine = createMachine(
           providerPACompleted: true,
         },
         events: [...context.events, createEvent(context, 'COMPLETE_PROVIDER_PA', 'provider', 13)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePapSmsSent: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          papSmsSent: true,
+        },
+        events: [...context.events, createEvent(context, 'SEND_PAP_SMS', 'crm', 7)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateIncomeVerified: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          incomeStatus: 'verified',
+          papStatus: 'active',
+          // Mirrors updatePAApproved: opens up Triage/pharmacy dispatch the
+          // instant PAP is approved, before anyone's picked a pharmacy.
+          dispatchStatus:
+            context.workflowData.dispatchStatus === 'none'
+              ? 'pending_selection'
+              : context.workflowData.dispatchStatus,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_INCOME', 'patient', 8)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       restoreLastSnapshot: assign(({ context }) => {

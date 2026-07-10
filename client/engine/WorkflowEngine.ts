@@ -221,6 +221,39 @@ export function derivePatientRoute(state: MachineContext): string {
       workflowData.biStatus === 'none')
     return '/enrollment-complete';
 
+  // ── Fax_PAP_Audit (WF2/PAP): no traditional PA ──────────────────────
+  // BI completing with no_insurance leads into an FA eIncome check instead
+  // of PA submission — paStatus stays 'none' for this flow forever, so this
+  // branch has to run before the generic paStatus-driven checks below.
+  if (flowType === 'Fax_PAP_Audit') {
+    // BI still running
+    if (workflowData.biStatus !== 'complete') return '/enrollment-complete';
+
+    // BI complete (no coverage found) — CRM has to text the patient the
+    // income-check link before they can start it (mirrors the initial
+    // enrollment SMS gate above).
+    if (workflowData.incomeStatus !== 'verified' && !workflowData.papSmsSent)
+      return '/enrollment-complete';
+
+    if (workflowData.incomeStatus !== 'verified')
+      return '/income-qualification';
+
+    // Income verified → PAP approved. No patient-driven delivery scheduling
+    // here (unlike WF1/CoA/iAssist) — PapEnrollmentComplete.tsx tells the
+    // patient there's nothing left for them to do; CRM handles Triage and
+    // Pharmacy Status directly from here.
+    if (workflowData.pharmacyStatus === 'none')
+      return '/pap-enrollment-complete';
+
+    if (workflowData.pharmacyStatus === 'processing' ||
+        workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
+
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    return '/medication-delivered';
+  }
+
   // ── Clinical workflow ────────────────────────────────────────────────
   if (workflowData.paStatus === 'denied') return '/pa-denied';
 

@@ -30,6 +30,14 @@ export interface WorkflowData {
   dispatchStatus: 'none' | 'pending_selection' | 'selected' | 'dispatched';
   qsStatus: 'none' | 'active' | 'complete';
   papStatus: 'none' | 'active' | 'complete' | 'audit_pending';
+  /** Fax_PAP_Audit only: has CRM texted the patient the "no coverage found,
+   *  here's your income check link" message after BI comes back with
+   *  no_insurance? Gates access to /income-qualification. */
+  papSmsSent: boolean;
+  /** Fax_PAP_Audit only: patient's FA eIncome check (IncomeQualification.tsx)
+   *  result. 'verified' is what flips papStatus to 'active' and opens up
+   *  dispatch/Triage. Unused by other flows. */
+  incomeStatus: 'none' | 'pending' | 'verified';
   selectedPharmacy: Pharmacy | null;
   providerPACompleted: boolean;
   paSubmittedAt: string | null;

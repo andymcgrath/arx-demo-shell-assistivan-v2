@@ -220,6 +220,18 @@ function createActorForFlow(
     persistSnapshot(flowType, actor.getPersistedSnapshot());
   });
 
+  // "enrollment" is shared by WF1 (Fax_QS_PA_Approved) and WF2
+  // (Fax_PAP_Audit) — its own workflowMachine.ts has no way to tell which
+  // one it's actually running, since its static initial context hardcodes
+  // flowType to Fax_QS_PA_Approved. CoA_DTP/iAssist have dedicated machines
+  // that already hardcode their own correct flowType, so they don't need
+  // this. Send the correction now (after subscribe, so it gets persisted)
+  // rather than trusting the machine's own default or a possibly-stale
+  // restored snapshot from before this existed.
+  if (machineId === "enrollment") {
+    actor.send({ type: "SET_FLOW_TYPE", flowType } as any);
+  }
+
   return actor;
 }
 

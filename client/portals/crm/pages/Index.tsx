@@ -23,6 +23,7 @@ import {
   Star,
   Plus,
   Bell,
+  Send,
 } from "lucide-react";
 
 const SF_BLUE = "#0070d2";
@@ -208,6 +209,20 @@ const STAGES_PAP_AUDIT: Stage[] = [
     lastUpdatedAgo: null,
   },
   {
+    id: "FA-14276",
+    name: "Financial Assistance",
+    statusLabel: "Stage not started",
+    statusDetail: "Awaiting BI result",
+    isComplete: false,
+    isNotStarted: true,
+    fields: [
+      { label: "Financial Program", value: null },
+      { label: "Income Verification", value: null },
+    ],
+    lastUpdated: null,
+    lastUpdatedAgo: null,
+  },
+  {
     id: "TP-14277",
     name: "Dispatch to Triage",
     statusLabel: "Stage not started",
@@ -218,6 +233,17 @@ const STAGES_PAP_AUDIT: Stage[] = [
       { label: "Pharmacy Name", value: "Biologics" },
       { label: "First Dispense Date", value: null },
     ],
+    lastUpdated: null,
+    lastUpdatedAgo: null,
+  },
+  {
+    id: "PS-14278",
+    name: "Pharmacy Status",
+    statusLabel: "Stage not started",
+    statusDetail: "No Status available",
+    isComplete: false,
+    isNotStarted: true,
+    fields: [],
     lastUpdated: null,
     lastUpdatedAgo: null,
   },
@@ -707,9 +733,12 @@ export default function Index() {
   const flowType = workflowData.flowType;
   const consentStatus = workflowData.consentStatus;
   const biStatus = workflowData.biStatus;
+  const biResult = workflowData.biResult;
   const paStatus = workflowData.paStatus;
   const paApprovedAt = workflowData.paApprovedAt;
   const papStatus = workflowData.papStatus;
+  const papSmsSent = workflowData.papSmsSent;
+  const incomeStatus = workflowData.incomeStatus;
   const dispatchStatus = workflowData.dispatchStatus;
   const pharmacyStatus = workflowData.pharmacyStatus;
   const selectedPharmacy = workflowData.selectedPharmacy;
@@ -802,11 +831,15 @@ export default function Index() {
   }, [enrollmentFormTabOpen]);
 
   useEffect(() => {
-    if (isPapFlow) return;
+    // PAP used to be excluded here, which meant biStatus could never leave
+    // "none" for this flow — BI never ran, so the "No Coverage" result and
+    // the SMS-to-patient action below it were unreachable. PAP's BI runs
+    // automatically on consent exactly like WF1's; the CRM-specific step for
+    // this flow is completing it and sending the SMS, not starting it.
     if (consentStatus !== "confirmed") return;
     if (biStatus !== "none") return;
     dispatch('RUN_BI', { portal: 'crm' });
-  }, [consentStatus, biStatus, isPapFlow, dispatch]);
+  }, [consentStatus, biStatus, dispatch]);
 
   // Auto-complete BI when agent opens the BI stage tab
   useEffect(() => {
@@ -934,7 +967,16 @@ export default function Index() {
     ? { id: "A-14275", name: "Appeals", statusLabel: "Not needed", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
     : { id: "A-14275", name: "Appeals", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
-  const faStage: Stage = biStatus === "complete" && !isPapFlow && paStatus === "approved"
+  // For the PAP flow, Financial Assistance tracks the FA eIncome check
+  // itself (IncomeQualification.tsx) rather than WF1's "not needed —
+  // commercial insurance" shortcut.
+  const faStage: Stage = isPapFlow
+    ? incomeStatus === "verified"
+      ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "Complete", statusDetail: "Income verified — PAP approved", isComplete: true, isNotStarted: false, fields: [{ label: "Financial Program", value: "Free Goods (PAP)" }, { label: "Income Verification", value: "Verified" }], lastUpdated: new Date().toLocaleDateString(), lastUpdatedAgo: "today" }
+      : papSmsSent
+      ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "In Progress", statusDetail: "SMS sent — awaiting patient income verification", isComplete: false, isNotStarted: false, fields: [{ label: "Financial Program", value: "Free Goods (PAP)" }, { label: "Income Verification", value: "Pending" }], lastUpdated: new Date().toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: "Awaiting BI result", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Income Verification", value: null }], lastUpdated: null, lastUpdatedAgo: null }
+    : biStatus === "complete" && paStatus === "approved"
     ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "Not needed", statusDetail: "Commercial Insurance", isComplete: true, isNotStarted: false, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
     : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
@@ -1021,6 +1063,7 @@ export default function Index() {
         : s.id === "BI-14273" ? biStage
         : s.id === "PAP-14279" ? papStage
         : s.id === "TP-14277" ? tpStage
+        : s.id === "PS-14278" ? psStage
         : s.id === "AUDIT-14280" ? auditStage
         : s.id === "PA-14274" ? paStage
         : s.id === "A-14275" ? appealStage
@@ -1800,6 +1843,25 @@ export default function Index() {
                   </div>
                   <h1 className="text-[20px] font-bold text-[#3e3e3c]">BIR-0431</h1>
                 </div>
+                {/* No Coverage → SMS to Patient: kicks off the FA eIncome
+                    check (papSmsSent gates /income-qualification in
+                    WorkflowEngine.ts's PAP routing branch). */}
+                {isPapFlow && biResult === "no_insurance" && (
+                  papSmsSent ? (
+                    <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                      SMS Sent to Patient
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => dispatch('SEND_PAP_SMS', { portal: 'crm' })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+                      style={{ background: FC_BLUE }}
+                    >
+                      <Send size={12} />
+                      Send SMS to Patient
+                    </button>
+                  )
+                )}
               </div>
             </div>
 

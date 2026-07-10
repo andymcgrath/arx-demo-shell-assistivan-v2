@@ -225,12 +225,14 @@ function OrderDetails({
   phone,
   email,
   contactMethod,
+  isPapFlow,
 }: {
   orderAdded: boolean;
   patientName: string;
   phone: string;
   email: string;
   contactMethod: "phone" | "email";
+  isPapFlow: boolean;
 }) {
   if (!orderAdded) {
     return (
@@ -245,7 +247,9 @@ function OrderDetails({
 
   const isPhone = contactMethod === "phone";
   const destination = isPhone ? phone : email;
-  const messageText = `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
+  const messageText = isPapFlow
+    ? `Welcome! You've been referred to the Assistivan Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
+    : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
 
   return (
     <div className="flex flex-col h-full">
@@ -442,6 +446,7 @@ export default function FulfilmentCenter() {
 
   const { data: patientCase, isLoading: caseLoading } = usePatientCase(CASE_ID);
   const enrollMutation = useEnrollPatient();
+  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
 
   // Auto-navigate back to record when patient completes onboarding
   useEffect(() => {
@@ -553,6 +558,7 @@ export default function FulfilmentCenter() {
               phone={patientCase?.phone ?? ""}
               email={patientCase?.email ?? ""}
               contactMethod={contactMethod}
+              isPapFlow={isPapFlow}
             />
           )}
         </div>
