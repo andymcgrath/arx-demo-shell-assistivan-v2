@@ -143,10 +143,10 @@ const DEFAULT_PANELS: Record<LayoutMode, PanelState[]> = {
 // ── Flow options ──────────────────────────────────────────────────────────────
 
 const FLOW_OPTIONS: { value: FlowType; label: string }[] = [
-  { value: "Fax_QS_PA_Approved", label: "1. Fax QS / PA Approved" },
-  { value: "Fax_PAP_Audit",      label: "2. Fax PAP Audit" },
-  { value: "CoA_DTP",            label: "3. CoA Direct to Patient" },
-  { value: "iAssist_PA_Approved", label: "4. iAssist PA Approved" },
+  { value: "Fax_QS_PA_Approved", label: "1. Standard" },
+  { value: "Fax_PAP_Audit",      label: "2. PAP" },
+  { value: "CoA_DTP",            label: "3. CoAssist" },
+  { value: "iAssist_PA_Approved", label: "4. iAssist" },
 ];
 
 // ── Step progress bar ─────────────────────────────────────────────────────────
