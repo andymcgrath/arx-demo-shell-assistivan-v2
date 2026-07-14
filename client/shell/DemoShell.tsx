@@ -178,6 +178,7 @@ const STEP_LABELS_DEFAULT = [
 const STEP_LABELS_PAP_AUDIT = [
   "Referral Received",
   "Patient Enrolled",
+  "Benefits Investigation",
   "PAP Enrolled",
   "First Dispense",
   "Audit Initiated",
@@ -309,8 +310,13 @@ function StepBar() {
   // Prior Authorization (n=4) positions, so those rings need no per-flow
   // adjustment. The dispense tail is shifted +1 for CoA (it has an extra
   // "Payment" step WF1 doesn't), so those two positions are computed below
-  // instead of hardcoded.
-  const biRunning       = biStatus === "running" && flowType !== "Fax_PAP_Audit";
+  // instead of hardcoded. Fax_PAP_Audit also runs BI through the same
+  // biStatus field and now has its own Benefits Investigation step at the
+  // same n=3 slot (checking BI for no insurance), so biRunning applies
+  // there too — only the PA/rx decorations stay WF1/CoA-only since PAP's
+  // audit tail (PAP Enrolled/First Dispense/Audit Initiated/PA Approved)
+  // doesn't map to paStatus/pharmacyStatus the same way.
+  const biRunning       = biStatus === "running";
   const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
   const rxInTransit     = pharmacyStatus === "processing" && flowType !== "Fax_PAP_Audit";
   const rxProcessing    = pharmacyStatus === "ready" && flowType !== "Fax_PAP_Audit";
