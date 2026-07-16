@@ -9,7 +9,11 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
  *
  * A second identity check, separate from the original enrollment OTP
  * (OTPVerification.tsx, untouched). Follows PapUpdateSms.tsx. Dispatches
- * VERIFY_PAP_OTP and continues to the eIncome eligibility check.
+ * VERIFY_PAP_OTP and returns Home — PapNoInsuranceCard there explains no
+ * coverage was found and offers the Patient Assistance Program, rather than
+ * dropping the patient straight into the eIncome form. See
+ * WorkflowEngine.ts's Fax_PAP_Audit branch for the incomeStatus
+ * none/pending/verified gate this relies on.
  */
 export default function PapUpdateOtp() {
   const navigate = useNavigate();
@@ -43,7 +47,7 @@ export default function PapUpdateOtp() {
   const validateAndSubmit = (code: string) => {
     if (code === correctOTP) {
       dispatch("VERIFY_PAP_OTP", { portal: "patient" });
-      navigate("/income-qualification");
+      navigate("/");
     } else {
       setError("That code didn't match. Please try again or request a new one.");
       setOtpInput("");

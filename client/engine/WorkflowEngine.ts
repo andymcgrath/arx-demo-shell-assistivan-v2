@@ -237,6 +237,13 @@ export function derivePatientRoute(state: MachineContext): string {
       if (!workflowData.papSmsSent) return '/enrollment-complete';
       if (!workflowData.papSmsVerified) return '/pap-update-sms';
       if (!workflowData.papOtpVerified) return '/pap-update-otp';
+      // Code verified but the patient hasn't tapped "Enroll" yet — land on
+      // Home, where PapNoInsuranceCard explains no coverage was found and
+      // offers the Patient Assistance Program instead of dropping straight
+      // into the eIncome form. incomeStatus flips 'none' -> 'pending' via
+      // START_INCOME_QUALIFICATION (see workflowMachine.ts) when they tap
+      // that card's CTA, which is what actually unlocks the next line.
+      if (workflowData.incomeStatus === 'none') return '/';
       return '/income-qualification';
     }
 

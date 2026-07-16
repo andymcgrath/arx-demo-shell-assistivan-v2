@@ -163,6 +163,17 @@ export const workflowMachine = createMachine(
       PATIENT_SELECTS_SHIP_DATE: {
         actions: 'updatePapPatientSelectsShipDate',
       },
+      // Fax_PAP_Audit (WF2/PAP) only — fired from the new PapNoInsuranceCard
+      // on the patient's home screen ("Enroll" CTA). incomeStatus's 'pending'
+      // value was declared in types.ts but never produced by anything until
+      // now: WorkflowEngine.ts's Fax_PAP_Audit branch shows the home card
+      // while incomeStatus is 'none' (right after papOtpVerified) and only
+      // routes to /income-qualification once it's 'pending', so the patient
+      // has to actually tap "Enroll" instead of landing on the eIncome form
+      // immediately after verifying the code.
+      START_INCOME_QUALIFICATION: {
+        actions: 'updateIncomeQualificationStarted',
+      },
     },
     states: {
       enrollment: {
@@ -498,6 +509,14 @@ export const workflowMachine = createMachine(
           patientShipDate: new Date().toISOString(),
         },
         events: [...context.events, createEvent(context, 'PATIENT_SELECTS_SHIP_DATE', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateIncomeQualificationStarted: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          incomeStatus: 'pending',
+        },
+        events: [...context.events, createEvent(context, 'START_INCOME_QUALIFICATION', 'patient', 8)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       restoreLastSnapshot: assign(({ context }) => {
