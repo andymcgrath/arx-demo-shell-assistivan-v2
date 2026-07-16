@@ -229,14 +229,16 @@ export function derivePatientRoute(state: MachineContext): string {
     // BI still running
     if (workflowData.biStatus !== 'complete') return '/enrollment-complete';
 
-    // BI complete (no coverage found) — CRM has to text the patient the
-    // income-check link before they can start it (mirrors the initial
-    // enrollment SMS gate above).
-    if (workflowData.incomeStatus !== 'verified' && !workflowData.papSmsSent)
-      return '/enrollment-complete';
-
-    if (workflowData.incomeStatus !== 'verified')
+    // BI complete (no coverage found) — Fulfillment Center has to stage an
+    // "application update" message, and the patient has to tap through
+    // it and confirm a code, before they can start the income check.
+    // Mirrors the initial enrollment SMS→OTP beat one-for-one.
+    if (workflowData.incomeStatus !== 'verified') {
+      if (!workflowData.papSmsSent) return '/enrollment-complete';
+      if (!workflowData.papSmsVerified) return '/pap-update-sms';
+      if (!workflowData.papOtpVerified) return '/pap-update-otp';
       return '/income-qualification';
+    }
 
     // Income verified → PAP approved. No patient-driven delivery scheduling
     // here (unlike WF1/CoA/iAssist) — PapEnrollmentComplete.tsx tells the

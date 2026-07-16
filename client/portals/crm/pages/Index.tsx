@@ -1843,9 +1843,11 @@ export default function Index() {
                   </div>
                   <h1 className="text-[20px] font-bold text-[#3e3e3c]">BIR-0431</h1>
                 </div>
-                {/* No Coverage → SMS to Patient: kicks off the FA eIncome
-                    check (papSmsSent gates /income-qualification in
-                    WorkflowEngine.ts's PAP routing branch). */}
+                {/* No Coverage → Application Update: kicks off the FA
+                    eIncome check (papSmsSent gates /income-qualification in
+                    WorkflowEngine.ts's PAP routing branch). Sent through the
+                    Fulfillment Center now, same as every other patient SMS
+                    in the demo, instead of a bespoke button here. */}
                 {isPapFlow && biResult === "no_insurance" && (
                   papSmsSent ? (
                     <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
@@ -1853,12 +1855,12 @@ export default function Index() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => dispatch('SEND_PAP_SMS', { portal: 'crm' })}
+                      onClick={() => navigate('/fulfilment-center')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                       style={{ background: FC_BLUE }}
                     >
                       <Send size={12} />
-                      Send SMS to Patient
+                      Send via Fulfillment Center
                     </button>
                   )
                 )}

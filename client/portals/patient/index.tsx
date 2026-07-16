@@ -59,6 +59,8 @@ import PADenied from "./pages/PADenied";
 import PAApproved from "./pages/PAApproved";
 import PaApprovedSms from "./pages/PaApprovedSms";
 import PaApprovedOtp from "./pages/PaApprovedOtp";
+import PapUpdateSms from "./pages/PapUpdateSms";
+import PapUpdateOtp from "./pages/PapUpdateOtp";
 import BenefitPricing from "./pages/BenefitPricing";
 import CopayEnroll from "./pages/CopayEnroll";
 import DeliveryAddress from "./pages/DeliveryAddress";
@@ -121,7 +123,7 @@ function PatientRoutes() {
 
   // Show header and footer starting from phone verification onwards
   // (not for lock-screen and sms-message which should feel like a phone)
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms";
+  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms";
 
   return (
     <div className="flex flex-col h-full">
@@ -144,6 +146,8 @@ function PatientRoutes() {
           <Route path="/pa-approved"           element={<PAApproved />} />
           <Route path="/pa-approved-sms"       element={<PaApprovedSms />} />
           <Route path="/pa-approved-otp"       element={<PaApprovedOtp />} />
+          <Route path="/pap-update-sms"        element={<PapUpdateSms />} />
+          <Route path="/pap-update-otp"        element={<PapUpdateOtp />} />
           <Route path="/benefit-pricing"       element={<BenefitPricing />} />
           <Route path="/copay-enroll"          element={<CopayEnroll />} />
           <Route path="/delivery-address"      element={<DeliveryAddress />} />

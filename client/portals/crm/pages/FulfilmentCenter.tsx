@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "@/lib/portalRouter";
 import { ChevronRight, ChevronDown, CheckCircle2, ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react";
 import { usePatientCase } from "../hooks/usePatientCase";
 import { useEnrollPatient } from "../hooks/useEnrollPatient";
+import { useSendPapUpdate } from "@/hooks/useSendPapUpdate";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import type { WorkflowData } from "@/engine/types";
 
 const CASE_ID = "demo";
 const FC_BLUE = "#0176d3";
@@ -27,7 +29,14 @@ type TreeGroup = {
 const TREE_DATA: TreeGroup[] = [
   { id: "material-items", label: "Material Items" },
   { id: "email", label: "Email" },
-  { id: "secure-comms", label: "Secure Communications" },
+  {
+    id: "secure-comms",
+    label: "Secure Communications",
+    expanded: true,
+    children: [
+      { id: "pap-application-update", label: "Application Update", sublabel: "PAP_Application_Update" },
+    ],
+  },
   {
     id: "consent-comms",
     label: "Consent Communications",
@@ -41,6 +50,73 @@ const TREE_DATA: TreeGroup[] = [
     ],
   },
 ];
+
+// ─── Material metadata ──────────────────────────────────────────────────────
+// One entry per wired catalog item (id must match a TREE_DATA leaf above).
+// ItemDetails/OrderDetails read this instead of hardcoding "Electronic
+// Consent" so a second real item (Application Update) renders correctly.
+
+type MaterialMeta = {
+  title: string;
+  typeLabel: string;
+  subtypeLabel: string;
+  description: string;
+  checks: string[];
+};
+
+const MATERIAL_META: Record<string, MaterialMeta> = {
+  "electronic-consent": {
+    title: "Communication Consent",
+    typeLabel: "CommunicationConsent",
+    subtypeLabel: "ElectronicConsent",
+    description: "Communication Consent Capture",
+    checks: [
+      "Patient has valid mobile phone number",
+      "Patient communication consent status is pending capture",
+    ],
+  },
+  "pap-application-update": {
+    title: "Application Update",
+    typeLabel: "SecureCommunication",
+    subtypeLabel: "PAP_Application_Update",
+    description: "PAP Application Status Notification",
+    checks: [
+      "Benefits Investigation complete — no coverage found",
+      "Patient has valid mobile phone number",
+    ],
+  },
+};
+
+/**
+ * Whether the selected catalog item is ready to add to the order.
+ * "electronic-consent" keys off the pre-enrollment consent record
+ * (unchanged); "pap-application-update" keys off BI having just come back
+ * no_insurance for a WF2 (Fax_PAP_Audit) patient who hasn't been texted yet
+ * — see WorkflowEngine.ts's Fax_PAP_Audit routing branch.
+ */
+function canAddItem(selectedId: string, consentStatus: string, workflowData: WorkflowData): boolean {
+  if (selectedId === "pap-application-update") {
+    return (
+      workflowData.flowType === "Fax_PAP_Audit" &&
+      workflowData.biStatus === "complete" &&
+      workflowData.biResult === "no_insurance" &&
+      !workflowData.papSmsSent
+    );
+  }
+  if (selectedId === "electronic-consent") {
+    return consentStatus === "pending";
+  }
+  return false;
+}
+
+function buildMessageText(selectedId: string, isPapFlow: boolean): string {
+  if (selectedId === "pap-application-update") {
+    return `There's an update on your Assistivan Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
+  }
+  return isPapFlow
+    ? `Welcome! You've been referred to the Assistivan Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
+    : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
+}
 
 // ─── Small reusable components ──────────────────────────────────────────────
 
@@ -92,6 +168,7 @@ function MaterialCatalog({
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     "consent-comms": true,
+    "secure-comms": true,
   });
 
   const toggle = (id: string) =>
@@ -167,34 +244,37 @@ function MaterialCatalog({
 // ─── Column 2: Item Details ──────────────────────────────────────────────────
 
 function ItemDetails({
-  consentStatus,
+  meta,
+  itemReady,
   checksVisible,
   validating,
   orderAdded,
   onAddToOrder,
 }: {
-  consentStatus: string;
+  meta: MaterialMeta;
+  itemReady: boolean;
   checksVisible: 0 | 1 | 2;
   validating: boolean;
   orderAdded: boolean;
   onAddToOrder: () => void;
 }) {
-  const canAdd = consentStatus === "pending" && !orderAdded && !validating;
+  const canAdd = itemReady && !orderAdded && !validating;
 
   return (
     <div className="flex flex-col h-full">
       <PanelLabel>Item Details</PanelLabel>
 
       <h2 className="text-[16px] font-bold text-[#3e3e3c] mb-0.5">
-        Communication Consent
+        {meta.title}
       </h2>
-      <div className="text-[12px] text-[#706e6b] mb-0.5">CommunicationConsent</div>
-      <div className="text-[12px] text-[#706e6b] mb-3">Communication Consent Capture</div>
+      <div className="text-[12px] text-[#706e6b] mb-0.5">{meta.typeLabel}</div>
+      <div className="text-[12px] text-[#706e6b] mb-3">{meta.description}</div>
 
       <hr className="border-[#dddbda] mb-3" />
 
-      <CheckRow text="Patient has valid mobile phone number" visible={checksVisible >= 1} />
-      <CheckRow text="Patient communication consent status is pending capture" visible={checksVisible >= 2} />
+      {meta.checks.map((check, i) => (
+        <CheckRow key={check} text={check} visible={checksVisible >= i + 1} />
+      ))}
 
       <hr className="border-[#dddbda] mt-3 mb-4" />
 
@@ -220,19 +300,21 @@ function ItemDetails({
 // ─── Column 3: Order Details ─────────────────────────────────────────────────
 
 function OrderDetails({
+  meta,
   orderAdded,
   patientName,
   phone,
   email,
   contactMethod,
-  isPapFlow,
+  messageText,
 }: {
+  meta: MaterialMeta;
   orderAdded: boolean;
   patientName: string;
   phone: string;
   email: string;
   contactMethod: "phone" | "email";
-  isPapFlow: boolean;
+  messageText: string;
 }) {
   if (!orderAdded) {
     return (
@@ -247,9 +329,6 @@ function OrderDetails({
 
   const isPhone = contactMethod === "phone";
   const destination = isPhone ? phone : email;
-  const messageText = isPapFlow
-    ? `Welcome! You've been referred to the Assistivan Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
-    : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
 
   return (
     <div className="flex flex-col h-full">
@@ -261,7 +340,7 @@ function OrderDetails({
         style={{ background: "#f9f9f9" }}
       >
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[13px] font-semibold text-[#3e3e3c]">Electronic Consent</span>
+          <span className="text-[13px] font-semibold text-[#3e3e3c]">{meta.title}</span>
           <span
             className="text-[11px] px-2 py-0.5 rounded font-medium"
             style={{ background: "#e8f4ef", color: "#2e844a" }}
@@ -269,7 +348,7 @@ function OrderDetails({
             Ready
           </span>
         </div>
-        <div className="text-[12px] text-[#706e6b]">CommunicationConsent · ElectronicConsent</div>
+        <div className="text-[12px] text-[#706e6b]">{meta.typeLabel} · {meta.subtypeLabel}</div>
         <div className="text-[12px] text-[#706e6b] mt-1">
           Via: <span className="font-medium text-[#3e3e3c]">{isPhone ? "SMS" : "Email"}</span> → {destination}
         </div>
@@ -437,7 +516,14 @@ export default function FulfilmentCenter() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('crm');
 
-  const [selectedItem, setSelectedItem] = useState("electronic-consent");
+  // Default straight to Application Update when that's what actually needs
+  // sending (BI just came back no_insurance for a WF2 patient) — saves the
+  // agent a click when arriving here from the BI detail view's CTA.
+  const [selectedItem, setSelectedItem] = useState(() =>
+    canAddItem("pap-application-update", "pending", workflowData)
+      ? "pap-application-update"
+      : "electronic-consent"
+  );
   const [contactMethod, setContactMethod] = useState<"phone" | "email">("phone");
   const [checksVisible, setChecksVisible] = useState<0 | 1 | 2>(0);
   const [validating, setValidating] = useState(false);
@@ -446,20 +532,38 @@ export default function FulfilmentCenter() {
 
   const { data: patientCase, isLoading: caseLoading } = usePatientCase(CASE_ID);
   const enrollMutation = useEnrollPatient();
+  const papUpdateMutation = useSendPapUpdate();
   const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
+  const isPapUpdateItem = selectedItem === "pap-application-update";
+  const activeMutation = isPapUpdateItem ? papUpdateMutation : enrollMutation;
 
-  // Auto-navigate back to record when patient completes onboarding
+  // Auto-navigate back to record once the patient completes onboarding.
+  // Only fires on a pending→confirmed transition observed *during this
+  // page visit* — guarded by a mount-time ref so opening the Fulfillment
+  // Center later in the flow (e.g. to send the Application Update, after
+  // consent was already confirmed earlier) doesn't immediately bounce the
+  // agent back out.
+  const consentAlreadyConfirmedOnMount = useRef(workflowData.consentStatus === 'confirmed');
   useEffect(() => {
-    if (workflowData.consentStatus === 'confirmed') {
+    if (!consentAlreadyConfirmedOnMount.current && workflowData.consentStatus === 'confirmed') {
       navigate('/');
     }
   }, [workflowData.consentStatus, navigate]);
 
   useEffect(() => {
-    if (orderPlaced && !enrollMutation.isPending) {
+    if (orderPlaced && !activeMutation.isPending) {
       toast.success("Message sent successfully");
     }
-  }, [orderPlaced, enrollMutation.isPending]);
+  }, [orderPlaced, activeMutation.isPending]);
+
+  // Reset per-item progress when the agent switches catalog selection, so
+  // an in-progress or completed order on one item doesn't bleed into another.
+  useEffect(() => {
+    setChecksVisible(0);
+    setValidating(false);
+    setOrderAdded(false);
+    setOrderPlaced(false);
+  }, [selectedItem]);
 
   const handleAddToOrder = () => {
     setValidating(true);
@@ -472,11 +576,14 @@ export default function FulfilmentCenter() {
   };
 
   const handlePlaceOrder = () => {
-    enrollMutation.mutate({ caseId: CASE_ID, contactMethod });
+    activeMutation.mutate({ caseId: CASE_ID, contactMethod });
     setOrderPlaced(true);
   };
 
   const consentStatus = patientCase?.consentStatus ?? "pending";
+  const meta = MATERIAL_META[selectedItem] ?? MATERIAL_META["electronic-consent"];
+  const itemReady = canAddItem(selectedItem, consentStatus, workflowData);
+  const messageText = buildMessageText(selectedItem, isPapFlow);
 
   return (
     <div
@@ -533,7 +640,8 @@ export default function FulfilmentCenter() {
             </div>
           ) : (
             <ItemDetails
-              consentStatus={consentStatus}
+              meta={meta}
+              itemReady={itemReady}
               checksVisible={checksVisible}
               validating={validating}
               orderAdded={orderAdded}
@@ -553,12 +661,13 @@ export default function FulfilmentCenter() {
             </div>
           ) : (
             <OrderDetails
+              meta={meta}
               orderAdded={orderAdded}
               patientName={patientCase?.patientName ?? ""}
               phone={patientCase?.phone ?? ""}
               email={patientCase?.email ?? ""}
               contactMethod={contactMethod}
-              isPapFlow={isPapFlow}
+              messageText={messageText}
             />
           )}
         </div>
@@ -581,7 +690,7 @@ export default function FulfilmentCenter() {
               onContactMethodChange={setContactMethod}
               orderAdded={orderAdded}
               onPlaceOrder={handlePlaceOrder}
-              isPlacing={enrollMutation.isPending}
+              isPlacing={activeMutation.isPending}
               orderPlaced={orderPlaced}
             />
           )}

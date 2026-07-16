@@ -18,6 +18,8 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   qsStatus: "none",
   papStatus: "none",
   papSmsSent: false,
+  papSmsVerified: false,
+  papOtpVerified: false,
   incomeStatus: "none",
   selectedPharmacy: null,
   providerPACompleted: false,
@@ -125,12 +127,19 @@ export const workflowMachine = createMachine(
       DELIVER_RX: {
         actions: 'updatePharmacyDelivered',
       },
-      // Fax_PAP_Audit (WF2/PAP) only — BI comes back no_insurance, CRM texts
-      // the patient an income-check link (Fulfillment/BI stage action), then
-      // the patient's eIncome check result flips PAP to "active" and opens
+      // Fax_PAP_Audit (WF2/PAP) only — BI comes back no_insurance, the
+      // Fulfillment Center stages an "application update" SMS (mirrors the
+      // initial enrollment SMS→OTP beat: tap link -> enter code), then the
+      // patient's eIncome check result flips PAP to "active" and opens
       // dispatch the same way PA approval does for other flows.
       SEND_PAP_SMS: {
         actions: 'updatePapSmsSent',
+      },
+      VERIFY_PAP_SMS: {
+        actions: 'updatePapSmsVerified',
+      },
+      VERIFY_PAP_OTP: {
+        actions: 'updatePapOtpVerified',
       },
       VERIFY_INCOME: {
         actions: 'updateIncomeVerified',
@@ -418,6 +427,22 @@ export const workflowMachine = createMachine(
           papSmsSent: true,
         },
         events: [...context.events, createEvent(context, 'SEND_PAP_SMS', 'crm', 7)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePapSmsVerified: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          papSmsVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PAP_SMS', 'patient', 7)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePapOtpVerified: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          papOtpVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PAP_OTP', 'patient', 7)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateIncomeVerified: assign(({ context }) => ({

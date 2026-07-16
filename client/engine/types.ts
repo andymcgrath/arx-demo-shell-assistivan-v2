@@ -30,10 +30,17 @@ export interface WorkflowData {
   dispatchStatus: 'none' | 'pending_selection' | 'selected' | 'dispatched';
   qsStatus: 'none' | 'active' | 'complete';
   papStatus: 'none' | 'active' | 'complete' | 'audit_pending';
-  /** Fax_PAP_Audit only: has CRM texted the patient the "no coverage found,
-   *  here's your income check link" message after BI comes back with
-   *  no_insurance? Gates access to /income-qualification. */
+  /** Fax_PAP_Audit only: has the Fulfillment Center staged the "application
+   *  update" message to the patient after BI comes back with no_insurance?
+   *  Mirrors enrollmentInviteSent — gates /pap-update-sms. */
   papSmsSent: boolean;
+  /** Fax_PAP_Audit only: patient tapped the "application update" SMS link.
+   *  Mirrors smsVerified — gates /pap-update-otp. */
+  papSmsVerified: boolean;
+  /** Fax_PAP_Audit only: patient entered the code sent with the
+   *  application-update SMS. Mirrors otpVerified — unlocks
+   *  /income-qualification. */
+  papOtpVerified: boolean;
   /** Fax_PAP_Audit only: patient's FA eIncome check (IncomeQualification.tsx)
    *  result. 'verified' is what flips papStatus to 'active' and opens up
    *  dispatch/Triage. Unused by other flows. */
