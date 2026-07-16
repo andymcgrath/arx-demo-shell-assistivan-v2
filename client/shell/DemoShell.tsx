@@ -93,13 +93,16 @@ function getProviderPortalLabel(flowType: string): string {
   return "Provider";
 }
 
+// Nav tab order (and the per-panel portal-selector dropdown order, which
+// reuses this same list via getPortals) — Workforce (analytics) intentionally
+// sits after Field now, for every workflow, per request.
 const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "crm",       color: "#0176d3" },
   { id: "patient",   color: "#16a34a" },
   { id: "provider",  color: "#7c3aed" },
   { id: "iassist",   color: "#d97706" },
-  { id: "analytics", color: "#d97706" },
   { id: "field",     color: "#14b8a6" },
+  { id: "analytics", color: "#d97706" },
 ];
 
 function getPortals(flowType: string) {

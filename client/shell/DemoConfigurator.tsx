@@ -108,11 +108,13 @@ export default function DemoConfigurator({
 
   if (!isOpen) return null;
 
+  // Matches DemoShell.tsx's PORTALS_BASE nav order — Workforce (Analytics)
+  // after Field for every workflow.
   const portalOptions: { id: PortalId; label: string }[] = [
     { id: "patient", label: "Patient" },
     { id: "provider", label: "Provider" },
-    { id: "analytics", label: "Analytics" },
     { id: "field", label: "Field" },
+    { id: "analytics", label: "Analytics" },
   ];
 
   return (
