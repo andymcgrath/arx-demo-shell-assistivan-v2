@@ -474,7 +474,17 @@ export const workflowMachine = createMachine(
     guards: {
       canRunBI: ({ context }) => context.workflowData.consentStatus === 'confirmed',
       canSubmitPA: ({ context }) => context.workflowData.biStatus === 'complete',
-      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved',
+      // Fax_PAP_Audit (WF2/PAP) never sets paStatus — it stays 'none' for
+      // that flow forever by design (see the SEND_PAP_SMS/VERIFY_INCOME
+      // comment above). Its equivalent "cleared to dispatch" signal is
+      // papStatus flipping to 'active' (set by updateIncomeVerified once
+      // the eIncome check passes). Without this, WF2 could never actually
+      // reach FILL_RX in a real click-through — the guard would silently
+      // block it forever since paStatus === 'approved' is unreachable for
+      // this flow.
+      canFillRX: ({ context }) =>
+        context.workflowData.paStatus === 'approved' ||
+        context.workflowData.papStatus === 'active',
     },
   }
 );

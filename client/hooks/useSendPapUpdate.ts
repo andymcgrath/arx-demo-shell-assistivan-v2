@@ -23,9 +23,18 @@ export function useSendPapUpdate() {
 
   const mutate = useCallback(
     (_payload: SendPapUpdatePayload, options?: { onSuccess?: () => void }) => {
+      // Dispatch immediately — papSmsSent has to actually be true by the
+      // time FulfilmentCenter.tsx marks the order "placed" and shows the
+      // success toast. Deferring this inside the setTimeout (matching
+      // useEnrollPatient's cosmetic delay) left a ~600ms window where the
+      // UI claimed success but WorkflowEngine.ts's derivePatientRoute
+      // still saw papSmsSent === false, which could route the patient
+      // portal to /enrollment-complete instead of /pap-update-sms if state
+      // was read in that window (e.g. switching tabs right after clicking
+      // Place Order). The setTimeout now only drives the loading spinner.
+      dispatch('SEND_PAP_SMS', { portal: 'crm' });
       setIsPending(true);
       const timer = setTimeout(() => {
-        dispatch('SEND_PAP_SMS', { portal: 'crm' });
         setIsPending(false);
         options?.onSuccess?.();
       }, 600);

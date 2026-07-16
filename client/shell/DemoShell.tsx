@@ -545,6 +545,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 export default function DemoShell() {
   const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  const isPapFlow = flowType === "Fax_PAP_Audit";
   const resetPatient = usePatientStore((s) => s.reset);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
@@ -722,6 +723,62 @@ export default function DemoShell() {
       return;
     }
 
+    if (isPapFlow) {
+      // Fax_PAP_Audit's own ladder — this flow never submits/approves a
+      // traditional PA (paStatus stays 'none' forever, see
+      // workflowMachine.ts's SEND_PAP_SMS/VERIFY_INCOME comment), so it
+      // can't reuse WF1's generic ladder below, which drives SUBMIT_PA/
+      // APPROVE_PA instead. Stage 4 collapses BI coming back no_insurance,
+      // the Fulfillment Center staging the Application Update, and the
+      // patient tapping through its SMS→OTP beat, all the way to the
+      // eIncome check passing — mirrors how WF1's stage 4 collapses
+      // "BI complete" + "PA submitted" into one jump. See
+      // client/portals/patient/pages/PapUpdateSms.tsx/PapUpdateOtp.tsx for
+      // the real (non-jumped) version of that beat, and
+      // WorkflowEngine.ts's Fax_PAP_Audit branch for how these fields
+      // gate routing.
+      if (stage >= 2) {
+        actor.send({ type: 'ENROLL', portal: 'crm' });
+        actor.send({ type: 'INVITE', portal: 'crm' });
+        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
+        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
+      }
+      if (stage >= 3) {
+        actor.send({ type: 'RUN_BI', portal: 'crm' });
+      }
+      if (stage >= 4) {
+        actor.send({ type: 'COMPLETE_BI', portal: 'crm', result: 'no_insurance' });
+        actor.send({ type: 'SEND_PAP_SMS', portal: 'crm' });
+        actor.send({ type: 'VERIFY_PAP_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_PAP_OTP', portal: 'patient' });
+        actor.send({ type: 'VERIFY_INCOME', portal: 'patient' });
+      }
+      if (stage >= 5) {
+        const pharmacy = {
+          name: 'CoAssist Pharmacy',
+          address: '2400 Sand Lake Road, Suite 200',
+          city: 'Orlando',
+          state: 'FL',
+          zip: '32809',
+          phone: '(800) 555-0175',
+        };
+        actor.send({
+          type: 'SELECT_PHARMACY',
+          portal: 'crm',
+          pharmacy
+        });
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 6) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+      }
+      return;
+    }
+
     // Walk the actor forward to the target stage
     // Each stage builds on the previous
     if (stage >= 2) {
@@ -767,7 +824,7 @@ export default function DemoShell() {
     if (stage >= 8) {
       actor.send({ type: 'DELIVER_RX', portal: 'crm' });
     }
-  }, [resetDemo, isIAssistFlow]);
+  }, [resetDemo, isIAssistFlow, isPapFlow]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -923,10 +980,11 @@ export default function DemoShell() {
                     ? [
                       { stage: 1, label: "Referral Received" },
                       { stage: 2, label: "Patient Enrolled" },
-                      { stage: 3, label: "PAP Enrolled" },
-                      { stage: 4, label: "First Dispense" },
-                      { stage: 5, label: "Audit Initiated" },
-                      { stage: 6, label: "PA Approved" },
+                      { stage: 3, label: "Benefits Investigation" },
+                      { stage: 4, label: "PAP Enrolled" },
+                      { stage: 5, label: "First Dispense" },
+                      { stage: 6, label: "Audit Initiated" },
+                      { stage: 7, label: "PA Approved" },
                     ]
                     : isIAssistFlow
                     ? [
