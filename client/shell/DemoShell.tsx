@@ -175,14 +175,24 @@ const STEP_LABELS_DEFAULT = [
   "Medication Delivered",
 ];
 
+// Dispense tail reuses WF1's exact four labels — WF2 has no traditional PA
+// (Prior Authorization is replaced by "PAP Enrolled," the eIncome/PAP
+// milestone), but once CRM dispatches to a pharmacy the rest is driven by
+// the same pharmacyStatus states WF1 uses (see WorkflowEngine.ts's
+// Fax_PAP_Audit branch), so "Dispatch to Triage / Rx Processing / Rx
+// Shipped / Medication Delivered" describes it accurately — unlike the
+// "First Dispense / Audit Initiated / PA Approved" labels this replaced,
+// which didn't correspond to anything the demo actually does (no audit or
+// PA ever runs for this flow).
 const STEP_LABELS_PAP_AUDIT = [
   "Referral Received",
   "Patient Enrolled",
   "Benefits Investigation",
   "PAP Enrolled",
-  "First Dispense",
-  "Audit Initiated",
-  "PA Approved",
+  "Dispatch to Triage",
+  "Rx Processing",
+  "Rx Shipped",
+  "Medication Delivered",
 ];
 
 // "Copay Enrollment" and "Patient Payment" used to be two separate steps,
@@ -311,16 +321,19 @@ function StepBar() {
   // adjustment. The dispense tail is shifted +1 for CoA (it has an extra
   // "Payment" step WF1 doesn't), so those two positions are computed below
   // instead of hardcoded. Fax_PAP_Audit also runs BI through the same
-  // biStatus field and now has its own Benefits Investigation step at the
-  // same n=3 slot (checking BI for no insurance), so biRunning applies
-  // there too — only the PA/rx decorations stay WF1/CoA-only since PAP's
-  // audit tail (PAP Enrolled/First Dispense/Audit Initiated/PA Approved)
-  // doesn't map to paStatus/pharmacyStatus the same way.
+  // biStatus field (n=3 slot, checking BI for no insurance) and, now that
+  // its dispense tail reuses WF1's exact pharmacyStatus-driven labels at
+  // the exact same n=6/7 positions (Dispatch to Triage/Rx Processing/Rx
+  // Shipped/Medication Delivered — see STEP_LABELS_PAP_AUDIT), the rx
+  // decorations apply there too. Only paProcessing stays WF1/CoA-only —
+  // WF2 has no Prior Authorization step (paStatus never leaves 'none' for
+  // this flow, see workflowMachine.ts's SEND_PAP_SMS comment), so that ring
+  // guard is moot for WF2 either way.
   const biRunning       = biStatus === "running";
   const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
-  const rxInTransit     = pharmacyStatus === "processing" && flowType !== "Fax_PAP_Audit";
-  const rxProcessing    = pharmacyStatus === "ready" && flowType !== "Fax_PAP_Audit";
-  const rxShipping      = pharmacyStatus === "shipped" && flowType !== "Fax_PAP_Audit";
+  const rxInTransit     = pharmacyStatus === "processing";
+  const rxProcessing    = pharmacyStatus === "ready";
+  const rxShipping      = pharmacyStatus === "shipped";
   // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
   // pushes everything after it back by one).
   const rxProcessingStepN = isCoaFlow ? 7 : 6;
@@ -736,7 +749,12 @@ export default function DemoShell() {
       // client/portals/patient/pages/PapUpdateSms.tsx/PapUpdateOtp.tsx for
       // the real (non-jumped) version of that beat, and
       // WorkflowEngine.ts's Fax_PAP_Audit branch for how these fields
-      // gate routing.
+      // gate routing. Stage 5 adds the patient's delivery address/date
+      // confirmation (PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE,
+      // mirrors CoA_DTP/iAssist's own beat) plus CRM's pharmacy choice,
+      // stopping short of actually dispatching — matches WF1's own stage 5
+      // ("Dispatch to Triage") landing on "ready, not yet dispatched" one
+      // stage before "Rx Processing" fires FILL_RX.
       if (stage >= 2) {
         actor.send({ type: 'ENROLL', portal: 'crm' });
         actor.send({ type: 'INVITE', portal: 'crm' });
@@ -763,17 +781,21 @@ export default function DemoShell() {
           zip: '32809',
           phone: '(800) 555-0175',
         };
+        actor.send({ type: 'PATIENT_SETS_ADDRESS', portal: 'patient' });
+        actor.send({ type: 'PATIENT_SELECTS_SHIP_DATE', portal: 'patient' });
         actor.send({
           type: 'SELECT_PHARMACY',
           portal: 'crm',
           pharmacy
         });
-        actor.send({ type: 'FILL_RX', portal: 'crm' });
       }
       if (stage >= 6) {
-        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
       }
       if (stage >= 7) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 8) {
         actor.send({ type: 'DELIVER_RX', portal: 'crm' });
       }
       return;
@@ -982,9 +1004,10 @@ export default function DemoShell() {
                       { stage: 2, label: "Patient Enrolled" },
                       { stage: 3, label: "Benefits Investigation" },
                       { stage: 4, label: "PAP Enrolled" },
-                      { stage: 5, label: "First Dispense" },
-                      { stage: 6, label: "Audit Initiated" },
-                      { stage: 7, label: "PA Approved" },
+                      { stage: 5, label: "Dispatch to Triage" },
+                      { stage: 6, label: "Rx Processing" },
+                      { stage: 7, label: "Rx Shipped" },
+                      { stage: 8, label: "Medication Delivered" },
                     ]
                     : isIAssistFlow
                     ? [

@@ -144,6 +144,25 @@ export const workflowMachine = createMachine(
       VERIFY_INCOME: {
         actions: 'updateIncomeVerified',
       },
+      // Fax_PAP_Audit (WF2/PAP) only — mirrors CoA_DTP/iAssist's own
+      // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE beat (see
+      // coaDtp.ts's addressSet/shipDateSelected states), reusing the same
+      // patient screens (DeliveryAddress.tsx/DeliveryDate.tsx) and the same
+      // event names. Unlike CoA/iAssist — where the pharmacy is already
+      // auto-assigned by the time address is set — WF2's CRM still picks
+      // the pharmacy afterward via the Triage tab's "Choose Pharmacy"
+      // (SELECT_PHARMACY); this only adds the patient-facing address/date
+      // confirmation ahead of that, gating WorkflowEngine.ts's
+      // Fax_PAP_Audit branch before it falls through to Dispatch to
+      // Triage. No dedicated states needed here (unlike coaDtp.ts) since
+      // WF2's FILL_RX guard (canFillRX) only checks papStatus, not a named
+      // state — flat context fields are enough.
+      PATIENT_SETS_ADDRESS: {
+        actions: 'updatePapPatientSetsAddress',
+      },
+      PATIENT_SELECTS_SHIP_DATE: {
+        actions: 'updatePapPatientSelectsShipDate',
+      },
     },
     states: {
       enrollment: {
@@ -458,6 +477,27 @@ export const workflowMachine = createMachine(
               : context.workflowData.dispatchStatus,
         },
         events: [...context.events, createEvent(context, 'VERIFY_INCOME', 'patient', 8)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePapPatientSetsAddress: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          // Matches coaDtp.ts's PATIENT_SETS_ADDRESS exactly (dispatchStatus
+          // -> 'selected'). CRM still separately assigns the actual pharmacy
+          // via SELECT_PHARMACY on the Triage tab — this only signals "the
+          // patient's done their part," which is what canDispatchToPharmacy
+          // (Index.tsx) and canFillRX (this file's guards) key off.
+          dispatchStatus: 'selected',
+        },
+        events: [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updatePapPatientSelectsShipDate: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          patientShipDate: new Date().toISOString(),
+        },
+        events: [...context.events, createEvent(context, 'PATIENT_SELECTS_SHIP_DATE', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       restoreLastSnapshot: assign(({ context }) => {

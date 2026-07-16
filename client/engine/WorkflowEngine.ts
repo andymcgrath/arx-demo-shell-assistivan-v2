@@ -240,12 +240,27 @@ export function derivePatientRoute(state: MachineContext): string {
       return '/income-qualification';
     }
 
-    // Income verified → PAP approved. No patient-driven delivery scheduling
-    // here (unlike WF1/CoA/iAssist) — PapEnrollmentComplete.tsx tells the
-    // patient there's nothing left for them to do; CRM handles Triage and
-    // Pharmacy Status directly from here.
-    if (workflowData.pharmacyStatus === 'none')
+    // Income verified → PAP active. Patient confirms delivery address + ship
+    // date — mirrors CoA_DTP/iAssist's own address/date beat (same
+    // DeliveryAddress.tsx/DeliveryDate.tsx screens, same
+    // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE events, see
+    // workflowMachine.ts). Unlike CoA/iAssist, WF2's pharmacy still isn't
+    // auto-assigned — CRM's Triage tab still picks one via SELECT_PHARMACY
+    // — this only adds the patient-facing address/date step ahead of that.
+    if (workflowData.pharmacyStatus === 'none') {
+      if (workflowData.dispatchStatus === 'none' ||
+          workflowData.dispatchStatus === 'pending_selection')
+        return '/delivery-address';
+
+      if (workflowData.patientShipDate === null)
+        return '/delivery-date';
+
+      // Address + date done — CRM handles Triage (pharmacy selection/
+      // dispatch) and Pharmacy Status from here; PapEnrollmentComplete.tsx
+      // tells the patient there's nothing further for them to do while
+      // that's in progress.
       return '/pap-enrollment-complete';
+    }
 
     if (workflowData.pharmacyStatus === 'processing' ||
         workflowData.pharmacyStatus === 'ready')

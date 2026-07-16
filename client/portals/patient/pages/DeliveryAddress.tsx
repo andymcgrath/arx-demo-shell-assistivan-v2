@@ -44,12 +44,13 @@ export default function DeliveryAddress() {
   const { workflowData } = usePersonaState('patient');
   const isCoA = workflowData.flowType === "CoA_DTP";
   const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
+  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));
 
-  // Records the address on the workflow (CoA_DTP and iAssist only —
-  // dispatchStatus → "selected"). Previously nothing dispatched this at all,
+  // Records the address on the workflow (CoA_DTP, iAssist, and Fax_PAP_Audit
+  // — dispatchStatus → "selected"). Previously nothing dispatched this at all,
   // so the coaDtp actor's real state never left "pricingSelected":
   // derivePatientRoute's rule for "pricingOption set, dispatchStatus none →
   // /delivery-address" then matched forever, and any remount of the patient
@@ -58,10 +59,13 @@ export default function DeliveryAddress() {
   // to this screen. It also meant the CRM's Kick Off Fill button — only
   // reachable once the machine is in the addressSet/shipDateSelected states
   // — silently did nothing. iAssist replicates this exactly (see iAssist.ts's
-  // updatePatientSetsAddress).
+  // updatePatientSetsAddress). Fax_PAP_Audit reuses the same event name on
+  // the generic workflowMachine.ts (see updatePapPatientSetsAddress) — CRM
+  // still separately assigns the actual pharmacy via SELECT_PHARMACY on the
+  // Triage tab, this just signals the patient's own part is done.
   function handleContinue() {
     if (!valid) return;
-    if (isCoA || isIAssist) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (isCoA || isIAssist || isPapFlow) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     navigate("/delivery-date");
   }
 
