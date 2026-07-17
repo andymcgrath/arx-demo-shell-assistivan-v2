@@ -39,7 +39,7 @@ export default function PapNoInsuranceCard() {
         <p>
           There's good news: You may qualify for our Patient Assistance Program, which can
           provide this medication at no cost. Checking your eligibility takes just a couple of
-          minutes — and there's no obligation.
+          minutes.
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export default function PapNoInsuranceCard() {
         }}
         className="mt-5 w-full text-white font-semibold py-3.5 rounded-lg transition-colors bg-arx-primary hover:bg-arx-primary-dark"
       >
-        Enroll in Patient Assistance Program
+        Get Started
       </button>
     </div>
   );
