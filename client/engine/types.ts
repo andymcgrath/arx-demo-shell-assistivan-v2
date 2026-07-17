@@ -30,10 +30,32 @@ export interface WorkflowData {
   dispatchStatus: 'none' | 'pending_selection' | 'selected' | 'dispatched';
   qsStatus: 'none' | 'active' | 'complete';
   papStatus: 'none' | 'active' | 'complete' | 'audit_pending';
+  /** Fax_PAP_Audit only: has the Fulfillment Center staged the "application
+   *  update" message to the patient after BI comes back with no_insurance?
+   *  Mirrors enrollmentInviteSent — gates /pap-update-sms. */
+  papSmsSent: boolean;
+  /** Fax_PAP_Audit only: patient tapped the "application update" SMS link.
+   *  Mirrors smsVerified — gates /pap-update-otp. */
+  papSmsVerified: boolean;
+  /** Fax_PAP_Audit only: patient entered the code sent with the
+   *  application-update SMS. Mirrors otpVerified — unlocks
+   *  /income-qualification. */
+  papOtpVerified: boolean;
+  /** Fax_PAP_Audit only: patient's FA eIncome check (IncomeQualification.tsx)
+   *  result. 'verified' is what flips papStatus to 'active' and opens up
+   *  dispatch/Triage. Unused by other flows. */
+  incomeStatus: 'none' | 'pending' | 'verified';
   selectedPharmacy: Pharmacy | null;
   providerPACompleted: boolean;
   paSubmittedAt: string | null;
   paApprovedAt: string | null;
+  /** CoA_DTP only: which delivery/pricing path the patient picked on the
+   *  Benefit Pricing screen after PA approval. Unused by other flows. */
+  pricingOption: 'retail' | 'mail_order' | 'self_pay' | null;
+  /** CoA_DTP only: patient re-verification after PA approval (mirrors the
+   *  original enrollment SMS/OTP beats). Unused by other flows. */
+  paApprovedSmsVerified: boolean;
+  paApprovedOtpVerified: boolean;
 }
 
 export interface DemoEvent {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
 import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 function isUnavailable(d: Date): boolean {
   const day = d.getDay();
@@ -29,12 +29,36 @@ function formatDate(d: Date) {
 
 export default function DeliveryDate() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
+  const isCoA = flowType === "CoA_DTP";
+  const isIAssist = flowType === "iAssist_PA_Approved";
+  const isPapFlow = flowType === "Fax_PAP_Audit";
+  // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
+  // isn't payment, and testing confirmed Copay doesn't collect payment
+  // through this flow at all, so it now skips /delivery-payment the same
+  // way WF1 does. Retail/Mail are unchanged — they still visit
+  // /delivery-payment as a cost-summary screen (no change requested there).
+  // iAssist replicates this exactly (same self_pay-only gate). Fax_PAP_Audit
+  // has no pricing/payment concept at all (Free Goods program, see
+  // Index.tsx's papStage) — always skips straight to the confirmation
+  // screen, same as WF1.
+  const skipPayment = isWorkflow1 || isPapFlow || ((isCoA || isIAssist) && workflowData.pricingOption === "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
+
+  // Records the ship date on the workflow (CoA_DTP, iAssist, and
+  // Fax_PAP_Audit — see DeliveryAddress.tsx's PATIENT_SETS_ADDRESS for why
+  // this matters: without it the actor's real patientShipDate never gets
+  // set, so a portal remount falls back to an earlier screen).
+  function handleSave() {
+    if (!selected) return;
+    if (isCoA || isIAssist || isPapFlow) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment");
+  }
 
   return (
     <main className="flex-grow">
@@ -82,7 +106,7 @@ export default function DeliveryDate() {
             </div>
 
             <button
-              onClick={() => selected && navigate(isWorkflow1 ? "/delivery-confirmation" : "/delivery-payment")}
+              onClick={handleSave}
               disabled={!selected}
               className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${selected ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
             >

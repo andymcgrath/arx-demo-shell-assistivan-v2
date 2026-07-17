@@ -13,7 +13,9 @@ import { X, ChevronDown } from "lucide-react";
 import { useSwitchWorkflow, useActiveWorkflowId, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useDemoStore } from "@/store/demoStore";
 import { workflowRegistry } from "@/engine/WorkflowRegistry";
+import { resetAllWorkflowSnapshots } from "@/engine/actorSingleton";
 import { cn } from "@/lib/utils";
+import type { FlowType } from "@/engine/types";
 
 export type PortalId = "patient" | "provider" | "analytics" | "field";
 
@@ -42,6 +44,7 @@ export default function DemoConfigurator({
   const activeWorkflowId = useActiveWorkflowId();
   const dispatch = useWorkflowDispatch();
   const resetDemo = useDemoStore((s) => s.resetDemo);
+  const switchFlow = useDemoStore((s) => s.switchFlow);
 
   const [workflows] = useState(workflowRegistry.listWorkflows());
   const [behaviorFlags, setBehaviorFlags] = useState(() => {
@@ -56,8 +59,18 @@ export default function DemoConfigurator({
   });
 
   const handleWorkflowChange = (workflowId: string) => {
-    switchWorkflow(workflowId as import('@/engine/types').FlowType);
-    resetDemo();
+    const newFlow = workflowId as FlowType;
+    // Keep demoStore's flowType and the XState actor in sync — mirrors the
+    // shell's own flow dropdown (DemoShell.tsx). Previously this only called
+    // switchWorkflow (the actor), leaving demoStore.flowType stale. Anything
+    // reading demoStore's flowType directly (the step-bar labels, the
+    // shell's flow dropdown, DemoShell's mount-sync effect) would then
+    // disagree with the actor — and DemoShell's mount effect re-syncing the
+    // actor to that stale value would swap the running workflow back to
+    // whatever it was before, making the whole demo appear to "revert."
+    switchFlow(newFlow);
+    switchWorkflow(newFlow);
+    resetDemo(newFlow);
   };
 
   const handlePortalToggle = (portal: PortalId) => {
@@ -77,6 +90,11 @@ export default function DemoConfigurator({
   const handleReset = () => {
     dispatch("RESET");
     resetDemo();
+    // sessionStorage.clear() below wipes the persisted copy of every flow's
+    // snapshot, but not the in-memory cache actorSingleton.ts also keeps for
+    // same-session flow switching — clear that too so a stale snapshot for
+    // another flow can't silently resurface later in this session.
+    resetAllWorkflowSnapshots();
     sessionStorage.clear();
     setBehaviorFlags({
       autoAdvance: true,
@@ -90,11 +108,13 @@ export default function DemoConfigurator({
 
   if (!isOpen) return null;
 
+  // Matches DemoShell.tsx's PORTALS_BASE nav order — Workforce (Analytics)
+  // after Field for every workflow.
   const portalOptions: { id: PortalId; label: string }[] = [
     { id: "patient", label: "Patient" },
     { id: "provider", label: "Provider" },
-    { id: "analytics", label: "Analytics" },
     { id: "field", label: "Field" },
+    { id: "analytics", label: "Analytics" },
   ];
 
   return (

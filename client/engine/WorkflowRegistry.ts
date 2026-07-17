@@ -7,6 +7,7 @@
 
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coaDtpMachine } from "@/workflows/coaDtp";
+import { iAssistMachine } from "@/workflows/iAssist";
 
 export interface WorkflowMetadata {
   id: string;
@@ -48,4 +49,9 @@ workflowRegistry.registerWorkflow("enrollment", workflowMachine, {
 workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
   label: "COA Direct to Patient",
   description: "Cash-pay direct-to-patient workflow via CoAssist",
+});
+
+workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {
+  label: "iAssist PA Approved",
+  description: "Internal iAssist platform workflow with prior authorization approval",
 });

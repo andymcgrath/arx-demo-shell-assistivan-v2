@@ -3,17 +3,66 @@ import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Bell } from "lucide-react";
+import {
+  Search, Plus, Bell, ChevronDown, Settings, Users, Calendar,
+  ClipboardList, Pill, FlaskConical, Image as ImageIcon, FolderOpen,
+  Syringe, Share2, Mail, CheckSquare, MoreHorizontal,
+} from "lucide-react";
+import type { PatientStatus } from "@/store/samplePatients";
+import type { WorkflowData } from "@/engine/types";
+// WF4's own dashboard — reused as-is for CoA_DTP's post-PA screen (see the
+// isCoA branch in ProviderPortal below). Not a copy; if WF4's Dashboard
+// changes, this picks it up automatically.
+import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
+// Dashboard calls useNavigate() from portalRouter, which throws unless it's
+// mounted under a <PortalRouter> — WF4's own portal (client/portals/iassist/
+// index.tsx) supplies that wrapper, but the provider portal here doesn't, so
+// we provide our own when rendering Dashboard directly. Note: this is an
+// isolated router with no routes registered for "/new-case/*" (the case
+// wizard), so clicking a patient row here won't navigate anywhere — a known
+// limitation of reusing WF4's dashboard outside its own portal.
+import { PortalRouter } from "@/lib/portalRouter";
 import "./styles.css";
 
-type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-search" | "coa-rx" | "coa-sent";
+type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
+
+// ── Heroic EHR brand palette ──────────────────────────────────────────────────
+// The Provider portal for CoA_DTP represents the HCP's own EHR system — a
+// different product from CoAssist (the patient-facing app) — so it gets its
+// own name/logo/blue palette here, local to this file. Does not touch the
+// patient portal's branding.ts (CoAssist) or WF1/WF2/WF4's own provider
+// theming (BrandSidebar's iAssist teal, styles.css's --primary-teal-* vars,
+// shared pa-btn-* classes used by every flow).
+const HEROIC_BLUE = "#1E4FD6";
+const HEROIC_BLUE_DARK = "#15399E";
+const HEROIC_BLUE_LIGHT = "#EAF0FE";
+
+function HeroicEhrLogo({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true" className="flex-shrink-0">
+        <path d="M14 2L24 6V13C24 19.5 19.8 24.7 14 26C8.2 24.7 4 19.5 4 13V6L14 2Z" fill="#D62B2B" />
+        <path d="M14 2L24 6V13C24 19.5 19.8 24.7 14 26V2Z" fill={HEROIC_BLUE} />
+        <path d="M14 8.5V19.5M8.5 14H19.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+      <span className="text-[15px] leading-none whitespace-nowrap">
+        <span className="font-bold" style={{ color: HEROIC_BLUE }}>Heroic</span>{" "}
+        <span className="font-normal" style={{ color: HEROIC_BLUE }}>EHR</span>
+      </span>
+    </div>
+  );
+}
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
+// Default color (#007178) matches the shared app-wide teal used by every
+// flow's PA forms. CoA_DTP's Provider-portal-exclusive call sites pass
+// HEROIC_BLUE explicitly; every other call site is unaffected by the prop
+// existing since it just falls back to the same default as before.
 
-function CheckedCircleIcon({ className = "" }: { className?: string }) {
+function CheckedCircleIcon({ className = "", color = "#007178" }: { className?: string; color?: string }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className}>
-      <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
+      <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={color} />
     </svg>
   );
 }
@@ -26,10 +75,10 @@ function UncheckedCircleIcon({ className = "" }: { className?: string }) {
   );
 }
 
-function RadioCheckedIcon() {
+function RadioCheckedIcon({ color = "#007178" }: { color?: string } = {}) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M0 8C0 3.58125 3.58125 0 8 0C12.4187 0 16 3.58125 16 8C16 12.4187 12.4187 16 8 16C3.58125 16 0 12.4187 0 8ZM8 11C9.65625 11 11 9.65625 11 8C11 6.31563 9.65625 5 8 5C6.31563 5 5 6.31563 5 8C5 9.65625 6.31563 11 8 11Z" fill="#007178" />
+      <path d="M0 8C0 3.58125 3.58125 0 8 0C12.4187 0 16 3.58125 16 8C16 12.4187 12.4187 16 8 16C3.58125 16 0 12.4187 0 8ZM8 11C9.65625 11 11 9.65625 11 8C11 6.31563 9.65625 5 8 5C6.31563 5 5 6.31563 5 8C5 9.65625 6.31563 11 8 11Z" fill={color} />
     </svg>
   );
 }
@@ -94,9 +143,372 @@ function BrandSidebar({ isBranded }: { isBranded: boolean }) {
   );
 }
 
+// ── Heroic EHR full chart shell (CoA_DTP provider portal only) ─────────────
+//
+// Replaces the old Heroic EHR "dashboard" screens with a layout modeled on a
+// real clinical EHR chart (icon rail / patient banner / chart-note tabs /
+// Physician Notes sub-nav / Recommendations sub-tabs). This entire section is
+// only ever mounted from CoaProviderExperience below, which is only reached
+// when flowType === "CoA_DTP" — none of it is imported or referenced by
+// WF1/WF2/WF4's rendering paths, so it can't change their appearance.
+
+const CHART_TABS = [
+  { key: "questionnaires", label: "Questionnaires" },
+  { key: "nurse-input", label: "Nurse Input" },
+  { key: "physician-notes", label: "Physician Notes" },
+  { key: "procedure-codes", label: "Procedure Codes" },
+  { key: "mu", label: "MU" },
+] as const;
+
+const PLAN_NAV_GROUPS: { group: string; items: { key: string; label: string }[] }[] = [
+  { group: "Subjective", items: [{ key: "chief-complaints", label: "Chief Complaints" }, { key: "history", label: "History" }] },
+  { group: "Objective", items: [{ key: "physical-examination", label: "Physical Examination" }] },
+  { group: "Assessment", items: [{ key: "assessment-notes", label: "Assessment Notes" }, { key: "diagnoses", label: "Diagnoses" }, { key: "self-notes", label: "Self Notes" }] },
+  { group: "Plan", items: [{ key: "recommendations", label: "Recommendations" }, { key: "vaccines-injections", label: "Vaccines / Injections" }, { key: "treatment-notes", label: "Treatment Notes" }, { key: "instructions", label: "Instructions" }] },
+];
+
+const REC_TABS = [
+  { key: "prescriptions", label: "Prescriptions" },
+  { key: "supplements", label: "Supplements" },
+  { key: "order-labs", label: "Order Labs" },
+  { key: "imaging", label: "Imaging" },
+  { key: "diets", label: "Diets" },
+  { key: "lifestyle", label: "Lifestyle" },
+] as const;
+
+const ICON_RAIL_ITEMS = [
+  { key: "patients", label: "Patients", Icon: Users },
+  { key: "calendar", label: "Calendar", Icon: Calendar },
+  { key: "chart-notes", label: "Chart Notes", Icon: ClipboardList },
+  { key: "prescriptions", label: "Prescriptions", Icon: Pill },
+  { key: "labs", label: "Labs", Icon: FlaskConical },
+  { key: "images", label: "Images", Icon: ImageIcon },
+  { key: "documents", label: "Documents", Icon: FolderOpen },
+  { key: "injections", label: "Injections", Icon: Syringe },
+  { key: "referrals", label: "Referrals", Icon: Share2 },
+  { key: "messages", label: "Messages", Icon: Mail },
+  { key: "tasks", label: "Tasks", Icon: CheckSquare },
+  { key: "more", label: "More", Icon: MoreHorizontal },
+] as const;
+
+function EhrIconRail() {
+  return (
+    <aside className="hidden md:flex w-16 flex-shrink-0 flex-col items-center gap-1 bg-white border-r border-neutral-200 py-4 overflow-y-auto">
+      {ICON_RAIL_ITEMS.map(({ key, label, Icon }) => {
+        const active = key === "patients";
+        return (
+          <button
+            key={key}
+            type="button"
+            title={label}
+            className="flex flex-col items-center gap-0.5 px-1 py-2 rounded-md w-14"
+            style={{ color: active ? HEROIC_BLUE : "#9CA3AF", background: active ? HEROIC_BLUE_LIGHT : "transparent" }}
+          >
+            <Icon size={18} />
+            <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, textAlign: "center", lineHeight: 1.1 }}>{label}</span>
+          </button>
+        );
+      })}
+    </aside>
+  );
+}
+
+function EhrTopBar() {
+  return (
+    <header className="bg-white border-b border-neutral-200 h-14 flex items-center px-4 sm:px-6 gap-4 flex-shrink-0">
+      <HeroicEhrLogo />
+      <div className="flex-1 flex items-center gap-2 max-w-md ml-4">
+        <Search size={16} className="text-neutral-400 flex-shrink-0" />
+        <input
+          type="text"
+          placeholder="Search Patient by Name / ID"
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-neutral-400"
+          aria-label="Search patient by name or ID"
+          readOnly
+        />
+      </div>
+      <div className="flex items-center gap-3 ml-auto">
+        <div className="hidden sm:flex items-center gap-2 text-sm">
+          <span className="font-medium text-neutral-700">Dr. Sarah Chen</span>
+          <ChevronDown size={14} className="text-neutral-400" />
+        </div>
+        <button className="relative text-neutral-500 hover:text-neutral-700" aria-label="Notifications">
+          <Bell size={18} />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-600 rounded-full" aria-hidden="true" />
+        </button>
+        <button className="text-neutral-500 hover:text-neutral-700" aria-label="Settings">
+          <Settings size={18} />
+        </button>
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+          style={{ background: HEROIC_BLUE_LIGHT, color: HEROIC_BLUE }}
+        >
+          SC
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function computeAge(dob: string): number | null {
+  const parts = dob.split("/");
+  if (parts.length !== 3) return null;
+  const [m, d, y] = parts.map((p) => parseInt(p, 10));
+  if (!m || !d || !y) return null;
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  const hadBirthdayThisYear = today.getMonth() + 1 > m || (today.getMonth() + 1 === m && today.getDate() >= d);
+  if (!hadBirthdayThisYear) age -= 1;
+  return age;
+}
+
+function PatientBanner() {
+  const patientName = usePatientStore((s) => s.patientName);
+  const patientDob = usePatientStore((s) => s.patientDob);
+  const phone = usePatientStore((s) => s.phone);
+  const caseNumber = usePatientStore((s) => s.caseNumber);
+  const age = computeAge(patientDob);
+
+  const fields = [
+    { label: "Allergies", value: "NKDA" },
+    { label: "Visits", value: "Last: Today · Next: —" },
+    { label: "Wt / BMI", value: "—" },
+    { label: "Balance Due", value: "$0.00" },
+  ];
+
+  return (
+    <div className="bg-white border-b border-neutral-200 px-4 sm:px-6 py-3 flex-shrink-0">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: HEROIC_BLUE_LIGHT, color: HEROIC_BLUE }}
+          >
+            <Users size={20} />
+          </div>
+          <div>
+            <p className="text-base font-bold text-neutral-900 leading-tight">{patientName}</p>
+            <p className="text-xs text-neutral-500 leading-tight mt-0.5">
+              {age !== null ? `Age ${age} · ` : ""}DOB {patientDob} · ID PAT-{caseNumber} · Ph {phone}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+          {fields.map((f) => (
+            <div key={f.label}>
+              <p className="text-neutral-400 font-semibold uppercase tracking-wide" style={{ fontSize: 10 }}>{f.label}</p>
+              <p className="text-neutral-700 mt-0.5">{f.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-neutral-100">
+        <p className="text-xs text-neutral-500">
+          Provider: <span className="text-neutral-700 font-medium">Sarah Chen, MD</span>
+          <span className="mx-2 text-neutral-300">|</span>
+          Date: <span className="text-neutral-700 font-medium">
+            {new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+          </span>
+          <span className="mx-2 text-neutral-300">|</span>
+          Facility: <span className="text-neutral-700 font-medium">Heroic EHR — Main Clinic</span>
+        </p>
+        <div className="flex items-center gap-2">
+          {["Save", "Preview", "Sign", "Print"].map((label) => (
+            <button
+              key={label}
+              type="button"
+              disabled
+              title="Not part of this demo"
+              className="text-xs font-semibold px-3 py-1.5 rounded border border-neutral-200 text-neutral-400 cursor-default"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartTabs({ active, onChange }: { active: string; onChange: (k: string) => void }) {
+  return (
+    <div className="flex items-center gap-6 border-b border-neutral-200 px-4 sm:px-6 bg-white flex-shrink-0 overflow-x-auto">
+      {CHART_TABS.map((tab) => {
+        const isActive = tab.key === active;
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => onChange(tab.key)}
+            className="py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
+            style={{ color: isActive ? HEROIC_BLUE : "#6F7276", borderBottomColor: isActive ? HEROIC_BLUE : "transparent" }}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PlanNav({ active, onChange }: { active: string; onChange: (k: string) => void }) {
+  return (
+    <nav className="hidden sm:block w-[200px] flex-shrink-0 border-r border-neutral-200 py-4 px-3 overflow-y-auto">
+      {PLAN_NAV_GROUPS.map((group) => (
+        <div key={group.group} className="mb-4">
+          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide px-2 mb-1">{group.group}</p>
+          {group.items.map((item) => {
+            const isActive = item.key === active;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onChange(item.key)}
+                className="block w-full text-left px-2 py-1.5 rounded text-sm"
+                style={{
+                  color: isActive ? HEROIC_BLUE : "#374151",
+                  fontWeight: isActive ? 700 : 400,
+                  background: isActive ? HEROIC_BLUE_LIGHT : "transparent",
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function RecTabsRow({ active, onChange }: { active: string; onChange: (k: string) => void }) {
+  return (
+    <div className="flex items-center gap-5 border-b border-neutral-200 px-1 mb-4 overflow-x-auto">
+      {REC_TABS.map((tab) => {
+        const isActive = tab.key === active;
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => onChange(tab.key)}
+            className="pb-2 text-sm whitespace-nowrap border-b-2 transition-colors"
+            style={{
+              color: isActive ? HEROIC_BLUE : "#6F7276",
+              fontWeight: isActive ? 700 : 500,
+              borderBottomColor: isActive ? HEROIC_BLUE : "transparent",
+            }}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PlaceholderPanel({ label }: { label: string }) {
+  return (
+    <div style={{ padding: "48px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+      No {label.toLowerCase()} on file for this demo.
+    </div>
+  );
+}
+
+function RxToolbar({ canAddRx, onAddRx }: { canAddRx: boolean; onAddRx: () => void }) {
+  const items = ["PDMP", "Add Rx", "Templates", "Sign", "Past Rx", "Transmit"];
+  const nodes: JSX.Element[] = [];
+  items.forEach((item, i) => {
+    if (i > 0) nodes.push(<span key={`sep-${i}`} className="text-neutral-200">|</span>);
+    if (item === "Add Rx") {
+      nodes.push(
+        <button
+          key="add-rx"
+          type="button"
+          onClick={onAddRx}
+          disabled={!canAddRx}
+          className="font-semibold"
+          style={{ color: canAddRx ? HEROIC_BLUE : "#C4C4C4", cursor: canAddRx ? "pointer" : "not-allowed", background: "none", border: "none", padding: 0 }}
+        >
+          Add Rx
+        </button>
+      );
+    } else {
+      nodes.push(
+        <span key={item} className="text-neutral-300 select-none" title="Not part of this demo">
+          {item}
+        </span>
+      );
+    }
+  });
+  return <div className="flex items-center gap-2 text-sm mb-4 flex-wrap">{nodes}</div>;
+}
+
+function EhrChartShell({
+  children,
+  canAddRx,
+  onAddRx,
+}: {
+  children: React.ReactNode;
+  canAddRx: boolean;
+  onAddRx: () => void;
+}) {
+  const [chartTab, setChartTab] = useState("physician-notes");
+  const [planItem, setPlanItem] = useState("recommendations");
+  const [recTab, setRecTab] = useState("prescriptions");
+
+  const chartTabLabel = CHART_TABS.find((t) => t.key === chartTab)?.label ?? "";
+  const planItemLabel = PLAN_NAV_GROUPS.flatMap((g) => g.items).find((i) => i.key === planItem)?.label ?? "";
+  const recTabLabel = REC_TABS.find((t) => t.key === recTab)?.label ?? "";
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      <EhrTopBar />
+      <div className="flex flex-1 min-h-0">
+        <EhrIconRail />
+        <div className="flex-1 flex flex-col min-w-0">
+          <PatientBanner />
+          <ChartTabs active={chartTab} onChange={setChartTab} />
+          {chartTab !== "physician-notes" ? (
+            <div className="flex-1 overflow-auto px-6">
+              <PlaceholderPanel label={chartTabLabel} />
+            </div>
+          ) : (
+            <div className="flex flex-1 min-h-0 overflow-hidden">
+              <PlanNav active={planItem} onChange={setPlanItem} />
+              <div className="flex-1 overflow-auto px-6 py-4">
+                {planItem !== "recommendations" ? (
+                  <PlaceholderPanel label={planItemLabel} />
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                      <h2 className="text-base font-bold text-neutral-800">Recommendations</h2>
+                      <p className="text-xs font-semibold text-red-500">** This data will be shared with the patient.</p>
+                    </div>
+                    <RecTabsRow active={recTab} onChange={setRecTab} />
+                    {recTab !== "prescriptions" ? (
+                      <PlaceholderPanel label={recTabLabel} />
+                    ) : (
+                      <>
+                        <RxToolbar canAddRx={canAddRx} onAddRx={onAddRx} />
+                        {children}
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── PA info summary ───────────────────────────────────────────────────────────
 
-function PaSummaryTable({ isSubmitted = false }: { isSubmitted?: boolean } = {}) {
+function PaSummaryTable({ isSubmitted = false, accentColor = "#007178" }: { isSubmitted?: boolean; accentColor?: string } = {}) {
   const patientName = usePatientStore((s) => s.patientName);
   const patientDob = usePatientStore((s) => s.patientDob);
   const drugName = usePatientStore((s) => s.drugName);
@@ -116,7 +528,7 @@ function PaSummaryTable({ isSubmitted = false }: { isSubmitted?: boolean } = {})
       {paInfoItems.map((item) => (
         <div key={item.label} className="pa-summary-row">
           <div className="pa-summary-row__label">
-            {item.done ? <CheckedCircleIcon /> : <UncheckedCircleIcon />}
+            {item.done ? <CheckedCircleIcon color={accentColor} /> : <UncheckedCircleIcon />}
             <span className="pa-summary-label-text">{item.label}</span>
           </div>
           <p className="pa-summary-row__value">{item.value}</p>
@@ -132,10 +544,12 @@ function RadioQuestion({
   question,
   value,
   onChange,
+  accentColor = "#007178",
 }: {
   question: string;
   value: string | null;
   onChange: (v: string) => void;
+  accentColor?: string;
 }) {
   return (
     <div className="pa-question">
@@ -148,7 +562,7 @@ function RadioQuestion({
             className="pa-radio-btn"
             aria-pressed={value === "yes"}
           >
-            {value === "yes" ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+            {value === "yes" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
           <span className="pa-radio-label">Yes</span>
         </label>
@@ -159,7 +573,7 @@ function RadioQuestion({
             className="pa-radio-btn"
             aria-pressed={value === "no"}
           >
-            {value === "no" ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
+            {value === "no" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
           <span className="pa-radio-label">No</span>
         </label>
@@ -356,52 +770,70 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-function PaQuestionsStep({ onBack, onCancel, onNext }: { onBack: () => void; onCancel: () => void; onNext: () => void }) {
+function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
   const [q3, setQ3] = useState<string | null>(null);
-  const [comments, setComments] = useState("");
   const dispatch = useWorkflowDispatch();
+  const drugName = usePatientStore((s) => s.drugName);
+  const payer = usePatientStore((s) => s.payer);
 
   function handleNext() {
-    dispatch('SUBMIT_PA', { source: 'provider_portal', comments, portal: 'provider' });
+    dispatch('SUBMIT_PA', { source: 'provider_portal', portal: 'provider' });
     onNext();
+  }
+
+  const questions = (
+    <div className="pa-questions-section">
+      <RadioQuestion
+        question="Does the patient have a confirmed diagnosis of obesity or chronic weight management condition?"
+        value={q1}
+        onChange={setQ1}
+        accentColor={isCoA ? HEROIC_BLUE : undefined}
+      />
+      <RadioQuestion
+        question="Has the patient tried and failed therapy with other weight loss medications or lifestyle modifications?"
+        value={q2}
+        onChange={setQ2}
+        accentColor={isCoA ? HEROIC_BLUE : undefined}
+      />
+      <RadioQuestion
+        question="Is the patient's current BMI ≥ 30 kg/m² or ≥ 27 kg/m² with weight-related complications?"
+        value={q3}
+        onChange={setQ3}
+        accentColor={isCoA ? HEROIC_BLUE : undefined}
+      />
+    </div>
+  );
+
+  // CoA_DTP renders inline inside the Recommendations > Prescriptions panel
+  // (see EhrChartShell/CoaProviderExperience) instead of as its own page, so
+  // it gets a lighter wrapper with no duplicate patient-identity block — the
+  // chart's PatientBanner already shows that. Every other flow keeps the
+  // original full-page markup below, untouched.
+  if (isCoA) {
+    return (
+      <div>
+        <p style={{ fontSize: 13, color: "#6F7276", margin: "0 0 20px 0" }}>
+          The payer requires a prior authorization before <strong>{drugName}</strong> can be dispensed. Insurance: {payer}
+        </p>
+        {questions}
+        <div className="pa-nav-row" style={{ marginTop: 24 }}>
+          <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
+          <div className="pa-nav-actions">
+            <button onClick={onBack} className="pa-btn-secondary pa-btn-secondary--heroic">Back</button>
+            <button onClick={handleNext} className="pa-btn-primary pa-btn-primary--heroic">Next</button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">Electronic Prior Authorization</p>
+      {questions}
       <PaSummaryTable />
-
-      <div className="pa-questions-section">
-        <RadioQuestion
-          question="Does the patient have a confirmed diagnosis of obesity or chronic weight management condition?"
-          value={q1}
-          onChange={setQ1}
-        />
-        <RadioQuestion
-          question="Has the patient tried and failed therapy with other weight loss medications or lifestyle modifications?"
-          value={q2}
-          onChange={setQ2}
-        />
-        <RadioQuestion
-          question="Is the patient's current BMI ≥ 30 kg/m² or ≥ 27 kg/m² with weight-related complications?"
-          value={q3}
-          onChange={setQ3}
-        />
-
-        <div className="pa-comments-field">
-          <label className="pa-comments-label">Comments:</label>
-          <input
-            type="text"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            className="pa-comments-input"
-          />
-        </div>
-
-      </div>
-
       <div className="pa-nav-row">
         <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
         <div className="pa-nav-actions">
@@ -415,7 +847,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext }: { onBack: () => void; onC
 
 // ── Step 4: PA Submitted confirmation ───────────────────────────────────────
 
-function PaSubmittedStep({ onDone }: { onDone: () => void }) {
+function PaSubmittedStep({ onDone, isCoA = false }: { onDone: () => void; isCoA?: boolean }) {
   const dispatch = useWorkflowDispatch();
 
   const handleDone = () => {
@@ -423,11 +855,29 @@ function PaSubmittedStep({ onDone }: { onDone: () => void }) {
     onDone();
   };
 
+  // Same rationale as PaQuestionsStep above: CoA_DTP gets a lighter, chart-
+  // embedded confirmation; every other flow keeps its original full page.
+  if (isCoA) {
+    return (
+      <div style={{ textAlign: "center", padding: "24px 0" }}>
+        <svg width="56" height="56" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
+          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={HEROIC_BLUE} />
+        </svg>
+        <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 18, fontWeight: 700, color: "#1C1C1C" }}>
+          PA Submitted
+        </h2>
+        <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 24 }}>
+          The prior authorization has been submitted successfully. The patient will be notified once a decision is made.
+        </p>
+        <button onClick={handleDone} className="pa-btn-secondary pa-btn-secondary--heroic">Done</button>
+      </div>
+    );
+  }
+
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">Electronic Prior Authorization</p>
       <PaSummaryTable isSubmitted={true} />
-
       <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
           <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
@@ -458,7 +908,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
   return (
     <main className="provider-content provider-content--pa">
       <p className="pa-section-title">Income Verification — CoA Direct to Patient</p>
-      <PaSummaryTable />
+      <PaSummaryTable accentColor={HEROIC_BLUE} />
 
       <div className="pa-questions-section">
         <p style={{ fontSize: 13, color: "#3e3e3c", marginBottom: 16 }}>
@@ -470,7 +920,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
           <div className="pa-question__options">
             <label className="pa-radio-option">
               <button type="button" className="pa-radio-btn" aria-pressed="true" style={{ cursor: "default" }}>
-                <RadioCheckedIcon />
+                <RadioCheckedIcon color={HEROIC_BLUE} />
               </button>
               <span className="pa-radio-label">Yes — Patient confirmed eligible</span>
             </label>
@@ -487,201 +937,625 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
       <div className="pa-nav-row">
         <button onClick={onCancel} className="pa-btn-tertiary">Cancel</button>
         <div className="pa-nav-actions">
-          <button onClick={onBack} className="pa-btn-secondary">Back</button>
-          <button onClick={handleSubmit} className="pa-btn-primary">Submit Verification</button>
+          <button onClick={onBack} className="pa-btn-secondary pa-btn-secondary--heroic">Back</button>
+          <button onClick={handleSubmit} className="pa-btn-primary pa-btn-primary--heroic">Submit Verification</button>
         </div>
       </div>
     </main>
   );
 }
 
-// ── COA Patient Search ──────────────────────────────────────────────────────
+// ── Heroic EHR Dashboard (WF3 start/end screen) ───────────────────────────────
+//
+// Replaces the old bare "Search Patient" screen. Represents the HCP's own
+// Heroic EHR system, so it gets the Heroic blue palette, not CoAssist's teal.
+// Same dashboard pattern as IAssistDashboard below (that one's WF4-only —
+// left untouched here, this is a separate component so WF4 can't be
+// affected by anything in this file).
+// The search box filters the visible Patients table directly rather than a
+// dropdown overlay, since the point here is "type until only the patient you
+// want remains, then click their row" — matching the fact that only one row
+// (Keanu Reeves) is actually wired to real patient data via usePersonaState.
+//
+// Only patients with an active Rx show up by default — Keanu starts with
+// none (CoaRxForm is what creates his eRx), so he's hidden from the default
+// view but still findable by name/DOB search. Once ENROLL fires (eRx sent),
+// his real workflow state — not static demo data like everyone else's row —
+// drives his status, and he moves to the top of the default list.
 
-function CoaPatientSearch({ onSelect }: { onSelect: () => void }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const patientName = usePatientStore((s) => s.patientName);
-  const patientDob = usePatientStore((s) => s.patientDob);
-  const drugName = usePatientStore((s) => s.drugName);
+function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
+  if (workflowData.enrollmentStatus === "none") return null;
 
+  if (workflowData.pharmacyStatus === "delivered") {
+    return { label: "Delivered", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
+  }
+  if (workflowData.pharmacyStatus === "shipped" ||
+      workflowData.pharmacyStatus === "processing" ||
+      workflowData.pharmacyStatus === "ready") {
+    return { label: "Dispensing", color: "warning", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+  }
+  if (workflowData.paStatus === "approved") {
+    return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+  }
+  // Denial → cash-pay is kept in the state machine for demo flexibility, but
+  // CoA_DTP's live flow always approves (see coaDtp.ts / CRM Index.tsx), so
+  // this is unreachable today.
+  if (workflowData.paStatus === "denied") {
+    return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] };
+  }
+  if (workflowData.paStatus === "submitted") {
+    return { label: "PA Submitted", color: "warning", dots: ["completed", "completed", "completed", "pending", "disabled", "disabled"] };
+  }
+  // BI came back needing a PA, but the provider hasn't started it yet — the
+  // "Start Prior Auth" button in PrescriptionsIdlePanel takes the HCP
+  // straight into PA questions (no email/login hop, unlike WF1).
+  if (workflowData.biStatus === "complete") {
+    return { label: "PA Required", color: "warning", dots: ["completed", "completed", "pending", "disabled", "disabled", "disabled"] };
+  }
+  return { label: "Enrolled", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
+}
+
+function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {
   return (
-    <main className="provider-content">
-      <p className="pa-eyebrow">COA DIRECT TO PATIENT</p>
-      <h1 className="pa-login-heading">Search Patient</h1>
-      <p className="pa-login-description">
-        Find and select the patient for CoA Direct to Patient enrollment.
-      </p>
-
-      <div className="pa-field" style={{ marginBottom: 32 }}>
-        <label className="pa-field__label">Search by name or DOB</label>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pa-field__input"
-          placeholder="Enter patient name or date of birth"
-        />
-        <div className={`pa-field__underline ${searchQuery ? "pa-field__underline--active" : ""}`} />
-      </div>
-
-      <div style={{ marginTop: 32 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#6F7276", textTransform: "uppercase", marginBottom: 12 }}>RESULTS</p>
-        <button
-          onClick={onSelect}
-          style={{
-            width: "100%",
-            padding: "16px",
-            backgroundColor: "#F5F5F5",
-            border: "1px solid #E0E0E0",
-            borderRadius: 8,
-            cursor: "pointer",
-            textAlign: "left",
-            transition: "background-color 0.2s"
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#EEEEEE"; }}
-          onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "#F5F5F5"; }}
-        >
-          <p style={{ fontWeight: 600, color: "#1C1C1C", margin: "0 0 8px 0" }}>{patientName}</p>
-          <p style={{ fontSize: 13, color: "#6F7276", margin: 0 }}>DOB: {patientDob}</p>
-          <p style={{ fontSize: 13, color: "#6F7276", margin: "4px 0 0 0" }}>Medication: {drugName}</p>
-        </button>
-      </div>
-    </main>
+    <div className="flex items-center gap-2 px-2 py-1 border border-neutral-300 rounded-full bg-white w-fit">
+      {dots.map((d, i) => (
+        <StatusDot key={i} color={d} />
+      ))}
+    </div>
   );
 }
 
-// ── COA eRx Form ────────────────────────────────────────────────────────────
+// Resting state of the Recommendations > Prescriptions panel — shown when
+// there's no in-progress form. Mirrors a real EHR's "No recommended
+// prescriptions" empty state until Keanu's eRx exists, then shows the drug
+// with its live status (derived straight from workflowData, same source
+// every other CoA_DTP portal reads) and, once a PA is actually required, a
+// button to start it.
+function PrescriptionsIdlePanel({
+  status,
+  pharmacy,
+  onStartPA,
+}: {
+  status: PatientStatus | null;
+  pharmacy: PharmacyOption | null;
+  onStartPA: () => void;
+}) {
+  const drugName = usePatientStore((s) => s.drugName);
 
-function CoaRxForm({ onSend }: { onSend: () => void }) {
+  if (!status) {
+    return (
+      <div style={{ padding: "48px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+        No recommended prescriptions
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-4"
+      style={{ padding: 16, border: "1px solid #E5E7EB", borderRadius: 8 }}
+    >
+      <div>
+        <p style={{ fontWeight: 700, fontSize: 14, color: "#1C1C1C", margin: "0 0 4px 0" }}>{drugName}</p>
+        <p style={{ fontSize: 12, color: "#6F7276", margin: 0 }}>Ordering Provider: Sarah Chen, MD</p>
+        {pharmacy && (
+          <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>Dispensing Pharmacy: {pharmacy.name}</p>
+        )}
+      </div>
+      <div className="flex items-center gap-3 flex-wrap">
+        <StatusDots dots={status.dots} />
+        <StatusBadge status={status.label} color={status.color} />
+        {status.label === "PA Required" && (
+          <button onClick={onStartPA} className="pa-btn-primary pa-btn-primary--heroic">
+            Start Prior Auth
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Composes the chart shell with whichever CoA_DTP step is active. This is
+// the only place that mounts EhrChartShell, and it's only ever rendered when
+// flowType === "CoA_DTP" (see the isCoA branch in ProviderPortal below) — so
+// none of this reaches WF1/WF2/WF4.
+function CoaProviderExperience({
+  step,
+  setStep,
+  dispatch,
+  workflowData,
+}: {
+  step: Step;
+  setStep: (step: Step) => void;
+  dispatch: ReturnType<typeof useWorkflowDispatch>;
+  workflowData: WorkflowData;
+}) {
+  const keanuStatus = deriveKeanuStatus(workflowData);
+  const isIdle = step === "coa-dashboard";
+  const canAddRx = isIdle && !keanuStatus;
+  // Local to the provider portal, like CoaRxForm's dosage/refills — see the
+  // comment above PHARMACIES for why this isn't dispatched to the engine.
+  const [pharmacy, setPharmacy] = useState<PharmacyOption | null>(null);
+
+  // PA requests now arrive the same way WF1 delivers them — an external
+  // AssistRx email + hosted "Verify & Complete" PA form — instead of a form
+  // embedded in the Heroic EHR chart. So these four steps render WF1's own
+  // full-page experience (EmailStep/LoginStep/PaQuestionsStep/
+  // PaSubmittedStep, all isCoA={false}, same as WF1 uses them) with no chart
+  // chrome at all, and the provider only lands back in the EHR once PA
+  // Submitted's Done fires. This only reuses the shared step components —
+  // it doesn't change what WF1 itself renders with them.
+  if (step === "email" || step === "login" || step === "pa-questions" || step === "pa-submitted") {
+    return (
+      <div className="provider-portal">
+        {step !== "email" && <BrandSidebar isBranded={false} />}
+        {step === "email" && <EmailStep onClickLink={() => setStep("login")} />}
+        {step === "login" && <LoginStep onSubmit={() => setStep("pa-questions")} />}
+        {step === "pa-questions" && (
+          <PaQuestionsStep
+            isCoA={false}
+            onBack={() => setStep("login")}
+            onCancel={() => setStep("login")}
+            onNext={() => setStep("pa-submitted")}
+          />
+        )}
+        {step === "pa-submitted" && (
+          <PaSubmittedStep isCoA={false} onDone={() => setStep("coa-dashboard")} />
+        )}
+      </div>
+    );
+  }
+
+  let content: React.ReactNode;
+  if (step === "coa-rx") {
+    content = (
+      <CoaRxForm
+        pharmacy={pharmacy}
+        onPharmacyChange={setPharmacy}
+        onSend={() => {
+          dispatch('ENROLL', { portal: 'provider' });
+          setStep("coa-sent");
+        }}
+        onBack={() => setStep("coa-dashboard")}
+      />
+    );
+  } else if (step === "coa-sent") {
+    content = <CoaSentConfirmation pharmacy={pharmacy} onReturnToDashboard={() => setStep("coa-dashboard")} />;
+  } else {
+    content = <PrescriptionsIdlePanel status={keanuStatus} pharmacy={pharmacy} onStartPA={() => setStep("email")} />;
+  }
+
+  return (
+    <EhrChartShell canAddRx={canAddRx} onAddRx={() => setStep("coa-rx")}>
+      {content}
+    </EhrChartShell>
+  );
+}
+
+// ── COA eRx Form (Heroic EHR — the HCP's own EHR, not CoAssist) ─────────────
+
+// "Most common" pins the top of the list; everything else is alphabetical
+// below a divider. Names reuse the ones already established elsewhere in
+// this demo (CRM/iAssist medication cards) where they exist.
+const MEDICATION_MOST_COMMON = ["Assistivan", "Assistimab", "Ramoni", "Voloxivan"];
+const MEDICATION_OTHERS = ["Aficamten", "Assistivox", "Kelvara", "Nolrivex", "Zylodine"];
+
+function MedicationOption({
+  med,
+  selected,
+  onSelect,
+}: {
+  med: string;
+  selected: boolean;
+  onSelect: (v: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      onClick={() => onSelect(med)}
+      style={{
+        display: "block",
+        width: "100%",
+        textAlign: "left",
+        padding: "10px 16px",
+        fontSize: 14,
+        fontWeight: selected ? 700 : 400,
+        color: selected ? HEROIC_BLUE : "#1C1C1C",
+        background: selected ? HEROIC_BLUE_LIGHT : "transparent",
+        border: "none",
+        cursor: "pointer",
+      }}
+      onMouseOver={(e) => {
+        if (!selected) e.currentTarget.style.background = "#F5F5F5";
+      }}
+      onMouseOut={(e) => {
+        if (!selected) e.currentTarget.style.background = "transparent";
+      }}
+    >
+      {med}
+    </button>
+  );
+}
+
+function MedicationSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+    };
+  }, []);
+
+  const select = (med: string) => {
+    onChange(med);
+    setOpen(false);
+  };
+
+  return (
+    <div className="pa-field" style={{ marginBottom: 24, position: "relative" }}>
+      <label className="pa-field__label">Medication Order</label>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => {
+          if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = setTimeout(() => setOpen(false), 150);
+        }}
+        className="pa-field__input"
+        style={{
+          textAlign: "left",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          background: "none",
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{value}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <div className="pa-field__underline pa-field__underline--active" />
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Select medication"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 4,
+            background: "#fff",
+            border: "1px solid #E0E0E0",
+            borderRadius: 8,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            maxHeight: 300,
+            overflowY: "auto",
+            zIndex: 20,
+          }}
+        >
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6F7276", textTransform: "uppercase", padding: "10px 16px 4px", margin: 0 }}>
+            Most Common
+          </p>
+          {MEDICATION_MOST_COMMON.map((med) => (
+            <MedicationOption key={med} med={med} selected={med === value} onSelect={select} />
+          ))}
+
+          <hr style={{ border: "none", borderTop: "1px solid #E0E0E0", margin: "8px 0" }} />
+
+          {MEDICATION_OTHERS.map((med) => (
+            <MedicationOption key={med} med={med} selected={med === value} onSelect={select} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Dispensing pharmacy search/select ────────────────────────────────────────
+//
+// Mirrors the CRM's SPECIALTY_PHARMACIES list (client/portals/crm/pages/
+// Index.tsx) so the same pharmacy names/addresses show up whether staff pick
+// one there or the prescriber picks one here — kept as its own local copy
+// rather than a shared import, matching this file's existing practice of not
+// reaching into other portals (see HEROIC_BLUE's comment above).
+//
+// This is UI-only, like dosage/refills below — NOT dispatched to the CoA_DTP
+// state machine. Checked coaDtp.ts: SELECT_PHARMACY is only handled from
+// "pricingSelected" onward, and the patient's own Retail/Mail/Self-Pay choice
+// there always overwrites selectedPharmacy anyway — so a dispatch from this,
+// the very first step of the flow, would either no-op or get silently
+// clobbered later. Surfacing the prescriber's pick here (and on the eRx-sent
+// confirmation) is honest about being a demo-only touch, not a real
+// downstream effect.
+interface PharmacyOption {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+}
+
+const PHARMACIES: PharmacyOption[] = [
+  { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" },
+  { name: "Biologics", address: "456 Specialty Lane", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-1234" },
+  { name: "Accredo Health Group Inc.", address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
+  { name: "CVS Specialty", address: "321 Medication Blvd", city: "Jacksonville", state: "FL", zip: "32099", phone: "(904) 555-9012" },
+  { name: "Walgreens Specialty", address: "654 Drug St", city: "Miami", state: "FL", zip: "33101", phone: "(305) 555-3456" },
+  { name: "AllianceRx Walgreens Prime", address: "987 Medicine Way", city: "Fort Lauderdale", state: "FL", zip: "33301", phone: "(954) 555-7890" },
+  { name: "Optum Specialty Pharmacy", address: "111 Health Lane", city: "Clearwater", state: "FL", zip: "33755", phone: "(727) 555-2345" },
+  { name: "Shields Health Solutions", address: "222 Care Dr", city: "St. Petersburg", state: "FL", zip: "33701", phone: "(727) 555-6789" },
+  { name: "PharMerica Specialty", address: "333 Wellness Ave", city: "Sarasota", state: "FL", zip: "34236", phone: "(941) 555-0123" },
+];
+
+function PharmacySelect({
+  value,
+  onChange,
+}: {
+  value: PharmacyOption | null;
+  onChange: (p: PharmacyOption) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+    };
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const results = q
+    ? PHARMACIES.filter((p) => p.name.toLowerCase().includes(q) || p.city.toLowerCase().includes(q))
+    : PHARMACIES;
+
+  const select = (p: PharmacyOption) => {
+    onChange(p);
+    setQuery("");
+    setOpen(false);
+  };
+
+  if (value && !open) {
+    return (
+      <div className="pa-field" style={{ marginBottom: 24 }}>
+        <label className="pa-field__label">Dispensing Pharmacy</label>
+        <div
+          className="flex items-center justify-between"
+          style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 12px" }}
+        >
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1C", margin: 0 }}>{value.name}</p>
+            <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>
+              {value.address}, {value.city}, {value.state} {value.zip} · {value.phone}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            style={{ color: HEROIC_BLUE, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0, marginLeft: 12 }}
+          >
+            Change
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pa-field" style={{ marginBottom: 24, position: "relative" }}>
+      <label className="pa-field__label">Dispensing Pharmacy</label>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = setTimeout(() => setOpen(false), 150);
+        }}
+        placeholder="Search pharmacy by name or city…"
+        className="pa-field__input"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      />
+      <div className={`pa-field__underline ${query ? "pa-field__underline--active" : ""}`} />
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Select dispensing pharmacy"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 4,
+            background: "#fff",
+            border: "1px solid #E0E0E0",
+            borderRadius: 8,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            maxHeight: 260,
+            overflowY: "auto",
+            zIndex: 20,
+          }}
+        >
+          {results.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9CA3AF", padding: "12px 16px", margin: 0 }}>
+              No pharmacies found for "{query}"
+            </p>
+          ) : (
+            results.map((p) => (
+              <button
+                key={p.name}
+                type="button"
+                role="option"
+                aria-selected={value?.name === p.name}
+                onClick={() => select(p)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "8px 16px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: value?.name === p.name ? HEROIC_BLUE_LIGHT : "transparent",
+                }}
+                onMouseOver={(e) => {
+                  if (value?.name !== p.name) e.currentTarget.style.background = "#F5F5F5";
+                }}
+                onMouseOut={(e) => {
+                  if (value?.name !== p.name) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1C", margin: 0 }}>{p.name}</p>
+                <p style={{ fontSize: 12, color: "#6F7276", margin: "2px 0 0 0" }}>{p.city}, {p.state}</p>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoaRxForm({
+  pharmacy,
+  onPharmacyChange,
+  onSend,
+  onBack,
+}: {
+  pharmacy: PharmacyOption | null;
+  onPharmacyChange: (p: PharmacyOption) => void;
+  onSend: () => void;
+  onBack: () => void;
+}) {
   const [dosage, setDosage] = useState("0.5 mg");
   const [refills, setRefills] = useState("3");
-  const drugName = usePatientStore((s) => s.drugName);
-  const npi = usePatientStore((s) => s.npi);
+  // Local to this screen on purpose — not written back to usePatientStore.
+  // That store is the single active patient identity shared by every flow
+  // (including WF1), so changing it here could bleed a WF3-only choice into
+  // other flows. The confirmation screen still shows the seeded drug name.
+  const [medication, setMedication] = useState(usePatientStore.getState().drugName);
   const payer = usePatientStore((s) => s.payer);
 
   return (
-    <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">COA Direct to Patient — eRx</p>
-      <PaSummaryTable />
+    <div>
+      <button
+        type="button"
+        onClick={onBack}
+        style={{ color: HEROIC_BLUE, background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 13, fontWeight: 600, marginBottom: 16, display: "block" }}
+      >
+        ← Back to Prescriptions
+      </button>
+
+      <p style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1C", margin: "0 0 4px 0" }}>New Prescription</p>
+      <p style={{ fontSize: 13, color: "#6F7276", margin: "0 0 20px 0" }}>
+        Insurance: {payer}
+      </p>
 
       <div className="pa-questions-section">
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Drug Name (read-only)</label>
-          <input
-            type="text"
-            value={drugName}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
+        <MedicationSelect value={medication} onChange={setMedication} />
 
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Prescriber (read-only)</label>
-          <input
-            type="text"
-            value="Sarah Chen, MD"
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 240px", marginBottom: 24 }}>
+            <p className="pa-question__text">Dosage</p>
+            <div className="pa-question__options">
+              {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
+                <label key={d} className="pa-radio-option">
+                  <button
+                    type="button"
+                    onClick={() => setDosage(d)}
+                    className="pa-radio-btn"
+                    aria-pressed={dosage === d}
+                  >
+                    {dosage === d ? <RadioCheckedIcon color={HEROIC_BLUE} /> : <RadioUncheckedIcon />}
+                  </button>
+                  <span className="pa-radio-label">{d}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">NPI (read-only)</label>
-          <input
-            type="text"
-            value={npi}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
-
-        <div className="pa-field" style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Payer (read-only)</label>
-          <input
-            type="text"
-            value={payer}
-            disabled
-            className="pa-field__input"
-            style={{ color: "#999" }}
-          />
-          <div className="pa-field__underline" />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <p className="pa-question__text">Dosage</p>
-          <div className="pa-question__options">
-            {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
-              <label key={d} className="pa-radio-option">
-                <button
-                  type="button"
-                  onClick={() => setDosage(d)}
-                  className="pa-radio-btn"
-                  aria-pressed={dosage === d}
-                >
-                  {dosage === d ? <RadioCheckedIcon /> : <RadioUncheckedIcon />}
-                </button>
-                <span className="pa-radio-label">{d}</span>
-              </label>
-            ))}
+          <div style={{ flex: "1 1 160px", marginBottom: 24 }}>
+            <label className="pa-field__label">Number of Refills</label>
+            <select
+              value={refills}
+              onChange={(e) => setRefills(e.target.value)}
+              className="pa-field__input"
+              style={{ cursor: "pointer" }}
+            >
+              <option value="0">0</option>
+              <option value="3">3</option>
+              <option value="6">6</option>
+              <option value="11">11</option>
+            </select>
+            <div className="pa-field__underline" />
           </div>
         </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label className="pa-field__label">Number of Refills</label>
-          <select
-            value={refills}
-            onChange={(e) => setRefills(e.target.value)}
-            className="pa-field__input"
-            style={{ cursor: "pointer" }}
-          >
-            <option value="0">0</option>
-            <option value="3">3</option>
-            <option value="6">6</option>
-            <option value="11">11</option>
-          </select>
-          <div className="pa-field__underline" />
-        </div>
+        <PharmacySelect value={pharmacy} onChange={onPharmacyChange} />
       </div>
 
       <div className="pa-action-row">
-        <button onClick={onSend} className="pa-btn-primary">Send eRx</button>
+        <button
+          onClick={onSend}
+          disabled={!pharmacy}
+          className="pa-btn-primary pa-btn-primary--heroic"
+          title={pharmacy ? undefined : "Select a dispensing pharmacy first"}
+        >
+          Send eRx
+        </button>
       </div>
-    </main>
+    </div>
   );
 }
 
-// ── COA Sent Confirmation ────────────────────────────────────────────────────
+// ── COA Sent Confirmation (Heroic EHR) ───────────────────────────────────────
 
-function CoaSentConfirmation() {
-  const patientName = usePatientStore((s) => s.patientName);
+function CoaSentConfirmation({
+  pharmacy,
+  onReturnToDashboard,
+}: {
+  pharmacy: PharmacyOption | null;
+  onReturnToDashboard: () => void;
+}) {
   const drugName = usePatientStore((s) => s.drugName);
 
   return (
-    <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">COA Direct to Patient — Confirmation</p>
-      <PaSummaryTable isSubmitted={true} />
-
-      <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
-        <svg width="64" height="64" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
-          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
-        </svg>
-        <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>
-          eRx sent successfully
-        </h2>
-        <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 16 }}>
-          The patient will receive a consent text shortly
-        </p>
-        <div style={{ backgroundColor: "#F5F5F5", padding: 16, borderRadius: 8, textAlign: "left", marginTop: 24 }}>
-          <p style={{ fontSize: 12, color: "#6F7276", margin: "0 0 8px 0" }}>Patient: <strong>{patientName}</strong></p>
-          <p style={{ fontSize: 12, color: "#6F7276", margin: "0 0 8px 0" }}>Medication: <strong>{drugName}</strong></p>
-        </div>
+    <div style={{ textAlign: "center", padding: "24px 0" }}>
+      <svg width="56" height="56" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
+        <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill={HEROIC_BLUE} />
+      </svg>
+      <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 18, fontWeight: 700, color: "#1C1C1C" }}>
+        eRx sent successfully
+      </h2>
+      <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 16 }}>
+        The patient will receive a consent text shortly.
+      </p>
+      <div style={{ backgroundColor: "#F5F5F5", padding: 16, borderRadius: 8, textAlign: "left", marginTop: 16, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+        <p style={{ fontSize: 12, color: "#6F7276", margin: pharmacy ? "0 0 8px 0" : 0 }}>Medication: <strong>{drugName}</strong></p>
+        {pharmacy && (
+          <p style={{ fontSize: 12, color: "#6F7276", margin: 0 }}>
+            Pharmacy: <strong>{pharmacy.name}</strong> — {pharmacy.city}, {pharmacy.state}
+          </p>
+        )}
       </div>
-    </main>
+
+      <div className="pa-action-row" style={{ justifyContent: "center" }}>
+        <button onClick={onReturnToDashboard} className="pa-btn-primary pa-btn-primary--heroic">
+          Return to Prescriptions
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1172,7 +2046,7 @@ export default function ProviderPortal() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('provider');
   const [step, setStep] = useState<Step>(() =>
-    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-search' : 'email'
+    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-dashboard' : 'email'
   );
   const dispatch = useWorkflowDispatch();
   const flowType = workflowData.flowType;
@@ -1189,12 +2063,22 @@ export default function ProviderPortal() {
     if (storeFlowType !== 'CoA_DTP') {
       return;
     }
-    // COA: advance from coa-sent to email when BI completes
-    // biStatus complete is the reliable signal — paStatus may update too fast
-    if (biStatus === 'complete' && step === 'coa-sent') {
+    // BI completing means "PA Required" just appeared — skip the idle EHR
+    // chart entirely and go straight to the AssistRx PA request email/
+    // letter (same email/login/PA-form steps WF1 uses — see
+    // CoaProviderExperience). Flow: Send eRx → patient completes enrollment
+    // → BI: PA Required → provider sees the letter, with no idle chart or
+    // manual "Start Prior Auth" click in between.
+    // Covers both landing spots BI can finish while the provider is on:
+    // right after sending the eRx (still on "coa-sent") and having already
+    // clicked back to the idle chart before BI finished ("coa-dashboard").
+    // paStatus === 'none' keeps this from refiring once a PA exists —
+    // biStatus stays "complete" indefinitely, so that guard is load-bearing,
+    // not just an optimization.
+    if (biStatus === 'complete' && paStatus === 'none' && (step === 'coa-sent' || step === 'coa-dashboard')) {
       setStep('email');
     }
-  }, [storeFlowType, biStatus, step]);
+  }, [storeFlowType, biStatus, paStatus, step]);
 
   // `step` is local UI state with no memory of the outer workflow reset —
   // it only ever advances forward via the handlers below, so a reset that
@@ -1207,36 +2091,60 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-search' : 'email');
+    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'email');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
     return <IAssistDashboard />;
   }
 
-  // Show dashboard when PA is completed
+  // CoA_DTP gets its own dedicated render path — the full Heroic EHR chart
+  // shell, entered directly on Keanu's chart (no separate patient-list
+  // screen), for everything up through the PA request/response. This is
+  // checked before the generic providerPACompleted block below so CoA_DTP
+  // never falls into that WF1/WF2-oriented "Recent Submissions" screen.
+  //
+  // Once a PA exists — paStatus !== 'none' — we stop showing the Heroic EHR
+  // entirely and switch to WF4's own iAssist Dashboard (client/portals/
+  // iassist/pages/Dashboard.tsx) instead, with Keanu surfaced at the top via
+  // that page's own live-status lookup (usePersonaState reads whichever
+  // actor is active, so it picks up CoA_DTP's workflowData here the same way
+  // it reads iAssist's on WF4). Deliberately keyed on paStatus, not
+  // providerPACompleted — that flag only flips when the provider clicks
+  // "Done" on the PA Submitted screen themselves, so if PA resolves some
+  // other way (e.g. watched it get approved from the CRM tab instead), it
+  // would never fire and the chart would keep showing. paStatus is durable
+  // and persists across remounts/tab switches regardless of how the PA got
+  // there — it isn't tied to the `step` state machine below, which stops
+  // mattering once we're here.
+  if (isCoA) {
+    if (paStatus !== 'none') {
+      return (
+        <PortalRouter initialPath="/">
+          <IAssistDashboardPage />
+        </PortalRouter>
+      );
+    }
+    return (
+      <CoaProviderExperience
+        step={step}
+        setStep={setStep}
+        dispatch={dispatch}
+        workflowData={workflowData}
+      />
+    );
+  }
+
+  // Show dashboard when PA is completed. CoA_DTP already returned above via
+  // CoaProviderExperience, so flowType here is always WF1/WF2/WF4 — this
+  // stays the original generic "Recent Submissions" screen for those flows.
   if (providerPACompleted) {
-    const isCompletedCoA = flowType === "CoA_DTP";
-
-    // Derive primary submission type and status based on flow type
-    const getPrimarySubmissionData = () => {
-      if (isCompletedCoA) {
-        return {
-          rxName: "Assistivan eRx",
-          status: "Sent",
-          statusColor: "#D1E7F5",
-          statusTextColor: "#0555B0",
-        };
-      }
-      return {
-        rxName: "Assistivan Prior Authorization",
-        status: paStatus === "approved" ? "Approved" : "Pending",
-        statusColor: paStatus === "approved" ? "#D1E7F5" : "#FEF3C7",
-        statusTextColor: paStatus === "approved" ? "#0555B0" : "#92400E",
-      };
+    const primaryData = {
+      rxName: "Assistivan Prior Authorization",
+      status: paStatus === "approved" ? "Approved" : "Pending",
+      statusColor: paStatus === "approved" ? "#D1E7F5" : "#FEF3C7",
+      statusTextColor: paStatus === "approved" ? "#0555B0" : "#92400E",
     };
-
-    const primaryData = getPrimarySubmissionData();
 
     // Sample patients for dashboard (keeping Keanu at top)
     const samplePatients = [
@@ -1408,18 +2316,8 @@ export default function ProviderPortal() {
 
   return (
     <div className="provider-portal">
-      {step !== "email" && step !== "coa-search" && step !== "coa-rx" && step !== "coa-sent" && <BrandSidebar isBranded={isBranded} />}
-      {step === "coa-search" && (
-        <CoaPatientSearch onSelect={() => setStep("coa-rx")} />
-      )}
-      {step === "coa-rx" && (
-        <CoaRxForm onSend={() => {
-          dispatch('ENROLL', { portal: 'provider' });
-          setStep("coa-sent");
-        }} />
-      )}
-      {step === "coa-sent" && (
-        <CoaSentConfirmation />
+      {step !== "email" && (
+        <BrandSidebar isBranded={isBranded} />
       )}
       {step === "email" && (
         <EmailStep onClickLink={() => setStep("login")} />
@@ -1428,13 +2326,17 @@ export default function ProviderPortal() {
         <LoginStep onSubmit={() => setStep("pa-questions")} />
       )}
       {step === "pa-questions" && (
-        <PaQuestionsStep onBack={() => setStep("login")} onCancel={() => setStep("login")} onNext={() => setStep("pa-submitted")} />
+        <PaQuestionsStep
+          isCoA={false}
+          onBack={() => setStep("login")}
+          onCancel={() => setStep("login")}
+          onNext={() => setStep("pa-submitted")}
+        />
       )}
-      {step === "pa-submitted" && <PaSubmittedStep onDone={() => {
-        if (isCoA) {
-          dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' });
-        }
-      }} />}
+      {step === "pa-submitted" && <PaSubmittedStep
+        isCoA={false}
+        onDone={() => {}}
+      />}
       {step === "income-verify" && (
         <IncomeVerifyStep onBack={() => setStep("login")} onCancel={() => setStep("login")} onNext={() => setStep("income-submitted")} />
       )}
@@ -1442,14 +2344,14 @@ export default function ProviderPortal() {
         <main className="provider-content provider-content--pa">
           <p className="pa-section-title">Income Verification — CoA Direct to Patient</p>
           <div style={{ textAlign: "center", padding: "40px 0 32px" }}>
-            <CheckedCircleIcon />
+            <CheckedCircleIcon color={HEROIC_BLUE} />
             <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>
               Income Verified
             </h2>
             <p style={{ color: "#6F7276", fontSize: 14, marginBottom: 32 }}>
               The patient's eligibility has been confirmed. The patient portal will be updated and the free drug shipment process can begin.
             </p>
-            <button onClick={() => { dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' }); setStep("login"); }} className="pa-btn-secondary">Done</button>
+            <button onClick={() => { dispatch('COMPLETE_PROVIDER_PA', { portal: 'provider' }); setStep("login"); }} className="pa-btn-secondary pa-btn-secondary--heroic">Done</button>
           </div>
         </main>
       )}

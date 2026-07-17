@@ -124,7 +124,11 @@ export default function OrderTracker() {
             </div>
             <div className="space-y-2">
               {steps.map(step => (
-                <StepRow key={step.n} step={step} />
+                <StepRow
+                  key={step.n}
+                  step={step}
+                  onClick={step.n === 5 && step.status === "done" ? () => navigate("/medication-delivered") : undefined}
+                />
               ))}
             </div>
           </section>

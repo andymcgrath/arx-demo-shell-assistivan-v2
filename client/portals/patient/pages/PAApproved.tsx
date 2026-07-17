@@ -11,12 +11,13 @@ export default function PAApproved() {
   const pharmacyStatus = workflowData.pharmacyStatus;
   const paStatus = workflowData.paStatus;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
+  const isCoA = flowType === "CoA_DTP";
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
   return (
-    <main className="flex-grow pb-8">
+    <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Approved card */}
@@ -41,7 +42,7 @@ export default function PAApproved() {
 
             <button
               onClick={() => {
-                navigate("/delivery-address");
+                navigate(isCoA ? "/benefit-pricing" : "/delivery-address");
               }}
               className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-primary-dark transition-colors"
             >
@@ -50,8 +51,9 @@ export default function PAApproved() {
             </button>
           </div>
 
-          {/* Copay card */}
-          {!isWorkflow1 && (
+          {/* Copay card — CoA_DTP shows its own copay banner on the Benefit
+              Pricing screen that follows, so skip the duplicate prompt here. */}
+          {!isWorkflow1 && !isCoA && (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">

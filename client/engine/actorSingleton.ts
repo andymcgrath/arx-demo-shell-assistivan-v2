@@ -33,6 +33,43 @@ import type { FlowType } from "./types";
 let actorInstance: ReturnType<typeof createActor> | null = null;
 let currentFlowType: FlowType = "Fax_QS_PA_Approved";
 
+// demoStore.ts (zustand + persist) is the source of truth for which flow is
+// active, but actorSingleton.ts can't import it directly — demoStore.ts
+// already imports resetCurrentWorkflowActor from here, and the reverse
+// import would be circular. Reading zustand's own persisted blob directly
+// avoids that without needing a second source of truth.
+//
+// This matters because getWorkflowActor() below used to always default to
+// "Fax_QS_PA_Approved" on its very first call, no matter what flow was
+// actually persisted. That first call happens inside engine/WorkflowProvider
+// during React's initial render — before DemoShell's mount effect (the
+// useEffect that calls switchWorkflow(storedFlow) to correct it) has had a
+// chance to run. Every portal is mounted simultaneously (see DemoShell's
+// display:none panel structure), so on that very first render they were ALL
+// reading from a freshly-created WF1 actor for one render pass, correcting
+// only once the effect fired a moment later. Usually fast enough to be
+// invisible, but landing on this exact window — e.g. Provider and Patient
+// mounting/re-rendering around the same moment — could visibly show WF1
+// data before snapping back, which is what "once in a while, switching
+// from WF3 back to WF1" actually was. Reading the persisted flow up front
+// removes the window entirely instead of racing to correct it after.
+function readPersistedFlowType(): FlowType {
+  try {
+    const raw = sessionStorage.getItem("arx-demo-shell");
+    if (!raw) {
+      return "Fax_QS_PA_Approved";
+    }
+    const parsed = JSON.parse(raw);
+    const flowType = parsed?.state?.flowType as FlowType | undefined;
+    if (!flowType) {
+      return "Fax_QS_PA_Approved";
+    }
+    return flowType;
+  } catch (e) {
+    return "Fax_QS_PA_Approved";
+  }
+}
+
 // Per-flow snapshots keyed by FlowType — each flow has its own save slot.
 // Fast in-memory cache; sessionStorage (below) is the durable backing store.
 const actorSnapshots = new Map<FlowType, unknown>();
@@ -86,15 +123,18 @@ export const useActorStore = create<ActorStore>((set) => ({
 
 export function getWorkflowActor() {
   if (!actorInstance) {
-    actorInstance = createActorForFlow("Fax_QS_PA_Approved");
+    currentFlowType = readPersistedFlowType();
+    actorInstance = createActorForFlow(currentFlowType);
     useActorStore.getState().setActor(actorInstance);
   }
   return actorInstance;
 }
 
-/** Maps a FlowType to the machine registry ID. CoA uses its own machine; all others share "enrollment". */
+/** Maps a FlowType to the machine registry ID. CoA and iAssist each have their own dedicated machine; the two Fax flows share "enrollment". */
 function machineIdForFlow(flowType: FlowType): string {
-  return flowType === "CoA_DTP" ? "CoA_DTP" : "enrollment";
+  if (flowType === "CoA_DTP") return "CoA_DTP";
+  if (flowType === "iAssist_PA_Approved") return "iAssist_PA_Approved";
+  return "enrollment";
 }
 
 export function switchWorkflow(flowType: FlowType): void {
@@ -129,6 +169,26 @@ export function resetCurrentWorkflowActor(): void {
   clearPersistedSnapshot(currentFlowType);
 }
 
+/**
+ * Wipes every flow's saved progress — not just the currently active one.
+ * "Reset All" only reset the current flow's slot; any OTHER flow's snapshot
+ * (in-memory Map entry and its sessionStorage sub-key) survived untouched.
+ * That's how a case's progress from earlier in the session — including one
+ * captured before a machine definition change — could silently resurface
+ * (restored into a machine whose states/events have since changed) the next
+ * time someone switched back to that flow, looking exactly like "the demo
+ * reverted." Call this from any "reset everything" action so switching back
+ * to any flow afterward always starts genuinely fresh.
+ */
+export function resetAllWorkflowSnapshots(): void {
+  actorSnapshots.clear();
+  try {
+    sessionStorage.removeItem(SNAPSHOT_STORAGE_KEY);
+  } catch {
+    // no-op — see persistSnapshot
+  }
+}
+
 function createActorForFlow(
   flowType: FlowType,
   snapshot?: unknown
@@ -159,6 +219,18 @@ function createActorForFlow(
   actor.subscribe(() => {
     persistSnapshot(flowType, actor.getPersistedSnapshot());
   });
+
+  // "enrollment" is shared by WF1 (Fax_QS_PA_Approved) and WF2
+  // (Fax_PAP_Audit) — its own workflowMachine.ts has no way to tell which
+  // one it's actually running, since its static initial context hardcodes
+  // flowType to Fax_QS_PA_Approved. CoA_DTP/iAssist have dedicated machines
+  // that already hardcode their own correct flowType, so they don't need
+  // this. Send the correction now (after subscribe, so it gets persisted)
+  // rather than trusting the machine's own default or a possibly-stale
+  // restored snapshot from before this existed.
+  if (machineId === "enrollment") {
+    actor.send({ type: "SET_FLOW_TYPE", flowType } as any);
+  }
 
   return actor;
 }

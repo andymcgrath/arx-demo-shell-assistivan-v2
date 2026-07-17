@@ -30,7 +30,7 @@ export type { FlowType } from '../engine/types';
 // ── Constants (used by Field portal) ─────────────────────────────────────────
 
 export const PATIENTS: Record<string, string> = {
-  "EI-56342": "Keanu Dixon",
+  "EI-56342": "Keanu Reeves",
   "EI-56343": "Sarah Miller",
   "EI-56344": "James Wilson",
   "EI-56345": "Maria Garcia",

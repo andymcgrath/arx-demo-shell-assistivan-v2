@@ -1,8 +1,32 @@
+/**
+ * iAssist workflow machine — dedicated machine for WF4 (iAssist_PA_Approved)
+ *
+ * This is a deliberate structural clone of client/engine/workflowMachine.ts
+ * (the parallel machine WF1/WF2 use, registry id "enrollment"), which iAssist
+ * previously shared via machineIdForFlow's fallback. Cloning it into its own
+ * file/registry id gives WF4 a dedicated machine instance so future changes
+ * made here for iAssist-specific needs (e.g. new states once Figma designs
+ * and field specs land) can never affect WF1/WF2, and vice versa.
+ *
+ * States/events/guards are identical to workflowMachine.ts today — this is
+ * an isolation boundary, not a behavior change. Only `id` and the initial
+ * `flowType` differ.
+ */
+
 import { createMachine, assign } from 'xstate';
-import type { MachineContext, DemoEvent, WorkflowData } from './types';
+import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from '@/engine/types';
+
+// Same contact details coaDtp.ts uses for its Retail/Mail/Self-Pay options —
+// BenefitPricing.tsx's PRICING_OPTIONS card already hardcodes "CVS Pharmacy
+// #3795" / "FutureScripts Home Delivery" as display text for BOTH flows (it's
+// a shared component), so selectedPharmacy needs to match those exact
+// pharmacies for iAssist too, not a different demo pharmacy.
+const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
+const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
+const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
-  flowType: 'Fax_QS_PA_Approved',
+  flowType: 'iAssist_PA_Approved',
   enrollmentStatus: "none",
   smsVerified: false,
   otpVerified: false,
@@ -17,14 +41,20 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   dispatchStatus: "none",
   qsStatus: "none",
   papStatus: "none",
-  papSmsSent: false,
-  papSmsVerified: false,
-  papOtpVerified: false,
-  incomeStatus: "none",
   selectedPharmacy: null,
   providerPACompleted: false,
   paSubmittedAt: null,
   paApprovedAt: null,
+  // Post-PA scheduling fields, originally added for CoA_DTP — now also
+  // driven by iAssist's own PA-approved SMS/OTP + pricing/address/date chain
+  // below (see the root-level VERIFY_PA_APPROVED_SMS/OTP, SELECT_PRICING_OPTION,
+  // SELECT_SELF_PAY, PATIENT_SETS_ADDRESS, PATIENT_SELECTS_SHIP_DATE handlers),
+  // which replicates coaDtp.ts's approved-path stages exactly. iAssist never
+  // denies PA, so the paDenied/cashOfferSent/paymentProcessed branch CoA_DTP
+  // also has is intentionally NOT replicated here — cashOfferStatus stays at
+  // its neutral default except for the self-pay PATIENT_PAYS/VERIFY_PAYMENT
+  // handlers below, which mirror CoA's pricingSelected/addressSet/
+  // shipDateSelected states exactly.
   pricingOption: null,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
@@ -59,10 +89,9 @@ const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
 
-
-export const workflowMachine = createMachine(
+export const iAssistMachine = createMachine(
   {
-    id: 'arxWorkflow',
+    id: 'iAssist',
     type: 'parallel',
     context: initialContext,
     on: {
@@ -70,33 +99,11 @@ export const workflowMachine = createMachine(
         actions: 'restoreLastSnapshot',
       },
       RESET: {
-        target: '#arxWorkflow',
-        // Keep the actor's own current flowType — INITIAL_WORKFLOW_DATA's
-        // flowType is just a static fallback for the (shared, flow-agnostic)
-        // "enrollment" machine, not a real default. Spreading it wholesale
-        // here would silently flip a PAP session back to WF1 on Reset.
-        actions: assign(({ context }) => ({
-          workflowData: { ...INITIAL_WORKFLOW_DATA, flowType: context.workflowData.flowType },
+        target: '#iAssist',
+        actions: assign(() => ({
+          workflowData: { ...INITIAL_WORKFLOW_DATA },
           events: [],
           _snapshots: [],
-        })),
-      },
-      // Corrective, internal-only action — see actorSingleton.ts's
-      // createActorForFlow. The "enrollment" machine (shared by WF1/WF2) has
-      // no way to know which of the two it's actually running as, since its
-      // static INITIAL_WORKFLOW_DATA.flowType is hardcoded to
-      // 'Fax_QS_PA_Approved'. actorSingleton sends this right after creating
-      // (or restoring) the actor so workflowData.flowType actually matches
-      // the flow the user selected, instead of every isPapFlow-style check
-      // silently reading WF1 defaults. Deliberately doesn't touch
-      // events/_snapshots — this isn't a demo action, just a correction.
-      SET_FLOW_TYPE: {
-        actions: assign(({ context, event }: any) => ({
-          ...context,
-          workflowData: {
-            ...context.workflowData,
-            flowType: event.flowType,
-          },
         })),
       },
       COMPLETE_PROVIDER_PA: {
@@ -127,52 +134,36 @@ export const workflowMachine = createMachine(
       DELIVER_RX: {
         actions: 'updatePharmacyDelivered',
       },
-      // Fax_PAP_Audit (WF2/PAP) only — BI comes back no_insurance, the
-      // Fulfillment Center stages an "application update" SMS (mirrors the
-      // initial enrollment SMS→OTP beat: tap link -> enter code), then the
-      // patient's eIncome check result flips PAP to "active" and opens
-      // dispatch the same way PA approval does for other flows.
-      SEND_PAP_SMS: {
-        actions: 'updatePapSmsSent',
+      // ── Post-PA-approval scheduling chain, replicated exactly from
+      // coaDtp.ts's approved path (paApproved -> paApprovedSmsVerified ->
+      // paApprovedOtpVerified -> pricingSelected -> addressSet ->
+      // shipDateSelected). Root-level action-only handlers, same pattern as
+      // SELECT_PHARMACY/READY_RX above — nothing here needs its own nested
+      // state node since every consumer (derivePatientRoute, CRM Index.tsx)
+      // reads workflowData fields, not raw state paths.
+      VERIFY_PA_APPROVED_SMS: {
+        actions: 'updatePaApprovedSmsVerified',
       },
-      VERIFY_PAP_SMS: {
-        actions: 'updatePapSmsVerified',
+      VERIFY_PA_APPROVED_OTP: {
+        actions: 'updatePaApprovedOtpVerified',
       },
-      VERIFY_PAP_OTP: {
-        actions: 'updatePapOtpVerified',
+      SELECT_PRICING_OPTION: {
+        actions: 'updateSelectPricingOption',
       },
-      VERIFY_INCOME: {
-        actions: 'updateIncomeVerified',
+      SELECT_SELF_PAY: {
+        actions: 'updateSelectSelfPay',
       },
-      // Fax_PAP_Audit (WF2/PAP) only — mirrors CoA_DTP/iAssist's own
-      // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE beat (see
-      // coaDtp.ts's addressSet/shipDateSelected states), reusing the same
-      // patient screens (DeliveryAddress.tsx/DeliveryDate.tsx) and the same
-      // event names. Unlike CoA/iAssist — where the pharmacy is already
-      // auto-assigned by the time address is set — WF2's CRM still picks
-      // the pharmacy afterward via the Triage tab's "Choose Pharmacy"
-      // (SELECT_PHARMACY); this only adds the patient-facing address/date
-      // confirmation ahead of that, gating WorkflowEngine.ts's
-      // Fax_PAP_Audit branch before it falls through to Dispatch to
-      // Triage. No dedicated states needed here (unlike coaDtp.ts) since
-      // WF2's FILL_RX guard (canFillRX) only checks papStatus, not a named
-      // state — flat context fields are enough.
       PATIENT_SETS_ADDRESS: {
-        actions: 'updatePapPatientSetsAddress',
+        actions: 'updatePatientSetsAddress',
       },
       PATIENT_SELECTS_SHIP_DATE: {
-        actions: 'updatePapPatientSelectsShipDate',
+        actions: 'updatePatientSelectsShipDate',
       },
-      // Fax_PAP_Audit (WF2/PAP) only — fired from the new PapNoInsuranceCard
-      // on the patient's home screen ("Enroll" CTA). incomeStatus's 'pending'
-      // value was declared in types.ts but never produced by anything until
-      // now: WorkflowEngine.ts's Fax_PAP_Audit branch shows the home card
-      // while incomeStatus is 'none' (right after papOtpVerified) and only
-      // routes to /income-qualification once it's 'pending', so the patient
-      // has to actually tap "Enroll" instead of landing on the eIncome form
-      // immediately after verifying the code.
-      START_INCOME_QUALIFICATION: {
-        actions: 'updateIncomeQualificationStarted',
+      PATIENT_PAYS: {
+        actions: 'updatePatientPays',
+      },
+      VERIFY_PAYMENT: {
+        actions: 'updateVerifyPayment',
       },
     },
     states: {
@@ -181,8 +172,20 @@ export const workflowMachine = createMachine(
         states: {
           idle: {
             on: {
+              // WF1's CRM-driven flow treats "enrolled" and "invited" as two
+              // separate manual clicks (see useEnrollPatient.ts) — ENROLL
+              // goes to 'pending', then a separate INVITE event moves to
+              // 'invited'. iAssist has no such second step: Rx submission
+              // (finishCase's ENROLL dispatch) already sends the welcome
+              // text in the same moment (enrollmentInviteSent is set true by
+              // updateEnrollmentPending below), so it must land directly in
+              // 'invited' — otherwise the region is stuck in 'pending'
+              // forever (nothing in the iAssist flow ever dispatches INVITE)
+              // and VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT — all only handled
+              // from 'invited' onward — get silently ignored no matter how
+              // correctly the patient walks through those screens.
               ENROLL: {
-                target: 'pending',
+                target: 'invited',
                 actions: 'updateEnrollmentPending',
               },
             },
@@ -233,6 +236,16 @@ export const workflowMachine = createMachine(
                 guard: 'canRunBI',
                 actions: 'updateBISubmitted',
               },
+              // iAssist completes BI the moment the eRx is submitted, same
+              // ENROLL dispatch that auto-submits PA below — iAssist runs
+              // its own benefits investigation instantly rather than
+              // waiting on the patient consent RUN_BI normally requires.
+              // Jumping straight to 'complete' (not 'submitted') skips the
+              // "Running..." visual, since there's no real wait to show.
+              ENROLL: {
+                target: 'complete',
+                actions: 'updateBIComplete',
+              },
             },
           },
           submitted: {
@@ -255,6 +268,17 @@ export const workflowMachine = createMachine(
               SUBMIT_PA: {
                 target: 'submitted',
                 guard: 'canSubmitPA',
+                actions: 'updatePASubmitted',
+              },
+              // iAssist auto-submits PA the moment the eRx is submitted
+              // (finishCase's ENROLL dispatch) — iAssist runs BI and PA
+              // submission itself, so this doesn't wait on the normal
+              // biStatus==='complete' guard SUBMIT_PA uses. The parallel
+              // 'enrollment' region handles the same ENROLL event for its
+              // own transition; this is a second, independent handler for
+              // that event in a different region, not a replacement.
+              ENROLL: {
+                target: 'submitted',
                 actions: 'updatePASubmitted',
               },
             },
@@ -443,67 +467,52 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'DELIVER_RX', 'field', 12)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateCompleteProviderPA: assign(({ context }) => ({
+      // ── Post-PA-approval scheduling actions, mirroring coaDtp.ts's
+      // paApprovedSmsVerified/paApprovedOtpVerified/pricingSelected/
+      // addressSet/shipDateSelected context updates field-for-field.
+      updatePaApprovedSmsVerified: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
-          providerPACompleted: true,
+          paApprovedSmsVerified: true,
         },
-        events: [...context.events, createEvent(context, 'COMPLETE_PROVIDER_PA', 'provider', 13)],
+        events: [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_SMS', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePapSmsSent: assign(({ context }) => ({
+      updatePaApprovedOtpVerified: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
-          papSmsSent: true,
+          paApprovedOtpVerified: true,
         },
-        events: [...context.events, createEvent(context, 'SEND_PAP_SMS', 'crm', 7)],
+        events: [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_OTP', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePapSmsVerified: assign(({ context }) => ({
+      updateSelectPricingOption: assign(({ context, event }: any) => ({
         workflowData: {
           ...context.workflowData,
-          papSmsVerified: true,
+          pricingOption: event.option,
+          selectedPharmacy: event.option === 'retail' ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
         },
-        events: [...context.events, createEvent(context, 'VERIFY_PAP_SMS', 'patient', 7)],
+        events: [...context.events, createEvent(context, 'SELECT_PRICING_OPTION', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePapOtpVerified: assign(({ context }) => ({
+      updateSelectSelfPay: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
-          papOtpVerified: true,
+          pricingOption: 'self_pay',
+          selectedPharmacy: SELF_PAY_PHARMACY,
         },
-        events: [...context.events, createEvent(context, 'VERIFY_PAP_OTP', 'patient', 7)],
+        events: [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateIncomeVerified: assign(({ context }) => ({
+      updatePatientSetsAddress: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
-          incomeStatus: 'verified',
-          papStatus: 'active',
-          // Mirrors updatePAApproved: opens up Triage/pharmacy dispatch the
-          // instant PAP is approved, before anyone's picked a pharmacy.
-          dispatchStatus:
-            context.workflowData.dispatchStatus === 'none'
-              ? 'pending_selection'
-              : context.workflowData.dispatchStatus,
-        },
-        events: [...context.events, createEvent(context, 'VERIFY_INCOME', 'patient', 8)],
-        _snapshots: pushSnapshot(context._snapshots, context),
-      })),
-      updatePapPatientSetsAddress: assign(({ context }) => ({
-        workflowData: {
-          ...context.workflowData,
-          // Matches coaDtp.ts's PATIENT_SETS_ADDRESS exactly (dispatchStatus
-          // -> 'selected'). CRM still separately assigns the actual pharmacy
-          // via SELECT_PHARMACY on the Triage tab — this only signals "the
-          // patient's done their part," which is what canDispatchToPharmacy
-          // (Index.tsx) and canFillRX (this file's guards) key off.
           dispatchStatus: 'selected',
         },
         events: [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updatePapPatientSelectsShipDate: assign(({ context }) => ({
+      updatePatientSelectsShipDate: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
           patientShipDate: new Date().toISOString(),
@@ -511,12 +520,28 @@ export const workflowMachine = createMachine(
         events: [...context.events, createEvent(context, 'PATIENT_SELECTS_SHIP_DATE', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
-      updateIncomeQualificationStarted: assign(({ context }) => ({
+      updatePatientPays: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
-          incomeStatus: 'pending',
+          cashOfferStatus: 'paid',
         },
-        events: [...context.events, createEvent(context, 'START_INCOME_QUALIFICATION', 'patient', 8)],
+        events: [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateVerifyPayment: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          paymentVerified: true,
+        },
+        events: [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'patient', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
+      updateCompleteProviderPA: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          providerPACompleted: true,
+        },
+        events: [...context.events, createEvent(context, 'COMPLETE_PROVIDER_PA', 'provider', 13)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       restoreLastSnapshot: assign(({ context }) => {
@@ -533,17 +558,7 @@ export const workflowMachine = createMachine(
     guards: {
       canRunBI: ({ context }) => context.workflowData.consentStatus === 'confirmed',
       canSubmitPA: ({ context }) => context.workflowData.biStatus === 'complete',
-      // Fax_PAP_Audit (WF2/PAP) never sets paStatus — it stays 'none' for
-      // that flow forever by design (see the SEND_PAP_SMS/VERIFY_INCOME
-      // comment above). Its equivalent "cleared to dispatch" signal is
-      // papStatus flipping to 'active' (set by updateIncomeVerified once
-      // the eIncome check passes). Without this, WF2 could never actually
-      // reach FILL_RX in a real click-through — the guard would silently
-      // block it forever since paStatus === 'approved' is unreachable for
-      // this flow.
-      canFillRX: ({ context }) =>
-        context.workflowData.paStatus === 'approved' ||
-        context.workflowData.papStatus === 'active',
+      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved',
     },
   }
 );
