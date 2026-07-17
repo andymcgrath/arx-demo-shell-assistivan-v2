@@ -247,45 +247,13 @@ const STAGES_PAP_AUDIT: Stage[] = [
     lastUpdated: null,
     lastUpdatedAgo: null,
   },
-  {
-    id: "AUDIT-14280",
-    name: "PAP Audit",
-    statusLabel: "Stage not started",
-    statusDetail: "Scheduled — 90 days post-enrollment",
-    isComplete: false,
-    isNotStarted: true,
-    fields: [
-      { label: "Audit Type", value: "ABV Insurance Check" },
-      { label: "Scheduled Date", value: null },
-    ],
-    lastUpdated: null,
-    lastUpdatedAgo: null,
-  },
-  {
-    id: "PA-14274",
-    name: "Prior Authorization",
-    statusLabel: "Stage not started",
-    statusDetail: "Pending audit result",
-    isComplete: false,
-    isNotStarted: true,
-    fields: [],
-    lastUpdated: null,
-    lastUpdatedAgo: null,
-  },
-  {
-    id: "A-14275",
-    name: "Appeals",
-    statusLabel: "Stage not started",
-    statusDetail: "No Status available",
-    isComplete: false,
-    isNotStarted: true,
-    fields: [
-      { label: "Pharmacy Notes", value: null },
-      { label: "Shipment Date", value: null },
-    ],
-    lastUpdated: null,
-    lastUpdatedAgo: null,
-  },
+  // PAP Audit (AUDIT-14280), Prior Authorization (PA-14274), and Appeals
+  // (A-14275) were removed from this list on request — none of them are
+  // implemented for Fax_PAP_Audit (papStatus never reaches 'audit_pending',
+  // paStatus never leaves 'none' for this flow, and no appeal concept
+  // exists at all — see auditStage/paStage/appealStage below, still shared
+  // with WF1's STAGES list where paStage/appealStage are real). WF2 now
+  // ends its CRM stage list at Pharmacy Status / Medication Delivered.
 ];
 
 const STAGES: Stage[] = [
@@ -1064,9 +1032,6 @@ export default function Index() {
         : s.id === "PAP-14279" ? papStage
         : s.id === "TP-14277" ? tpStage
         : s.id === "PS-14278" ? psStage
-        : s.id === "AUDIT-14280" ? auditStage
-        : s.id === "PA-14274" ? paStage
-        : s.id === "A-14275" ? appealStage
         : s.id === "FA-14276" ? faStage
         : s
       )
