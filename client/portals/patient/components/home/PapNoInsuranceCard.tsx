@@ -24,7 +24,7 @@ export default function PapNoInsuranceCard() {
     <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-xl font-bold leading-snug text-arx-slate">
-          No active insurance on file
+          We couldn't confirm active insurance coverage
         </h2>
         <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-primary">
           <HeartHandshake className="w-6 h-6 text-white" />
@@ -33,13 +33,13 @@ export default function PapNoInsuranceCard() {
 
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-arx-body-copy">
         <p>
-          We checked your benefits and couldn't find active insurance coverage for this
-          medication.
+          We checked, but weren't able to find active insurance coverage on file for this
+          medication. This doesn't mean you're out of options.
         </p>
         <p>
-          The good news: you may be eligible for our Patient Assistance Program, which
-          provides this medication at no cost to qualifying patients. It only takes a couple
-          of minutes to check.
+          There's good news: You may qualify for our Patient Assistance Program, which can
+          provide this medication at no cost. Checking your eligibility takes just a couple of
+          minutes — and there's no obligation.
         </p>
       </div>
 
