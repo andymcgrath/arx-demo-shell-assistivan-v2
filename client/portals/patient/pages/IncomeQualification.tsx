@@ -55,7 +55,7 @@ export default function IncomeQualification() {
               <h2 className="text-xl font-bold leading-snug text-arx-slate">You're eligible!</h2>
             </div>
             <p className="text-sm leading-relaxed text-arx-body-copy mb-5">
-              Based on your household information, you qualify for the Jascayd free drug program. Your application has been submitted and is being reviewed.
+              Based on your household information, you qualify for the {PROGRAM.drugDisplayName} free drug program. Your application has been submitted and is being reviewed.
             </p>
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5">
               <p className="text-sm font-semibold text-green-800">Application submitted</p>
@@ -89,7 +89,7 @@ export default function IncomeQualification() {
             </div>
 
             <p className="text-sm leading-relaxed text-arx-body-copy mb-5">
-              Great news — based on the information you provided, you appear to be eligible for the Jascayd free drug program. Since this medication is provided at no cost, no insurance is required.
+              Great news — based on the information you provided, you appear to be eligible for the {PROGRAM.drugDisplayName} free drug program. Since this medication is provided at no cost, no insurance is required.
             </p>
 
             <div className="bg-arx-sky/20 border border-arx-sky rounded-xl px-4 py-3 mb-5 space-y-1.5">
@@ -130,7 +130,7 @@ export default function IncomeQualification() {
           </div>
           <h2 className="text-xl font-bold leading-snug text-arx-slate mb-2">Check your eligibility</h2>
           <p className="text-sm leading-relaxed text-arx-body-copy">
-            Jascayd is available at <strong>no cost</strong> to eligible patients. Answer a few quick questions to see if you qualify.
+            {PROGRAM.drugDisplayName} is available at <strong>no cost</strong> to eligible patients. Answer a few quick questions to see if you qualify.
           </p>
         </div>
 
