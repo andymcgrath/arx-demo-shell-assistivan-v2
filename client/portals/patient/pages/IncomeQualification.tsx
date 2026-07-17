@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, ChevronRight, Users, DollarSign } from "lucide-react";
+import { CheckCircle, ChevronRight, Users, DollarSign, Loader2 } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import ProgramLogo from "@/components/brand/ProgramLogo";
@@ -24,6 +24,7 @@ export default function IncomeQualification() {
   const [householdSize, setHouseholdSize] = useState("");
   const [incomeRaw, setIncomeRaw] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
 
   const incomeDisplay = formatIncome(incomeRaw);
   const canSubmit = householdSize !== "" && incomeRaw !== "";
@@ -34,8 +35,12 @@ export default function IncomeQualification() {
   }
 
   function handleSubmit() {
-    if (!canSubmit) return;
-    setSubmitted(true);
+    if (!canSubmit || checkingEligibility) return;
+    setCheckingEligibility(true);
+    setTimeout(() => {
+      setCheckingEligibility(false);
+      setSubmitted(true);
+    }, 2000);
   }
 
   function handleConfirm() {
@@ -181,15 +186,24 @@ export default function IncomeQualification() {
 
           <button
             onClick={handleSubmit}
-            disabled={!canSubmit}
+            disabled={!canSubmit || checkingEligibility}
             className="w-full text-white font-semibold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             style={{
               backgroundColor: canSubmit ? "hsl(var(--arx-primary))" : "#c4c4c4",
-              cursor: canSubmit ? "pointer" : "not-allowed",
+              cursor: canSubmit && !checkingEligibility ? "pointer" : "not-allowed",
             }}
           >
-            Check eligibility
-            <ChevronRight className="w-4 h-4" />
+            {checkingEligibility ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Checking eligibility…
+              </>
+            ) : (
+              <>
+                Check eligibility
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
 
