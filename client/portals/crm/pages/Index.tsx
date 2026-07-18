@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { getLiveWorkItems } from "@/engine/WorkflowEngine";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
@@ -2950,48 +2951,38 @@ export default function Index() {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Missing Information task - always visible with status reflecting workflow */}
-                    <tr className="hover:bg-[#f3f3f3] transition-colors">
-                      <td className="px-3 py-2.5 border-b border-[#dddbda] font-medium cursor-pointer hover:underline" style={{ color: SF_BLUE }}>
-                        Missing Information
-                      </td>
-                      <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c]">
-                        High
-                      </td>
-                      <td className="px-3 py-2.5 border-b border-[#dddbda]">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: biStatus === "complete" ? "#e8f4ef" : "#fff3cd", color: biStatus === "complete" ? "#2e844a" : "#856404" }}>
-                          {biStatus === "complete" ? "Closed" : "Open"}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">
-                        Jun 14, 2026
-                      </td>
-                      <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c]">
-                        Sarah Mitchell
-                      </td>
-                    </tr>
-                    {/* Prior Authorization Requested task - always visible when BI is complete */}
-                    {biStatus === "complete" && (
-                      <tr className="hover:bg-[#f3f3f3] transition-colors">
+                    {/* Same two tasks Field Portal's "My Tasks" shows for this
+                        patient — one shared computation (getLiveWorkItems in
+                        WorkflowEngine.ts) drives status/visibility in both
+                        places, so they can't disagree with each other or with
+                        this case's own live Enrollment Assistance (EA-14272)
+                        stage card. */}
+                    {getLiveWorkItems({
+                      enrollmentStatus: workflowData.enrollmentStatus,
+                      consentStatus,
+                      biStatus,
+                      paStatus,
+                    }).map((item) => (
+                      <tr key={item.id} className="hover:bg-[#f3f3f3] transition-colors">
                         <td className="px-3 py-2.5 border-b border-[#dddbda] font-medium cursor-pointer hover:underline" style={{ color: SF_BLUE }}>
-                          Prior Authorization Requested
+                          {item.refId}
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c]">
-                          High
+                          {item.priority}
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#dddbda]">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: paStatus === "approved" ? "#e8f4ef" : "#fff3cd", color: paStatus === "approved" ? "#2e844a" : "#856404" }}>
-                            {paStatus === "approved" ? "Closed" : "Open"}
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: item.status === "Closed" ? "#e8f4ef" : "#fff3cd", color: item.status === "Closed" ? "#2e844a" : "#856404" }}>
+                            {item.status}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">
-                          {new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          {item.dueDate}
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#3e3e3c]">
-                          Sarah Mitchell
+                          {item.assignedTo}
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>

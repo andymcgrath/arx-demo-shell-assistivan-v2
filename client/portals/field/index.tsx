@@ -4,6 +4,7 @@ import { useDemoStore } from "@/store/demoStore";
 import { useFieldStore, type FieldItem, type FieldPatientRecord } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
+import { getLiveWorkItems } from "@/engine/WorkflowEngine";
 
 // Core data model
 // Legacy shape the dashboard quick-view modal and task detail drill-in were
@@ -54,6 +55,30 @@ function toCase(item: FieldItem): Case {
   };
 }
 
+// ── Calendar item categorization ─────────────────────────────────────────────
+// Same categories, checked in the same priority order, as the dashboard's
+// filter cards/quick-view table — an item colored "Urgent" on the calendar
+// is exactly the set of items the "Urgent Tasks" card would show. "Due
+// Today" and "Created Today" aren't included here: every chip on a given
+// day already IS that day's due items, so "Due Today" would just recolor
+// whatever's on today's cell, and "Created Today" is a creation-date fact
+// that has nothing to do with which day a due-date calendar groups it under.
+type CalendarCategory = "urgent" | "pendingConsent" | "idle" | "other";
+
+const CALENDAR_CATEGORY_STYLES: Record<CalendarCategory, { swatch: string; text: string; label: string }> = {
+  urgent: { swatch: "bg-arx-orange", text: "text-slate-900", label: "Urgent Task" },
+  pendingConsent: { swatch: "bg-arx-sky", text: "text-slate-900", label: "Pending Consent" },
+  idle: { swatch: "bg-arx-primary-30", text: "text-slate-900", label: "Idle Case" },
+  other: { swatch: "bg-slate-300", text: "text-slate-800", label: "Other" },
+};
+
+function getCalendarCategory(c: Case): CalendarCategory {
+  if (c.kind === "Task" && c.priority === "High" && c.status !== "Closed") return "urgent";
+  if (c.status === "Pending Consent") return "pendingConsent";
+  if (c.kind === "Case" && c.status === "Idle") return "idle";
+  return "other";
+}
+
 export default function FieldPortal() {
   const { state } = useDemoState("Field");
   const demoState = useDemoStore();
@@ -63,6 +88,7 @@ export default function FieldPortal() {
   const paStatus = state.pa_status;
   const consentStatus = state.consent_status;
   const enrollmentStatus = state.enrollment_status;
+  const biStatus = state.bi_status;
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -70,69 +96,39 @@ export default function FieldPortal() {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 5, 1));
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
-
-  const currentDate = new Date();
-  const daysUntilPADue = new Date(currentDate.getTime() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const [previewItem, setPreviewItem] = useState<Case | null>(null);
 
   // Field Portal's core dataset — seeded once, persisted to sessionStorage
   // (see client/store/fieldStore.ts). Does not vary by workflow.
   const { items: persistedItems, hcps: fieldHCPs, patients: storePatients } = useFieldStore();
 
-  const liveItems: FieldItem[] = [];
-
-  // Field doesn't work referrals that haven't been enrolled yet — that's
-  // CRM/HUB's job. Before enrollmentStatus flips to "enrolled", there's no
-  // real case for a field agent to see, so neither live task below exists
-  // at all: no half-populated row with a blank prescriber and a patient
-  // name that isn't a real, clickable patient record yet.
-  if (enrollmentStatus === "enrolled") {
-    // "Missing Information" task - created in the CRM on eRx submission,
-    // closed once the patient completes enrollment (consentStatus flips to
-    // "confirmed" — the same field the HUB's own EA-14272 stage uses to mark
-    // "Enrollment Completed"). Not gated on biStatus, since iAssist can reach
-    // full enrollment via the patient consent flow independent of BI. Kept
-    // live (computed every render from the actor) rather than persisted, so
-    // it always reflects whichever workflow is actually active.
-    liveItems.push({
-      id: "LIVE-MISSING-INFO",
-      kind: "Task",
-      refId: "Missing Information",
-      status: consentStatus === "confirmed" ? "Closed" : "Open",
-      priority: "High",
-      dueDate: "Jun 14, 2026",
-      createdAt: "Jun 14, 2026",
-      patient: patientState.patientName,
-      patientId: "AS-164543",
-      prescriber: "---",
-      territory: "---",
-      assignedTo: "Sarah Mitchell",
-      subStatus: "--None--",
-      description: "Gather missing patient information for enrollment",
-    });
-
-    // "Prior Authorization Requested" task - created once PA has been
-    // submitted (paStatus !== "none"), closed on Approval. Keyed off paStatus
-    // rather than biStatus so iAssist's auto-submitted PA (which can happen
-    // before BI ever runs) still surfaces this task.
-    if (paStatus !== "none") {
-      liveItems.push({
-        id: "LIVE-PA-REQUESTED",
-        kind: "Task",
-        refId: "Prior Authorization Requested",
-        status: paStatus === "approved" ? "Closed" : "Open",
-        priority: "High",
-        dueDate: daysUntilPADue,
-        createdAt: "Jun 14, 2026",
-        patient: patientState.patientName,
-        patientId: "AS-164543",
-        prescriber: "---",
-        territory: "---",
-        assignedTo: "Sarah Mitchell",
-        subStatus: "--None--",
-        description: "Submit Prior Authorization request to payer",
-      });
-    }
-  }
+  // "Missing Information" and "Prior Authorization Requested" — the same two
+  // tasks CRM's Related Tasks case tab shows for this patient, computed by
+  // the one shared function both portals call (client/engine/WorkflowEngine.ts)
+  // so status/visibility can't drift between them again. Kept live (computed
+  // every render from the actor) rather than persisted, so it always reflects
+  // whichever workflow is actually active.
+  const liveItems: FieldItem[] = getLiveWorkItems({
+    enrollmentStatus,
+    consentStatus,
+    biStatus,
+    paStatus,
+  }).map((item) => ({
+    id: `LIVE-${item.id.toUpperCase()}`,
+    kind: "Task",
+    refId: item.refId,
+    status: item.status,
+    priority: item.priority,
+    dueDate: item.dueDate,
+    createdAt: "Jun 14, 2026",
+    patient: patientState.patientName,
+    patientId: "AS-164543",
+    prescriber: "---",
+    territory: "---",
+    assignedTo: item.assignedTo,
+    subStatus: "--None--",
+    description: item.description,
+  }));
 
   // Single source of truth for every task/case-shaped view on this portal —
   // the two live entries above plus the persisted seed. Dashboard KPI
@@ -242,25 +238,32 @@ export default function FieldPortal() {
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   
-  const getCaseDatesForMonth = (date: Date) => {
-    const caseDates = new Set<number>();
+  // Groups every non-Closed task/case onto the day of its due date, for
+  // whichever month is currently showing — this is what puts colored items
+  // on the calendar. Closed items are left off; a completed task isn't
+  // really "on the calendar" anymore.
+  const getItemsByDayForMonth = (date: Date): Map<number, Case[]> => {
+    const itemsByDay = new Map<number, Case[]>();
     const monthName = date.toLocaleDateString('en-US', { month: 'short' });
     const year = date.getFullYear().toString();
     cases.forEach(c => {
+      if (c.status === "Closed") return;
       const parts = c.dueDate.split(' ');
       if (parts[0] === monthName && parts[2] === year) {
         const dayNum = parseInt(parts[1], 10);
         if (Number.isInteger(dayNum) && dayNum >= 1 && dayNum <= 31) {
-          caseDates.add(dayNum);
+          const existing = itemsByDay.get(dayNum) ?? [];
+          existing.push(c);
+          itemsByDay.set(dayNum, existing);
         }
       }
     });
-    return caseDates;
+    return itemsByDay;
   };
 
   const daysInMonth = getDaysInMonth(currentMonth);
   const firstDay = getFirstDayOfMonth(currentMonth);
-  const caseDates = getCaseDatesForMonth(currentMonth);
+  const itemsByDay = getItemsByDayForMonth(currentMonth);
   const calendarDays: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -503,49 +506,84 @@ export default function FieldPortal() {
 
                   {/* Calendar Views */}
                   {calendarView === "Month" && (
-                    <div className="border border-slate-300 rounded">
-                      {/* Day Headers */}
-                      <div className="grid grid-cols-7 bg-arx-primary">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                          <div
-                            key={day}
-                            className={`text-center py-3 text-white text-xs font-semibold ${
-                              idx < 6 ? 'border-r border-arx-primary-dark' : ''
-                            }`}
-                          >
-                            {day}
-                          </div>
+                    <div>
+                      {/* Legend — same colors as the dashboard filter cards
+                          above, so a chip's color tells you which filter
+                          would surface it. */}
+                      <div className="flex items-center gap-4 mb-3 text-xs text-slate-600 flex-wrap">
+                        {(Object.keys(CALENDAR_CATEGORY_STYLES) as CalendarCategory[]).map((cat) => (
+                          <span key={cat} className="flex items-center gap-1.5">
+                            <span className={`w-2.5 h-2.5 rounded-full inline-block ${CALENDAR_CATEGORY_STYLES[cat].swatch}`} />
+                            {CALENDAR_CATEGORY_STYLES[cat].label}
+                          </span>
                         ))}
                       </div>
 
-                      {/* Calendar Days */}
-                      <div className="grid grid-cols-7 bg-white">
-                        {calendarDays.map((day, idx) => {
-                          const isLastCol = (idx + 1) % 7 === 0;
-                          const isLastRow = idx >= calendarDays.length - 7;
-                          return (
+                      <div className="border border-slate-300 rounded">
+                        {/* Day Headers */}
+                        <div className="grid grid-cols-7 bg-arx-primary">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
                             <div
-                              key={idx}
-                              className={`border-slate-300 p-3 min-h-20 ${
-                                !isLastCol ? 'border-r' : ''
-                              } ${
-                                !isLastRow ? 'border-b' : ''
-                              } ${
-                                day === null ? 'bg-slate-50' : ''
+                              key={day}
+                              className={`text-center py-3 text-white text-xs font-semibold ${
+                                idx < 6 ? 'border-r border-arx-primary-dark' : ''
                               }`}
                             >
-                              {day && (
-                                <div>
-                                  <p className={`text-sm mb-2 ${
-                                    day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear() ? 'text-slate-900' : 'font-medium text-slate-700'
-                                  }`}>
-                                    {day}
-                                  </p>
-                                </div>
-                              )}
+                              {day}
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
+
+                        {/* Calendar Days */}
+                        <div className="grid grid-cols-7 bg-white">
+                          {calendarDays.map((day, idx) => {
+                            const isLastCol = (idx + 1) % 7 === 0;
+                            const isLastRow = idx >= calendarDays.length - 7;
+                            const dayItems = day ? itemsByDay.get(day) ?? [] : [];
+                            const visibleItems = dayItems.slice(0, 3);
+                            const overflowCount = dayItems.length - visibleItems.length;
+                            return (
+                              <div
+                                key={idx}
+                                className={`border-slate-300 p-2 min-h-24 ${
+                                  !isLastCol ? 'border-r' : ''
+                                } ${
+                                  !isLastRow ? 'border-b' : ''
+                                } ${
+                                  day === null ? 'bg-slate-50' : ''
+                                }`}
+                              >
+                                {day && (
+                                  <div>
+                                    <p className={`text-sm mb-1 px-0.5 ${
+                                      day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear() ? 'text-slate-900' : 'font-medium text-slate-700'
+                                    }`}>
+                                      {day}
+                                    </p>
+                                    <div className="space-y-0.5">
+                                      {visibleItems.map((item) => {
+                                        const style = CALENDAR_CATEGORY_STYLES[getCalendarCategory(item)];
+                                        return (
+                                          <button
+                                            key={item.id}
+                                            onClick={() => setPreviewItem(item)}
+                                            title={item.refId}
+                                            className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] font-medium truncate block ${style.swatch} ${style.text} hover:opacity-80 transition-opacity`}
+                                          >
+                                            {item.refId}
+                                          </button>
+                                        );
+                                      })}
+                                      {overflowCount > 0 && (
+                                        <p className="text-[10px] text-slate-500 px-1.5">+{overflowCount} more</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -609,6 +647,78 @@ export default function FieldPortal() {
                   )}
                 </div>
               </div>
+
+              {/* Calendar item preview — clicking a chip opens this instead
+                  of jumping straight to the full detail view. "Close"
+                  dismisses it; "Open Details" hands off to the same
+                  case/task detail screen every other entry point uses. */}
+              {previewItem && (
+                <div
+                  className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                  onClick={() => setPreviewItem(null)}
+                >
+                  <div
+                    className="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className={`px-5 py-4 flex items-center justify-between ${CALENDAR_CATEGORY_STYLES[getCalendarCategory(previewItem)].swatch}`}>
+                      <h3 className={`text-sm font-semibold ${CALENDAR_CATEGORY_STYLES[getCalendarCategory(previewItem)].text}`}>
+                        {previewItem.refId}
+                      </h3>
+                      <button
+                        onClick={() => setPreviewItem(null)}
+                        aria-label="Close"
+                        className={`rounded p-1 hover:opacity-70 ${CALENDAR_CATEGORY_STYLES[getCalendarCategory(previewItem)].text}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="p-5 space-y-2.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">Patient</span>
+                        <span className="font-medium text-slate-800">{previewItem.patientName || "---"}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">Status</span>
+                        <span className="font-medium text-slate-800">{previewItem.status}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">Priority</span>
+                        <span className="font-medium text-slate-800">{previewItem.priority}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">Due Date</span>
+                        <span className="font-medium text-slate-800">{previewItem.dueDate}</span>
+                      </div>
+                      {previewItem.description && (
+                        <p className="text-sm text-slate-600 pt-2 border-t border-slate-100">
+                          {previewItem.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="px-5 py-4 border-t border-slate-200 flex justify-end gap-2">
+                      <button
+                        onClick={() => setPreviewItem(null)}
+                        className="px-4 py-2 text-sm rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
+                      >
+                        Close
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedPatientId(null);
+                          setSelectedTaskId(previewItem.id);
+                          setPreviewItem(null);
+                        }}
+                        className="px-4 py-2 text-sm rounded bg-arx-primary text-white hover:bg-arx-primary-dark"
+                      >
+                        Open Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>

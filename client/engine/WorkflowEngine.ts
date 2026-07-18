@@ -363,3 +363,77 @@ export function getUndoSnapshot(snapshots: MachineContext[]): MachineContext | n
 
   return snapshots[snapshots.length - 2];
 }
+
+// ── Live work items ───────────────────────────────────────────────────────────
+//
+// "Missing Information" and "Prior Authorization Requested" are the same two
+// tasks CRM's "Related Tasks" case tab and Field Portal's "My Tasks" both
+// display for the active patient — one task, two locations. They used to be
+// computed independently in each portal, and disagreed: CRM's Related Tasks
+// tab closed "Missing Information" on biStatus === 'complete', while CRM's
+// own live Enrollment Assistance stage card (EA-14272) and Field Portal both
+// correctly close it on consentStatus === 'confirmed'. This is the one place
+// that decides, so both portals show identical status for identical
+// workflowData — task progression is driven by these stage transitions, not
+// by each portal's own copy of the logic.
+export interface LiveWorkItem {
+  id: string;
+  refId: string;
+  status: 'Open' | 'Closed';
+  priority: 'High';
+  dueDate: string;
+  assignedTo: string;
+  description: string;
+}
+
+export interface LiveWorkItemInputs {
+  enrollmentStatus: string;
+  consentStatus: string;
+  biStatus: string;
+  paStatus: string;
+}
+
+export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
+  // Field doesn't work referrals that haven't been enrolled yet, and CRM has
+  // nothing case-related to show either — neither task exists before this.
+  if (input.enrollmentStatus !== 'enrolled') {
+    return [];
+  }
+
+  const items: LiveWorkItem[] = [
+    {
+      id: 'missing-information',
+      refId: 'Missing Information',
+      // Matches CRM's live EA-14272 (Enrollment Assistance) stage card, which
+      // is the actual source of truth for "is enrollment done" — not biStatus.
+      status: input.consentStatus === 'confirmed' ? 'Closed' : 'Open',
+      priority: 'High',
+      dueDate: 'Jun 14, 2026',
+      assignedTo: 'Sarah Mitchell',
+      description: 'Gather missing patient information for enrollment',
+    },
+  ];
+
+  // Appears once Benefits Investigation completes — that's the stage
+  // transition that makes submitting a PA the next actionable thing to do,
+  // matching CRM's existing trigger for this row (Field Portal previously
+  // waited until paStatus !== 'none', i.e. after submission had already
+  // happened, which is too late for this to function as a to-do).
+  if (input.biStatus === 'complete') {
+    items.push({
+      id: 'pa-submission-required',
+      refId: 'Prior Authorization Requested',
+      status: input.paStatus === 'approved' ? 'Closed' : 'Open',
+      priority: 'High',
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      assignedTo: 'Sarah Mitchell',
+      description: 'Submit Prior Authorization request to payer',
+    });
+  }
+
+  return items;
+}
