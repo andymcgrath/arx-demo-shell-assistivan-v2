@@ -80,42 +80,26 @@ export default function FieldPortal() {
 
   const liveItems: FieldItem[] = [];
 
-  // "Missing Information" task - created in the CRM on eRx submission,
-  // closed once the patient completes enrollment (consentStatus flips to
-  // "confirmed" — the same field the HUB's own EA-14272 stage uses to mark
-  // "Enrollment Completed"). Not gated on biStatus, since iAssist can reach
-  // full enrollment via the patient consent flow independent of BI. Kept
-  // live (computed every render from the actor) rather than persisted, so
-  // it always reflects whichever workflow is actually active.
-  liveItems.push({
-    id: "LIVE-MISSING-INFO",
-    kind: "Task",
-    refId: "Missing Information",
-    status: consentStatus === "confirmed" ? "Closed" : "Open",
-    priority: "High",
-    dueDate: "Jun 14, 2026",
-    createdAt: "Jun 14, 2026",
-    patient: patientState.patientName,
-    patientId: "AS-164543",
-    prescriber: "---",
-    territory: "---",
-    assignedTo: "Sarah Mitchell",
-    subStatus: "--None--",
-    description: "Gather missing patient information for enrollment",
-  });
-
-  // "Prior Authorization Requested" task - created once PA has been
-  // submitted (paStatus !== "none"), closed on Approval. Keyed off paStatus
-  // rather than biStatus so iAssist's auto-submitted PA (which can happen
-  // before BI ever runs) still surfaces this task.
-  if (paStatus !== "none") {
+  // Field doesn't work referrals that haven't been enrolled yet — that's
+  // CRM/HUB's job. Before enrollmentStatus flips to "enrolled", there's no
+  // real case for a field agent to see, so neither live task below exists
+  // at all: no half-populated row with a blank prescriber and a patient
+  // name that isn't a real, clickable patient record yet.
+  if (enrollmentStatus === "enrolled") {
+    // "Missing Information" task - created in the CRM on eRx submission,
+    // closed once the patient completes enrollment (consentStatus flips to
+    // "confirmed" — the same field the HUB's own EA-14272 stage uses to mark
+    // "Enrollment Completed"). Not gated on biStatus, since iAssist can reach
+    // full enrollment via the patient consent flow independent of BI. Kept
+    // live (computed every render from the actor) rather than persisted, so
+    // it always reflects whichever workflow is actually active.
     liveItems.push({
-      id: "LIVE-PA-REQUESTED",
+      id: "LIVE-MISSING-INFO",
       kind: "Task",
-      refId: "Prior Authorization Requested",
-      status: paStatus === "approved" ? "Closed" : "Open",
+      refId: "Missing Information",
+      status: consentStatus === "confirmed" ? "Closed" : "Open",
       priority: "High",
-      dueDate: daysUntilPADue,
+      dueDate: "Jun 14, 2026",
       createdAt: "Jun 14, 2026",
       patient: patientState.patientName,
       patientId: "AS-164543",
@@ -123,8 +107,31 @@ export default function FieldPortal() {
       territory: "---",
       assignedTo: "Sarah Mitchell",
       subStatus: "--None--",
-      description: "Submit Prior Authorization request to payer",
+      description: "Gather missing patient information for enrollment",
     });
+
+    // "Prior Authorization Requested" task - created once PA has been
+    // submitted (paStatus !== "none"), closed on Approval. Keyed off paStatus
+    // rather than biStatus so iAssist's auto-submitted PA (which can happen
+    // before BI ever runs) still surfaces this task.
+    if (paStatus !== "none") {
+      liveItems.push({
+        id: "LIVE-PA-REQUESTED",
+        kind: "Task",
+        refId: "Prior Authorization Requested",
+        status: paStatus === "approved" ? "Closed" : "Open",
+        priority: "High",
+        dueDate: daysUntilPADue,
+        createdAt: "Jun 14, 2026",
+        patient: patientState.patientName,
+        patientId: "AS-164543",
+        prescriber: "---",
+        territory: "---",
+        assignedTo: "Sarah Mitchell",
+        subStatus: "--None--",
+        description: "Submit Prior Authorization request to payer",
+      });
+    }
   }
 
   // Single source of truth for every task/case-shaped view on this portal —
