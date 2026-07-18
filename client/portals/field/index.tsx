@@ -62,6 +62,7 @@ export default function FieldPortal() {
   // Workflow state from actor (via useDemoState)
   const paStatus = state.pa_status;
   const consentStatus = state.consent_status;
+  const enrollmentStatus = state.enrollment_status;
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -172,7 +173,18 @@ export default function FieldPortal() {
   // above: My Patients, the patient detail screen, and a case's "Patient Id"
   // link all resolve against this same list instead of three different
   // patient shapes.
-  const allPatients: FieldPatientRecord[] = [livePatient, ...storePatients];
+  //
+  // The live patient only joins that list once actually enrolled — the
+  // "Missing Information" task's whole point is that this patient isn't a
+  // real, workable patient record yet. Showing a patient card for someone
+  // who hasn't enrolled would be showing a record that doesn't exist yet.
+  const allPatients: FieldPatientRecord[] =
+    enrollmentStatus === "enrolled" ? [livePatient, ...storePatients] : [...storePatients];
+
+  // Guards every patient link (My Tasks/My Cases patient cells, the case
+  // detail's Patient Id field, etc.) — same reasoning as above: don't link
+  // to a patient record that doesn't exist yet.
+  const patientRecordExists = (id?: string) => !!id && allPatients.some(p => p.id === id);
 
   const selectedCase = selectedTaskId !== null ? cases.find(c => c.id === selectedTaskId) ?? null : null;
   const selectedPatient = selectedPatientId !== null ? allPatients.find(p => p.id === selectedPatientId) ?? null : null;
@@ -266,7 +278,15 @@ export default function FieldPortal() {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => setSelectedTab(item.id)}
+              onClick={() => {
+                // Switching tabs must always escape a detail view — otherwise
+                // detailView (which takes priority over selectedTab in every
+                // render branch below) keeps whatever screen was open on
+                // screen no matter which sidebar item you click next.
+                setSelectedTab(item.id);
+                setSelectedTaskId(null);
+                setSelectedPatientId(null);
+              }}
               aria-label={item.label}
               aria-current={item.id === selectedTab ? "page" : undefined}
               className={`w-full flex items-center gap-2.5 px-2 py-2 rounded text-xs font-medium transition-colors ${
@@ -388,7 +408,7 @@ export default function FieldPortal() {
                             <thead className="bg-slate-50 border-b border-slate-200">
                               <tr>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Subject</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient ID</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Description</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Assigned To</th>
                               </tr>
@@ -406,17 +426,20 @@ export default function FieldPortal() {
                                   >
                                     {caseItem.refId}
                                   </td>
-                                  <td
-                                    onClick={() => {
-                                      if (!caseItem.patientId) return;
-                                      setShowQuickView(null);
-                                      setSelectedTaskId(null);
-                                      setSelectedPatientId(caseItem.patientId);
-                                    }}
-                                    className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
-                                  >
-                                    {caseItem.patientId || "---"}
-                                  </td>
+                                  {patientRecordExists(caseItem.patientId) ? (
+                                    <td
+                                      onClick={() => {
+                                        setShowQuickView(null);
+                                        setSelectedTaskId(null);
+                                        setSelectedPatientId(caseItem.patientId!);
+                                      }}
+                                      className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                                    >
+                                      {caseItem.patientName || "---"}
+                                    </td>
+                                  ) : (
+                                    <td className="px-4 py-3 text-slate-700">{caseItem.patientName || "---"}</td>
+                                  )}
                                   <td className="px-4 py-3 text-slate-700">{caseItem.description || "---"}</td>
                                   <td className="px-4 py-3 text-slate-700">{caseItem.assignedTo}</td>
                                 </tr>
@@ -595,7 +618,6 @@ export default function FieldPortal() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Subject</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Prescriber</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient ID</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Sub Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Due Date</th>
@@ -614,13 +636,16 @@ export default function FieldPortal() {
                         {task.refId}
                       </td>
                       <td className="px-4 py-3 text-slate-700">{task.prescriber}</td>
-                      <td className="px-4 py-3 text-slate-700">{task.patient}</td>
-                      <td
-                        onClick={() => { setSelectedTaskId(null); setSelectedPatientId(task.patientId); }}
-                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
-                      >
-                        {task.patientId}
-                      </td>
+                      {patientRecordExists(task.patientId) ? (
+                        <td
+                          onClick={() => { setSelectedTaskId(null); setSelectedPatientId(task.patientId); }}
+                          className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                        >
+                          {task.patient}
+                        </td>
+                      ) : (
+                        <td className="px-4 py-3 text-slate-700">{task.patient}</td>
+                      )}
                       <td className="px-4 py-3 text-slate-700">{task.status}</td>
                       <td className="px-4 py-3 text-slate-700">{task.subStatus}</td>
                       <td className="px-4 py-3 text-slate-700">{task.dueDate}</td>
@@ -675,16 +700,19 @@ export default function FieldPortal() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Patient Id</p>
-                    <p
-                      onClick={() => {
-                        if (!selectedCase.patientId) return;
-                        setSelectedTaskId(null);
-                        setSelectedPatientId(selectedCase.patientId);
-                      }}
-                      className="text-sm font-medium text-arx-primary cursor-pointer hover:underline"
-                    >
-                      {selectedCase.patientId}
-                    </p>
+                    {patientRecordExists(selectedCase.patientId) ? (
+                      <p
+                        onClick={() => {
+                          setSelectedTaskId(null);
+                          setSelectedPatientId(selectedCase.patientId!);
+                        }}
+                        className="text-sm font-medium text-arx-primary cursor-pointer hover:underline"
+                      >
+                        {selectedCase.patientId}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-medium text-slate-800">{selectedCase.patientId}</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">DOB</p>
@@ -860,7 +888,6 @@ export default function FieldPortal() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Service Type</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient ID</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Prescriber</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Territory</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">FRM Contact</th>
@@ -878,13 +905,16 @@ export default function FieldPortal() {
                       </td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.status}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.serviceType}</td>
-                      <td className="px-4 py-3 text-slate-700">{caseItem.patient}</td>
-                      <td
-                        onClick={() => { setSelectedTaskId(null); setSelectedPatientId(caseItem.patientId); }}
-                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
-                      >
-                        {caseItem.patientId}
-                      </td>
+                      {patientRecordExists(caseItem.patientId) ? (
+                        <td
+                          onClick={() => { setSelectedTaskId(null); setSelectedPatientId(caseItem.patientId); }}
+                          className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                        >
+                          {caseItem.patient}
+                        </td>
+                      ) : (
+                        <td className="px-4 py-3 text-slate-700">{caseItem.patient}</td>
+                      )}
                       <td className="px-4 py-3 text-slate-700">{caseItem.prescriber}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.territory}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.frmContact}</td>
@@ -905,7 +935,6 @@ export default function FieldPortal() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">ARx Id</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">DOB</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Primary Prescriber</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Primary SOC</th>
@@ -918,12 +947,11 @@ export default function FieldPortal() {
                 <tbody>
                   {allPatients.map((patient) => (
                     <tr key={patient.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-700">{patient.name}</td>
                       <td
                         onClick={() => { setSelectedTaskId(null); setSelectedPatientId(patient.id); }}
                         className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
                       >
-                        {patient.id}
+                        {patient.name}
                       </td>
                       <td className="px-4 py-3 text-slate-700">{patient.dob}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.primaryPrescriber}</td>
