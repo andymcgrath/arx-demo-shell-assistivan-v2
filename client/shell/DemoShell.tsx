@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
+import { FLOW_OPTIONS } from "./flowOptions";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -155,15 +156,6 @@ const DEFAULT_PANELS: Record<LayoutMode, PanelState[]> = {
   "2up": [{ portal: "crm" }, { portal: "patient" }],
   "3up": [{ portal: "crm" }, { portal: "patient" }, { portal: "provider" }],
 };
-
-// ── Flow options ──────────────────────────────────────────────────────────────
-
-const FLOW_OPTIONS: { value: FlowType; label: string }[] = [
-  { value: "Fax_QS_PA_Approved", label: "1. Standard" },
-  { value: "Fax_PAP_Audit",      label: "2. PAP" },
-  { value: "CoA_DTP",            label: "3. CoAssist" },
-  { value: "iAssist_PA_Approved", label: "4. iAssist" },
-];
 
 // ── Step progress bar ─────────────────────────────────────────────────────────
 

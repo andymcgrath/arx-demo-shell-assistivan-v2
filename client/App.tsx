@@ -15,11 +15,7 @@ import DemoShell, { FLOW_START_PORTAL, PORTAL_SLUG } from "@/shell/DemoShell";
 import { useDemoStore } from "@/store/demoStore";
 import WorkflowProvider from './engine/WorkflowProvider';
 import { WorkflowProvider as XStateProvider } from '@/providers/WorkflowProvider';
-import { registerWorkflows } from '@/workflows';
 import { StageInspector } from '@/components/StageInspector';
-
-// Register all workflows at startup
-registerWorkflows();
 
 // Toggle to bring StageInspector back — kept mounted-but-hidden behind this
 // flag rather than removed, so re-enabling it later is a one-line change.

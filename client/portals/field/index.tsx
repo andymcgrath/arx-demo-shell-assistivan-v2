@@ -1,12 +1,20 @@
 import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield } from "lucide-react";
 import { useState } from "react";
-import { PATIENTS, FIELD_AGENTS, useDemoStore, FIELD_TASKS, FIELD_CASES, FIELD_PATIENTS, FIELD_HCPS } from "@/store/demoStore";
+import { useDemoStore } from "@/store/demoStore";
+import { useFieldStore, type FieldItem, type FieldPatientRecord } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
 
 // Core data model
+// Legacy shape the dashboard quick-view modal and task detail drill-in were
+// already built against. Rather than rewrite that (already-built) detail
+// view, `cases` below is derived from the unified FieldItem list — see
+// toCase() — so this stays a display-shape adapter, not a second source of
+// truth. `kind` is threaded through so dashboard filters (Urgent Tasks =
+// Task kind, Idle Cases = Case kind) can still tell the two apart.
 interface Case {
-  id: number;
+  id: string;
+  kind: "Task" | "Case";
   refId: string;
   related: string;
   status: string;
@@ -17,8 +25,6 @@ interface Case {
   assignedTo: string;
   patientName?: string;
   patientId?: string;
-  dob?: string;
-  gender?: string;
   subStatus?: string;
   createdBy?: string;
   completeDatetime?: string;
@@ -26,28 +32,26 @@ interface Case {
   description?: string;
 }
 
-interface Patient {
-  id: string;
-  name: string;
-  dob: string;
-  gender: string;
-  externalPatientId: string;
-  accountStatus: string;
-  allergies: string;
-  territory: string;
-  homePhone: string;
-  mobilePhone: string;
-  email: string;
-  workPhone: string;
-  workPhoneExtension: string;
-  alternatePhone: string;
-  preferredPhone: string;
-  preferredMethodOfContact: string;
-  bestTimeToContact: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
+function toCase(item: FieldItem): Case {
+  return {
+    id: item.id,
+    kind: item.kind,
+    refId: item.refId,
+    related: item.kind === "Case" ? "Stage" : "Patient",
+    status: item.status,
+    date: item.createdAt,
+    dueDate: item.dueDate,
+    eid: item.id,
+    label: item.description ?? item.refId,
+    assignedTo: item.assignedTo,
+    patientName: item.patient,
+    patientId: item.patientId,
+    subStatus: item.subStatus ?? "--None--",
+    createdBy: "CaseAssist Update",
+    completeDatetime: item.status === "Closed" ? item.dueDate : "---",
+    priority: item.priority,
+    description: item.description,
+  };
 }
 
 export default function FieldPortal() {
@@ -59,184 +63,44 @@ export default function FieldPortal() {
   const paStatus = state.pa_status;
   const consentStatus = state.consent_status;
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [patientTab, setPatientTab] = useState("SUMMARY");
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 5, 1));
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
-  const [taskOrigin, setTaskOrigin] = useState<"DASHBOARD" | "MY_TASKS" | "MY_PATIENTS">("DASHBOARD");
-
-  const patients: Record<string, Patient> = {
-    "AS-164542": {
-      id: "AS-164542",
-      name: "Takeda Laga Test",
-      dob: "3/25/1997",
-      gender: "Male",
-      externalPatientId: "000007087",
-      accountStatus: "Active",
-      allergies: "Peanut",
-      territory: "New York",
-      homePhone: "8056252520",
-      mobilePhone: "8056252521",
-      email: "takedalogstest@yopmail.com",
-      workPhone: "",
-      workPhoneExtension: "044",
-      alternatePhone: "8056252524",
-      preferredPhone: "Mobile",
-      preferredMethodOfContact: "Phone",
-      bestTimeToContact: "Morning",
-      address: "101 S Garland Ave Suite 110",
-      city: "Orlando",
-      state: "Florida",
-      zip: "32801",
-    },
-    "AS-164543": {
-      id: "AS-164543",
-      name: patientState.patientName,
-      dob: patientState.patientDob,
-      gender: "Male",
-      externalPatientId: "000007088",
-      accountStatus: "Active",
-      allergies: "Latex",
-      territory: "Texas",
-      homePhone: patientState.phone,
-      mobilePhone: patientState.phone,
-      email: patientState.email,
-      workPhone: "",
-      workPhoneExtension: "101",
-      alternatePhone: patientState.phone,
-      preferredPhone: "Mobile",
-      preferredMethodOfContact: patientState.preferredMethodOfContact,
-      bestTimeToContact: "Afternoon",
-      address: "456 Oak Ave",
-      city: "Houston",
-      state: "Texas",
-      zip: "77001",
-    },
-    "AS-164544": {
-      id: "AS-164544",
-      name: "Jessica Williams",
-      dob: "7/22/1992",
-      gender: "Female",
-      externalPatientId: "000007089",
-      accountStatus: "Active",
-      allergies: "Penicillin",
-      territory: "California",
-      homePhone: "4155551111",
-      mobilePhone: "4155551112",
-      email: "jessicaw@yopmail.com",
-      workPhone: "4155551113",
-      workPhoneExtension: "202",
-      alternatePhone: "4155551114",
-      preferredPhone: "Work",
-      preferredMethodOfContact: "Phone",
-      bestTimeToContact: "Morning",
-      address: "789 Pine St",
-      city: "San Francisco",
-      state: "California",
-      zip: "94105",
-    },
-    "AS-164545": {
-      id: "AS-164545",
-      name: "Robert Brown",
-      dob: "11/3/1988",
-      gender: "Male",
-      externalPatientId: "000007090",
-      accountStatus: "Active",
-      allergies: "None",
-      territory: "New Jersey",
-      homePhone: "2015552222",
-      mobilePhone: "2015552223",
-      email: "robertb@yopmail.com",
-      workPhone: "2015552224",
-      workPhoneExtension: "303",
-      alternatePhone: "2015552225",
-      preferredPhone: "Mobile",
-      preferredMethodOfContact: "Email",
-      bestTimeToContact: "Evening",
-      address: "321 Elm St",
-      city: "Newark",
-      state: "New Jersey",
-      zip: "07101",
-    },
-    "AS-164546": {
-      id: "AS-164546",
-      name: "Lisa Anderson",
-      dob: "2/14/1995",
-      gender: "Female",
-      externalPatientId: "000007091",
-      accountStatus: "Active",
-      allergies: "Sulfa",
-      territory: "Pennsylvania",
-      homePhone: "6105553333",
-      mobilePhone: "6105553334",
-      email: "lisaa@yopmail.com",
-      workPhone: "6105553335",
-      workPhoneExtension: "404",
-      alternatePhone: "6105553336",
-      preferredPhone: "Home",
-      preferredMethodOfContact: "Phone",
-      bestTimeToContact: "Morning",
-      address: "654 Maple Dr",
-      city: "Philadelphia",
-      state: "Pennsylvania",
-      zip: "19103",
-    },
-    "AS-164547": {
-      id: "AS-164547",
-      name: "David Martinez",
-      dob: "9/8/1980",
-      gender: "Male",
-      externalPatientId: "000007092",
-      accountStatus: "Active",
-      allergies: "Aspirin",
-      territory: "Texas",
-      homePhone: "2125554444",
-      mobilePhone: "2125554445",
-      email: "davidm@yopmail.com",
-      workPhone: "2125554446",
-      workPhoneExtension: "505",
-      alternatePhone: "2125554447",
-      preferredPhone: "Mobile",
-      preferredMethodOfContact: "Phone",
-      bestTimeToContact: "Afternoon",
-      address: "987 Cedar Ln",
-      city: "Dallas",
-      state: "Texas",
-      zip: "75201",
-    },
-  };
 
   const currentDate = new Date();
   const daysUntilPADue = new Date(currentDate.getTime() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-  const dynamicCases: Case[] = [];
+  // Field Portal's core dataset — seeded once, persisted to sessionStorage
+  // (see client/store/fieldStore.ts). Does not vary by workflow.
+  const { items: persistedItems, hcps: fieldHCPs, patients: storePatients } = useFieldStore();
+
+  const liveItems: FieldItem[] = [];
 
   // "Missing Information" task - created in the CRM on eRx submission,
   // closed once the patient completes enrollment (consentStatus flips to
   // "confirmed" — the same field the HUB's own EA-14272 stage uses to mark
   // "Enrollment Completed"). Not gated on biStatus, since iAssist can reach
-  // full enrollment via the patient consent flow independent of BI.
-  dynamicCases.push({
-    id: 1,
+  // full enrollment via the patient consent flow independent of BI. Kept
+  // live (computed every render from the actor) rather than persisted, so
+  // it always reflects whichever workflow is actually active.
+  liveItems.push({
+    id: "LIVE-MISSING-INFO",
+    kind: "Task",
     refId: "Missing Information",
-    related: "Patient",
     status: consentStatus === "confirmed" ? "Closed" : "Open",
-    date: "Jun 14, 2026",
-    dueDate: "Jun 14, 2026",
-    eid: "EI-56342",
-    label: "New Patient Referral",
-    assignedTo: "Sarah Mitchell",
-    patientName: patientState.patientName,
-    patientId: "AS-164543",
-    dob: patientState.patientDob,
-    gender: "Male",
-    subStatus: "--None--",
-    createdBy: "CaseAssist Update",
-    completeDatetime: consentStatus === "confirmed" ? "Jun 14, 2026" : "---",
     priority: "High",
-    description: "Gather missing patient information for enrollment"
+    dueDate: "Jun 14, 2026",
+    createdAt: "Jun 14, 2026",
+    patient: patientState.patientName,
+    patientId: "AS-164543",
+    prescriber: "---",
+    territory: "---",
+    assignedTo: "Sarah Mitchell",
+    subStatus: "--None--",
+    description: "Gather missing patient information for enrollment",
   });
 
   // "Prior Authorization Requested" task - created once PA has been
@@ -244,50 +108,116 @@ export default function FieldPortal() {
   // rather than biStatus so iAssist's auto-submitted PA (which can happen
   // before BI ever runs) still surfaces this task.
   if (paStatus !== "none") {
-    dynamicCases.push({
-      id: 2,
+    liveItems.push({
+      id: "LIVE-PA-REQUESTED",
+      kind: "Task",
       refId: "Prior Authorization Requested",
-      related: "Patient",
       status: paStatus === "approved" ? "Closed" : "Open",
-      date: "Jun 14, 2026",
-      dueDate: daysUntilPADue,
-      eid: "EI-56342",
-      label: "PA Submission Required",
-      assignedTo: "Sarah Mitchell",
-      patientName: patientState.patientName,
-      patientId: "AS-164543",
-      dob: patientState.patientDob,
-      gender: "Male",
-      subStatus: "--None--",
-      createdBy: "CaseAssist Update",
-      completeDatetime: paStatus === "approved" ? "Jun 14, 2026" : "---",
       priority: "High",
-      description: "Submit Prior Authorization request to payer"
+      dueDate: daysUntilPADue,
+      createdAt: "Jun 14, 2026",
+      patient: patientState.patientName,
+      patientId: "AS-164543",
+      prescriber: "---",
+      territory: "---",
+      assignedTo: "Sarah Mitchell",
+      subStatus: "--None--",
+      description: "Submit Prior Authorization request to payer",
     });
   }
 
-  // Add other static cases
-  dynamicCases.push(
-    { id: 3, refId: "Payer Outreach", related: "Stage", status: "Pending Patient Consent", date: "Jun 15, 2026", dueDate: "Jun 20, 2026", eid: "EI-56344", label: "Steroid Legs Test", assignedTo: "Maria Rodriguez", patientName: "Jessica Williams", patientId: "AS-164544", dob: "7/22/1992", gender: "Female", subStatus: "--None--", createdBy: "Takeda FRM Contact Test", completeDatetime: "---", priority: "High", description: "---" },
-    { id: 4, refId: "Appeals Follow Up", related: "Patient", status: "Open", date: "Jun 8, 2026", dueDate: "Jun 14, 2026", eid: "EI-56345", label: "Steroid Legs Test", assignedTo: "James Chen", patientName: "Robert Brown", patientId: "AS-164545", dob: "11/3/1988", gender: "Male", subStatus: "--None--", createdBy: "Takeda FRM Contact Test", completeDatetime: "---", priority: "Medium", description: "---" },
-    { id: 5, refId: "Adherence Call 3", related: "State", status: "Open", date: "Jun 14, 2026", dueDate: "Jun 14, 2026", eid: "EI-56346", label: "Steroid Legs Test", assignedTo: "James Chen", patientName: "Lisa Anderson", patientId: "AS-164546", dob: "2/14/1995", gender: "Female", subStatus: "--None--", createdBy: "Takeda FRM Contact Test", completeDatetime: "---", priority: "Low", description: "---" },
-    { id: 6, refId: "Adherence Call 4", related: "Stage", status: "Idle", date: "Jun 12, 2026", dueDate: "Jun 16, 2026", eid: "EI-56347", label: "Steroid Legs Test", assignedTo: "Maria Rodriguez", patientName: "David Martinez", patientId: "AS-164547", dob: "9/8/1980", gender: "Male", subStatus: "--None--", createdBy: "Takeda FRM Contact Test", completeDatetime: "---", priority: "High", description: "---" }
-  );
+  // Single source of truth for every task/case-shaped view on this portal —
+  // the two live entries above plus the persisted seed. Dashboard KPI
+  // cards, the quick-view modal, and the My Tasks/My Cases tabs all read
+  // from this same list (filtered differently), so a given item's
+  // priority/status/dueDate means the same thing everywhere it shows up.
+  const allItems: FieldItem[] = [...liveItems, ...persistedItems];
 
-  const cases: Case[] = dynamicCases;
+  const cases: Case[] = allItems.map(toCase);
 
-  const selectedCase = selectedTaskId !== null ? cases.find(c => c.id === selectedTaskId) : null;
-  const selectedPatient = selectedPatientId !== null ? patients[selectedPatientId] : null;
+  // A case has exactly one patient. The live items above reference the
+  // active demo patient (AS-164543, driven by patientState) rather than one
+  // of the seeded/persisted patients, so it needs its own live profile here
+  // for the same reason liveItems exists — it has to reflect whichever
+  // patient is actually active in the session, not a frozen seed value.
+  const livePatient: FieldPatientRecord = {
+    id: "AS-164543",
+    name: patientState.patientName,
+    dob: patientState.patientDob,
+    gender: "Male",
+    externalPatientId: "000007088",
+    accountStatus: "Active",
+    allergies: "Latex",
+    territory: "Texas",
+    region: "South",
+    primaryPrescriber: "---",
+    primarySOC: "---",
+    consentExpiration: "---",
+    enrollmentDate: "Jun 14, 2026",
+    homePhone: patientState.phone,
+    mobilePhone: patientState.phone,
+    workPhone: "",
+    alternatePhone: patientState.phone,
+    preferredPhone: "Mobile",
+    email: patientState.email,
+    preferredMethodOfContact: patientState.preferredMethodOfContact,
+    bestTimeToContact: "Afternoon",
+    address: "456 Oak Ave",
+    city: "Houston",
+    state: "Texas",
+    zip: "77001",
+  };
 
-  // Calculate stats
+  // Same "one shared dataset, filtered differently" principle as allItems
+  // above: My Patients, the patient detail screen, and a case's "Patient Id"
+  // link all resolve against this same list instead of three different
+  // patient shapes.
+  const allPatients: FieldPatientRecord[] = [livePatient, ...storePatients];
+
+  const selectedCase = selectedTaskId !== null ? cases.find(c => c.id === selectedTaskId) ?? null : null;
+  const selectedPatient = selectedPatientId !== null ? allPatients.find(p => p.id === selectedPatientId) ?? null : null;
+
+  // The case/task detail view's "PATIENT INFORMATION" card pulls dob/gender
+  // from here instead of carrying its own copy — same 1:1 relationship, one
+  // patient record behind both views.
+  const linkedPatient = selectedCase?.patientId
+    ? allPatients.find(p => p.id === selectedCase.patientId) ?? null
+    : null;
+
+  // Which detail screen (if any) takes over the main content area. Checked
+  // ahead of selectedTab everywhere it's rendered below, so a row clicked
+  // from Dashboard, My Tasks, My Cases, or My Patients all land on the same
+  // detail views regardless of which tab is currently selected.
+  const detailView: "TASK_CASE" | "PATIENT" | null = selectedCase
+    ? "TASK_CASE"
+    : selectedPatient
+    ? "PATIENT"
+    : null;
+
+  // Calculate stats — each one filters allItems with the exact same
+  // predicate the quick-view modal below uses, so the number on the card
+  // always matches the row count you see after clicking it.
   const today = new Date(2026, 5, 14);
   const todayDateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const uniqueHCPs = 52;
-  const idleCases = cases.filter(c => c.status === "Idle").length;
-  const pendingConsents = 7;
-  const todayCases = 14;
-  const urgentTasks = 32;
-  const createdTodayCount = 13;
+  const uniqueHCPs = fieldHCPs.length;
+  const idleCases = allItems.filter(i => i.kind === "Case" && i.status === "Idle").length;
+  const pendingConsents = allItems.filter(i => i.status === "Pending Consent").length;
+  const todayCases = allItems.filter(i => i.dueDate === todayDateStr && i.status !== "Closed").length;
+  const urgentTasks = allItems.filter(i => i.kind === "Task" && i.priority === "High" && i.status !== "Closed").length;
+  const createdTodayCount = allItems.filter(i => i.createdAt === todayDateStr).length;
+
+  // Quick-view modal rows — same predicates as the stat cards above, so the
+  // number on a card always matches what clicking it shows. "Total HCPs" is
+  // a separate entity (fieldHCPs), rendered by its own branch below, so it's
+  // excluded here rather than matching everything.
+  const quickViewCases: Case[] = cases.filter(c => {
+    if (showQuickView === "Urgent Tasks") return c.kind === "Task" && c.priority === "High" && c.status !== "Closed";
+    if (showQuickView === "Due Today") return c.dueDate === todayDateStr && c.status !== "Closed";
+    if (showQuickView === "Pending Consent") return c.status === "Pending Consent";
+    if (showQuickView === "Created Today") return c.date === todayDateStr;
+    if (showQuickView === "Idle Cases") return c.kind === "Case" && c.status === "Idle";
+    return false;
+  });
 
   // Calendar helpers
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -367,7 +297,7 @@ export default function FieldPortal() {
         </div>
 
         {/* Dashboard View */}
-        {selectedTab === "DASHBOARD" && (
+        {!detailView && selectedTab === "DASHBOARD" && (
           <div className="flex-1 overflow-auto">
             <div className="p-6 bg-white min-h-full">
               {/* Dashboard Header */}
@@ -388,8 +318,10 @@ export default function FieldPortal() {
                 ].map((stat, idx) => (
                   <div
                     key={idx}
-                    className={`${stat.color} rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow`}
-                    onClick={() => setShowQuickView(stat.label)}
+                    className={`${stat.color} rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow ${
+                      showQuickView === stat.label ? "ring-2 ring-arx-primary" : ""
+                    }`}
+                    onClick={() => setShowQuickView(showQuickView === stat.label ? null : stat.label)}
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -403,6 +335,100 @@ export default function FieldPortal() {
                   </div>
                 ))}
               </div>
+
+              {/* Quick View Table — clicking a stat card above expands this
+                  in place; clicking the same card again (or the ✕) collapses
+                  it. When showQuickView is null this renders nothing at all,
+                  not just a collapsed/hidden container. */}
+              {showQuickView && (
+                <div className="mb-6 rounded-lg border border-slate-300 overflow-hidden">
+                  <div className="bg-arx-primary p-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">{showQuickView}</h3>
+                    <button
+                      onClick={() => setShowQuickView(null)}
+                      aria-label="Collapse"
+                      className="text-white hover:bg-arx-primary-dark rounded p-2 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="p-6 bg-white">
+                    <p className="text-sm text-slate-600 mb-4">
+                      Total Records: {showQuickView === "Total HCPs" ? fieldHCPs.length : quickViewCases.length}
+                    </p>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                      <table className="w-full text-sm">
+                        {showQuickView === "Total HCPs" ? (
+                          <>
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Physician</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">NPI</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Preferred Contact</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Office Phone</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Office Email</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fieldHCPs.map((hcp) => (
+                                <tr key={hcp.id} className="border-b border-slate-200 hover:bg-slate-50">
+                                  <td className="px-4 py-3 text-slate-700">{hcp.physician}</td>
+                                  <td className="px-4 py-3 text-slate-700">{hcp.npi}</td>
+                                  <td className="px-4 py-3 text-slate-700">{hcp.preferredContact}</td>
+                                  <td className="px-4 py-3 text-slate-700">{hcp.officePhone}</td>
+                                  <td className="px-4 py-3 text-slate-700">{hcp.officeEmail}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </>
+                        ) : (
+                          <>
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Subject</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient ID</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Description</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Assigned To</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {quickViewCases.map((caseItem) => (
+                                <tr key={caseItem.id} className="border-b border-slate-200 hover:bg-slate-50">
+                                  <td
+                                    onClick={() => {
+                                      setShowQuickView(null);
+                                      setSelectedPatientId(null);
+                                      setSelectedTaskId(caseItem.id);
+                                    }}
+                                    className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                                  >
+                                    {caseItem.refId}
+                                  </td>
+                                  <td
+                                    onClick={() => {
+                                      if (!caseItem.patientId) return;
+                                      setShowQuickView(null);
+                                      setSelectedTaskId(null);
+                                      setSelectedPatientId(caseItem.patientId);
+                                    }}
+                                    className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                                  >
+                                    {caseItem.patientId || "---"}
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-700">{caseItem.description || "---"}</td>
+                                  <td className="px-4 py-3 text-slate-700">{caseItem.assignedTo}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </>
+                        )}
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Calendar Section */}
               <div className="rounded-lg border border-slate-300 overflow-hidden">
@@ -554,101 +580,12 @@ export default function FieldPortal() {
                 </div>
               </div>
 
-              {/* Dynamic Quick View Modal */}
-              {showQuickView && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-auto">
-                    {/* Modal Header */}
-                    <div className="bg-arx-primary text-white p-6 flex items-center justify-between sticky top-0">
-                      <h2 className="text-xl font-semibold">{showQuickView}</h2>
-                      <button
-                        onClick={() => setShowQuickView(null)}
-                        className="text-white hover:bg-arx-primary-dark rounded p-2 transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    {/* Modal Content */}
-                    <div className="p-6">
-                      {/* Metrics */}
-                      <div className="mb-6 flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-slate-600">Showing Page 1 of 2 | Total Records: 10</p>
-                        </div>
-                        <div className="flex gap-3">
-                          <select className="px-3 py-2 border border-slate-300 rounded text-sm">
-                            <option>5 Records</option>
-                            <option>10 Records</option>
-                            <option>25 Records</option>
-                          </select>
-                          <select className="px-3 py-2 border border-slate-300 rounded text-sm">
-                            <option>Sort By</option>
-                            <option>Due Date</option>
-                            <option>Priority</option>
-                            <option>Assigned To</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Table */}
-                      <div className="overflow-x-auto border border-slate-200 rounded-lg mb-6">
-                        <table className="w-full text-sm">
-                          <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Subject</th>
-                              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Patient ID</th>
-                              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Description</th>
-                              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">Assigned To ID</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {cases.filter(c => {
-                              if (showQuickView === "Urgent Tasks") return c.priority === "High";
-                              if (showQuickView === "Due Today") return c.dueDate === todayDateStr;
-                              if (showQuickView === "Pending Consent") return c.status === "Pending Patient Consent";
-                              if (showQuickView === "Created Today") return c.date === todayDateStr;
-                              if (showQuickView === "Total HCPs") return true;
-                              if (showQuickView === "Idle Cases") return c.status === "Idle";
-                              return false;
-                            }).map((caseItem) => (
-                              <tr key={caseItem.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                <td
-                                  onClick={() => {
-                                    setTaskOrigin("DASHBOARD");
-                                    setShowQuickView(null);
-                                    setSelectedTaskId(caseItem.id);
-                                  }}
-                                  className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
-                                >
-                                  {caseItem.refId}
-                                </td>
-                                <td className="px-4 py-3 text-slate-700">{caseItem.patientId || "---"}</td>
-                                <td className="px-4 py-3 text-slate-700">{caseItem.description || "---"}</td>
-                                <td className="px-4 py-3 text-slate-700">{caseItem.assignedTo}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Pagination */}
-                      <div className="flex items-center justify-center gap-2">
-                        <button className="px-4 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50">First</button>
-                        <button className="px-4 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50">Previous</button>
-                        <span className="px-4 py-2 text-sm text-slate-700">Page 1 of 2</span>
-                        <button className="px-4 py-2 border border-slate-300 rounded text-sm text-slate-700 hover:bg-slate-50">Next</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
 
         {/* Tasks View */}
-        {selectedTab === "MY_TASKS" && !selectedTaskId && (
+        {!detailView && selectedTab === "MY_TASKS" && (
           <div className="flex-1 overflow-auto p-6">
             <h2 className="text-xl font-semibold text-slate-800 mb-4">My Tasks</h2>
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -668,12 +605,22 @@ export default function FieldPortal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {FIELD_TASKS.map((task) => (
+                  {allItems.filter((i) => i.kind === "Task").map((task) => (
                     <tr key={task.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline">{task.subject}</td>
+                      <td
+                        onClick={() => { setSelectedPatientId(null); setSelectedTaskId(task.id); }}
+                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                      >
+                        {task.refId}
+                      </td>
                       <td className="px-4 py-3 text-slate-700">{task.prescriber}</td>
                       <td className="px-4 py-3 text-slate-700">{task.patient}</td>
-                      <td className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline">{task.patientId}</td>
+                      <td
+                        onClick={() => { setSelectedTaskId(null); setSelectedPatientId(task.patientId); }}
+                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                      >
+                        {task.patientId}
+                      </td>
                       <td className="px-4 py-3 text-slate-700">{task.status}</td>
                       <td className="px-4 py-3 text-slate-700">{task.subStatus}</td>
                       <td className="px-4 py-3 text-slate-700">{task.dueDate}</td>
@@ -688,16 +635,19 @@ export default function FieldPortal() {
           </div>
         )}
 
-        {selectedTab === "MY_TASKS" && selectedTaskId && selectedCase && (
+        {detailView === "TASK_CASE" && selectedCase && (
           <div className="flex-1 overflow-auto">
             <div className="p-6 bg-white min-h-full">
-              {/* Breadcrumb Navigation */}
+              {/* Breadcrumb Navigation — label follows the item's own kind
+                  (Task vs Case) rather than whichever tab you clicked from,
+                  so it's correct whether you got here from Dashboard, My
+                  Tasks, or My Cases. */}
               <div className="mb-6 flex items-center gap-2 text-sm">
                 <button
                   onClick={() => setSelectedTaskId(null)}
                   className="text-arx-primary hover:underline font-medium"
                 >
-                  My Tasks
+                  {selectedCase.kind === "Case" ? "My Cases" : "My Tasks"}
                 </button>
                 <span className="text-slate-400">/</span>
                 <span className="text-slate-700 font-medium">{selectedCase.refId}</span>
@@ -725,15 +675,24 @@ export default function FieldPortal() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Patient Id</p>
-                    <p className="text-sm font-medium text-arx-primary">{selectedCase.patientId}</p>
+                    <p
+                      onClick={() => {
+                        if (!selectedCase.patientId) return;
+                        setSelectedTaskId(null);
+                        setSelectedPatientId(selectedCase.patientId);
+                      }}
+                      className="text-sm font-medium text-arx-primary cursor-pointer hover:underline"
+                    >
+                      {selectedCase.patientId}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">DOB</p>
-                    <p className="text-sm font-medium text-slate-800">{selectedCase.dob}</p>
+                    <p className="text-sm font-medium text-slate-800">{linkedPatient?.dob ?? "---"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 mb-1">Gender</p>
-                    <p className="text-sm font-medium text-slate-800">{selectedCase.gender}</p>
+                    <p className="text-sm font-medium text-slate-800">{linkedPatient?.gender ?? "---"}</p>
                   </div>
                 </div>
               </div>
@@ -795,7 +754,7 @@ export default function FieldPortal() {
           </div>
         )}
 
-        {selectedTab === "MY_TASKS" && selectedPatientId && selectedPatient && !selectedTaskId && (
+        {detailView === "PATIENT" && selectedPatient && (
           <div className="flex-1 overflow-auto">
             <div className="p-6 bg-white min-h-full">
               {/* Breadcrumb Navigation */}
@@ -804,7 +763,7 @@ export default function FieldPortal() {
                   onClick={() => setSelectedPatientId(null)}
                   className="text-arx-primary hover:underline font-medium"
                 >
-                  My Tasks
+                  My Patients
                 </button>
                 <span className="text-slate-400">/</span>
                 <span className="text-slate-700 font-medium">{selectedPatient.name}</span>
@@ -890,7 +849,7 @@ export default function FieldPortal() {
         )}
 
         {/* Cases View */}
-        {selectedTab === "MY_CASES" && (
+        {!detailView && selectedTab === "MY_CASES" && (
           <div className="flex-1 overflow-auto p-6">
             <h2 className="text-xl font-semibold text-slate-800 mb-4">My Cases</h2>
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -909,13 +868,23 @@ export default function FieldPortal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {FIELD_CASES.map((caseItem) => (
+                  {allItems.filter((i) => i.kind === "Case").map((caseItem) => (
                     <tr key={caseItem.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline">{caseItem.caseNumber}</td>
+                      <td
+                        onClick={() => { setSelectedPatientId(null); setSelectedTaskId(caseItem.id); }}
+                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                      >
+                        {caseItem.refId}
+                      </td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.status}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.serviceType}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.patient}</td>
-                      <td className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline">{caseItem.patientId}</td>
+                      <td
+                        onClick={() => { setSelectedTaskId(null); setSelectedPatientId(caseItem.patientId); }}
+                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                      >
+                        {caseItem.patientId}
+                      </td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.prescriber}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.territory}</td>
                       <td className="px-4 py-3 text-slate-700">{caseItem.frmContact}</td>
@@ -928,7 +897,7 @@ export default function FieldPortal() {
           </div>
         )}
 
-        {selectedTab === "MY_PATIENTS" && (
+        {!detailView && selectedTab === "MY_PATIENTS" && (
           <div className="flex-1 overflow-auto p-6">
             <h2 className="text-xl font-semibold text-slate-800 mb-4">My Patients</h2>
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -947,16 +916,21 @@ export default function FieldPortal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {FIELD_PATIENTS.map((patient) => (
+                  {allPatients.map((patient) => (
                     <tr key={patient.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-700">{patient.patient}</td>
-                      <td className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline">{patient.arbId}</td>
+                      <td className="px-4 py-3 text-slate-700">{patient.name}</td>
+                      <td
+                        onClick={() => { setSelectedTaskId(null); setSelectedPatientId(patient.id); }}
+                        className="px-4 py-3 text-arx-primary font-medium cursor-pointer hover:underline"
+                      >
+                        {patient.id}
+                      </td>
                       <td className="px-4 py-3 text-slate-700">{patient.dob}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.primaryPrescriber}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.primarySOC}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.territory}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.region}</td>
-                      <td className="px-4 py-3 text-slate-700">{patient.consentExpi}</td>
+                      <td className="px-4 py-3 text-slate-700">{patient.consentExpiration}</td>
                       <td className="px-4 py-3 text-slate-700">{patient.enrollmentDate}</td>
                     </tr>
                   ))}
@@ -966,7 +940,7 @@ export default function FieldPortal() {
           </div>
         )}
 
-        {selectedTab === "MY_HCPS" && (
+        {!detailView && selectedTab === "MY_HCPS" && (
           <div className="flex-1 overflow-auto p-6">
             <h2 className="text-xl font-semibold text-slate-800 mb-4">My HCPs</h2>
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -983,7 +957,7 @@ export default function FieldPortal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {FIELD_HCPS.map((hcp) => (
+                  {fieldHCPs.map((hcp) => (
                     <tr key={hcp.id} className="border-b border-slate-200 hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-700">{hcp.physician}</td>
                       <td className="px-4 py-3 text-slate-700">{hcp.npi}</td>

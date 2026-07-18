@@ -12,10 +12,11 @@ import { useState, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { useSwitchWorkflow, useActiveWorkflowId, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { useDemoStore } from "@/store/demoStore";
-import { workflowRegistry } from "@/engine/WorkflowRegistry";
 import { resetAllWorkflowSnapshots } from "@/engine/actorSingleton";
+import { useFieldStore } from "@/store/fieldStore";
 import { cn } from "@/lib/utils";
 import type { FlowType } from "@/engine/types";
+import { FLOW_OPTIONS } from "./flowOptions";
 
 export type PortalId = "patient" | "provider" | "analytics" | "field";
 
@@ -45,8 +46,8 @@ export default function DemoConfigurator({
   const dispatch = useWorkflowDispatch();
   const resetDemo = useDemoStore((s) => s.resetDemo);
   const switchFlow = useDemoStore((s) => s.switchFlow);
+  const resetFieldData = useFieldStore((s) => s.resetFieldData);
 
-  const [workflows] = useState(workflowRegistry.listWorkflows());
   const [behaviorFlags, setBehaviorFlags] = useState(() => {
     const stored = sessionStorage.getItem(BEHAVIOR_FLAGS_KEY);
     return stored
@@ -95,6 +96,10 @@ export default function DemoConfigurator({
     // same-session flow switching — clear that too so a stale snapshot for
     // another flow can't silently resurface later in this session.
     resetAllWorkflowSnapshots();
+    // sessionStorage.clear() below also wipes fieldStore's persisted key, but
+    // that only takes effect on next page load — reset the in-memory zustand
+    // state too so Field Portal data snaps back to its seed immediately.
+    resetFieldData();
     sessionStorage.clear();
     setBehaviorFlags({
       autoAdvance: true,
@@ -149,14 +154,14 @@ export default function DemoConfigurator({
               onChange={(e) => handleWorkflowChange(e.target.value)}
               className="w-full px-3 py-2 bg-[#0f172a] border border-indigo-400/50 rounded text-white text-sm hover:border-indigo-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30 transition-colors"
             >
-              {workflows.map((wf) => (
-                <option key={wf.id} value={wf.id}>
+              {FLOW_OPTIONS.map((wf) => (
+                <option key={wf.value} value={wf.value}>
                   {wf.label}
                 </option>
               ))}
             </select>
             <p className="text-xs text-indigo-200/60 mt-2">
-              {workflows.find((w) => w.id === activeWorkflowId)?.description}
+              {FLOW_OPTIONS.find((w) => w.value === activeWorkflowId)?.description}
             </p>
           </section>
 
