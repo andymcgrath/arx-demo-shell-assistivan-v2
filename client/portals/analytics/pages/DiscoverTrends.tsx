@@ -362,7 +362,7 @@ export default function DiscoverTrends({ onNavigate }: { onNavigate?: (tab: numb
   const [searchLegend, setSearchLegend] = useState("");
 
   const getDateRange = (rangeIdx: number): { from: string; to: string } => {
-    const today = new Date(2026, 5, 23); // Jun 23, 2026 (today)
+    const today = new Date(); // real "today" — was hardcoded to Jun 23, 2026
     const to = new Date(today);
     let from = new Date(today);
 
@@ -381,13 +381,13 @@ export default function DiscoverTrends({ onNavigate }: { onNavigate?: (tab: numb
         from.setMonth(to.getMonth() - 6);
         break;
       case "YTD":
-        from = new Date(2026, 0, 1);
+        from = new Date(today.getFullYear(), 0, 1);
         break;
       case "1Y":
         from.setFullYear(to.getFullYear() - 1);
         break;
       case "All":
-        from = new Date(2024, 0, 1);
+        from = new Date(today.getFullYear() - 2, 0, 1);
         break;
       default:
         break;
@@ -406,25 +406,35 @@ export default function DiscoverTrends({ onNavigate }: { onNavigate?: (tab: numb
   const getChartData = (rangeIdx: number) => {
     const ranges = TIME_RANGES;
     const range = ranges[rangeIdx];
-    const baselineDate = new Date(2026, 5, 23); // Jun 23, 2026
+    const baselineDate = new Date(); // real "today" — was hardcoded to Jun 23, 2026
 
     const formatDateShort = (d: Date) => {
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return `${months[d.getMonth()]} ${d.getDate()}`;
     };
 
+    const formatDateFull = (d: Date) => {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    };
+
     let dataPoints: typeof TREND_DATA;
 
     if (range === "1W") {
-      // Last 7 days - recent daily variation
+      // Last 7 days - recent daily variation, ending on the real "today"
+      const days = [6, 5, 4, 3, 2, 1, 0].map((offset) => {
+        const d = new Date(baselineDate);
+        d.setDate(baselineDate.getDate() - offset);
+        return formatDateShort(d);
+      });
       dataPoints = [
-        { date: "Jun 17", churn: 29.3, newCC: 27.0, volume: 1200 },
-        { date: "Jun 18", churn: 30.1, newCC: 27.3, volume: 1350 },
-        { date: "Jun 19", churn: 29.7, newCC: 27.5, volume: 1280 },
-        { date: "Jun 20", churn: 30.5, newCC: 27.8, volume: 1420 },
-        { date: "Jun 21", churn: 31.0, newCC: 28.2, volume: 1500 },
-        { date: "Jun 22", churn: 31.6, newCC: 28.7, volume: 1680 },
-        { date: "Jun 23", churn: 32.0, newCC: 29.0, volume: 1800 },
+        { date: days[0], churn: 29.3, newCC: 27.0, volume: 1200 },
+        { date: days[1], churn: 30.1, newCC: 27.3, volume: 1350 },
+        { date: days[2], churn: 29.7, newCC: 27.5, volume: 1280 },
+        { date: days[3], churn: 30.5, newCC: 27.8, volume: 1420 },
+        { date: days[4], churn: 31.0, newCC: 28.2, volume: 1500 },
+        { date: days[5], churn: 31.6, newCC: 28.7, volume: 1680 },
+        { date: days[6], churn: 32.0, newCC: 29.0, volume: 1800 },
       ];
     } else if (range === "1M") {
       // Last 30 days - smoother variation
@@ -484,37 +494,47 @@ export default function DiscoverTrends({ onNavigate }: { onNavigate?: (tab: numb
         { date: formatDateShort(d7), churn: 32.0, newCC: 29.0, volume: 1800 },
       ];
     } else if (range === "YTD") {
-      // Year to date (Jan 1 - Jun 23) - strong upward trend
+      // Year to date (Jan 1 - today) - strong upward trend
+      const yearStart = new Date(baselineDate.getFullYear(), 0, 1);
+      const ytdSpan = baselineDate.getTime() - yearStart.getTime();
+      const ytdPoint = (frac: number) => formatDateShort(new Date(yearStart.getTime() + ytdSpan * frac));
       dataPoints = [
-        { date: "Jan 01", churn: 27.1, newCC: 25.3, volume: 850 },
-        { date: "Feb 15", churn: 28.3, newCC: 25.8, volume: 950 },
-        { date: "Mar 30", churn: 29.2, newCC: 26.3, volume: 1050 },
-        { date: "Apr 30", churn: 30.1, newCC: 26.9, volume: 1200 },
-        { date: "May 30", churn: 31.2, newCC: 27.7, volume: 1500 },
-        { date: "Jun 15", churn: 31.6, newCC: 28.3, volume: 1650 },
-        { date: "Jun 23", churn: 32.0, newCC: 29.0, volume: 1800 },
+        { date: ytdPoint(0), churn: 27.1, newCC: 25.3, volume: 850 },
+        { date: ytdPoint(0.25), churn: 28.3, newCC: 25.8, volume: 950 },
+        { date: ytdPoint(0.5), churn: 29.2, newCC: 26.3, volume: 1050 },
+        { date: ytdPoint(0.68), churn: 30.1, newCC: 26.9, volume: 1200 },
+        { date: ytdPoint(0.85), churn: 31.2, newCC: 27.7, volume: 1500 },
+        { date: ytdPoint(0.95), churn: 31.6, newCC: 28.3, volume: 1650 },
+        { date: ytdPoint(1), churn: 32.0, newCC: 29.0, volume: 1800 },
       ];
     } else if (range === "1Y") {
       // One year - seasonal variation with growth
+      const yearAgo = new Date(baselineDate);
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      const yearSpan = baselineDate.getTime() - yearAgo.getTime();
+      const yearPoint = (frac: number) => formatDateFull(new Date(yearAgo.getTime() + yearSpan * frac));
       dataPoints = [
-        { date: "Jun 23, 2025", churn: 27.8, newCC: 26.2, volume: 1100 },
-        { date: "Aug 15, 2025", churn: 28.5, newCC: 26.6, volume: 1180 },
-        { date: "Oct 10, 2025", churn: 29.1, newCC: 27.0, volume: 1250 },
-        { date: "Dec 15, 2025", churn: 29.8, newCC: 27.5, volume: 1350 },
-        { date: "Feb 20, 2026", churn: 30.5, newCC: 27.8, volume: 1450 },
-        { date: "Apr 25, 2026", churn: 31.2, newCC: 28.4, volume: 1600 },
-        { date: "Jun 23, 2026", churn: 32.0, newCC: 29.0, volume: 1800 },
+        { date: yearPoint(0), churn: 27.8, newCC: 26.2, volume: 1100 },
+        { date: yearPoint(0.15), churn: 28.5, newCC: 26.6, volume: 1180 },
+        { date: yearPoint(0.32), churn: 29.1, newCC: 27.0, volume: 1250 },
+        { date: yearPoint(0.48), churn: 29.8, newCC: 27.5, volume: 1350 },
+        { date: yearPoint(0.66), churn: 30.5, newCC: 27.8, volume: 1450 },
+        { date: yearPoint(0.85), churn: 31.2, newCC: 28.4, volume: 1600 },
+        { date: yearPoint(1), churn: 32.0, newCC: 29.0, volume: 1800 },
       ];
     } else {
-      // All time - long-term trend from 2024
+      // All time - long-term trend from ~2 years back
+      const allStart = new Date(baselineDate.getFullYear() - 2, 0, 1);
+      const allSpan = baselineDate.getTime() - allStart.getTime();
+      const allPoint = (frac: number) => formatDateShort(new Date(allStart.getTime() + allSpan * frac));
       dataPoints = [
-        { date: "Jan 01", churn: 25.2, newCC: 24.0, volume: 650 },
-        { date: "Feb 15", churn: 26.1, newCC: 24.6, volume: 780 },
-        { date: "Mar 30", churn: 27.3, newCC: 25.2, volume: 880 },
-        { date: "May 15", churn: 28.8, newCC: 25.9, volume: 1050 },
-        { date: "Jun 01", churn: 30.3, newCC: 27.2, volume: 1350 },
-        { date: "Jun 15", churn: 31.2, newCC: 28.2, volume: 1650 },
-        { date: "Jun 23", churn: 32.0, newCC: 29.0, volume: 1800 },
+        { date: allPoint(0), churn: 25.2, newCC: 24.0, volume: 650 },
+        { date: allPoint(0.3), churn: 26.1, newCC: 24.6, volume: 780 },
+        { date: allPoint(0.55), churn: 27.3, newCC: 25.2, volume: 880 },
+        { date: allPoint(0.78), churn: 28.8, newCC: 25.9, volume: 1050 },
+        { date: allPoint(0.9), churn: 30.3, newCC: 27.2, volume: 1350 },
+        { date: allPoint(0.96), churn: 31.2, newCC: 28.2, volume: 1650 },
+        { date: allPoint(1), churn: 32.0, newCC: 29.0, volume: 1800 },
       ];
     }
 

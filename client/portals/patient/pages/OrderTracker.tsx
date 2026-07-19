@@ -1,8 +1,9 @@
 import { ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { daysFromToday } from "@/lib/relativeDate";
 const ORDER_NUMBER = "428046573";
-const ORDER_DATE = "May 23, 2026";
+const ORDER_DATE = daysFromToday(-4);
 
 type StepStatus = "done" | "active" | "pending";
 type StepDef = { n: number; label: string; sub: string | null; status: StepStatus };

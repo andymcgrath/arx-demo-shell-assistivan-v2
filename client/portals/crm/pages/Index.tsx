@@ -4,6 +4,7 @@ import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { getLiveWorkItems } from "@/engine/WorkflowEngine";
+import { dateFromToday, daysFromToday } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
@@ -181,7 +182,7 @@ const STAGES_PAP_AUDIT: Stage[] = [
     isComplete: true,
     isNotStarted: false,
     fields: [],
-    lastUpdated: "5/15/2026",
+    lastUpdated: dateFromToday(-4).toLocaleDateString(),
     lastUpdatedAgo: "4 days ago",
   },
   {
@@ -192,7 +193,7 @@ const STAGES_PAP_AUDIT: Stage[] = [
     isComplete: true,
     isNotStarted: false,
     fields: [],
-    lastUpdated: "5/19/2026",
+    lastUpdated: dateFromToday(0).toLocaleDateString(),
     lastUpdatedAgo: "today",
   },
   {
@@ -269,7 +270,7 @@ const STAGES: Stage[] = [
       { label: "Prescriber Notes", value: null },
       { label: "Patient Notes", value: null },
     ],
-    lastUpdated: "5/15/2026",
+    lastUpdated: dateFromToday(-4).toLocaleDateString(),
     lastUpdatedAgo: "4 days ago",
   },
   {
@@ -280,7 +281,7 @@ const STAGES: Stage[] = [
     isComplete: true,
     isNotStarted: false,
     fields: [],
-    lastUpdated: "5/19/2026",
+    lastUpdated: dateFromToday(-1).toLocaleDateString(),
     lastUpdatedAgo: "1 days ago",
   },
   {
@@ -291,7 +292,7 @@ const STAGES: Stage[] = [
     isComplete: false,
     isNotStarted: false,
     fields: [],
-    lastUpdated: "5/19/2026",
+    lastUpdated: dateFromToday(-1).toLocaleDateString(),
     lastUpdatedAgo: "1 days ago",
   },
   {
@@ -437,7 +438,7 @@ const FAX_DOCUMENTS = [
   {
     fileId: "FAX-2026-00431",
     fileName: "Enrollment_Form_KReeves_051526.pdf",
-    dateReceived: "May 15, 2026",
+    dateReceived: daysFromToday(-4),
     type: "Enrollment Form",
     pages: 3,
   },
@@ -882,14 +883,14 @@ export default function Index() {
       : paStatus === "none"
       ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : paStatus === "submitted"
-      ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Submitted", statusDetail: "Awaiting Approval", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+      ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Submitted", statusDetail: "Awaiting Approval", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
       : paStatus === "approved"
-      ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Complete", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
-      : { id: "PA-14274", name: "Prior Authorization", statusLabel: "Denied", statusDetail: "PA Denied — Appeal initiated", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
+      ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Complete", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "PA-14274", name: "Prior Authorization", statusLabel: "Denied", statusDetail: "PA Denied — Appeal initiated", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const eaStage: Stage = consentStatus !== "confirmed"
-    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : isCoaFlow ? "SMS sent — awaiting patient consent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" }
-    : { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Complete", statusDetail: "Enrollment Completed", isComplete: true, isNotStarted: false, fields: [], lastUpdated: "5/15/2026", lastUpdatedAgo: "4 days ago" };
+    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : isCoaFlow ? "SMS sent — awaiting patient consent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(-4).toLocaleDateString(), lastUpdatedAgo: "4 days ago" }
+    : { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Complete", statusDetail: "Enrollment Completed", isComplete: true, isNotStarted: false, fields: [], lastUpdated: dateFromToday(-4).toLocaleDateString(), lastUpdatedAgo: "4 days ago" };
 
   const biCompleteDetail = isPapFlow
     ? "No Insurance Found; Free Goods Assessment Initiated"
@@ -899,41 +900,41 @@ export default function Index() {
     ? { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Not Started", statusDetail: "Waiting for patient consent", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : biStatus === "running"
     ? { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Running", statusDetail: "Investigating patient benefits...", isComplete: false, isNotStarted: false, fields: [], lastUpdated: null, lastUpdatedAgo: null }
-    : { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Complete", statusDetail: biCompleteDetail, isComplete: true, isNotStarted: false, fields: [], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
+    : { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Complete", statusDetail: biCompleteDetail, isComplete: true, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const papStage: Stage = papStatus === "none"
     ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Pending", statusDetail: "Awaiting income verification", isComplete: false, isNotStarted: true, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: null }], lastUpdated: null, lastUpdatedAgo: null }
     : papStatus === "active"
-    ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Complete", statusDetail: "Patient enrolled — Free Goods approved", isComplete: true, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: "Verified" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Complete", statusDetail: "Patient enrolled — Free Goods approved", isComplete: true, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: "Verified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : papStatus === "audit_pending"
-    ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Audit Pending", statusDetail: "Insurance audit initiated", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: "Verified" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
-    : { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Discontinued", statusDetail: "Patient has insurance — PAP discontinued", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
+    ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Audit Pending", statusDetail: "Insurance audit initiated", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: "Verified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Discontinued", statusDetail: "Patient has insurance — PAP discontinued", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const tpStage: Stage =
     dispatchStatus === "pending_selection" || dispatchStatus === "none"
     ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : dispatchStatus === "selected"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : pharmacyStatus === "processing"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "First dispense processing", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Initiated" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "First dispense processing", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Initiated" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : pharmacyStatus === "ready"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Ready for delivery", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Ready" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
-    : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "First dispense shipped", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Shipped" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
+    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Ready for delivery", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Ready" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "First dispense shipped", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Shipped" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const psStage: Stage = pharmacyStatus === "shipped"
-    ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "In Transit", statusDetail: "First dispense shipped — in transit to patient", isComplete: false, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Est. Delivery", value: "May 26, 2026" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "In Transit", statusDetail: "First dispense shipped — in transit to patient", isComplete: false, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Est. Delivery", value: daysFromToday(7) }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : pharmacyStatus === "delivered"
-    ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "Complete", statusDetail: "First dispense delivered", isComplete: true, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Delivered", value: "May 26, 2026" }], lastUpdated: "5/26/2026", lastUpdatedAgo: "today" }
+    ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "Complete", statusDetail: "First dispense delivered", isComplete: true, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Delivered", value: daysFromToday(0) }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "PS-14278", name: "Pharmacy Status", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null };
 
   const auditStage: Stage = papStatus !== "audit_pending" && paStatus === "none"
     ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Scheduled", statusDetail: "ABV audit — 90 days post-enrollment", isComplete: false, isNotStarted: true, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }], lastUpdated: null, lastUpdatedAgo: null }
     : papStatus === "audit_pending"
-    ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "In Progress", statusDetail: "Conducting ABV audit — insurance found", isComplete: false, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
-    : { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Complete", statusDetail: "Insurance found — PA required", isComplete: true, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" };
+    ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "In Progress", statusDetail: "Conducting ABV audit — insurance found", isComplete: false, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Complete", statusDetail: "Insurance found — PA required", isComplete: true, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const appealStage: Stage = paStatus === "approved"
-    ? { id: "A-14275", name: "Appeals", statusLabel: "Not needed", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "A-14275", name: "Appeals", statusLabel: "Not needed", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "A-14275", name: "Appeals", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
   // For the PAP flow, Financial Assistance tracks the FA eIncome check
@@ -946,7 +947,7 @@ export default function Index() {
       ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "In Progress", statusDetail: "SMS sent — awaiting patient income verification", isComplete: false, isNotStarted: false, fields: [{ label: "Financial Program", value: "Free Goods (PAP)" }, { label: "Income Verification", value: "Pending" }], lastUpdated: new Date().toLocaleDateString(), lastUpdatedAgo: "today" }
       : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: "Awaiting BI result", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Income Verification", value: null }], lastUpdated: null, lastUpdatedAgo: null }
     : biStatus === "complete" && paStatus === "approved"
-    ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "Not needed", statusDetail: "Commercial Insurance", isComplete: true, isNotStarted: false, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: "5/19/2026", lastUpdatedAgo: "today" }
+    ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "Not needed", statusDetail: "Commercial Insurance", isComplete: true, isNotStarted: false, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
   const STAGES_LIVE: Stage[] = isCoaFlow
@@ -1301,7 +1302,7 @@ export default function Index() {
               <span>·</span>
               <span>5 pages</span>
               <span>·</span>
-              <span>Received May 15, 2026</span>
+              <span>Received {daysFromToday(-4)}</span>
               <span>·</span>
               <span>Fax: 866-725-7218</span>
             </div>
@@ -1323,7 +1324,7 @@ export default function Index() {
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
                   <FieldRow label="Patient Signature" value={patientName} />
                   <FieldRow label="Relationship to Patient" value="Self" />
-                  <FieldRow label="Date Signed" value="05/20/2026" />
+                  <FieldRow label="Date Signed" value={dateFromToday(1).toLocaleDateString()} />
                 </div>
               </div>
 
@@ -1443,7 +1444,7 @@ export default function Index() {
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
                   <FieldRow label="Prescriber Signature" value="Sarah Chen, MD" />
                   <FieldRow label="Dispense As Written" value="Yes" />
-                  <FieldRow label="Date" value="05/20/2026" />
+                  <FieldRow label="Date" value={dateFromToday(1).toLocaleDateString()} />
                 </div>
               </div>
 
@@ -1599,9 +1600,9 @@ export default function Index() {
                     </div>
                     <div>
                       <FieldRow label="Prior Authorization ID" value="SELECTED_Template_51" />
-                      <FieldRow label="Last PA Fax Sent Date" value="6/28/2026" />
+                      <FieldRow label="Last PA Fax Sent Date" value={dateFromToday(-3).toLocaleDateString()} />
                       <FieldRow label="Denial Date" value={new Date().toLocaleDateString()} />
-                      <FieldRow label="Appeal Deadline" value="8/28/2026" />
+                      <FieldRow label="Appeal Deadline" value={dateFromToday(57).toLocaleDateString()} />
                       <FieldRow label="PA Requirements Communicated" value="Yes" />
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
                     </div>
@@ -1660,7 +1661,7 @@ export default function Index() {
                     </div>
                     <div>
                       <div className="text-[11px] text-[#706e6b] mb-1">Appeal Deadline</div>
-                      <div className="text-[13px] text-[#3e3e3c]">8/28/2026</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(57).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>
@@ -1733,11 +1734,11 @@ export default function Index() {
                     </div>
                     <div>
                       <FieldRow label="Prior Authorization ID" value="SELECTED_Template_51" />
-                      <FieldRow label="Last PA Fax Sent Date" value="5/19/2026" />
-                      <FieldRow label="Effective Date" value="5/19/2026" />
-                      <FieldRow label="Expiration Date" value="5/19/2027" />
+                      <FieldRow label="Last PA Fax Sent Date" value={dateFromToday(0).toLocaleDateString()} />
+                      <FieldRow label="Effective Date" value={dateFromToday(0).toLocaleDateString()} />
+                      <FieldRow label="Expiration Date" value={dateFromToday(365).toLocaleDateString()} />
                       <FieldRow label="PA Requirements Communicated" value="Yes" />
-                      <FieldRow label="PA Requirement Communicated Date/Time" value="5/19/2026, 10:30 AM" />
+                      <FieldRow label="PA Requirement Communicated Date/Time" value={`${dateFromToday(0).toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
                 </div>
@@ -1782,11 +1783,11 @@ export default function Index() {
                     </div>
                     <div>
                       <div className="text-[11px] text-[#706e6b] mb-1">Approval Date</div>
-                      <div className="text-[13px] text-[#3e3e3c]">{paApprovedAt ? new Date(paApprovedAt).toLocaleDateString() : "5/19/2026"}</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{paApprovedAt ? new Date(paApprovedAt).toLocaleDateString() : dateFromToday(0).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <div className="text-[11px] text-[#706e6b] mb-1">Valid Until</div>
-                      <div className="text-[13px] text-[#3e3e3c]">5/19/2027</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(365).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>
@@ -2521,7 +2522,7 @@ export default function Index() {
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] mb-1">Created Date</div>
-                    <div className="text-[13px] text-[#3e3e3c]">5/19/2026</div>
+                    <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(0).toLocaleDateString()}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] mb-1">Related Benefit Investigation</div>
@@ -2570,7 +2571,7 @@ export default function Index() {
             </div>
             <div className="flex flex-col min-w-[150px]">
               <span className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium">Date/Time Opened</span>
-              <span className="text-[13px] text-[#3e3e3c]">5/15/2026 2:31 PM</span>
+              <span className="text-[13px] text-[#3e3e3c]">{dateFromToday(-4).toLocaleDateString()} 2:31 PM</span>
             </div>
             <div className="flex flex-col min-w-[150px]">
               <span className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium">Date/Time Closed</span>
@@ -2646,7 +2647,7 @@ export default function Index() {
                           <SfLink className="text-[13px]">AssistRx Clin/Fulfillment</SfLink>
                         </div>
                       </div>
-                      <FieldRow label="Enrollment Date" value="5/15/2026" />
+                      <FieldRow label="Enrollment Date" value={dateFromToday(-4).toLocaleDateString()} />
                     </div>
                   </div>
                 )}
@@ -2732,7 +2733,7 @@ export default function Index() {
                                 <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">{stageState}</td>
                                 <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c]">Onboarding</td>
                                 <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">
-                                  5/15/2026 2:31 PM
+                                  {dateFromToday(-4).toLocaleDateString()} 2:31 PM
                                 </td>
                                 <td className="px-3 py-2 border-b border-[#dddbda]">
                                   <button className="p-0.5 hover:bg-[#e5e5e5] rounded">

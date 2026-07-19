@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { dateFromToday } from "@/lib/relativeDate";
 import { useNavigate } from "react-router-dom";
 import {
   Search, Plus, Bell, ChevronDown, Settings, Users, Calendar,
@@ -596,7 +597,7 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
             </div>
             <div className="email-header__meta">
               <p className="email-meta__label">Sent:</p>
-              <p className="email-meta__value">Thursday, May 21, 2026 1:23 PM</p>
+              <p className="email-meta__value">{dateFromToday(-3).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} 1:23 PM</p>
             </div>
             <div className="email-header__meta">
               <p className="email-meta__label">To:</p>
@@ -642,7 +643,7 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
               </p>
 
               <p className="email-paragraph email-paragraph--highlight">
-                This link expires on 05/29/2026.
+                This link expires on {dateFromToday(5).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}.
               </p>
 
               <p className="email-paragraph">

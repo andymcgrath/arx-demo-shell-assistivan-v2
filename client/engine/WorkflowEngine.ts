@@ -1,4 +1,5 @@
 import type { MachineContext, PersonaId } from './types';
+import { daysFromToday } from '@/lib/relativeDate';
 
 export function getPersonaActions(state: MachineContext, persona: PersonaId): string[] {
   const { workflowData } = state;
@@ -408,7 +409,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
       // is the actual source of truth for "is enrollment done" — not biStatus.
       status: input.consentStatus === 'confirmed' ? 'Closed' : 'Open',
       priority: 'High',
-      dueDate: 'Jun 14, 2026',
+      dueDate: daysFromToday(0),
       assignedTo: 'Sarah Mitchell',
       description: 'Gather missing patient information for enrollment',
     },
@@ -425,11 +426,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
       refId: 'Prior Authorization Requested',
       status: input.paStatus === 'approved' ? 'Closed' : 'Open',
       priority: 'High',
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }),
+      dueDate: daysFromToday(2),
       assignedTo: 'Sarah Mitchell',
       description: 'Submit Prior Authorization request to payer',
     });

@@ -263,7 +263,7 @@ function DesktopFooter() {
             <a href="#" className="text-arx-primary font-bold hover:underline">Terms of Use</a>
           </div>
           <p className="text-arx-inactive text-xs font-bold">
-            ©2025 AssistRx. All Rights Reserved. Intended for US residents only.
+            ©{new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.
           </p>
         </div>
       </div>
@@ -292,7 +292,7 @@ function TealFooter() {
           <span className="text-white/60">|</span>
           <a href="#" className="text-white font-bold underline">Terms of Use</a>
         </div>
-        <p className="text-white/70 text-xs font-bold">©2025 AssistRx. All Rights Reserved. Intended for US residents only.</p>
+        <p className="text-white/70 text-xs font-bold">©{new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.</p>
         <p className="text-arx-sky text-xs font-bold">Powered by AssistRx</p>
       </div>
     </footer>
@@ -777,7 +777,7 @@ export default function DesignSystem() {
           <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
             v1.0
           </span>
-          <span className="text-white/60 text-xs hidden sm:block">2025</span>
+          <span className="text-white/60 text-xs hidden sm:block">{new Date().getFullYear()}</span>
         </div>
       </header>
 
@@ -866,7 +866,7 @@ export default function DesignSystem() {
                 { label: "Body Large — 20px SemiBold · #6F7276", sample: "We assist patients and caregivers with capturing secure consent and authorization for medications prescribed by their doctors.", className: "text-arx-body-copy font-semibold text-xl leading-[160%]" },
                 { label: "Body — 16px Regular · #6F7276", sample: "Contact Customer Support at 877-450-4412", className: "text-arx-body-copy text-base leading-[140%]" },
                 { label: "Label — 16px Bold · #414042", sample: "Need Assistance?", className: "text-arx-slate font-bold text-base" },
-                { label: "Small / Legal — 12px Bold · #ACACAC", sample: "©2025 AssistRx. All Rights Reserved. Intended for US residents only.", className: "text-arx-inactive font-bold text-xs" },
+                { label: "Small / Legal — 12px Bold · #ACACAC", sample: `©${new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.`, className: "text-arx-inactive font-bold text-xs" },
               ].map(({ label, sample, className }) => (
                 <div key={label} className="py-5 flex flex-col gap-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-arx-inactive">{label}</p>

@@ -1,12 +1,13 @@
 import { ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
+import { daysFromToday } from "@/lib/relativeDate";
 const ORDER_NUMBER = "428046573";
-const SHIP_DATE = "May 26, 2026";
+const SHIP_DATE = daysFromToday(-1);
 
 const STEPS = [
-  { n: 1, label: "Order received", sub: "May 23, 2026", status: "done" },
-  { n: 2, label: "Routing to pharmacy", sub: "May 23, 2026", status: "done" },
-  { n: 3, label: "Preparing medication", sub: "May 25, 2026", status: "done" },
+  { n: 1, label: "Order received", sub: daysFromToday(-4), status: "done" },
+  { n: 2, label: "Routing to pharmacy", sub: daysFromToday(-4), status: "done" },
+  { n: 3, label: "Preparing medication", sub: daysFromToday(-2), status: "done" },
   { n: 4, label: "In transit", sub: SHIP_DATE, status: "active" },
   { n: 5, label: "Delivered", sub: null, status: "pending" },
 ] as const;

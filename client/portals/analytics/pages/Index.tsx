@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { daysFromToday } from "@/lib/relativeDate";
 import ExplorePerformance from "./ExplorePerformance";
 import DiscoverTrends from "./DiscoverTrends";
 import GenieAI from "./GenieAI";
@@ -1217,7 +1218,7 @@ function Tab5PlaybackAndCompliance() {
         <div className="flex-1 rounded-xl border border-navy-light p-5" style={{ background: "hsl(220 55% 10%)" }}>
           <SectionTitle tip="An example structured call summary produced by the Playback Summary Bot.">Sample AI-Generated Summary</SectionTitle>
           <div className="rounded-xl border-l-4 border-teal p-4" style={{ background: "hsl(220 48% 8%)", fontFamily: "ui-monospace, monospace" }}>
-            <div className="text-xs text-muted-foreground mb-3">Call #8841 · May 14, 2026 · 4:23 duration<br />Agent: Martinez, Sofia</div>
+            <div className="text-xs text-muted-foreground mb-3">Call #8841 · {daysFromToday(-3)} · 4:23 duration<br />Agent: Martinez, Sofia</div>
             <div className="text-xs font-bold text-teal uppercase tracking-widest mb-2">Summary</div>
             <p className="text-sm text-white/85 leading-relaxed mb-4">Patient called regarding prior authorization status for JASCAYD. Expressed frustration with 3-day delay. Agent confirmed PA submitted and escalated to PA specialist team.</p>
             <div className="space-y-1.5 border-t border-navy-light pt-3">

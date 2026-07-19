@@ -35,7 +35,7 @@ export const MANUFACTURER = {
     safetyUrl: "#",
     prescribingUrl: "#",
   },
-  copyright: "©2026 AssistRx. All Rights Reserved. Intended for US residents only.",
+  copyright: `©${new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.`,
 };
 
 export const PROGRAM = {

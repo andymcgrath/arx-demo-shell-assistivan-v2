@@ -5,6 +5,7 @@ import { useFieldStore, type FieldItem, type FieldPatientRecord } from "@/store/
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
 import { getLiveWorkItems } from "@/engine/WorkflowEngine";
+import { daysFromToday } from "@/lib/relativeDate";
 
 // Core data model
 // Legacy shape the dashboard quick-view modal and task detail drill-in were
@@ -93,7 +94,7 @@ export default function FieldPortal() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [patientTab, setPatientTab] = useState("SUMMARY");
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 5, 1));
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
@@ -120,7 +121,7 @@ export default function FieldPortal() {
     status: item.status,
     priority: item.priority,
     dueDate: item.dueDate,
-    createdAt: "Jun 14, 2026",
+    createdAt: daysFromToday(0),
     patient: patientState.patientName,
     patientId: "AS-164543",
     prescriber: "---",
@@ -157,7 +158,7 @@ export default function FieldPortal() {
     primaryPrescriber: "---",
     primarySOC: "---",
     consentExpiration: "---",
-    enrollmentDate: "Jun 14, 2026",
+    enrollmentDate: daysFromToday(0),
     homePhone: patientState.phone,
     mobilePhone: patientState.phone,
     workPhone: "",
@@ -212,7 +213,7 @@ export default function FieldPortal() {
   // Calculate stats — each one filters allItems with the exact same
   // predicate the quick-view modal below uses, so the number on the card
   // always matches the row count you see after clicking it.
-  const today = new Date(2026, 5, 14);
+  const today = new Date();
   const todayDateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const uniqueHCPs = fieldHCPs.length;
   const idleCases = allItems.filter(i => i.kind === "Case" && i.status === "Idle").length;
@@ -601,14 +602,14 @@ export default function FieldPortal() {
 
                       {/* Week Days */}
                       <div className="grid grid-cols-7 bg-white">
-                        {[14, 15, 16, 17, 18, 19, 20].map((day) => (
+                        {Array.from({ length: 7 }, (_, i) => today.getDate() - 3 + i).map((day) => (
                           <div key={day} className="border-slate-300 p-4 min-h-24 border-r border-b last:border-r-0">
                             <p className={`text-sm mb-2 ${
-                              day === 14 ? 'text-slate-900' : 'font-medium text-slate-700'
+                              day === today.getDate() ? 'text-slate-900' : 'font-medium text-slate-700'
                             }`}>
                               {day}
                             </p>
-                            {day === 14 && (
+                            {day === today.getDate() && (
                               <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-arx-primary rounded">
                                 Today
                               </span>
@@ -622,7 +623,7 @@ export default function FieldPortal() {
                   {calendarView === "Day" && (
                     <div className="border border-slate-300 rounded p-6">
                       <p className="text-center text-slate-600">Day view for {monthYear}</p>
-                      <p className="text-center text-slate-500 text-sm mt-2">Showing June 14, 2026 (Today)</p>
+                      <p className="text-center text-slate-500 text-sm mt-2">Showing {todayDateStr} (Today)</p>
                     </div>
                   )}
 
