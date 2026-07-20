@@ -1,5 +1,5 @@
 import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDemoStore } from "@/store/demoStore";
 import {
@@ -14,6 +14,7 @@ import {
   type FieldInsurance,
   type FieldPatientAuthorization,
   type FieldSPShipment,
+  type FieldComment,
 } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
@@ -171,6 +172,16 @@ export default function FieldPortal() {
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
+
+  // Clears the draft when navigating to a different task/case — otherwise
+  // an unsent comment on one item would still be sitting in the box (and
+  // could get posted to the wrong item) after clicking into another.
+  useEffect(() => {
+    setCommentDraft("");
+    setAlsoAddToRelated(false);
+  }, [selectedTaskId]);
 
   // Field Portal's core dataset — seeded once, persisted to sessionStorage
   // (see client/store/fieldStore.ts). Does not vary by workflow.
@@ -185,6 +196,8 @@ export default function FieldPortal() {
     insurance: fieldInsurance,
     authorizations: fieldAuthorizations,
     shipments: fieldShipments,
+    comments,
+    addComment,
   } = useFieldStore();
 
   // Referenced by both liveItems (as relatedCaseId) and liveCase (as its own
@@ -1157,6 +1170,92 @@ export default function FieldPortal() {
                 <label className="text-xs font-semibold text-slate-700 mb-2 block">Task Description</label>
                 <p className="text-sm text-slate-700 min-h-24">{selectedCase.description || "---"}</p>
               </div>
+
+              {/* Comments — FRMs can add a note to whatever's open here,
+                  and optionally post the same note to the item on the
+                  other side of the relatedCaseId link (a task's case, or
+                  a case's related tasks) instead of re-typing it twice. */}
+              {(() => {
+                const itemComments = comments.filter((c) => c.itemId === selectedCase.id);
+                const relatedCase = selectedCase.kind === "Task" && selectedCase.relatedCaseId
+                  ? allItems.find((i) => i.id === selectedCase.relatedCaseId)
+                  : undefined;
+                const relatedTasksForCase = selectedCase.kind === "Case"
+                  ? allItems.filter((i) => i.kind === "Task" && i.relatedCaseId === selectedCase.id)
+                  : [];
+                const hasRelatedTarget = !!relatedCase || relatedTasksForCase.length > 0;
+
+                const handleAdd = () => {
+                  const text = commentDraft.trim();
+                  if (!text) return;
+                  addComment(selectedCase.id, text);
+                  if (alsoAddToRelated) {
+                    if (relatedCase) addComment(relatedCase.id, text);
+                    relatedTasksForCase.forEach((t) => addComment(t.id, text));
+                  }
+                  setCommentDraft("");
+                  setAlsoAddToRelated(false);
+                };
+
+                return (
+                  <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
+                    <h3 className="text-sm font-semibold text-slate-700 mb-4">COMMENTS</h3>
+
+                    <div className="space-y-3 mb-4">
+                      {itemComments.length === 0 ? (
+                        <p className="text-sm text-slate-400">No comments yet</p>
+                      ) : (
+                        itemComments.map((c) => (
+                          <div key={c.id} className="bg-slate-50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                              <span className="text-xs text-slate-400">{c.createdAt}</span>
+                            </div>
+                            <p className="text-sm text-slate-700">{c.text}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <textarea
+                      value={commentDraft}
+                      onChange={(e) => setCommentDraft(e.target.value)}
+                      placeholder="Add a comment..."
+                      rows={3}
+                      className="w-full border border-slate-300 rounded-lg p-3 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-arx-primary"
+                    />
+
+                    {hasRelatedTarget && (
+                      <label className="flex items-center gap-2 text-sm text-slate-600 mb-3">
+                        <input
+                          type="checkbox"
+                          checked={alsoAddToRelated}
+                          onChange={(e) => setAlsoAddToRelated(e.target.checked)}
+                        />
+                        {relatedCase
+                          ? `Also add to Case ${relatedCase.refId}`
+                          : `Also add to related task${relatedTasksForCase.length > 1 ? "s" : ""} (${relatedTasksForCase.map((t) => t.refId).join(", ")})`}
+                      </label>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAdd}
+                        disabled={!commentDraft.trim()}
+                        className="px-4 py-2 text-sm rounded bg-arx-primary text-white hover:bg-arx-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setCommentDraft(""); setAlsoAddToRelated(false); }}
+                        className="px-4 py-2 text-sm rounded border border-slate-300 text-slate-700 hover:bg-slate-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

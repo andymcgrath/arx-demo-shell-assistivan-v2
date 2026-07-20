@@ -147,6 +147,22 @@ export interface FieldPatientAuthorization {
   receivedDate: string;
 }
 
+/**
+ * FRM-authored comments on a Task or Case. Kept as its own collection
+ * indexed by `itemId` rather than a `comments` array on FieldItem itself,
+ * because two of the items comments get added to (Keanu's live tasks) are
+ * recomputed fresh every render from the actor and never live in `items` —
+ * a flat, itemId-keyed collection works the same way whether the item
+ * behind it is persisted or live-computed.
+ */
+export interface FieldComment {
+  id: string;
+  itemId: string;
+  author: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface FieldSPShipment {
   id: string;
   patientId: string;
@@ -463,6 +479,8 @@ interface FieldStoreState {
   insurance: FieldInsurance[];
   authorizations: FieldPatientAuthorization[];
   shipments: FieldSPShipment[];
+  comments: FieldComment[];
+  addComment: (itemId: string, text: string) => void;
   resetFieldData: () => void;
 }
 
@@ -478,6 +496,9 @@ function seedAll() {
     insurance: seedFieldInsurance(),
     authorizations: seedFieldAuthorizations(),
     shipments: seedFieldShipments(),
+    // No seeded comments — every row here was added by an FRM through the
+    // UI, not part of the hand-authored demo narrative.
+    comments: [] as FieldComment[],
   };
 }
 
@@ -485,6 +506,19 @@ export const useFieldStore = create<FieldStoreState>()(
   persist(
     (set) => ({
       ...seedAll(),
+      addComment: (itemId, text) =>
+        set((state) => ({
+          comments: [
+            ...state.comments,
+            {
+              id: `CMT-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              itemId,
+              author: "You",
+              text,
+              createdAt: daysFromToday(0),
+            },
+          ],
+        })),
       resetFieldData: () => set(seedAll()),
     }),
     {
