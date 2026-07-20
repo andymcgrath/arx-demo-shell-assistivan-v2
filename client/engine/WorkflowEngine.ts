@@ -1,5 +1,5 @@
 import type { MachineContext, PersonaId } from './types';
-import { daysFromToday, dateFromToday } from '@/lib/relativeDate';
+import { daysFromToday } from '@/lib/relativeDate';
 
 export function getPersonaActions(state: MachineContext, persona: PersonaId): string[] {
   const { workflowData } = state;
@@ -447,7 +447,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
 }
 
 // ── Generated emails ─────────────────────────────────────────────────────────
-// Field Portal's Emails screen doesn't maintain its own queue. Every email it
+// Field Portal's email client doesn't maintain its own queue. Every email it
 // shows is derived, on every render, from the actor's own event log (the same
 // `events` array useDemoState() already exposes) plus the patient's current
 // prescriber. That's why nothing here is stored anywhere: a status change
@@ -456,6 +456,23 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
 // list. Read state (which emails have been opened) is bookkeeping kept
 // separately in fieldStore.ts, the same way comments are kept separate from
 // the FieldItem list.
+//
+// This is an FRM's own inbox, not the patient's or prescriber's — every
+// email here is an internal notification about activity on one of the
+// FRM's patients, addressed to the FRM (`frmName`), not to the patient or
+// HCP the activity is about. Each one links to the specific task or case in
+// Field Portal it's reporting on (`linkedItemId`), so opening it and
+// clicking through lands the FRM directly on that record's detail screen —
+// the same ids field/index.tsx's own liveItems/liveCase already use, kept
+// here as shared constants so the two can't drift apart.
+
+/** Field Portal ids for this patient's two live tasks and their one live
+ * case (see liveItems/liveCase in client/portals/field/index.tsx) — shared
+ * here so a generated email's `linkedItemId` always resolves to a real row
+ * in Field Portal's Task/Case detail view. */
+export const LIVE_CASE_ID = 'LIVE-CASE-AS164543';
+export const LIVE_MISSING_INFO_TASK_ID = 'LIVE-MISSING-INFORMATION';
+export const LIVE_PA_TASK_ID = 'LIVE-PA-SUBMISSION-REQUIRED';
 
 /** Minimal event shape this function needs — matches useDemoState()'s
  * snake_case DemoEvent so callers can pass that array through unchanged. */
@@ -472,23 +489,25 @@ export interface GeneratedEmail {
   to: string;
   sentAt: string;
   bodyParagraphs: string[];
-  numberedSteps?: string[];
-  noteText?: string;
-  highlight?: string;
-  closing?: string;
+  /** The task or case (client/store/fieldStore.ts FieldItem id) this
+   * notification is about — the client's "View Task" / "View Case" link
+   * jumps straight to that record's detail screen in Field Portal. */
+  linkedItemId?: string;
+  linkedItemLabel?: string;
 }
 
 export interface GeneratedEmailInputs {
   events: GeneratedEmailSourceEvent[];
   patientName: string;
   prescriberName: string;
+  frmName: string;
   biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | null;
 }
 
 // Identity-verification substeps and the welcome-banner dismissal aren't
-// milestones a field rep or patient would expect a separate email about —
-// they're folded into the enrollment/consent narrative instead of each
-// generating their own noisy notification.
+// milestones an FRM would expect a separate notification about — they're
+// folded into the enrollment/consent narrative instead of each generating
+// their own noisy entry.
 const NON_EMAIL_EVENT_TYPES = new Set([
   'DISMISS_WELCOME',
   'VERIFY_SMS',
@@ -511,14 +530,14 @@ function friendlyEventLabel(eventType: string): string {
 }
 
 /**
- * Maps the actor's event log into the exact set of emails Field Portal
- * should have ready. One entry in, one email out (aside from the excluded
- * types above) — nothing is summarized or batched, so the list always
- * matches the real event history exactly, including events that happened
- * while nobody was looking at the Emails screen.
+ * Maps the actor's event log into the exact set of notification emails
+ * this FRM should have waiting. One entry in, one email out (aside from the
+ * excluded types above) — nothing is summarized or batched, so the list
+ * always matches the real event history exactly, including events that
+ * happened while nobody was looking at the email client.
  */
 export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[] {
-  const { events, patientName, prescriberName, biResult } = input;
+  const { events, patientName, prescriberName, frmName, biResult } = input;
   const emails: GeneratedEmail[] = [];
 
   for (const event of events) {
@@ -527,6 +546,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
     const base = {
       id: event.id,
       eventType: event.event_type,
+      to: frmName,
       sentAt: formatSentAt(event.created_at),
     };
 
@@ -534,50 +554,52 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
       case 'ENROLL':
         emails.push({
           ...base,
-          subject: 'Welcome to the AssistRx Patient Support Program',
-          to: patientName,
+          subject: `New Patient Enrolled - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `Welcome to the AssistRx Patient Support Program. We received your enrollment and our team is reviewing your information now.`,
-            `You'll get an email at each step. Benefits verification comes first, then prior authorization if your plan requires it, then shipment. Call AssistRx at 1-866-424-6935 with any questions.`,
+            `${patientName} has been enrolled in the AssistRx Patient Support Program under ${prescriberName}.`,
+            `Review the Missing Information task to confirm what enrollment steps are still outstanding.`,
           ],
+          linkedItemId: LIVE_MISSING_INFO_TASK_ID,
+          linkedItemLabel: 'View Task: Missing Information',
         });
         break;
 
       case 'INVITE':
         emails.push({
           ...base,
-          subject: 'Verify Your Identity to Continue Enrollment',
-          to: patientName,
+          subject: `Identity Verification Sent - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `AssistRx sent a text message to the mobile number on file to verify your identity and finish setting up your account.`,
-            `Follow the link in that text to complete verification. Contact AssistRx at 1-866-424-6935 if you didn't receive it.`,
+            `AssistRx sent an identity verification text to ${patientName} to continue enrollment.`,
+            `No action is needed from you unless the patient reports an issue receiving it.`,
           ],
+          linkedItemId: LIVE_MISSING_INFO_TASK_ID,
+          linkedItemLabel: 'View Task: Missing Information',
         });
         break;
 
       case 'CONFIRM_CONSENT':
         emails.push({
           ...base,
-          subject: 'Enrollment Consent Confirmed',
-          to: 'Field Team',
+          subject: `Consent Confirmed - ${patientName}`,
           bodyParagraphs: [
             `${patientName} confirmed enrollment consent.`,
-            `The Missing Information task for this patient is now closed. No enrollment paperwork is outstanding.`,
+            `The Missing Information task for this patient is now closed.`,
           ],
+          linkedItemId: LIVE_MISSING_INFO_TASK_ID,
+          linkedItemLabel: 'View Task: Missing Information',
         });
         break;
 
       case 'RUN_BI':
         emails.push({
           ...base,
-          subject: 'Benefits Investigation Started',
-          to: 'Field Team',
+          subject: `Benefits Investigation Started - ${patientName}`,
           bodyParagraphs: [
-            `Benefits investigation has started for ${patientName}.`,
-            `AssistRx is contacting the payer to confirm coverage. An update will follow once the investigation completes.`,
+            `AssistRx started a benefits investigation for ${patientName} under ${prescriberName}.`,
+            `An update will follow once the investigation completes.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
@@ -585,36 +607,27 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         if (biResult === 'no_insurance') {
           emails.push({
             ...base,
-            subject: 'Financial Assistance Program - Next Steps',
-            to: patientName,
+            subject: `No Coverage Found - ${patientName}`,
             bodyParagraphs: [
-              `Dear ${patientName},`,
-              `Based on your benefits investigation, no insurance coverage was found for this medication. You may qualify for AssistRx's Free Goods financial assistance program.`,
-              `Our team will follow up shortly with next steps to verify your income and complete enrollment in the program.`,
+              `Benefits investigation found no insurance coverage for ${patientName}.`,
+              `The patient may qualify for AssistRx's Free Goods financial assistance program. No Prior Authorization task will open on this case.`,
             ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
           });
         } else {
           const nonFormulary = biResult === 'no_coverage';
           emails.push({
             ...base,
-            subject: nonFormulary
-              ? 'Action Required - Prior Authorization Submittal (Non-Formulary)'
-              : 'Action Required - Prior Authorization Submittal',
-            to: prescriberName,
+            subject: `Prior Authorization Needed - ${patientName}${nonFormulary ? ' (Non-Formulary)' : ''}`,
             bodyParagraphs: [
-              `Dear ${prescriberName},`,
               nonFormulary
-                ? `AssistRx has received your request to process a prior authorization for ${patientName}. The patient's insurer covers this drug class only with a prior authorization on file, since the medication isn't on their standard formulary.`
-                : `AssistRx has received your request to process a prior authorization for ${patientName}. The patient's insurer requires a prior authorization (PA) submitted by their healthcare provider.`,
-              `An electronic PA request form has been prepared for you by AssistRx. To complete and submit the PA, follow these steps:`,
+                ? `Benefits investigation found ${patientName}'s medication is not on the payer's standard formulary. ${prescriberName} needs to submit a prior authorization.`
+                : `Benefits investigation confirmed ${prescriberName} needs to submit a prior authorization for ${patientName}.`,
+              `The Prior Authorization task is now open on this patient's case.`,
             ],
-            numberedSteps: [
-              'Click HERE to be redirected to our PA request form, powered by AssistRx.',
-              'Input your NPI and follow the instructions on the form to complete the submission.',
-            ],
-            noteText: '*Your NPI is required to protect against fraudulent activity and to ensure only active prescribers can submit PAs.',
-            highlight: `This link expires on ${dateFromToday(5).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}.`,
-            closing: 'If you are having any issues with this process or need to request a new link, please contact AssistRx at 1-866-424-6935.',
+            linkedItemId: LIVE_PA_TASK_ID,
+            linkedItemLabel: 'View Task: Prior Authorization Requested',
           });
         }
         break;
@@ -622,176 +635,183 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
       case 'SUBMIT_PA':
         emails.push({
           ...base,
-          subject: 'Prior Authorization Submitted - Pending Payer Review',
-          to: 'Field Team',
+          subject: `Prior Authorization Submitted - ${patientName}`,
           bodyParagraphs: [
-            `A prior authorization request was submitted to the payer on behalf of ${patientName}.`,
-            `AssistRx will monitor for a decision and notify the care team once the payer responds.`,
+            `A prior authorization request was submitted to the payer for ${patientName}.`,
+            `AssistRx is monitoring for a decision and will notify you once the payer responds.`,
           ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
         });
         break;
 
       case 'APPROVE_PA':
         emails.push({
           ...base,
-          subject: 'Good News! Your Prior Authorization Has Been Approved',
-          to: patientName,
+          subject: `Prior Authorization Approved - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `Your insurer has approved the prior authorization for your medication. Your prescriber has also been notified.`,
-            `Your prescription now moves to fulfillment. You'll get another email once it ships.`,
+            `The payer approved the prior authorization for ${patientName}. ${prescriberName} has also been notified.`,
+            `The prescription now moves to fulfillment.`,
           ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
         });
         break;
 
       case 'DENY_PA':
         emails.push({
           ...base,
-          subject: 'Action Required - Prior Authorization Denied',
-          to: 'Field Team',
+          subject: `Prior Authorization Denied - ${patientName}`,
           bodyParagraphs: [
             `The payer denied the prior authorization request for ${patientName}.`,
-            `An appeal is recommended. Review the denial reason and coordinate next steps with the prescriber.`,
+            `An appeal is recommended. Review the denial reason and coordinate next steps with ${prescriberName}.`,
           ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
         });
         break;
 
       case 'READY_RX':
         emails.push({
           ...base,
-          subject: 'Prescription Ready for Fulfillment',
-          to: 'Field Team',
+          subject: `Prescription Ready for Fulfillment - ${patientName}`,
           bodyParagraphs: [
-            `The specialty pharmacy has verified and is preparing to fill the prescription for ${patientName}.`,
+            `The specialty pharmacy verified and is preparing to fill the prescription for ${patientName}.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'FILL_RX':
         emails.push({
           ...base,
-          subject: 'Prescription Filled - Ready for Dispatch',
-          to: 'Field Team',
+          subject: `Prescription Filled - ${patientName}`,
           bodyParagraphs: [
             `The specialty pharmacy filled the prescription for ${patientName}.`,
-            `The order is ready for dispatch and will ship shortly.`,
+            `The order is ready for dispatch.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'SELECT_PHARMACY':
         emails.push({
           ...base,
-          subject: 'Your Specialty Pharmacy Has Been Selected',
-          to: patientName,
+          subject: `Specialty Pharmacy Selected - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `AssistRx has selected the specialty pharmacy that will fill your prescription and coordinate delivery.`,
+            `AssistRx selected the specialty pharmacy that will fill the prescription for ${patientName}.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'SHIP_RX':
         emails.push({
           ...base,
-          subject: 'Your Medication Has Shipped',
-          to: patientName,
+          subject: `Medication Shipped - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `Your medication has shipped and is expected to arrive within 2-3 business days.`,
-            `Your AssistRx care team will follow up once it's delivered to confirm you received it safely.`,
+            `${patientName}'s medication has shipped and is expected within 2-3 business days.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'DELIVER_RX':
         emails.push({
           ...base,
-          subject: 'Delivery Confirmed - Medication Received',
-          to: patientName,
+          subject: `Medication Delivered - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `This confirms your medication has been delivered. Contact AssistRx at 1-866-424-6935 with any questions about your treatment.`,
+            `Delivery has been confirmed for ${patientName}'s medication.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'COMPLETE_PROVIDER_PA':
         emails.push({
           ...base,
-          subject: 'Provider Completed Prior Authorization Form',
-          to: 'Field Team',
+          subject: `Provider Completed PA Form - ${patientName}`,
           bodyParagraphs: [
             `${prescriberName}'s office completed the prior authorization form for ${patientName}.`,
-            `The completed form has been submitted to the payer for review.`,
+            `It has been submitted to the payer for review.`,
           ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
         });
         break;
 
       case 'SEND_PAP_SMS':
         emails.push({
           ...base,
-          subject: 'Verify Your Identity - Financial Assistance Program',
-          to: patientName,
+          subject: `Financial Assistance Verification Sent - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `AssistRx sent a text message to verify your identity for the Free Goods financial assistance program.`,
+            `AssistRx sent an identity verification text to ${patientName} for the Free Goods financial assistance program.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'VERIFY_INCOME':
         emails.push({
           ...base,
-          subject: 'Income Verification Submitted',
-          to: 'Field Team',
+          subject: `Income Verification Submitted - ${patientName}`,
           bodyParagraphs: [
             `${patientName} submitted income verification for the financial assistance program review.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'PATIENT_SETS_ADDRESS':
         emails.push({
           ...base,
-          subject: 'Shipping Address Confirmed',
-          to: 'Field Team',
+          subject: `Shipping Address Confirmed - ${patientName}`,
           bodyParagraphs: [
             `${patientName} confirmed the delivery address for their medication shipment.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'PATIENT_SELECTS_SHIP_DATE':
         emails.push({
           ...base,
-          subject: 'Preferred Ship Date Selected',
-          to: 'Field Team',
+          subject: `Preferred Ship Date Selected - ${patientName}`,
           bodyParagraphs: [
             `${patientName} selected a preferred ship date for their medication.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       case 'START_INCOME_QUALIFICATION':
         emails.push({
           ...base,
-          subject: 'Next Step - Income Qualification for Financial Assistance',
-          to: patientName,
+          subject: `Income Qualification Started - ${patientName}`,
           bodyParagraphs: [
-            `Dear ${patientName},`,
-            `To finish qualifying for the Free Goods financial assistance program, AssistRx needs proof of income.`,
-            `A member of our team will reach out with instructions on how to submit this securely.`,
+            `${patientName} needs to submit proof of income to finish qualifying for the Free Goods financial assistance program.`,
           ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
         break;
 
       default:
         emails.push({
           ...base,
-          subject: `Status Update: ${friendlyEventLabel(event.event_type)}`,
-          to: 'Field Team',
+          subject: `Status Update: ${friendlyEventLabel(event.event_type)} - ${patientName}`,
           bodyParagraphs: [`${friendlyEventLabel(event.event_type)} occurred for ${patientName}.`],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
         });
     }
   }

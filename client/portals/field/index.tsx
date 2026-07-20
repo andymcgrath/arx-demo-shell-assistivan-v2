@@ -18,13 +18,24 @@ import {
 } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
-import { getLiveWorkItems, getGeneratedEmails } from "@/engine/WorkflowEngine";
+import {
+  getLiveWorkItems,
+  getGeneratedEmails,
+  LIVE_CASE_ID,
+  LIVE_MISSING_INFO_TASK_ID,
+  LIVE_PA_TASK_ID,
+} from "@/engine/WorkflowEngine";
 import { daysFromToday } from "@/lib/relativeDate";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
-// CRM's enrollment fax, iAssist, the live tasks above) — the recipient the
-// generated PA-submittal email is addressed to.
+// CRM's enrollment fax, iAssist, the live tasks above) — referenced by the
+// generated email notifications below.
 const PRESCRIBER_NAME = "Dr. Sarah Chen";
+// The FRM working this patient's case — same name the dashboard's "Welcome
+// Back" greeting and the live tasks' assignedTo already use. Every
+// generated email is addressed to this FRM, since the email client is an
+// internal notification inbox, not the patient's or prescriber's.
+const FRM_NAME = "Sarah Mitchell";
 
 // Core data model
 // Legacy shape the dashboard quick-view modal and task detail drill-in were
@@ -223,14 +234,20 @@ export default function FieldPortal() {
     events,
     patientName: patientState.patientName,
     prescriberName: PRESCRIBER_NAME,
+    frmName: FRM_NAME,
     biResult,
   });
   const selectedEmail = selectedEmailId ? generatedEmails.find((e) => e.id === selectedEmailId) ?? null : null;
 
-  // Referenced by both liveItems (as relatedCaseId) and liveCase (as its own
-  // id) below — a plain string constant instead of forward-referencing
-  // liveCase, since liveItems is built first.
-  const LIVE_CASE_ID = "LIVE-CASE-AS164543";
+  // Jumps from the email client straight to the task/case a notification is
+  // about — LIVE_CASE_ID (imported from WorkflowEngine.ts, along with the
+  // two live task ids) is also what liveItems/liveCase below are keyed by,
+  // so this always resolves to a real row once Field Portal renders.
+  const openLinkedItem = (itemId: string) => {
+    setSelectedPatientId(null);
+    setSelectedTaskId(itemId);
+    setFieldPortalEntered(true);
+  };
 
   // "Missing Information" and "Prior Authorization Requested" — the same two
   // tasks CRM's Related Tasks case tab shows for this patient, computed by
@@ -245,7 +262,11 @@ export default function FieldPortal() {
     paStatus,
     flowType: state.flow_type,
   }).map((item) => ({
-    id: `LIVE-${item.id.toUpperCase()}`,
+    // Matches the ids getGeneratedEmails' notifications link back to
+    // (LIVE_MISSING_INFO_TASK_ID / LIVE_PA_TASK_ID, imported from the same
+    // WorkflowEngine.ts module) rather than recomputing an equivalent
+    // string here, so the two can't quietly drift apart.
+    id: item.id === "missing-information" ? LIVE_MISSING_INFO_TASK_ID : LIVE_PA_TASK_ID,
     kind: "Task",
     refId: item.refId,
     status: item.status,
@@ -565,9 +586,6 @@ export default function FieldPortal() {
                       />
                       <div className="min-w-0">
                         <p className={`text-sm truncate ${isUnread ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>
-                          {email.to}
-                        </p>
-                        <p className={`text-xs truncate ${isUnread ? "text-slate-700" : "text-slate-500"}`}>
                           {email.subject}
                         </p>
                         <p className="text-xs text-slate-400 mt-0.5">{email.sentAt}</p>
@@ -625,44 +643,16 @@ export default function FieldPortal() {
                       ))}
                     </div>
 
-                    {selectedEmail.numberedSteps && (
-                      <ol className="list-decimal ml-5 space-y-2 mt-4">
-                        {selectedEmail.numberedSteps.map((step, i) => {
-                          const parts = step.split("HERE");
-                          return (
-                            <li key={i}>
-                              {parts.length === 2 ? (
-                                <>
-                                  {parts[0]}
-                                  <span
-                                    className="text-arx-primary underline font-semibold cursor-pointer"
-                                    title="Demo link — not a real destination"
-                                  >
-                                    HERE
-                                  </span>
-                                  {parts[1]}
-                                </>
-                              ) : (
-                                step
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ol>
-                    )}
-
-                    {selectedEmail.noteText && (
-                      <p className="text-xs text-slate-500 mt-4 italic">{selectedEmail.noteText}</p>
-                    )}
-
-                    {selectedEmail.highlight && (
-                      <p className="bg-green-50 border-l-4 border-green-500 p-3 mt-4 font-medium text-slate-800">
-                        {selectedEmail.highlight}
-                      </p>
-                    )}
-
-                    {selectedEmail.closing && (
-                      <p className="mt-4">{selectedEmail.closing}</p>
+                    {/* Jumps straight to the task/case this notification is
+                        about — the whole point of an FRM's inbox pointing
+                        at their own portal instead of an outside form. */}
+                    {selectedEmail.linkedItemId && (
+                      <button
+                        onClick={() => openLinkedItem(selectedEmail.linkedItemId!)}
+                        className="mt-6 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded bg-arx-primary text-white hover:bg-arx-primary-dark"
+                      >
+                        {selectedEmail.linkedItemLabel ?? "View in Field Portal"} →
+                      </button>
                     )}
                   </div>
                 </div>
