@@ -392,6 +392,14 @@ export interface LiveWorkItemInputs {
   consentStatus: string;
   biStatus: string;
   paStatus: string;
+  // Fax_PAP_Audit patients never have insurance (CRM's own BI stage always
+  // resolves biResult to 'no_insurance' for this flow — see paStage's
+  // `!isPapFlow` check in crm/pages/Index.tsx), so there's no real Prior
+  // Authorization step to submit. Without this, biStatus still reaches
+  // 'complete' the same way it does on every other flow, and the PA task
+  // below would appear and sit "Open" forever, since paStatus never leaves
+  // 'none' on this flow either.
+  flowType: string;
 }
 
 export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
@@ -400,6 +408,8 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
   if (input.enrollmentStatus !== 'enrolled') {
     return [];
   }
+
+  const isPapFlow = input.flowType === 'Fax_PAP_Audit';
 
   const items: LiveWorkItem[] = [
     {
@@ -419,8 +429,9 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
   // transition that makes submitting a PA the next actionable thing to do,
   // matching CRM's existing trigger for this row (Field Portal previously
   // waited until paStatus !== 'none', i.e. after submission had already
-  // happened, which is too late for this to function as a to-do).
-  if (input.biStatus === 'complete') {
+  // happened, which is too late for this to function as a to-do). Excluded
+  // entirely for Fax_PAP_Audit — see the flowType comment above.
+  if (input.biStatus === 'complete' && !isPapFlow) {
     items.push({
       id: 'pa-submission-required',
       refId: 'Prior Authorization Requested',

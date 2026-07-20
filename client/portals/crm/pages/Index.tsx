@@ -2963,6 +2963,7 @@ export default function Index() {
                       consentStatus,
                       biStatus,
                       paStatus,
+                      flowType,
                     }).map((item) => (
                       <tr key={item.id} className="hover:bg-[#f3f3f3] transition-colors">
                         <td className="px-3 py-2.5 border-b border-[#dddbda] font-medium cursor-pointer hover:underline" style={{ color: SF_BLUE }}>

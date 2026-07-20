@@ -216,6 +216,7 @@ export default function FieldPortal() {
     consentStatus,
     biStatus,
     paStatus,
+    flowType: state.flow_type,
   }).map((item) => ({
     id: `LIVE-${item.id.toUpperCase()}`,
     kind: "Task",
