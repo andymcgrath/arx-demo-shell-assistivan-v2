@@ -2,7 +2,19 @@ import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircl
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDemoStore } from "@/store/demoStore";
-import { useFieldStore, type FieldItem, type FieldPatientRecord } from "@/store/fieldStore";
+import {
+  useFieldStore,
+  type FieldItem,
+  type FieldPatientRecord,
+  type FieldHCP,
+  type FieldSOC,
+  type FieldPatientSOCLink,
+  type FieldPatientHCPLink,
+  type FieldPrescription,
+  type FieldInsurance,
+  type FieldPatientAuthorization,
+  type FieldSPShipment,
+} from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
 import { getLiveWorkItems } from "@/engine/WorkflowEngine";
@@ -145,6 +157,8 @@ export default function FieldPortal() {
   const consentStatus = state.consent_status;
   const enrollmentStatus = state.enrollment_status;
   const biStatus = state.bi_status;
+  const biResult = state.bi_result;
+  const pharmacyStatus = state.pharmacy_status;
   // The Enrollment Application fax only exists for the two fax-intake
   // flows — same gate CRM's Related Documents tab uses (isFaxFlow there).
   const isFaxFlow = state.flow_type === "Fax_QS_PA_Approved" || state.flow_type === "Fax_PAP_Audit";
@@ -173,6 +187,11 @@ export default function FieldPortal() {
     shipments: fieldShipments,
   } = useFieldStore();
 
+  // Referenced by both liveItems (as relatedCaseId) and liveCase (as its own
+  // id) below — a plain string constant instead of forward-referencing
+  // liveCase, since liveItems is built first.
+  const LIVE_CASE_ID = "LIVE-CASE-AS164543";
+
   // "Missing Information" and "Prior Authorization Requested" — the same two
   // tasks CRM's Related Tasks case tab shows for this patient, computed by
   // the one shared function both portals call (client/engine/WorkflowEngine.ts)
@@ -194,21 +213,137 @@ export default function FieldPortal() {
     createdAt: daysFromToday(0),
     patient: patientState.patientName,
     patientId: "AS-164543",
-    prescriber: "---",
-    territory: "---",
+    // "Dr. Sarah Chen" is the one prescriber the rest of the app already
+    // established for this patient (Provider portal, CRM's enrollment fax,
+    // iAssist) — these two live tasks were the only place still showing a
+    // placeholder instead of that same fact. Territory matches livePatient
+    // below (also this patient's real value, not a separate guess).
+    prescriber: "Dr. Sarah Chen",
+    territory: "Texas",
     assignedTo: item.assignedTo,
-    subStatus: "--None--",
+    subStatus: item.status === "Closed" ? "Complete" : item.id === "missing-information" ? "Awaiting Consent" : "Awaiting Submission",
     description: item.description,
+    // Both live tasks belong to this patient's one live case, same "Stage"
+    // pattern used on the seeded patients' tasks — matches the reference's
+    // "Related Item: PA-25842, Stage: Prior Authorization" shape instead of
+    // showing the bare patient id.
+    relatedCaseId: LIVE_CASE_ID,
+    stageName: item.id === "missing-information" ? "Enrollment" : "Prior Authorization",
   }));
 
+  // The one case behind this patient's live tasks — same onboarding/PA
+  // narrative CRM's own stage cards show for this patient, given a Field
+  // Portal case shape so it can appear in My Cases / the Related tab like
+  // any other case. Only exists once enrolled, same as the tasks above.
+  const liveCase: FieldItem = {
+    id: LIVE_CASE_ID,
+    kind: "Case",
+    refId: "00001310",
+    status: consentStatus === "confirmed" ? "Open" : "Pending Consent",
+    priority: "High",
+    dueDate: daysFromToday(3),
+    createdAt: daysFromToday(0),
+    patient: patientState.patientName,
+    patientId: "AS-164543",
+    prescriber: "Dr. Sarah Chen",
+    territory: "Texas",
+    assignedTo: "Sarah Mitchell",
+    serviceType: "Onboarding",
+    frmContact: "---",
+    description: "Onboarding case for new patient enrollment",
+  };
+
   // Single source of truth for every task/case-shaped view on this portal —
-  // the two live entries above plus the persisted seed. Dashboard KPI
-  // cards, the quick-view modal, and the My Tasks/My Cases tabs all read
-  // from this same list (filtered differently), so a given item's
-  // priority/status/dueDate means the same thing everywhere it shows up.
-  const allItems: FieldItem[] = [...liveItems, ...persistedItems];
+  // the two live tasks (+ their case) above plus the persisted seed.
+  // Dashboard KPI cards, the quick-view modal, and the My Tasks/My Cases
+  // tabs all read from this same list (filtered differently), so a given
+  // item's priority/status/dueDate means the same thing everywhere it
+  // shows up.
+  const allItems: FieldItem[] = [
+    ...liveItems,
+    ...(enrollmentStatus === "enrolled" ? [liveCase] : []),
+    ...persistedItems,
+  ];
 
   const cases: Case[] = allItems.map(toCase);
+
+  // Same "live once enrolled" data this patient's tasks/case already
+  // follow, extended to the rest of the Related tab's entities. Dr. Sarah
+  // Chen isn't part of the seeded 18-name HCP roster (she's this specific
+  // patient's real prescriber everywhere else in the app), so she's added
+  // to the roster here rather than invented under a conflicting name.
+  const isEnrolled = enrollmentStatus === "enrolled";
+
+  const liveHCPs: FieldHCP[] = [
+    { id: "NPI-CHEN", physician: "Dr. Sarah Chen", npi: "1234567890", preferredContact: "Phone", officePhone: "(713) 555-0199", officeFax: "(713) 555-0299", officeEmail: "sarah.chen@medical.com", zip: "77002" },
+    { id: "NPI-REYES", physician: "Dr. Michael Reyes", npi: "1699009988", preferredContact: "Email", officePhone: "(713) 555-0399", officeFax: "(713) 555-0499", officeEmail: "michael.reyes@medical.com", zip: "77002" },
+  ];
+  const liveHCPLinks: FieldPatientHCPLink[] = isEnrolled ? [
+    { id: "LIVE-PHCP-1", patientId: "AS-164543", hcpId: "NPI-CHEN", role: "Primary" },
+    { id: "LIVE-PHCP-2", patientId: "AS-164543", hcpId: "NPI-REYES", role: "Secondary" },
+  ] : [];
+
+  const liveSOCs: FieldSOC[] = [
+    { id: "SOC-HOU", facilityName: "Houston SOC", npi: "1699006677", contactName: "Priya Sandhu", contactPhone: "(713) 555-3006", address: "800 Bagby St", city: "Houston", state: "Texas", zip: "77002" },
+  ];
+  const liveSOCLinks: FieldPatientSOCLink[] = isEnrolled ? [
+    { id: "LIVE-PSOC-1", patientId: "AS-164543", socId: "SOC-HOU", isPrimary: true },
+  ] : [];
+
+  const livePrescriptions: FieldPrescription[] = isEnrolled ? [
+    { id: "PP-11307", patientId: "AS-164543", hcpId: "NPI-CHEN", prescriptionName: "PP-11307", hcpSignature: true, hcpSignatureDate: daysFromToday(0) },
+  ] : [];
+
+  // Plan type/status track the live BI outcome instead of a fixed guess —
+  // "Pending Verification" until BI actually runs, then reflects bi_result.
+  const liveInsurance: FieldInsurance[] = isEnrolled ? [
+    {
+      id: "IN-20607", patientId: "AS-164543", insuranceName: "IN-20607", rank: "Primary",
+      effectiveDate: daysFromToday(0),
+      insurancePlanType: biResult === "no_insurance" ? "Self-Pay" : biResult === "no_coverage" ? "Commercial (No Coverage)" : "Commercial",
+      groupNumber: "331207", rxGroupNumber: "RXG-8807", rxMemberId: "MBR-77207",
+      status: biStatus === "complete" ? "Active" : biStatus === "running" ? "Verifying" : "Pending Verification",
+    },
+  ] : [];
+
+  // Status/dates track consentStatus instead of a fixed "Complete" — this
+  // is the formal record behind livePatient's consentExpiration below.
+  const liveAuthorizations: FieldPatientAuthorization[] = isEnrolled ? [
+    {
+      id: "CF-31507", patientId: "AS-164543", authType: "Electronic",
+      status: consentStatus === "confirmed" ? "Complete" : consentStatus === "declined" ? "Declined" : "Pending",
+      effectiveDate: consentStatus === "confirmed" ? daysFromToday(0) : "---",
+      revocationDate: consentStatus === "confirmed" ? daysFromToday(700) : "---",
+      attestationDate: consentStatus === "confirmed" ? daysFromToday(0) : "---",
+      receivedDate: daysFromToday(0),
+    },
+  ] : [];
+
+  // Doesn't exist until pharmacy actually starts working the order — no
+  // "Processing" placeholder sitting there before that's true.
+  const liveShipments: FieldSPShipment[] = isEnrolled && pharmacyStatus !== "none" ? [
+    {
+      id: "SHIP-407", patientId: "AS-164543", prescriptionId: "PP-11307",
+      carrier: "FedEx", trackingNumber: "775801122307",
+      shipDate: pharmacyStatus === "delivered" || pharmacyStatus === "shipped" ? daysFromToday(-1) : daysFromToday(2),
+      estDelivery: pharmacyStatus === "delivered" ? daysFromToday(-1) : daysFromToday(2),
+      deliveredDate: pharmacyStatus === "delivered" ? daysFromToday(-1) : null,
+      status: pharmacyStatus === "delivered" ? "Delivered" : pharmacyStatus === "shipped" ? "In Transit" : "Processing",
+    },
+  ] : [];
+
+  // Merged live + persisted — every place that reads these collections
+  // (the Related tab, the task detail's Primary HCP block) uses these
+  // instead of the raw store values, so Keanu's live rows show up
+  // alongside the seeded patients' rows without duplicating lookup logic.
+  const allHCPs: FieldHCP[] = [...fieldHCPs, ...liveHCPs];
+  const allPatientHCPLinks: FieldPatientHCPLink[] = [...patientHCPLinks, ...liveHCPLinks];
+  const allSOCs: FieldSOC[] = [...fieldSOCs, ...liveSOCs];
+  const allPatientSOCLinks: FieldPatientSOCLink[] = [...patientSOCLinks, ...liveSOCLinks];
+  const allPrescriptions: FieldPrescription[] = [...fieldPrescriptions, ...livePrescriptions];
+  const allInsurance: FieldInsurance[] = [...fieldInsurance, ...liveInsurance];
+  const allAuthorizations: FieldPatientAuthorization[] = [...fieldAuthorizations, ...liveAuthorizations];
+  const allShipments: FieldSPShipment[] = [...fieldShipments, ...liveShipments];
 
   // A case has exactly one patient. The live items above reference the
   // active demo patient (AS-164543, driven by patientState) rather than one
@@ -225,9 +360,9 @@ export default function FieldPortal() {
     allergies: "Latex",
     territory: "Texas",
     region: "South",
-    primaryPrescriber: "---",
-    primarySOC: "---",
-    consentExpiration: "---",
+    primaryPrescriber: "Dr. Sarah Chen",
+    primarySOC: "Houston SOC",
+    consentExpiration: consentStatus === "confirmed" ? daysFromToday(700) : "---",
     enrollmentDate: daysFromToday(0),
     homePhone: patientState.phone,
     mobilePhone: patientState.phone,
@@ -285,7 +420,7 @@ export default function FieldPortal() {
   // always matches the row count you see after clicking it.
   const today = new Date();
   const todayDateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const uniqueHCPs = fieldHCPs.length;
+  const uniqueHCPs = allHCPs.length;
   const idleCases = allItems.filter(i => i.kind === "Case" && i.status === "Idle").length;
   const pendingConsents = allItems.filter(i => i.status === "Pending Consent").length;
   const todayCases = allItems.filter(i => i.dueDate === todayDateStr && i.status !== "Closed").length;
@@ -294,7 +429,7 @@ export default function FieldPortal() {
 
   // Quick-view modal rows — same predicates as the stat cards above, so the
   // number on a card always matches what clicking it shows. "Total HCPs" is
-  // a separate entity (fieldHCPs), rendered by its own branch below, so it's
+  // a separate entity (allHCPs), rendered by its own branch below, so it's
   // excluded here rather than matching everything.
   const quickViewCases: Case[] = cases.filter(c => {
     if (showQuickView === "Urgent Tasks") return c.kind === "Task" && c.priority === "High" && c.status !== "Closed";
@@ -456,7 +591,7 @@ export default function FieldPortal() {
 
                   <div className="p-6 bg-white">
                     <p className="text-sm text-slate-600 mb-4">
-                      Total Records: {showQuickView === "Total HCPs" ? fieldHCPs.length : quickViewCases.length}
+                      Total Records: {showQuickView === "Total HCPs" ? allHCPs.length : quickViewCases.length}
                     </p>
 
                     <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -473,7 +608,7 @@ export default function FieldPortal() {
                               </tr>
                             </thead>
                             <tbody>
-                              {fieldHCPs.map((hcp) => (
+                              {allHCPs.map((hcp) => (
                                 <tr key={hcp.id} className="border-b border-slate-200 hover:bg-slate-50">
                                   <td className="px-4 py-3 text-slate-700">{hcp.physician}</td>
                                   <td className="px-4 py-3 text-slate-700">{hcp.npi}</td>
@@ -968,9 +1103,9 @@ export default function FieldPortal() {
               {selectedCase.kind === "Task" && selectedCase.relatedCaseId && (() => {
                 const relatedCase = allItems.find((i) => i.id === selectedCase.relatedCaseId);
                 const primaryHCPLink = selectedCase.patientId
-                  ? patientHCPLinks.find((l) => l.patientId === selectedCase.patientId && l.role === "Primary")
+                  ? allPatientHCPLinks.find((l) => l.patientId === selectedCase.patientId && l.role === "Primary")
                   : undefined;
-                const primaryHCP = primaryHCPLink ? fieldHCPs.find((h) => h.id === primaryHCPLink.hcpId) : undefined;
+                const primaryHCP = primaryHCPLink ? allHCPs.find((h) => h.id === primaryHCPLink.hcpId) : undefined;
                 return (
                   <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
                     <h3 className="text-sm font-semibold text-slate-700 mb-4">RELATED CASE</h3>
@@ -1126,12 +1261,12 @@ export default function FieldPortal() {
                 const pid = selectedPatient.id;
                 const patientTasks = allItems.filter((i) => i.kind === "Task" && i.patientId === pid);
                 const patientCases = allItems.filter((i) => i.kind === "Case" && i.patientId === pid);
-                const patientSOCRows = patientSOCLinks.filter((l) => l.patientId === pid);
-                const patientHCPRows = patientHCPLinks.filter((l) => l.patientId === pid);
-                const patientRx = fieldPrescriptions.filter((p) => p.patientId === pid);
-                const patientIns = fieldInsurance.filter((i) => i.patientId === pid);
-                const patientAuths = fieldAuthorizations.filter((a) => a.patientId === pid);
-                const patientShipments = fieldShipments.filter((s) => s.patientId === pid);
+                const patientSOCRows = allPatientSOCLinks.filter((l) => l.patientId === pid);
+                const patientHCPRows = allPatientHCPLinks.filter((l) => l.patientId === pid);
+                const patientRx = allPrescriptions.filter((p) => p.patientId === pid);
+                const patientIns = allInsurance.filter((i) => i.patientId === pid);
+                const patientAuths = allAuthorizations.filter((a) => a.patientId === pid);
+                const patientShipments = allShipments.filter((s) => s.patientId === pid);
 
                 return (
                   <div>
@@ -1164,7 +1299,7 @@ export default function FieldPortal() {
                       count={patientSOCRows.length}
                       columns={["Facility Name", "NPI", "Contact Name", "Contact Phone", "City", "State", "Zip", "Primary"]}
                       rows={patientSOCRows.map((link) => {
-                        const soc = fieldSOCs.find((s) => s.id === link.socId);
+                        const soc = allSOCs.find((s) => s.id === link.socId);
                         return [
                           soc?.facilityName ?? "---",
                           soc?.npi ?? "---",
@@ -1183,7 +1318,7 @@ export default function FieldPortal() {
                       count={patientHCPRows.length}
                       columns={["Physician Name", "NPI", "Office Phone", "Office Email", "Role"]}
                       rows={patientHCPRows.map((link) => {
-                        const hcp = fieldHCPs.find((h) => h.id === link.hcpId);
+                        const hcp = allHCPs.find((h) => h.id === link.hcpId);
                         return [
                           hcp?.physician ?? "---",
                           hcp?.npi ?? "---",
@@ -1199,7 +1334,7 @@ export default function FieldPortal() {
                       count={patientRx.length}
                       columns={["Prescription Name", "HCP Affiliation", "HCP Signature", "HCP Signature Date"]}
                       rows={patientRx.map((rx) => {
-                        const hcp = fieldHCPs.find((h) => h.id === rx.hcpId);
+                        const hcp = allHCPs.find((h) => h.id === rx.hcpId);
                         return [
                           rx.prescriptionName,
                           hcp?.physician ?? "---",
@@ -1259,7 +1394,7 @@ export default function FieldPortal() {
                       count={patientShipments.length}
                       columns={["Shipment Id", "Prescription", "Carrier", "Tracking #", "Ship Date", "Est. Delivery", "Delivered", "Status"]}
                       rows={patientShipments.map((s) => {
-                        const rx = fieldPrescriptions.find((p) => p.id === s.prescriptionId);
+                        const rx = allPrescriptions.find((p) => p.id === s.prescriptionId);
                         return [
                           s.id,
                           rx?.prescriptionName ?? "---",
@@ -1464,7 +1599,7 @@ export default function FieldPortal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {fieldHCPs.map((hcp) => (
+                  {allHCPs.map((hcp) => (
                     <tr key={hcp.id} className="border-b border-slate-200 hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-700">{hcp.physician}</td>
                       <td className="px-4 py-3 text-slate-700">{hcp.npi}</td>
