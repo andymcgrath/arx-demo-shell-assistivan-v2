@@ -1,5 +1,6 @@
 import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useDemoStore } from "@/store/demoStore";
 import { useFieldStore, type FieldItem, type FieldPatientRecord } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
@@ -32,6 +33,9 @@ interface Case {
   completeDatetime?: string;
   priority?: string;
   description?: string;
+  relatedCaseId?: string;
+  stageName?: string;
+  closedAt?: string;
 }
 
 function toCase(item: FieldItem): Case {
@@ -53,7 +57,58 @@ function toCase(item: FieldItem): Case {
     completeDatetime: item.status === "Closed" ? item.dueDate : "---",
     priority: item.priority,
     description: item.description,
+    relatedCaseId: item.relatedCaseId,
+    stageName: item.stageName,
+    closedAt: item.closedAt,
   };
+}
+
+// A patient's "Related" tab is eight small tables, each just a filtered
+// slice of a store collection joined by patientId — this renders any of
+// them from a title/columns/rows triple instead of repeating the same
+// table chrome eight times.
+function RelatedTable({
+  title,
+  count,
+  columns,
+  rows,
+}: {
+  title: string;
+  count: number;
+  columns: string[];
+  rows: ReactNode[][];
+}) {
+  return (
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold text-slate-700 mb-2">{title} ({count})</h3>
+      <div className="overflow-x-auto border border-slate-200 rounded-lg">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              {columns.map((c) => (
+                <th key={c} className="px-4 py-2 text-left text-xs font-semibold text-slate-700 whitespace-nowrap">{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-4 text-slate-400 text-center">No records</td>
+              </tr>
+            ) : (
+              rows.map((row, i) => (
+                <tr key={i} className="border-b border-slate-200 hover:bg-slate-50">
+                  {row.map((cell, j) => (
+                    <td key={j} className="px-4 py-2 text-slate-700 whitespace-nowrap">{cell}</td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 // ── Calendar item categorization ─────────────────────────────────────────────
@@ -90,6 +145,9 @@ export default function FieldPortal() {
   const consentStatus = state.consent_status;
   const enrollmentStatus = state.enrollment_status;
   const biStatus = state.bi_status;
+  // The Enrollment Application fax only exists for the two fax-intake
+  // flows — same gate CRM's Related Documents tab uses (isFaxFlow there).
+  const isFaxFlow = state.flow_type === "Fax_QS_PA_Approved" || state.flow_type === "Fax_PAP_Audit";
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -98,10 +156,22 @@ export default function FieldPortal() {
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
+  const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
 
   // Field Portal's core dataset — seeded once, persisted to sessionStorage
   // (see client/store/fieldStore.ts). Does not vary by workflow.
-  const { items: persistedItems, hcps: fieldHCPs, patients: storePatients } = useFieldStore();
+  const {
+    items: persistedItems,
+    hcps: fieldHCPs,
+    patients: storePatients,
+    socs: fieldSOCs,
+    patientSOCLinks,
+    patientHCPLinks,
+    prescriptions: fieldPrescriptions,
+    insurance: fieldInsurance,
+    authorizations: fieldAuthorizations,
+    shipments: fieldShipments,
+  } = useFieldStore();
 
   // "Missing Information" and "Prior Authorization Requested" — the same two
   // tasks CRM's Related Tasks case tab shows for this patient, computed by
@@ -653,7 +723,7 @@ export default function FieldPortal() {
                   of jumping straight to the full detail view. "Close"
                   dismisses it; "Open Details" hands off to the same
                   case/task detail screen every other entry point uses. */}
-              {previewItem && (
+              {previewItem && createPortal(
                 <div
                   className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
                   onClick={() => setPreviewItem(null)}
@@ -718,7 +788,8 @@ export default function FieldPortal() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div>,
+                document.body
               )}
 
             </div>
@@ -891,6 +962,61 @@ export default function FieldPortal() {
                 </div>
               </div>
 
+              {/* Related Case / Primary HCP — only for tasks tied to one of
+                  the patient's cases (relatedCaseId set); direct-to-patient
+                  tasks and Case-kind items themselves don't get this block. */}
+              {selectedCase.kind === "Task" && selectedCase.relatedCaseId && (() => {
+                const relatedCase = allItems.find((i) => i.id === selectedCase.relatedCaseId);
+                const primaryHCPLink = selectedCase.patientId
+                  ? patientHCPLinks.find((l) => l.patientId === selectedCase.patientId && l.role === "Primary")
+                  : undefined;
+                const primaryHCP = primaryHCPLink ? fieldHCPs.find((h) => h.id === primaryHCPLink.hcpId) : undefined;
+                return (
+                  <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
+                    <h3 className="text-sm font-semibold text-slate-700 mb-4">RELATED CASE</h3>
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Case Number</p>
+                        {relatedCase ? (
+                          <p
+                            onClick={() => setSelectedTaskId(relatedCase.id)}
+                            className="text-sm font-medium text-arx-primary cursor-pointer hover:underline"
+                          >
+                            {relatedCase.refId}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-slate-800">---</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Stage</p>
+                        <p className="text-sm text-slate-800">{selectedCase.stageName ?? "---"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Service Type</p>
+                        <p className="text-sm text-slate-800">{relatedCase?.serviceType ?? "---"}</p>
+                      </div>
+                    </div>
+
+                    <h3 className="text-sm font-semibold text-slate-700 mb-4">PRIMARY HCP INFORMATION</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Physician Name</p>
+                        <p className="text-sm text-slate-800">{primaryHCP?.physician ?? "---"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">NPI</p>
+                        <p className="text-sm text-slate-800">{primaryHCP?.npi ?? "---"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Office Phone</p>
+                        <p className="text-sm text-slate-800">{primaryHCP?.officePhone ?? "---"}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Task Description */}
               <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
                 <label className="text-xs font-semibold text-slate-700 mb-2 block">Task Description</label>
@@ -990,6 +1116,241 @@ export default function FieldPortal() {
                   </div>
                 </div>
               )}
+
+              {/* Related Tab Content — eight tables, each a filtered slice
+                  of a store collection joined on this patient's id. Tasks
+                  and Cases reuse the same unified allItems list every other
+                  view reads from; the rest come from the new relationship
+                  tables in fieldStore.ts. */}
+              {patientTab === "RELATED" && (() => {
+                const pid = selectedPatient.id;
+                const patientTasks = allItems.filter((i) => i.kind === "Task" && i.patientId === pid);
+                const patientCases = allItems.filter((i) => i.kind === "Case" && i.patientId === pid);
+                const patientSOCRows = patientSOCLinks.filter((l) => l.patientId === pid);
+                const patientHCPRows = patientHCPLinks.filter((l) => l.patientId === pid);
+                const patientRx = fieldPrescriptions.filter((p) => p.patientId === pid);
+                const patientIns = fieldInsurance.filter((i) => i.patientId === pid);
+                const patientAuths = fieldAuthorizations.filter((a) => a.patientId === pid);
+                const patientShipments = fieldShipments.filter((s) => s.patientId === pid);
+
+                return (
+                  <div>
+                    <RelatedTable
+                      title="Tasks"
+                      count={patientTasks.length}
+                      columns={["Subject", "Related Item", "Status", "Due Date", "Assigned To"]}
+                      rows={patientTasks.map((t) => {
+                        const relatedCase = t.relatedCaseId ? allItems.find((c) => c.id === t.relatedCaseId) : null;
+                        return [
+                          <button key="s" onClick={() => { setSelectedPatientId(null); setSelectedTaskId(t.id); }} className="text-arx-primary font-medium hover:underline">
+                            {t.refId}
+                          </button>,
+                          relatedCase ? (
+                            <button key="r" onClick={() => { setSelectedPatientId(null); setSelectedTaskId(relatedCase.id); }} className="text-arx-primary hover:underline">
+                              {relatedCase.refId} (Stage: {t.stageName})
+                            </button>
+                          ) : (
+                            <span key="r">{pid}</span>
+                          ),
+                          t.status,
+                          t.dueDate,
+                          t.assignedTo,
+                        ];
+                      })}
+                    />
+
+                    <RelatedTable
+                      title="SOC"
+                      count={patientSOCRows.length}
+                      columns={["Facility Name", "NPI", "Contact Name", "Contact Phone", "City", "State", "Zip", "Primary"]}
+                      rows={patientSOCRows.map((link) => {
+                        const soc = fieldSOCs.find((s) => s.id === link.socId);
+                        return [
+                          soc?.facilityName ?? "---",
+                          soc?.npi ?? "---",
+                          soc?.contactName ?? "---",
+                          soc?.contactPhone ?? "---",
+                          soc?.city ?? "---",
+                          soc?.state ?? "---",
+                          soc?.zip ?? "---",
+                          link.isPrimary ? "✓" : "",
+                        ];
+                      })}
+                    />
+
+                    <RelatedTable
+                      title="HCP"
+                      count={patientHCPRows.length}
+                      columns={["Physician Name", "NPI", "Office Phone", "Office Email", "Role"]}
+                      rows={patientHCPRows.map((link) => {
+                        const hcp = fieldHCPs.find((h) => h.id === link.hcpId);
+                        return [
+                          hcp?.physician ?? "---",
+                          hcp?.npi ?? "---",
+                          hcp?.officePhone ?? "---",
+                          hcp?.officeEmail ?? "---",
+                          link.role,
+                        ];
+                      })}
+                    />
+
+                    <RelatedTable
+                      title="Prescription"
+                      count={patientRx.length}
+                      columns={["Prescription Name", "HCP Affiliation", "HCP Signature", "HCP Signature Date"]}
+                      rows={patientRx.map((rx) => {
+                        const hcp = fieldHCPs.find((h) => h.id === rx.hcpId);
+                        return [
+                          rx.prescriptionName,
+                          hcp?.physician ?? "---",
+                          rx.hcpSignature ? "✓" : "—",
+                          rx.hcpSignatureDate,
+                        ];
+                      })}
+                    />
+
+                    <RelatedTable
+                      title="Cases"
+                      count={patientCases.length}
+                      columns={["Case", "Date/Time Opened", "Date/Time Closed", "Service Type"]}
+                      rows={patientCases.map((c) => [
+                        <button key="c" onClick={() => { setSelectedPatientId(null); setSelectedTaskId(c.id); }} className="text-arx-primary font-medium hover:underline">
+                          {c.refId}
+                        </button>,
+                        c.createdAt,
+                        c.closedAt ?? "---",
+                        c.serviceType ?? "---",
+                      ])}
+                    />
+
+                    <RelatedTable
+                      title="Insurance"
+                      count={patientIns.length}
+                      columns={["Insurance Name", "Rank", "Effective Date", "Plan Type", "Group Number", "Rx Group Number", "Rx Member Id", "Status"]}
+                      rows={patientIns.map((ins) => [
+                        ins.insuranceName,
+                        ins.rank,
+                        ins.effectiveDate,
+                        ins.insurancePlanType,
+                        ins.groupNumber,
+                        ins.rxGroupNumber,
+                        ins.rxMemberId,
+                        ins.status,
+                      ])}
+                    />
+
+                    <RelatedTable
+                      title="Patient Authorizations"
+                      count={patientAuths.length}
+                      columns={["Authorization Id", "Type", "Status", "Effective Date", "Revocation Date", "Attestation Date", "Received Date"]}
+                      rows={patientAuths.map((a) => [
+                        a.id,
+                        a.authType,
+                        a.status,
+                        a.effectiveDate,
+                        a.revocationDate,
+                        a.attestationDate,
+                        a.receivedDate,
+                      ])}
+                    />
+
+                    <RelatedTable
+                      title="SP Shipment"
+                      count={patientShipments.length}
+                      columns={["Shipment Id", "Prescription", "Carrier", "Tracking #", "Ship Date", "Est. Delivery", "Delivered", "Status"]}
+                      rows={patientShipments.map((s) => {
+                        const rx = fieldPrescriptions.find((p) => p.id === s.prescriptionId);
+                        return [
+                          s.id,
+                          rx?.prescriptionName ?? "---",
+                          s.carrier,
+                          s.trackingNumber,
+                          s.shipDate,
+                          s.estDelivery,
+                          s.deliveredDate ?? "---",
+                          s.status,
+                        ];
+                      })}
+                    />
+                  </div>
+                );
+              })()}
+
+              {/* Related Docs — the seeded patients have no document
+                  records (nothing to show, same as before). The live
+                  patient's Enrollment Application fax exists once enrolled
+                  on a fax-intake flow, same gate as CRM's Related
+                  Documents tab (isFaxFlow) and the same file both portals
+                  point at, so dropping a real PDF into public/ lights up
+                  the preview in both places at once. */}
+              {patientTab === "RELATED DOCS" && (() => {
+                const hasEnrollmentDoc = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled" && isFaxFlow;
+                if (!hasEnrollmentDoc) {
+                  return <p className="text-sm text-slate-400 text-center py-10">No documents</p>;
+                }
+                return (
+                  <div>
+                    <RelatedTable
+                      title="Documents"
+                      count={1}
+                      columns={["File ID", "File Name", "Type", "Pages", "Date Received"]}
+                      rows={[[
+                        <button key="f" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary font-medium hover:underline">
+                          FAX-2026-00431
+                        </button>,
+                        <button key="n" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary hover:underline">
+                          Enrollment_Form_KReeves_051526.pdf
+                        </button>,
+                        "Enrollment Form",
+                        "3",
+                        daysFromToday(-4),
+                      ]]}
+                    />
+
+                    {showEnrollmentDoc && createPortal(
+                      <div
+                        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                        onClick={() => setShowEnrollmentDoc(false)}
+                      >
+                        <div
+                          className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col"
+                          style={{ height: "80vh" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+                            <span className="text-sm font-semibold text-slate-700">Enrollment_Form_KReeves_051526.pdf</span>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href="/enrollment-form.pdf"
+                                download="Enrollment_Form_KReeves_051526.pdf"
+                                className="text-xs px-2 py-1 rounded border border-slate-300 text-arx-primary hover:bg-slate-100"
+                              >
+                                Download
+                              </a>
+                              <button
+                                onClick={() => setShowEnrollmentDoc(false)}
+                                aria-label="Close"
+                                className="rounded p-1 text-slate-500 hover:opacity-70"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          <object data="/enrollment-form.pdf" type="application/pdf" className="flex-1 w-full">
+                            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 bg-slate-50">
+                              <span className="text-sm font-medium">PDF preview not available</span>
+                              <span className="text-xs">
+                                Place <code className="bg-slate-200 px-1 rounded">enrollment-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
+                              </span>
+                            </div>
+                          </object>
+                        </div>
+                      </div>,
+                      document.body
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
