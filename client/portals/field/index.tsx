@@ -1,4 +1,4 @@
-import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield } from "lucide-react";
+import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield, Mail } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDemoStore } from "@/store/demoStore";
@@ -18,8 +18,13 @@ import {
 } from "@/store/fieldStore";
 import { usePatientStore } from "@/store/patientStore";
 import { useDemoState } from "@/hooks/useDemoState";
-import { getLiveWorkItems } from "@/engine/WorkflowEngine";
+import { getLiveWorkItems, getGeneratedEmails } from "@/engine/WorkflowEngine";
 import { daysFromToday } from "@/lib/relativeDate";
+
+// This patient's one prescriber everywhere else in the app (Provider portal,
+// CRM's enrollment fax, iAssist, the live tasks above) — the recipient the
+// generated PA-submittal email is addressed to.
+const PRESCRIBER_NAME = "Dr. Sarah Chen";
 
 // Core data model
 // Legacy shape the dashboard quick-view modal and task detail drill-in were
@@ -149,7 +154,7 @@ function getCalendarCategory(c: Case): CalendarCategory {
 }
 
 export default function FieldPortal() {
-  const { state } = useDemoState("Field");
+  const { state, events } = useDemoState("Field");
   const demoState = useDemoStore();
   const patientState = usePatientStore();
 
@@ -174,6 +179,13 @@ export default function FieldPortal() {
   const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  // Field Portal opens directly into the standalone email client below —
+  // no Field Portal chrome (sidebar/header) renders until this flips, the
+  // same one-directional "step" shape Provider portal's EmailStep uses
+  // (BrandSidebar is hidden while step === "email"). Not persisted: a
+  // reload always lands back on the email client first.
+  const [fieldPortalEntered, setFieldPortalEntered] = useState(false);
 
   // Clears the draft when navigating to a different task/case — otherwise
   // an unsent comment on one item would still be sitting in the box (and
@@ -198,7 +210,22 @@ export default function FieldPortal() {
     shipments: fieldShipments,
     comments,
     addComment,
+    readEmailIds,
+    markEmailRead,
   } = useFieldStore();
+
+  // Every generated email, newest first — derived straight from the actor's
+  // event log (events, from useDemoState above), never a separately
+  // maintained queue. A status change that happens while nobody's looking
+  // at this tab still lands here the moment the tab is next opened; nothing
+  // is lost, and nothing needs to be "generated" on click.
+  const generatedEmails = getGeneratedEmails({
+    events,
+    patientName: patientState.patientName,
+    prescriberName: PRESCRIBER_NAME,
+    biResult,
+  });
+  const selectedEmail = selectedEmailId ? generatedEmails.find((e) => e.id === selectedEmailId) ?? null : null;
 
   // Referenced by both liveItems (as relatedCaseId) and liveCase (as its own
   // id) below — a plain string constant instead of forward-referencing
@@ -488,6 +515,169 @@ export default function FieldPortal() {
 
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  // ── Standalone email client ─────────────────────────────────────────────
+  // Field Portal opens directly into this — no sidebar, no header, none of
+  // Field Portal's own chrome — the same way Provider portal's EmailStep
+  // hides BrandSidebar entirely while step === "email". The list is exactly
+  // the actor's event log (getGeneratedEmails), so nothing here is a queue
+  // that can drift from real state; "Continue to Field Portal" is the one
+  // link out, mirroring EmailStep's own single link forward.
+  if (!fieldPortalEntered) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex flex-col">
+        <div className="bg-arx-primary text-white px-6 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Mail size={18} />
+            <span className="font-semibold text-sm">AssistRx Mail</span>
+          </div>
+          <button
+            onClick={() => setFieldPortalEntered(true)}
+            className="text-xs font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded transition-colors"
+          >
+            Continue to Field Portal →
+          </button>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {/* Inbox list */}
+          <div className="w-80 flex-shrink-0 border-r border-slate-200 bg-white overflow-y-auto">
+            {generatedEmails.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-10 px-4">No emails yet</p>
+            ) : (
+              generatedEmails.map((email) => {
+                const isUnread = !readEmailIds.includes(email.id);
+                const isSelected = selectedEmailId === email.id;
+                return (
+                  <button
+                    key={email.id}
+                    onClick={() => {
+                      markEmailRead(email.id);
+                      setSelectedEmailId(email.id);
+                    }}
+                    className={`w-full text-left px-4 py-3 border-b border-slate-100 transition-colors ${
+                      isSelected ? "bg-arx-primary-30/40" : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span
+                        className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${isUnread ? "bg-arx-primary" : "bg-transparent"}`}
+                        title={isUnread ? "Unread" : undefined}
+                      />
+                      <div className="min-w-0">
+                        <p className={`text-sm truncate ${isUnread ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>
+                          {email.to}
+                        </p>
+                        <p className={`text-xs truncate ${isUnread ? "text-slate-700" : "text-slate-500"}`}>
+                          {email.subject}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">{email.sentAt}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Reading pane — same visual structure as Provider portal's
+              EmailStep (client/portals/provider/index.tsx + styles.css's
+              .email-* classes), rebuilt in Tailwind since Field Portal has
+              no custom stylesheet to import that from. */}
+          <div className="flex-1 overflow-y-auto bg-slate-50 p-8">
+            {!selectedEmail ? (
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+                Select an email to read
+              </div>
+            ) : (
+              <div className="max-w-[800px] mx-auto bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-white px-6 py-3 border-b border-slate-200 space-y-1.5">
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-semibold text-slate-500 min-w-[60px]">From:</span>
+                    <span className="text-slate-800">no-reply@assistrx.com</span>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-semibold text-slate-500 min-w-[60px]">Sent:</span>
+                    <span className="text-slate-800">{selectedEmail.sentAt}</span>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-semibold text-slate-500 min-w-[60px]">To:</span>
+                    <span className="text-slate-800">{selectedEmail.to}</span>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <span className="font-semibold text-slate-500 min-w-[60px]">Subject:</span>
+                    <span className="text-slate-800">{selectedEmail.subject}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-10">
+                  <div className="flex justify-center mb-6">
+                    <img
+                      src="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2F3a7a98e156014cee98b701ac84c6fa2c?format=webp&width=800&height=1200"
+                      alt="AssistRx Logo"
+                      style={{ maxWidth: "200px", height: "auto" }}
+                    />
+                  </div>
+
+                  <div className="text-sm leading-relaxed text-slate-700">
+                    <div className="space-y-4">
+                      {selectedEmail.bodyParagraphs.map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                    </div>
+
+                    {selectedEmail.numberedSteps && (
+                      <ol className="list-decimal ml-5 space-y-2 mt-4">
+                        {selectedEmail.numberedSteps.map((step, i) => {
+                          const parts = step.split("HERE");
+                          return (
+                            <li key={i}>
+                              {parts.length === 2 ? (
+                                <>
+                                  {parts[0]}
+                                  <span
+                                    className="text-arx-primary underline font-semibold cursor-pointer"
+                                    title="Demo link — not a real destination"
+                                  >
+                                    HERE
+                                  </span>
+                                  {parts[1]}
+                                </>
+                              ) : (
+                                step
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+
+                    {selectedEmail.noteText && (
+                      <p className="text-xs text-slate-500 mt-4 italic">{selectedEmail.noteText}</p>
+                    )}
+
+                    {selectedEmail.highlight && (
+                      <p className="bg-green-50 border-l-4 border-green-500 p-3 mt-4 font-medium text-slate-800">
+                        {selectedEmail.highlight}
+                      </p>
+                    )}
+
+                    {selectedEmail.closing && (
+                      <p className="mt-4">{selectedEmail.closing}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 px-6 py-4 text-xs text-slate-500 text-center border-t border-slate-200">
+                  If you'd like to unsubscribe and stop receiving these emails{" "}
+                  <span className="text-arx-primary underline cursor-pointer" title="Demo link — not a real destination">click here</span>.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="portal-field min-h-screen bg-slate-50 flex">

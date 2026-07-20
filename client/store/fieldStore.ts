@@ -480,7 +480,14 @@ interface FieldStoreState {
   authorizations: FieldPatientAuthorization[];
   shipments: FieldSPShipment[];
   comments: FieldComment[];
+  // Which generated emails (keyed by the underlying event id — see
+  // getGeneratedEmails in WorkflowEngine.ts) have been opened in the Emails
+  // screen. The emails themselves are never stored; only this read/unread
+  // flag is bookkeeping, same reasoning as comments living in their own
+  // collection instead of on FieldItem.
+  readEmailIds: string[];
   addComment: (itemId: string, text: string) => void;
+  markEmailRead: (emailId: string) => void;
   resetFieldData: () => void;
 }
 
@@ -499,6 +506,7 @@ function seedAll() {
     // No seeded comments — every row here was added by an FRM through the
     // UI, not part of the hand-authored demo narrative.
     comments: [] as FieldComment[],
+    readEmailIds: [] as string[],
   };
 }
 
@@ -519,6 +527,12 @@ export const useFieldStore = create<FieldStoreState>()(
             },
           ],
         })),
+      markEmailRead: (emailId) =>
+        set((state) =>
+          state.readEmailIds.includes(emailId)
+            ? state
+            : { readEmailIds: [...state.readEmailIds, emailId] }
+        ),
       resetFieldData: () => set(seedAll()),
     }),
     {
