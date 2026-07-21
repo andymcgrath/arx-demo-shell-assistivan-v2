@@ -25,7 +25,7 @@ import {
   LIVE_MISSING_INFO_TASK_ID,
   LIVE_PA_TASK_ID,
 } from "@/engine/WorkflowEngine";
-import { daysFromToday } from "@/lib/relativeDate";
+import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
 // CRM's enrollment fax, iAssist, the live tasks above) — referenced by the
@@ -36,6 +36,23 @@ const PRESCRIBER_NAME = "Dr. Sarah Chen";
 // generated email is addressed to this FRM, since the email client is an
 // internal notification inbox, not the patient's or prescriber's.
 const FRM_NAME = "Sarah Mitchell";
+
+// "New Task" modal option lists — same fixed choices shown in the
+// reference app's own New Task dialog, not derived from any live data.
+const NEW_TASK_SUBJECTS = [
+  "General FAM Task",
+  "Appeals Follow Up",
+  "Benefit Investigation Follow Up",
+  "Consent Follow Up",
+  "Missing Information",
+  "Patient Not Covered",
+  "Payer Outreach",
+  "Prior Authorization Follow Up",
+  "Prior Authorization Denied",
+  "Financial Assistance Denied",
+];
+const NEW_TASK_PRIORITIES = ["High", "Normal"] as const;
+const NEW_TASK_ASSIGNEES = ["My Task", "Case Manager Task"] as const;
 
 // Core data model
 // Legacy shape the dashboard quick-view modal and task detail drill-in were
@@ -198,6 +215,23 @@ export default function FieldPortal() {
   // reload always lands back on the email client first.
   const [fieldPortalEntered, setFieldPortalEntered] = useState(false);
 
+  // "New Task" modal — same draft shape as the reference app's dialog.
+  // relatedPatientId/relatedCaseId capture which record the button was
+  // opened from (Patient detail vs. a Case's own detail screen) so Create
+  // links the new task the same way an existing seeded task would be.
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTaskContext, setNewTaskContext] = useState<{
+    patientId: string;
+    patientName: string;
+    relatedCaseId?: string;
+  } | null>(null);
+  const [newTaskDraft, setNewTaskDraft] = useState({
+    subject: "",
+    priority: "" as "" | typeof NEW_TASK_PRIORITIES[number],
+    dueDate: "",
+    assignedTo: "My Task" as typeof NEW_TASK_ASSIGNEES[number],
+  });
+
   // Clears the draft when navigating to a different task/case — otherwise
   // an unsent comment on one item would still be sitting in the box (and
   // could get posted to the wrong item) after clicking into another.
@@ -223,6 +257,7 @@ export default function FieldPortal() {
     addComment,
     readEmailIds,
     markEmailRead,
+    addItem,
   } = useFieldStore();
 
   // Every generated email, newest first — derived straight from the actor's
@@ -247,6 +282,45 @@ export default function FieldPortal() {
     setSelectedPatientId(null);
     setSelectedTaskId(itemId);
     setFieldPortalEntered(true);
+  };
+
+  // "New Task" modal's Create handler — reads allPatients (defined further
+  // down) only at call time (onClick, after the render that defined it),
+  // so declaring this above that point is fine; it's never invoked during
+  // render itself.
+  const handleCreateTask = () => {
+    if (!newTaskContext) return;
+    const { subject, priority, dueDate, assignedTo } = newTaskDraft;
+    if (!subject || !priority || !dueDate) return;
+
+    const patientRecord = allPatients.find((p) => p.id === newTaskContext.patientId);
+    // Date input values are "YYYY-MM-DD" — parsed manually (rather than
+    // `new Date(value)`, which treats a date-only string as UTC midnight
+    // and can display a day early/late depending on the browser's local
+    // timezone) so the due date shown afterward is the exact day picked.
+    const [y, m, d] = dueDate.split("-").map(Number);
+
+    addItem({
+      id: `TK-${Date.now()}`,
+      kind: "Task",
+      refId: subject,
+      status: "Open",
+      priority: priority === "High" ? "High" : "Medium",
+      dueDate: formatShortDate(new Date(y, m - 1, d)),
+      createdAt: daysFromToday(0),
+      patient: newTaskContext.patientName,
+      patientId: newTaskContext.patientId,
+      prescriber: patientRecord?.primaryPrescriber ?? "---",
+      territory: patientRecord?.territory ?? "---",
+      assignedTo: assignedTo === "My Task" ? FRM_NAME : "Case Manager",
+      subStatus: "Not Started",
+      description: "",
+      relatedCaseId: newTaskContext.relatedCaseId,
+    });
+
+    setShowNewTaskModal(false);
+    setNewTaskContext(null);
+    setNewTaskDraft({ subject: "", priority: "", dueDate: "", assignedTo: "My Task" });
   };
 
   // "Missing Information" and "Prior Authorization Requested" — the same two
@@ -1205,13 +1279,33 @@ export default function FieldPortal() {
 
               {/* Task Title */}
               <div className="mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-arx-primary-30 rounded flex items-center justify-center">
-                    <ListTodo size={18} className="text-arx-primary" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-arx-primary-30 rounded flex items-center justify-center">
+                      <ListTodo size={18} className="text-arx-primary" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-800">
+                      {selectedCase.refId} | {selectedCase.eid}
+                    </h2>
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-800">
-                    {selectedCase.refId} | {selectedCase.eid}
-                  </h2>
+                  {/* Cases have their own tasks; a task itself doesn't
+                      spawn a further task, so this only shows on Case-kind
+                      detail screens, same as the Patient header's button. */}
+                  {selectedCase.kind === "Case" && selectedCase.patientId && (
+                    <button
+                      onClick={() => {
+                        setNewTaskContext({
+                          patientId: selectedCase.patientId!,
+                          patientName: selectedCase.patientName ?? "",
+                          relatedCaseId: selectedCase.id,
+                        });
+                        setShowNewTaskModal(true);
+                      }}
+                      className="px-4 py-2 text-sm font-medium rounded bg-arx-primary text-white hover:bg-arx-primary-dark"
+                    >
+                      New Task
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1481,6 +1575,15 @@ export default function FieldPortal() {
                       <h2 className="text-xl font-semibold text-slate-800">{selectedPatient.name} | {selectedPatient.id}</h2>
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      setNewTaskContext({ patientId: selectedPatient.id, patientName: selectedPatient.name });
+                      setShowNewTaskModal(true);
+                    }}
+                    className="px-4 py-2 text-sm font-medium rounded bg-arx-primary text-white hover:bg-arx-primary-dark"
+                  >
+                    New Task
+                  </button>
                 </div>
 
                 {/* Patient Info Grid */}
@@ -1910,6 +2013,148 @@ export default function FieldPortal() {
         )}
 
       </div>
+
+      {/* New Task modal — opened from the Patient detail view or a Case's
+          own detail view (see the two "New Task" buttons above). Subject/
+          Priority/Due Date/Assigned To are the only real inputs; Related
+          To/Status/Created By mirror the reference app's dialog but are
+          fixed context (which patient/case this is for, always "Open",
+          always this FRM), not fields the user picks. */}
+      {showNewTaskModal && newTaskContext && createPortal(
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowNewTaskModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-xl font-bold text-slate-800 text-center">New Task</h3>
+            </div>
+
+            <div className="p-6 grid grid-cols-2 gap-x-6 gap-y-4">
+              <div className="col-span-2">
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">
+                  <span className="text-red-500">*</span> Subject
+                </label>
+                <select
+                  value={newTaskDraft.subject}
+                  onChange={(e) => setNewTaskDraft((d) => ({ ...d, subject: e.target.value }))}
+                  className="w-full border border-arx-primary-30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-arx-primary"
+                >
+                  <option value="">Select subject...</option>
+                  {NEW_TASK_SUBJECTS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">
+                  <span className="text-red-500">*</span> Priority
+                </label>
+                <select
+                  value={newTaskDraft.priority}
+                  onChange={(e) => setNewTaskDraft((d) => ({ ...d, priority: e.target.value as typeof d.priority }))}
+                  className="w-full border border-arx-primary-30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-arx-primary"
+                >
+                  <option value="">Select priority...</option>
+                  {NEW_TASK_PRIORITIES.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">Related To</label>
+                <div className="flex gap-2">
+                  <div className="flex-1 border border-slate-200 rounded px-3 py-2 text-sm text-slate-400 bg-slate-50">
+                    Account
+                  </div>
+                  <div className="flex items-center gap-1.5 border border-slate-200 rounded px-2 py-2 bg-slate-50 text-sm text-slate-600 whitespace-nowrap">
+                    <span className="w-5 h-5 rounded bg-arx-primary-30 flex items-center justify-center flex-shrink-0">
+                      <Users size={12} className="text-arx-primary" />
+                    </span>
+                    <span className="truncate max-w-24">{newTaskContext.patientName}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">
+                  <span className="text-red-500">*</span> Due Date
+                </label>
+                <input
+                  type="date"
+                  value={newTaskDraft.dueDate}
+                  onChange={(e) => setNewTaskDraft((d) => ({ ...d, dueDate: e.target.value }))}
+                  className="w-full border border-arx-primary-30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-arx-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">Status</label>
+                <div className="border border-slate-200 rounded px-3 py-2 text-sm text-slate-400 bg-slate-50">
+                  Open
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">
+                  <span className="text-red-500">*</span> Assigned To
+                </label>
+                <select
+                  value={newTaskDraft.assignedTo}
+                  onChange={(e) => setNewTaskDraft((d) => ({ ...d, assignedTo: e.target.value as typeof d.assignedTo }))}
+                  className="w-full border border-arx-primary-30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-arx-primary"
+                >
+                  {NEW_TASK_ASSIGNEES.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+                {newTaskDraft.assignedTo === "My Task" && (
+                  <p className="text-xs text-slate-500 italic mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={12} className="text-amber-500 flex-shrink-0" />
+                    Only you can see and take actions for this task
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-800 mb-1.5 block">Created By</label>
+                <div className="flex items-center gap-1.5 border border-slate-200 rounded px-2 py-2 bg-slate-50 text-sm text-slate-600">
+                  <span className="w-5 h-5 rounded-full bg-arx-primary-30 flex items-center justify-center flex-shrink-0 text-[10px] font-semibold text-arx-primary">
+                    {FRM_NAME.split(" ").map((n) => n[0]).join("")}
+                  </span>
+                  {FRM_NAME}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowNewTaskModal(false);
+                  setNewTaskContext(null);
+                  setNewTaskDraft({ subject: "", priority: "", dueDate: "", assignedTo: "My Task" });
+                }}
+                className="px-4 py-2 text-sm rounded border border-arx-primary text-arx-primary hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateTask}
+                disabled={!newTaskDraft.subject || !newTaskDraft.priority || !newTaskDraft.dueDate}
+                className="px-4 py-2 text-sm font-medium rounded bg-arx-primary text-white hover:bg-arx-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

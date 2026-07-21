@@ -488,6 +488,11 @@ interface FieldStoreState {
   readEmailIds: string[];
   addComment: (itemId: string, text: string) => void;
   markEmailRead: (emailId: string) => void;
+  // Appends an FRM-created task from the "New Task" modal (Patient and
+  // Case detail views) — a plain add to the persisted list, same as any
+  // seeded row, so it shows up in My Tasks / the Related tab / the
+  // patient's task list identically to one from the original seed.
+  addItem: (item: FieldItem) => void;
   resetFieldData: () => void;
 }
 
@@ -533,6 +538,7 @@ export const useFieldStore = create<FieldStoreState>()(
             ? state
             : { readEmailIds: [...state.readEmailIds, emailId] }
         ),
+      addItem: (item) => set((state) => ({ items: [...state.items, item] })),
       resetFieldData: () => set(seedAll()),
     }),
     {
