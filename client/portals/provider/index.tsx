@@ -2104,6 +2104,22 @@ export default function ProviderPortal() {
     }
   }, [storeFlowType, biStatus, paStatus, step]);
 
+  // WF1 now opens on a generic login lock screen by default (see
+  // LoginStep's isLockScreen prop) instead of always starting on EmailStep.
+  // But once BI completes with the PA still unsubmitted — the same
+  // biStatus/paStatus signal CRM's stage tracker uses for "Letter sent -
+  // HCP letter mailed for Prior Authorization" — a real PA request email
+  // now exists, so surface it instead of leaving the provider parked on the
+  // lock screen. Guarded to `step === 'login'` so this can only ever move
+  // the provider forward from the resting lock screen, never yank them back
+  // once they've clicked past it (into pa-questions/pa-submitted).
+  useEffect(() => {
+    if (storeFlowType !== 'Fax_QS_PA_Approved') return;
+    if (biStatus === 'complete' && paStatus === 'none' && step === 'login') {
+      setStep('email');
+    }
+  }, [storeFlowType, biStatus, paStatus, step]);
+
   // `step` is local UI state with no memory of the outer workflow reset —
   // it only ever advances forward via the handlers below, so a reset that
   // clears workflowData would otherwise leave this portal stuck mid-flow

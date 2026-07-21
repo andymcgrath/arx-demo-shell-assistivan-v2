@@ -114,10 +114,15 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 
 function getPortals(flowType: string) {
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  const isPapFlow = flowType === "Fax_PAP_Audit";
 
   return PORTALS_BASE.filter(p => {
-    // Show provider for workflows 1-3, hide for workflow 4 (iAssist)
-    if (p.id === "provider" && isIAssistFlow) return false;
+    // Show provider for workflows 1 and 3, hide for workflow 4 (iAssist —
+    // it has its own dedicated "iAssist" tab instead) and workflow 2
+    // (Fax_PAP_Audit never requires a traditional PA, so there's no
+    // provider-facing screen for this flow at all — see isPapFlow's use
+    // elsewhere in this file, e.g. the step-bar labels/reset ladder).
+    if (p.id === "provider" && (isIAssistFlow || isPapFlow)) return false;
     // Show iAssist only for workflow 4
     if (p.id === "iassist" && !isIAssistFlow) return false;
     return true;
@@ -860,9 +865,9 @@ export default function DemoShell() {
           {/* Portal tabs (single-panel mode: clicking selects that portal) */}
           <nav className="flex items-stretch flex-1 overflow-x-auto border-l border-white/10">
             {getPortals(flowType).map((tab) => {
-              const isHidden = tab.id === "provider" && flowType === "Fax_PAP_Audit";
-              if (isHidden) return null;
-
+              // Provider is already excluded from getPortals() for
+              // Fax_PAP_Audit (WF2) and iAssist (WF4) — no separate
+              // per-tab hiding needed here now.
               const isActive = layout === "1up" && urlPortal === tab.id;
               return (
                 <button
