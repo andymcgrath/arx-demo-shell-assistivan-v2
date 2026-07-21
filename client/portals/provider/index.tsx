@@ -663,7 +663,22 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
 
 // ── Step 1: Login ─────────────────────────────────────────────────────────────
 
-function LoginStep({ onSubmit }: { onSubmit: () => void }) {
+function LoginStep({
+  onSubmit,
+  isLockScreen = false,
+}: {
+  onSubmit: () => void;
+  /**
+   * WF1/WF2 now use this same screen as their default/starting screen (a
+   * generic provider lock screen, reached before any actual PA request
+   * exists) instead of only reaching it after EmailStep. In that context,
+   * "a prior authorization form has been requested" isn't true yet, so this
+   * drops the eyebrow + first description line that reference Prior Auth.
+   * CoA_DTP's own call site (reached only after its real PA-request email)
+   * doesn't pass this, so its copy is unchanged.
+   */
+  isLockScreen?: boolean;
+}) {
   const [npi, setNpi] = useState("");
   const [pin, setPin] = useState("");
 
@@ -676,11 +691,13 @@ function LoginStep({ onSubmit }: { onSubmit: () => void }) {
 
   return (
     <main className="provider-content">
-      <p className="pa-eyebrow">PRIOR AUTHORIZATION</p>
+      {!isLockScreen && <p className="pa-eyebrow">PRIOR AUTHORIZATION</p>}
       <h1 className="pa-login-heading">Verify<br />&amp; Complete</h1>
-      <p className="pa-login-description">
-        A request has been made for your office to complete a prior authorization form for one of your patients.
-      </p>
+      {!isLockScreen && (
+        <p className="pa-login-description">
+          A request has been made for your office to complete a prior authorization form for one of your patients.
+        </p>
+      )}
       <p className="pa-login-description">
         Please enter your provider NPI and the associated security PIN to access and complete this request
       </p>
@@ -2046,8 +2063,14 @@ function IAssistDashboard() {
 export default function ProviderPortal() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('provider');
+  // WF1/WF2 now open directly on the login screen (as a generic provider
+  // "lock screen" — see LoginStep's isLockScreen prop) instead of on
+  // EmailStep. This is purely which screen greets the provider before
+  // anything has happened; it doesn't change any of the state-machine-driven
+  // transitions below (SUBMIT_PA, COMPLETE_PROVIDER_PA, etc. all fire the
+  // same way once the provider is past this starting screen).
   const [step, setStep] = useState<Step>(() =>
-    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-dashboard' : 'email'
+    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-dashboard' : 'login'
   );
   const dispatch = useWorkflowDispatch();
   const flowType = workflowData.flowType;
@@ -2092,7 +2115,7 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'email');
+    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
@@ -2324,7 +2347,7 @@ export default function ProviderPortal() {
         <EmailStep onClickLink={() => setStep("login")} />
       )}
       {step === "login" && (
-        <LoginStep onSubmit={() => setStep("pa-questions")} />
+        <LoginStep isLockScreen onSubmit={() => setStep("pa-questions")} />
       )}
       {step === "pa-questions" && (
         <PaQuestionsStep
