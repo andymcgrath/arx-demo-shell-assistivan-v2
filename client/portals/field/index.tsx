@@ -1353,16 +1353,14 @@ export default function FieldPortal() {
                 );
               })()}
 
-              {/* Task Description */}
-              <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
-                <label className="text-xs font-semibold text-slate-700 mb-2 block">Task Description</label>
-                <p className="text-sm text-slate-700 min-h-24">{selectedCase.description || "---"}</p>
-              </div>
-
-              {/* Comments — FRMs can add a note to whatever's open here,
-                  and optionally post the same note to the item on the
-                  other side of the relatedCaseId link (a task's case, or
-                  a case's related tasks) instead of re-typing it twice. */}
+              {/* Task Description — in the reference app this field is
+                  really a running notes log, not a single static blurb, so
+                  it's one card: the original description (if any) shown as
+                  the first entry, FRM-added notes appended below it, and
+                  the same Add/Cancel input that used to be its own separate
+                  "Comments" card. addComment/FieldComment still model each
+                  entry the same way (itemId-keyed, not nested on FieldItem)
+                  — only the label and layout changed, not the data shape. */}
               {(() => {
                 const itemComments = comments.filter((c) => c.itemId === selectedCase.id);
                 const relatedCase = selectedCase.kind === "Task" && selectedCase.relatedCaseId
@@ -1387,28 +1385,36 @@ export default function FieldPortal() {
 
                 return (
                   <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
-                    <h3 className="text-sm font-semibold text-slate-700 mb-4">COMMENTS</h3>
+                    <label className="text-xs font-semibold text-slate-700 mb-4 block">Task Description</label>
 
                     <div className="space-y-3 mb-4">
-                      {itemComments.length === 0 ? (
-                        <p className="text-sm text-slate-400">No comments yet</p>
-                      ) : (
-                        itemComments.map((c) => (
-                          <div key={c.id} className="bg-slate-50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-semibold text-slate-700">{c.author}</span>
-                              <span className="text-xs text-slate-400">{c.createdAt}</span>
-                            </div>
-                            <p className="text-sm text-slate-700">{c.text}</p>
+                      {selectedCase.description && (
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-slate-700">{selectedCase.createdBy}</span>
+                            <span className="text-xs text-slate-400">{selectedCase.date}</span>
                           </div>
-                        ))
+                          <p className="text-sm text-slate-700">{selectedCase.description}</p>
+                        </div>
+                      )}
+                      {itemComments.map((c) => (
+                        <div key={c.id} className="bg-slate-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                            <span className="text-xs text-slate-400">{c.createdAt}</span>
+                          </div>
+                          <p className="text-sm text-slate-700">{c.text}</p>
+                        </div>
+                      ))}
+                      {!selectedCase.description && itemComments.length === 0 && (
+                        <p className="text-sm text-slate-400">No notes yet</p>
                       )}
                     </div>
 
                     <textarea
                       value={commentDraft}
                       onChange={(e) => setCommentDraft(e.target.value)}
-                      placeholder="Add a comment..."
+                      placeholder="Add a note..."
                       rows={3}
                       className="w-full border border-slate-300 rounded-lg p-3 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-arx-primary"
                     />
