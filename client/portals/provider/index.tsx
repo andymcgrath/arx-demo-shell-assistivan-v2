@@ -692,14 +692,16 @@ function LoginStep({
   return (
     <main className="provider-content">
       {!isLockScreen && <p className="pa-eyebrow">PRIOR AUTHORIZATION</p>}
-      <h1 className="pa-login-heading">Verify<br />&amp; Complete</h1>
+      <h1 className="pa-login-heading">
+        {isLockScreen ? "Welcome" : (<>Verify<br />&amp; Complete</>)}
+      </h1>
       {!isLockScreen && (
         <p className="pa-login-description">
           A request has been made for your office to complete a prior authorization form for one of your patients.
         </p>
       )}
       <p className="pa-login-description">
-        Please enter your provider NPI and the associated security PIN to access and complete this request
+        Please enter your provider NPI and the associated security PIN{!isLockScreen && " to access and complete this request"}
       </p>
 
       <div className="pa-fields">
