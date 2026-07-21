@@ -545,7 +545,14 @@ export default function FieldPortal() {
   // link out, mirroring EmailStep's own single link forward.
   if (!fieldPortalEntered) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col">
+      // "portal-field" is load-bearing here, not decorative — every
+      // arx-primary/arx-sky/etc. color below is a CSS var scoped to this
+      // class (client/global.css's ".portal-field" block). Without it here
+      // (this root used to be a plain min-h-screen div with no such class)
+      // those colors silently resolved against an undefined var, so the
+      // header bar and "View Task"/"View Case" button were rendering with
+      // no background/text color at all — invisible, not merely missing.
+      <div className="portal-field min-h-screen bg-slate-100 flex flex-col">
         <div className="bg-arx-primary text-white px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Mail size={18} />
