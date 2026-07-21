@@ -1135,7 +1135,14 @@ export default function FieldPortal() {
                   case/task detail screen every other entry point uses. */}
               {previewItem && createPortal(
                 <div
-                  className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                  // "portal-field" here isn't decorative — every arx-primary/
+                  // arx-sky/etc. color below is a CSS var scoped to that
+                  // class (client/global.css). createPortal renders this
+                  // straight onto document.body, outside the normal
+                  // .portal-field tree, so without it those vars are
+                  // undefined and every arx-colored element below is
+                  // invisible (no background/text color), not just missing.
+                  className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
                   onClick={() => setPreviewItem(null)}
                 >
                   <div
@@ -1840,7 +1847,10 @@ export default function FieldPortal() {
 
                     {showEnrollmentDoc && createPortal(
                       <div
-                        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                        // See the calendar preview modal's identical comment
+                        // above — same document.body portal, same need for
+                        // this class so arx-primary etc. resolve here too.
+                        className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
                         onClick={() => setShowEnrollmentDoc(false)}
                       >
                         <div
@@ -2022,7 +2032,12 @@ export default function FieldPortal() {
           always this FRM), not fields the user picks. */}
       {showNewTaskModal && newTaskContext && createPortal(
         <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          // Same document.body-portal CSS-var-scoping issue as the calendar
+          // preview and Enrollment Application modals above — without this,
+          // the Create button (bg-arx-primary) renders with no background
+          // at all, and the Cancel button and select borders fall back to
+          // default colors instead of teal.
+          className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
           onClick={() => setShowNewTaskModal(false)}
         >
           <div
