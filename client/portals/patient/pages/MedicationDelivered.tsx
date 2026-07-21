@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { ArrowRight, ChevronRight, Play, X } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useChatContext } from "@patient/components/ChatContext";
@@ -141,39 +140,44 @@ export default function MedicationDelivered() {
 
         </div>
 
-        {showPfVideo &&
-          createPortal(
+        {/*
+         * Rendered inline (no portal) so it stays inside the patient portal's
+         * phone-frame viewport instead of escaping to document.body.
+         * `absolute inset-0` resolves against `.i17pro__screen` (the nearest
+         * positioned ancestor set up in DemoShell), and the phone frame's own
+         * `overflow: hidden` keeps it clipped to the screen bounds/corners.
+         */}
+        {showPfVideo && (
+          <div
+            className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowPfVideo(false)}
+          >
             <div
-              className="portal-patient fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-              onClick={() => setShowPfVideo(false)}
+              className="bg-white rounded-2xl overflow-hidden w-full max-w-sm"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="bg-white rounded-2xl overflow-hidden w-full max-w-lg"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-arx-borders">
-                  <span className="text-sm font-semibold text-arx-slate">Pulmonary fibrosis basics</span>
-                  <button
-                    onClick={() => setShowPfVideo(false)}
-                    className="text-arx-body-copy hover:text-arx-slate"
-                    aria-label="Close video"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="aspect-video bg-black">
-                  <iframe
-                    src={`https://player.vimeo.com/video/${PF_VIDEO_ID}?h=${PF_VIDEO_HASH}&autoplay=1`}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    title="Pulmonary fibrosis basics"
-                  />
-                </div>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-arx-borders">
+                <span className="text-sm font-semibold text-arx-slate">Pulmonary fibrosis basics</span>
+                <button
+                  onClick={() => setShowPfVideo(false)}
+                  className="text-arx-body-copy hover:text-arx-slate"
+                  aria-label="Close video"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            </div>,
-            document.body
-          )}
+              <div className="aspect-video bg-black">
+                <iframe
+                  src={`https://player.vimeo.com/video/${PF_VIDEO_ID}?h=${PF_VIDEO_HASH}&autoplay=1`}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  title="Pulmonary fibrosis basics"
+                />
+              </div>
+            </div>
+          </div>
+        )}
     </main>
   );
 }
