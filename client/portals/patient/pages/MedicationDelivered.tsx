@@ -53,6 +53,43 @@ export default function MedicationDelivered() {
             </button>
           </div>
 
+          {/* Pulmonary fibrosis basics video */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
+              <h3 className="font-semibold text-sm text-arx-primary">Pulmonary fibrosis basics</h3>
+            </div>
+
+            <button
+              onClick={() => setShowPfVideo(true)}
+              className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
+            >
+              <div className="relative w-full h-40 bg-arx-slate/10">
+                <img
+                  src={PF_VIDEO_THUMBNAIL}
+                  alt="What's a healthy lung vs. a lung with inflammation and fibrosis"
+                  className="w-full h-40 object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                  <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                    <Play className="w-6 h-6 text-arx-primary fill-arx-primary" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-5">
+                <h4 className="text-lg font-bold mb-2 text-arx-slate">
+                  What's a healthy lung vs. a lung with inflammation and fibrosis?
+                </h4>
+                <p className="text-sm leading-relaxed text-arx-body-copy">
+                  A short animation on the basics of pulmonary fibrosis — 2 min watch.
+                </p>
+              </div>
+            </button>
+          </section>
+
           {/* Prescriptions section */}
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -99,43 +136,6 @@ export default function MedicationDelivered() {
                 </button>
               </div>
             </div>
-          </section>
-
-          {/* Pulmonary fibrosis basics video */}
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Pulmonary fibrosis basics</h3>
-            </div>
-
-            <button
-              onClick={() => setShowPfVideo(true)}
-              className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
-            >
-              <div className="relative w-full h-40 bg-arx-slate/10">
-                <img
-                  src={PF_VIDEO_THUMBNAIL}
-                  alt="What's a healthy lung vs. a lung with inflammation and fibrosis"
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                  <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
-                    <Play className="w-6 h-6 text-arx-primary fill-arx-primary" />
-                  </div>
-                </div>
-              </div>
-              <div className="p-5">
-                <h4 className="text-lg font-bold mb-2 text-arx-slate">
-                  What's a healthy lung vs. a lung with inflammation and fibrosis?
-                </h4>
-                <p className="text-sm leading-relaxed text-arx-body-copy">
-                  A short animation on the basics of pulmonary fibrosis — 2 min watch.
-                </p>
-              </div>
-            </button>
           </section>
 
         </div>
