@@ -36,11 +36,12 @@ import { FLOW_OPTIONS } from "./flowOptions";
 import CrmPortal      from "@/portals/crm/index";
 import PatientPortal  from "@/portals/patient/index";
 import AnalyticsPortal from "@/portals/analytics/index";
+import InsightsPortal from "@/portals/insights/index";
 import FieldPortal    from "@/portals/field/index";
 import ProviderPortal from "@/portals/provider/index";
 import IAssistPortal from "@/portals/iassist/index";
 
-export type PortalId = "crm" | "patient" | "analytics" | "field" | "provider" | "iassist";
+export type PortalId = "crm" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist";
 
 // NOTE: the iAssist portal tab's URL slug is "iassist-hub", NOT "iassist".
 // "/iassist" is a separate, pre-existing top-level deep-link route (see
@@ -55,6 +56,7 @@ export const PORTAL_SLUG: Record<PortalId, string> = {
   crm: "hub",
   patient: "patient",
   analytics: "analytics",
+  insights: "insights",
   field: "field",
   provider: "provider",
   iassist: "iassist-hub",
@@ -64,6 +66,7 @@ const SLUG_TO_PORTAL: Record<string, PortalId> = {
   hub: "crm",
   patient: "patient",
   analytics: "analytics",
+  insights: "insights",
   field: "field",
   provider: "provider",
   "iassist-hub": "iassist",
@@ -96,13 +99,16 @@ function getProviderPortalLabel(flowType: string): string {
 
 // Nav tab order (and the per-panel portal-selector dropdown order, which
 // reuses this same list via getPortals) — Workforce (analytics) intentionally
-// sits after Field now, for every workflow, per request.
+// sits after Field now, for every workflow, per request. "insights" (tab
+// label "Analytics") is a newer, separate placeholder tab — sits directly to
+// the left of Workforce, visible in every workflow.
 const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "crm",       color: "#0176d3" },
   { id: "patient",   color: "#16a34a" },
   { id: "provider",  color: "#7c3aed" },
   { id: "iassist",   color: "#d97706" },
   { id: "field",     color: "#14b8a6" },
+  { id: "insights",  color: "#2563eb" },
   { id: "analytics", color: "#d97706" },
 ];
 
@@ -125,6 +131,7 @@ function getPortals(flowType: string) {
       provider: getProviderPortalLabel(flowType),
       iassist: "iAssist",
       analytics: "Workforce",
+      insights: "Analytics",
       field: "Field",
     };
     return { ...p, id: p.id as PortalId, label: baseLabels[p.id] };
@@ -137,6 +144,7 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "crm":       return <CrmPortal />;
     case "patient":   return <PatientPortal />;
     case "analytics": return <AnalyticsPortal />;
+    case "insights":  return <InsightsPortal />;
     case "field":     return <FieldPortal />;
     case "provider":  return <ProviderPortal key={flowType} />;
     case "iassist":   return <IAssistPortal branded={false} />;
