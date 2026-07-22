@@ -54,7 +54,7 @@ export default function PaApprovedSms() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              Good news! Your Assistivan prior authorization was approved. Time to schedule delivery:
+              Good news! Your Jascayd prior authorization was approved. Time to schedule delivery:
             </p>
             <button
               onClick={handleTapMessage}
