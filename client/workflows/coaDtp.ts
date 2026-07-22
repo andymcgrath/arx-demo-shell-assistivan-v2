@@ -1,5 +1,5 @@
 import { setup, assign } from "xstate";
-import type { MachineContext, Pharmacy, WorkflowData } from "@/engine/types";
+import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine/types";
 
 // Full contact details (not just a name) so the CRM's shared "Triage
 // Pharmacy Details" card — reused from WF1's Dispatch to Triage stage, see
@@ -42,6 +42,28 @@ const initialContext: MachineContext = {
   events: [],
   _snapshots: [],
 };
+
+// Mirrors workflowMachine.ts's createEvent exactly — every transition below
+// appends one of these to context.events, which is the only thing Field
+// Portal's email notifications (getGeneratedEmails, WorkflowEngine.ts) read
+// from. Before this, none of CoA_DTP's transitions touched context.events
+// at all (every action only ever assigned workflowData), so events stayed
+// permanently empty and the Field Portal inbox looked empty for the entire
+// WF3 flow no matter how far the demo progressed.
+const createEvent = (
+  context: MachineContext,
+  eventType: string,
+  portal: 'crm' | 'patient' | 'provider' | 'analytics' | 'field',
+  workflowStep: number
+): DemoEvent => ({
+  id: crypto.randomUUID(),
+  eventType,
+  portal,
+  flowType: context.workflowData.flowType,
+  workflowStep,
+  metadata: null,
+  createdAt: new Date().toISOString(),
+});
 
 export const coaDtpMachine = setup({
   types: {
@@ -91,7 +113,10 @@ export const coaDtpMachine = setup({
       on: {
         ENROLL: {
           target: "enrolled",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, enrollmentStatus: "enrolled", enrollmentInviteSent: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+          }),
         },
       },
     },
@@ -99,7 +124,10 @@ export const coaDtpMachine = setup({
       on: {
         VERIFY_SMS: {
           target: "smsVerified",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
         },
       },
     },
@@ -107,7 +135,10 @@ export const coaDtpMachine = setup({
       on: {
         VERIFY_OTP: {
           target: "otpVerified",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
         },
       },
     },
@@ -115,7 +146,10 @@ export const coaDtpMachine = setup({
       on: {
         CONFIRM_CONSENT: {
           target: "consentConfirmed",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
+          }),
         },
       },
     },
@@ -123,7 +157,10 @@ export const coaDtpMachine = setup({
       on: {
         RUN_BI: {
           target: "biRunning",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
         },
       },
     },
@@ -131,7 +168,10 @@ export const coaDtpMachine = setup({
       on: {
         COMPLETE_BI: {
           target: "biComplete",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
         },
       },
     },
@@ -139,7 +179,10 @@ export const coaDtpMachine = setup({
       on: {
         SUBMIT_PA: {
           target: "paSubmitted",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
         },
       },
     },
@@ -147,14 +190,20 @@ export const coaDtpMachine = setup({
       on: {
         APPROVE_PA: {
           target: "paApproved",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "approved", paApprovedAt: new Date().toISOString() }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "approved", paApprovedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'APPROVE_PA', 'provider', 9)],
+          }),
         },
         // Kept for demo flexibility — CoA_DTP's live flow always approves
         // (see CRM Index.tsx), but the denial → cash-offer chain below is
         // still fully wired if a future scenario needs it.
         DENY_PA: {
           target: "paDenied",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "denied" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "denied" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'DENY_PA', 'provider', 9)],
+          }),
         },
       },
     },
@@ -167,7 +216,10 @@ export const coaDtpMachine = setup({
       on: {
         VERIFY_PA_APPROVED_SMS: {
           target: "paApprovedSmsVerified",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paApprovedSmsVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paApprovedSmsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_SMS', 'patient', 9)],
+          }),
         },
       },
     },
@@ -175,7 +227,10 @@ export const coaDtpMachine = setup({
       on: {
         VERIFY_PA_APPROVED_OTP: {
           target: "paApprovedOtpVerified",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paApprovedOtpVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paApprovedOtpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_OTP', 'patient', 9)],
+          }),
         },
       },
     },
@@ -189,6 +244,7 @@ export const coaDtpMachine = setup({
               pricingOption: event.option,
               selectedPharmacy: event.option === "retail" ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
             }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PRICING_OPTION', 'patient', 9)],
           }),
         },
         // Third option on Benefit Pricing — patient applies to the CoAssist
@@ -206,6 +262,7 @@ export const coaDtpMachine = setup({
               pricingOption: "self_pay",
               selectedPharmacy: SELF_PAY_PHARMACY,
             }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
           }),
         },
       },
@@ -214,7 +271,10 @@ export const coaDtpMachine = setup({
       on: {
         PATIENT_SETS_ADDRESS: {
           target: "addressSet",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
+          }),
         },
         // CoA's pharmacy is already known the moment pricing is chosen (see
         // SELECT_PRICING_OPTION/SELECT_SELF_PAY above) — well before the
@@ -226,10 +286,16 @@ export const coaDtpMachine = setup({
         // here silently does nothing.
         FILL_RX: {
           target: "rxProcessing",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'FILL_RX', 'field', 10)],
+          }),
         },
         SELECT_PHARMACY: {
-          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+          actions: assign({
+            workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'crm', 5)],
+          }),
         },
         // Real payment for the self-pay/Copay path, fired from the payment
         // screen after address + date (nothing currently dispatches
@@ -238,10 +304,16 @@ export const coaDtpMachine = setup({
         // these, so cashOfferStatus/paymentVerified correctly stay
         // untouched for them.
         PATIENT_PAYS: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+          }),
         },
         VERIFY_PAYMENT: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'crm', 9)],
+          }),
         },
       },
     },
@@ -249,7 +321,10 @@ export const coaDtpMachine = setup({
       on: {
         SEND_CASH_OFFER: {
           target: "cashOfferSent",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "sent" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "sent" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SEND_CASH_OFFER', 'crm', 9)],
+          }),
         },
       },
     },
@@ -257,7 +332,10 @@ export const coaDtpMachine = setup({
       on: {
         PATIENT_PAYS: {
           target: "paymentProcessed",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+          }),
         },
       },
     },
@@ -265,7 +343,10 @@ export const coaDtpMachine = setup({
       on: {
         VERIFY_PAYMENT: {
           target: "paymentVerified",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'crm', 9)],
+          }),
         },
       },
     },
@@ -273,16 +354,25 @@ export const coaDtpMachine = setup({
       on: {
         PATIENT_SETS_ADDRESS: {
           target: "addressSet",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, dispatchStatus: "selected" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
+          }),
         },
         // Same reasoning as pricingSelected's FILL_RX/SELECT_PHARMACY —
         // pharmacy is already assigned by the time this state is reached.
         FILL_RX: {
           target: "rxProcessing",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'FILL_RX', 'field', 10)],
+          }),
         },
         SELECT_PHARMACY: {
-          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+          actions: assign({
+            workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'crm', 5)],
+          }),
         },
       },
     },
@@ -290,7 +380,10 @@ export const coaDtpMachine = setup({
       on: {
         PATIENT_SELECTS_SHIP_DATE: {
           target: "shipDateSelected",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, patientShipDate: new Date().toISOString() }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, patientShipDate: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_SELECTS_SHIP_DATE', 'patient', 9)],
+          }),
         },
         // The CRM's Dispatch to Triage tab (TP-14277, reused from WF1 — see
         // Index.tsx's STAGES_LIVE) shows "Dispatch to Pharmacy" as soon as
@@ -301,20 +394,32 @@ export const coaDtpMachine = setup({
         // + dispatchStatus flip together).
         FILL_RX: {
           target: "rxProcessing",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'FILL_RX', 'field', 10)],
+          }),
         },
         // Lets HUB staff override the auto-assigned pharmacy from the same
         // "Choose Pharmacy" modal WF1 uses on that tab.
         SELECT_PHARMACY: {
-          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+          actions: assign({
+            workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'crm', 5)],
+          }),
         },
         // Defensive duplicate of pricingSelected's payment handlers — same
         // reasoning, in case address ever does get dispatched for real.
         PATIENT_PAYS: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+          }),
         },
         VERIFY_PAYMENT: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'crm', 9)],
+          }),
         },
       },
     },
@@ -327,18 +432,30 @@ export const coaDtpMachine = setup({
         // ship date.
         FILL_RX: {
           target: "rxProcessing",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'FILL_RX', 'field', 10)],
+          }),
         },
         SELECT_PHARMACY: {
-          actions: assign({ workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }) }),
+          actions: assign({
+            workflowData: ({ context, event }) => ({ ...context.workflowData, selectedPharmacy: event.pharmacy }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'crm', 5)],
+          }),
         },
         // Defensive duplicate of pricingSelected's payment handlers — same
         // reasoning, in case ship date ever does get dispatched for real.
         PATIENT_PAYS: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "paid" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'PATIENT_PAYS', 'patient', 9)],
+          }),
         },
         VERIFY_PAYMENT: {
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paymentVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PAYMENT', 'crm', 9)],
+          }),
         },
       },
     },
@@ -351,7 +468,10 @@ export const coaDtpMachine = setup({
       on: {
         READY_RX: {
           target: "rxReady",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "ready" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "ready" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'READY_RX', 'field', 10)],
+          }),
         },
       },
     },
@@ -359,7 +479,10 @@ export const coaDtpMachine = setup({
       on: {
         SHIP_RX: {
           target: "rxShipped",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "shipped" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "shipped" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SHIP_RX', 'field', 11)],
+          }),
         },
       },
     },
@@ -367,7 +490,10 @@ export const coaDtpMachine = setup({
       on: {
         DELIVER_RX: {
           target: "rxDelivered",
-          actions: assign({ workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "delivered" }) }),
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyStatus: "delivered" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'DELIVER_RX', 'field', 12)],
+          }),
         },
       },
     },
