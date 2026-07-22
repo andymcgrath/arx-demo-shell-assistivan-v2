@@ -29,7 +29,7 @@ export default function PAApproved() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                Great news! Assistivan is covered by your insurance
+                Great news! Jascayd is covered by your insurance
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
                 <span className="text-lg font-bold text-arx-primary">Rx</span>
@@ -57,7 +57,7 @@ export default function PAApproved() {
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                  You might be eligible for the Assistivan Copay program!
+                  You might be eligible for the Jascayd Copay program!
                 </h2>
                 <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
                   <CreditCard className="w-5 h-5 text-arx-primary" />
@@ -109,7 +109,7 @@ export default function PAApproved() {
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
-                <h4 className="text-lg font-bold leading-snug text-arx-slate">Get ready for Assistivan</h4>
+                <h4 className="text-lg font-bold leading-snug text-arx-slate">Get ready for Jascayd</h4>
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-arx-sky">
                   <BookOpen className="w-5 h-5 text-arx-primary" />
                 </div>

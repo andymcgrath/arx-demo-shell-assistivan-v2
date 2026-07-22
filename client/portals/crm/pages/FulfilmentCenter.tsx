@@ -111,10 +111,10 @@ function canAddItem(selectedId: string, consentStatus: string, workflowData: Wor
 
 function buildMessageText(selectedId: string, isPapFlow: boolean): string {
   if (selectedId === "pap-application-update") {
-    return `There's an update on your Assistivan Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
+    return `There's an update on your Jascayd Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
   }
   return isPapFlow
-    ? `Welcome! You've been referred to the Assistivan Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
+    ? `Welcome! You've been referred to the Jascayd Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
     : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
 }
 

@@ -134,7 +134,7 @@ export default function Patient() {
       <div className="bg-blue-50 border-b-[3px] border-blue-500 px-4 sm:px-6 py-5">
         <div className="max-w-[680px] mx-auto">
           <h1 className="text-2xl font-bold text-slate-900">Patient Portal</h1>
-          <p className="text-sm text-slate-600 mt-0.5 mb-4">Jascayd 10mg intake in progress</p>
+          <p className="text-sm text-slate-600 mt-0.5 mb-4">Jascayd 18mg intake in progress</p>
           <CaseStateBar />
         </div>
       </div>

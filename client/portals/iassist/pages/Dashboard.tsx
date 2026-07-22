@@ -31,7 +31,7 @@ import IAssistHeader from "../components/IAssistHeader";
 // the time the wizard reaches Medication Details, instead of defaulting to
 // whatever's first in the dropdown.
 const COMMONLY_PRESCRIBED = [
-  { medication: MEDICATION_OPTIONS[0], label: "Assistivan", color: IASSIST_TEAL },
+  { medication: MEDICATION_OPTIONS[0], label: "Jascayd", color: IASSIST_TEAL },
   { medication: MEDICATION_OPTIONS[1], label: "ASSISTIMAB", color: "#2563EB" },
   { medication: MEDICATION_OPTIONS[3], label: "Voloxivan", color: "#7C3AED" },
 ];

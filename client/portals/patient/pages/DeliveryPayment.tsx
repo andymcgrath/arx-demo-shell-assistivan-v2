@@ -155,7 +155,7 @@ export default function DeliveryPayment() {
                   {breakdown && (
                     <div className="mt-2 p-3 rounded-lg text-xs space-y-1 bg-arx-neutral-100 text-arx-body-copy">
                       <div className="flex justify-between">
-                        <span>CoAssist Self-Pay (0.8 mg starter)</span>
+                        <span>CoAssist Self-Pay (9 mg starter)</span>
                         <span>$149.00</span>
                       </div>
                       <div className="flex justify-between">

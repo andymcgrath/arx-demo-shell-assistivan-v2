@@ -37,7 +37,7 @@ export default function CopayEnroll() {
                 <Sparkles className="w-5 h-5 text-arx-primary" />
               </div>
               <div>
-                <p className="font-bold text-xl text-arx-slate">Assistivan Copay Program</p>
+                <p className="font-bold text-xl text-arx-slate">Jascayd Copay Program</p>
                 <p className="text-2xl font-bold mt-0.5 text-arx-primary">
                   As low as $25<span className="text-sm font-semibold">/month</span>
                 </p>
@@ -63,7 +63,7 @@ export default function CopayEnroll() {
               <ArrowRight className="w-4 h-4" />
             </button>
             <p className="text-[10px] mt-3 leading-relaxed text-arx-body-copy">
-              Government insurance beneficiaries (Medicare, Medicaid, VA, TRICARE) are not eligible for the Assistivan Copay Program. Terms and conditions apply.
+              Government insurance beneficiaries (Medicare, Medicaid, VA, TRICARE) are not eligible for the Jascayd Copay Program. Terms and conditions apply.
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function CopayEnroll() {
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <h2 className="text-xl font-bold mb-1 text-arx-slate">Your savings options</h2>
             <p className="text-sm mb-5 text-arx-body-copy">
-              Choose the option that works best for you to reduce your out-of-pocket cost for Assistivan.
+              Choose the option that works best for you to reduce your out-of-pocket cost for Jascayd.
             </p>
 
             {/* Option 1: Savings Card */}
@@ -88,7 +88,7 @@ export default function CopayEnroll() {
                   <CreditCard className="w-5 h-5 text-arx-primary" />
                 </div>
                 <div>
-                  <p className="font-bold text-base text-arx-slate">Assistivan Savings Card</p>
+                  <p className="font-bold text-base text-arx-slate">Jascayd Savings Card</p>
                   <p className="text-2xl font-bold mt-0.5 text-arx-primary">
                     As low as $25<span className="text-sm font-semibold">/month</span>
                   </p>
@@ -96,7 +96,7 @@ export default function CopayEnroll() {
               </div>
               <ul className="space-y-1.5 mb-4">
                 {[
-                  "Requires commercial drug insurance that covers Assistivan",
+                  "Requires commercial drug insurance that covers Jascayd",
                   "Valid for 1-month, 2-month, or 3-month fills",
                   "Free to enroll — no additional fees",
                 ].map((item) => (
@@ -129,9 +129,8 @@ export default function CopayEnroll() {
               {/* Dose pricing table */}
               <div className="mb-4 rounded-lg overflow-hidden border border-arx-borders">
                 {[
-                  { dose: "0.8 mg (starter)", price: "$149/mo" },
-                  { dose: "2.5 mg", price: "$199/mo" },
-                  { dose: "5.5 mg – 17.2 mg", price: "$299/mo" },
+                  { dose: "9 mg (starter)", price: "$149/mo" },
+                  { dose: "18 mg (maintenance)", price: "$199/mo" },
                 ].map((row, i, arr) => (
                   <div
                     key={row.dose}
@@ -165,7 +164,7 @@ export default function CopayEnroll() {
             </div>
 
             <p className="text-[10px] mt-3 leading-relaxed text-arx-body-copy">
-              Government insurance beneficiaries (Medicare, Medicaid, VA, TRICARE) are not eligible for the Assistivan Savings Card. Terms and conditions apply.
+              Government insurance beneficiaries (Medicare, Medicaid, VA, TRICARE) are not eligible for the Jascayd Savings Card. Terms and conditions apply.
             </p>
           </div>
 

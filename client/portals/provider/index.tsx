@@ -1157,7 +1157,7 @@ function CoaProviderExperience({
 // "Most common" pins the top of the list; everything else is alphabetical
 // below a divider. Names reuse the ones already established elsewhere in
 // this demo (CRM/iAssist medication cards) where they exist.
-const MEDICATION_MOST_COMMON = ["Assistivan", "Assistimab", "Ramoni", "Voloxivan"];
+const MEDICATION_MOST_COMMON = ["Jascayd", "Assistimab", "Ramoni", "Voloxivan"];
 const MEDICATION_OTHERS = ["Aficamten", "Assistivox", "Kelvara", "Nolrivex", "Zylodine"];
 
 function MedicationOption({
@@ -1591,13 +1591,6 @@ interface PatientRow {
   statusColor: "success" | "warning" | "error";
 }
 
-interface RenewalItem {
-  id: string;
-  patient: string;
-  reach: string;
-  date: number;
-  month: string;
-}
 
 const PATIENTS: PatientRow[] = [
   {
@@ -1605,7 +1598,7 @@ const PATIENTS: PatientRow[] = [
     name: "Laura Olson",
     dob: "DOB 04/10/1950",
     address: "8753 Carlton Dr. Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: "Jascayd",
     status: "PA Questions",
     statusColor: "warning",
   },
@@ -1650,7 +1643,7 @@ const PATIENTS: PatientRow[] = [
     name: "Eric Herr",
     dob: "DOB 04/10/1950",
     address: "348 Dominion Circle Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: "Jascayd",
     status: "Complete",
     statusColor: "success",
   },
@@ -1659,7 +1652,7 @@ const PATIENTS: PatientRow[] = [
     name: "Katherine Johnson",
     dob: "DOB 04/10/1950",
     address: "690 Northwest Blvd. #90 Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: "Jascayd",
     status: "Complete",
     statusColor: "success",
   },
@@ -1674,18 +1667,8 @@ const PATIENTS: PatientRow[] = [
   },
 ];
 
-const RENEWALS: RenewalItem[] = [
-  { id: "1", patient: "Teri Hatcher", reach: "Reauth: Volixivan", date: 28, month: "APR" },
-  { id: "2", patient: "Dennis Johnson", reach: "Reauth: Assistimab", date: 29, month: "APR" },
-  { id: "3", patient: "Mitch Gruemmer", reach: "Reauth: Assistimab", date: 2, month: "MAY" },
-  { id: "4", patient: "Betty White", reach: "Reauth: Ramoni", date: 10, month: "MAY" },
-  { id: "5", patient: "Nancy Blank", reach: "Reauth: Ramoni", date: 12, month: "MAY" },
-  { id: "6", patient: "Steve Brown", reach: "Reauth: Ramoni", date: 13, month: "MAY" },
-  { id: "7", patient: "Sherrie Park", reach: "Reauth: Ramoni", date: 14, month: "MAY" },
-];
-
 const MEDICATIONS = [
-  { name: "Assistivan", action: "Start" },
+  { name: "Jascayd", action: "Start" },
   { name: "Assistimab", action: "Start" },
   { name: "Assistivox", action: "Start" },
 ];
@@ -1938,27 +1921,6 @@ function IAssistDashboard() {
               </div>
             </div>
           </div>
-
-          {/* Upcoming Section */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-normal text-neutral-800 mb-4">Upcoming Renewals</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {RENEWALS.map((renewal) => (
-                <div key={renewal.id} className="border border-neutral-300 rounded p-4 hover:shadow-md transition">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-teal-600 text-white rounded px-3 py-2 text-center min-w-12">
-                      <p className="font-bold text-sm">{renewal.date}</p>
-                      <p className="text-xs font-bold">{renewal.month}</p>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-sm text-neutral-800">{renewal.patient}</p>
-                      <p className="text-xs text-neutral-500">{renewal.reach}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -2182,7 +2144,7 @@ export default function ProviderPortal() {
   // stays the original generic "Recent Submissions" screen for those flows.
   if (providerPACompleted) {
     const primaryData = {
-      rxName: "Assistivan Prior Authorization",
+      rxName: "Jascayd Prior Authorization",
       status: paStatus === "approved" ? "Approved" : "Pending",
       statusColor: paStatus === "approved" ? "#D1E7F5" : "#FEF3C7",
       statusTextColor: paStatus === "approved" ? "#0555B0" : "#92400E",
@@ -2216,7 +2178,7 @@ export default function ProviderPortal() {
       },
       {
         name: "Maria Garcia",
-        rxName: "Assistivan Income Verification",
+        rxName: "Jascayd Income Verification",
         timestamp: "Submitted 3 days ago",
         status: "Verified",
         statusColor: "#D1E7F5",

@@ -64,7 +64,7 @@ const PRICING_OPTIONS: PricingOption[] = [
   {
     key: "self_pay",
     icon: Sparkles,
-    label: "Assistivan Copay Program",
+    label: "Jascayd Copay Program",
     price: 25,
     cadence: "/month",
     description: `Pay a reduced price by filling through the CoAssist Pharmacy — no separate insurance approval needed for this option.`,

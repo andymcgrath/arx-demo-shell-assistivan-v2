@@ -18,12 +18,12 @@
  */
 
 export const MANUFACTURER = {
-  name: "CoAssist",
+  name: "Boehringer Ingelheim",
   tagline: "Patient assistance & medication access program",
   logo: {
-    colors: "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
-    requiresFilter: true,
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+    colors: "/branding/boehringer-logo-colors.png",
+    requiresFilter: false,
+    white: "/branding/boehringer-logo-white.png",
   },
   support: {
     label: "Technical Help",
@@ -39,20 +39,21 @@ export const MANUFACTURER = {
 };
 
 export const PROGRAM = {
-  name: "Assistivan",
-  drugDisplayName: "Assistivan",
-  description: "0.8 mg · 30-day supply",
+  name: "Jascayd",
+  drugDisplayName: "Jascayd",
+  description: "18 mg · nerandomilast tablets",
   logo: {
     // Transparent background, brand-colored — use on white/light backgrounds
-    colors: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
+    colors: "/branding/jascayd-logo-colors.png",
     // Transparent background, all white — use on teal/dark backgrounds
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+    white: "/branding/jascayd-logo-white.png",
   },
   colors: {
     // Applied to --arx-primary, --arx-primary-dark, --arx-primary-80 in global.css
-    primary: "#007178",
-    primaryDark: "#005a5f",
-    primaryLight: "#338D93",
+    // Source: official JASCAYD / Boehringer Ingelheim brand palette (2023 Interbrand rebrand)
+    primary: "#215048", // Forest-mid
+    primaryDark: "#08312A", // Forest (hero backgrounds, navbars)
+    primaryLight: "#507A76", // Forest-light
   },
 };
 

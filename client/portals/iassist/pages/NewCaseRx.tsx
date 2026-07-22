@@ -8,7 +8,7 @@
  * Back/Next preserve answers (see that store's file header).
  *
  * Medication/NDC/ICD-10 summary values are still the spec's own placeholder
- * design content (fictional "Assistivan" product line, generic ICD-10
+ * design content (fictional "Jascayd" product line, generic ICD-10
  * example) — not real patient data. Prescriber now reflects Step 1's actual
  * selection, and Shipping Information defaults from Step 1's patient
  * address + prescriber instead of being blank free text.

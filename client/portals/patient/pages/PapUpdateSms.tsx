@@ -55,7 +55,7 @@ export default function PapUpdateSms() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              There's an update on your Assistivan Patient Assistance Program application. Tap to continue:
+              There's an update on your Jascayd Patient Assistance Program application. Tap to continue:
             </p>
             <button
               onClick={handleTapMessage}

@@ -716,7 +716,7 @@ export default function DemoShell() {
         // CoAssist (AssistRx's own specialty pharmacy, see
         // NewCaseMedication.tsx's STANDARD_PHARMACY_OPTIONS), and a real
         // walkthrough of the post-PA-approval scheduling chain lands on the
-        // same CoAssist Pharmacy whenever the patient picks the Assistivan
+        // same CoAssist Pharmacy whenever the patient picks the Jascayd
         // Copay Program option. The stage-jump ladder should land on the
         // identical pharmacy, not a different placeholder (previously
         // "Accredo Health Group Inc.", copy-pasted from WF1's ladder below).

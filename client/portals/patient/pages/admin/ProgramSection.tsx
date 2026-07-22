@@ -29,7 +29,7 @@ export default function ProgramSection({ data, onChange }: Props) {
         <Field label="Program Name" value={data.name} onChange={v => set("name", v)} />
         <Field label="Drug Display Name" value={data.drugDisplayName} onChange={v => set("drugDisplayName", v)} />
       </div>
-      <Field label="Description" value={data.description} onChange={v => set("description", v)} placeholder="e.g. 0.8 mg · 30-day supply" />
+      <Field label="Description" value={data.description} onChange={v => set("description", v)} placeholder="e.g. 18 mg · 30-day supply" />
 
       <div className="grid grid-cols-2 gap-4">
         <LogoPicker

@@ -14,7 +14,7 @@
  * visual consistency across dashboards — that file's own local list is left
  * untouched on purpose, so this doesn't risk changing WF4's appearance.
  *
- * "medication" here means the drug (e.g. Assistivan) — not to be confused
+ * "medication" here means the drug (e.g. Jascayd) — not to be confused
  * with CoAssist, which is the dispensing pharmacy, not a medication.
  *
  * hasActiveRx: false means "known patient, no prescription on file yet."
@@ -45,14 +45,14 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "keanu-reeves",
     name: "Keanu Reeves",
     dob: "09/02/1964",
-    medication: "Assistivan",
+    medication: "Jascayd",
     hasActiveRx: false,
   },
   {
     id: "laura-olson",
     name: "Laura Olson",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: "Jascayd",
     hasActiveRx: true,
     status: { label: "PA Questions", color: "warning", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] },
   },
@@ -92,7 +92,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "eric-herr",
     name: "Eric Herr",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: "Jascayd",
     hasActiveRx: true,
     status: { label: "Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] },
   },
@@ -100,7 +100,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "katherine-johnson",
     name: "Katherine Johnson",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: "Jascayd",
     hasActiveRx: true,
     status: { label: "Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] },
   },
