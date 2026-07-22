@@ -24,8 +24,8 @@ const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = 
 // fill, Mail Order is 90-day). Copay/self_pay keeps the standard starter
 // dose/supply shown elsewhere in the Copay flow.
 const COA_SUPPLY_BY_OPTION: Record<string, string> = {
-  retail: "1.0 mg Dose · 30-day supply",
-  mail_order: "1.0 mg Dose · 90-day supply",
+  retail: "18 mg Dose · 30-day supply",
+  mail_order: "18 mg Dose · 90-day supply",
   self_pay: PROGRAM.description,
 };
 

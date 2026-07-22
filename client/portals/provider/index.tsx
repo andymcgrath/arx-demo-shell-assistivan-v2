@@ -1458,7 +1458,7 @@ function CoaRxForm({
   onSend: () => void;
   onBack: () => void;
 }) {
-  const [dosage, setDosage] = useState("0.5 mg");
+  const [dosage, setDosage] = useState("9 mg");
   const [refills, setRefills] = useState("3");
   // Local to this screen on purpose — not written back to usePatientStore.
   // That store is the single active patient identity shared by every flow
@@ -1489,7 +1489,7 @@ function CoaRxForm({
           <div style={{ flex: "1 1 240px", marginBottom: 24 }}>
             <p className="pa-question__text">Dosage</p>
             <div className="pa-question__options">
-              {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
+              {["9 mg", "18 mg"].map((d) => (
                 <label key={d} className="pa-radio-option">
                   <button
                     type="button"
