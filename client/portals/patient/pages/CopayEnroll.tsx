@@ -129,8 +129,8 @@ export default function CopayEnroll() {
               {/* Dose pricing table */}
               <div className="mb-4 rounded-lg overflow-hidden border border-arx-borders">
                 {[
-                  { dose: "9 mg (starter)", price: "$149/mo" },
-                  { dose: "18 mg (maintenance)", price: "$199/mo" },
+                  { dose: "9 mg", price: "$149/mo" },
+                  { dose: "18 mg", price: "$199/mo" },
                 ].map((row, i, arr) => (
                   <div
                     key={row.dose}

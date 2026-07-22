@@ -6,15 +6,15 @@
 
 @layer base {
   /**
-   * AssistRx / iAssist Design System
+   * AssistRx / Jascayd Design System
    * Brand design tokens aligned with Figma design files
    */
   :root {
     /* ─── Brand Colors ─── */
-    /* Primary Forest Green (Jascayd / Boehringer Ingelheim) */
-    --arx-primary: 170 42% 22%;         /* #215048 */
-    --arx-primary-80: 174 21% 40%;      /* #507A76 - 80% tint */
-    --arx-primary-30: 173 18% 61%;      /* #8AAEAA - 30% tint */
+    /* Primary Forest Green (Jascayd) */
+    --arx-primary: 160 42% 22%;         /* #205048 */
+    --arx-primary-80: 160 38% 38%;      /* #3a6f68 - 80% tint */
+    --arx-primary-30: 160 36% 65%;      /* #80a99a - 30% tint */
 
     /* Secondary Sea Blue */
     --arx-secondary: 197 51% 38%;       /* #297896 */
@@ -23,14 +23,14 @@
     --arx-sky: 181 57% 87%;             /* #ADE2E3 */
 
     /* ─── Neutrals ─── */
-    --arx-slate: 300 1% 25%;            /* #414042 - Dark text / headings */
-    --arx-body-copy: 214 4% 37%;        /* #5A5D61 - Body text (darkened for WCAG AA on grey backgrounds) */
+    --arx-slate: 0 0% 0%;              /* #000000 - Pure black text / headings */
+    --arx-body-copy: 0 0% 0%;          /* #000000 - Pure black body text */
     --arx-neutral-800: 0 0% 11%;        /* #1D1D1D */
     --arx-neutral-100: 0 0% 97%;        /* #F8F8F8 */
     --arx-neutral-000: 0 0% 100%;       /* #FFFFFF */
 
     /* ─── Functional ─── */
-    --arx-primary-dark: 170 72% 11%;    /* #08312A - Darker forest green for accessible hover states */
+    --arx-primary-dark: 160 50% 16%;    /* #0d3835 - Darker forest green for accessible hover states */
     --arx-errors: 0 79% 47%;            /* #DB1616 */
     --arx-orange: 33 87% 51%;           /* #EF8A13 */
     --arx-links: 209 70% 43%;           /* #2171B8 */
@@ -49,7 +49,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 300 1% 25%;
 
-    --primary: 170 42% 22%;
+    --primary: 160 42% 22%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 197 51% 38%;
@@ -66,7 +66,7 @@
 
     --border: 0 0% 88%;
     --input: 0 0% 88%;
-    --ring: 183 100% 22%;
+    --ring: 160 42% 22%;
 
     --radius: 0.5rem;
   }
