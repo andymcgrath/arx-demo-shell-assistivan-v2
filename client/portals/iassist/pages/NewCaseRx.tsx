@@ -70,7 +70,7 @@ export default function NewCaseRx() {
   // Prescriber reflects Step 1's actual selection; medication/NDC/ICD-10
   // summary values are still the spec's own placeholder content.
   const prescriber = `1234567890, ${prescriberNameById(patient.prescriber) || "Sarah Chen, MD"}`;
-  const medicationName = "ASSISTIVAN 80 UNIT/ML INJECTION GEL 5 ML";
+  const medicationName = "JASCAYD 18 MG ORAL TABLET 100 EA NDC 123456789";
   const ndc = "123456789";
   const icd10 = "270.0: Nephrotic Syndrome";
   const icd10Skipped = !icd10;

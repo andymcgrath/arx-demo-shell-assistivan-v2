@@ -2077,9 +2077,21 @@ export default function ProviderPortal() {
   // lock screen. Guarded to `step === 'login'` so this can only ever move
   // the provider forward from the resting lock screen, never yank them back
   // once they've clicked past it (into pa-questions/pa-submitted).
+  //
+  // hasAutoShownEmailRef makes that guard fire-once instead of
+  // re-triggerable: biStatus/paStatus don't change when the provider clicks
+  // the email's "HERE" link (that only calls setStep('login') to move on to
+  // LoginStep), so without this ref the effect's condition — still true —
+  // fired again on that very next render and bounced step straight back to
+  // 'email', making the link look dead. Reset alongside step on a workflow
+  // reset so the auto-advance can fire again next time BI completes.
+  const hasAutoShownEmailRef = useRef(false);
+
   useEffect(() => {
     if (storeFlowType !== 'Fax_QS_PA_Approved') return;
+    if (hasAutoShownEmailRef.current) return;
     if (biStatus === 'complete' && paStatus === 'none' && step === 'login') {
+      hasAutoShownEmailRef.current = true;
       setStep('email');
     }
   }, [storeFlowType, biStatus, paStatus, step]);
@@ -2095,6 +2107,7 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
+    hasAutoShownEmailRef.current = false;
     setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'login');
   }, [resetNonce, storeFlowType]);
 
