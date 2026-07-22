@@ -42,6 +42,14 @@ export const usePatientStore = create<PatientStore>()(
     {
       name: 'arx-patient-identity',
       storage: createJSONStorage(() => sessionStorage),
+      // Bumped for the Boehringer/Jascayd rebrand: any tab with a
+      // pre-rebrand snapshot in sessionStorage (drugName: "Assistivan")
+      // would otherwise keep rehydrating that stale value forever — no
+      // reset action in the app touches this store, only demoStore's own
+      // state, so the old drug name could outlive every other branding
+      // fix. A version mismatch makes zustand discard the stale snapshot
+      // and fall back to the current PATIENT_SEED instead of merging it.
+      version: 1,
     }
   )
 );
