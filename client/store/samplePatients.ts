@@ -2,12 +2,12 @@
  * Sample Patients — shared roster for read-only dashboard demos.
  *
  * This is NOT the active patient identity used by live flow screens (that's
- * usePatientStore, a single Keanu Reeves record shared across every portal).
+ * usePatientStore, a single Keanu Dixon record shared across every portal).
  * This is a decoy roster for dashboards that need to *look* like a real
  * caseload — e.g. a "Patients" table you can search/filter — while only one
- * entry (Keanu Reeves) is actually wired to the rest of the demo.
+ * entry (Keanu Dixon) is actually wired to the rest of the demo.
  *
- * Keanu Reeves here intentionally matches PATIENT_SEED in patientStore.ts
+ * Keanu Dixon here intentionally matches PATIENT_SEED in patientStore.ts
  * (same DOB, same drug) so search results and the record you click through
  * agree with each other. Decoy names/medications/statuses are reused from
  * the WF4 IAssistDashboard roster (client/portals/provider/index.tsx) for
@@ -42,8 +42,8 @@ export interface SamplePatient {
 
 export const SAMPLE_PATIENTS: SamplePatient[] = [
   {
-    id: "keanu-reeves",
-    name: "Keanu Reeves",
+    id: "keanu-dixon",
+    name: "Keanu Dixon",
     dob: "09/02/1964",
     medication: "Assistivan",
     hasActiveRx: false,

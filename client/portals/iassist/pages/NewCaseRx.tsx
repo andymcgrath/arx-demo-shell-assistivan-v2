@@ -94,7 +94,7 @@ export default function NewCaseRx() {
 
   // Completing (or skipping) the last wizard step is this demo's stand-in for
   // "case submitted" — dispatching ENROLL flips the live-wired sample patient
-  // (Keanu Reeves) out of enrollmentStatus "none" so he surfaces on the
+  // (Keanu Dixon) out of enrollmentStatus "none" so he surfaces on the
   // Dashboard's active-patient list, same event CoaRxForm's onSend dispatches
   // on WF3 (client/portals/provider/index.tsx). Resetting the wizard after
   // submit keeps the next case from inheriting this one's answers.

@@ -21,7 +21,7 @@ import { PATIENT_SEED } from "./patientStore";
  * navigation is fine.
  */
 
-/** "Keanu Reeves" -> { first: "Keanu", last: "Reeves" } */
+/** "Keanu Dixon" -> { first: "Keanu", last: "Dixon" } */
 function splitName(fullName: string) {
   const [first, ...rest] = fullName.trim().split(/\s+/);
   return { first: first ?? "", last: rest.join(" ") };

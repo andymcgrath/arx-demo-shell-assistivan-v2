@@ -16,12 +16,12 @@ export interface PatientIdentity {
 }
 
 export const PATIENT_SEED: PatientIdentity = {
-  patientName: "Keanu Reeves",
+  patientName: "Keanu Dixon",
   patientDob: "09/02/1964",
   drugName: "Assistivan",
   rxNumber: "40002500",
   phone: "(555) 310-4200",
-  email: "keanu.reeves@email.com",
+  email: "keanu.dixon@email.com",
   payer: "Commercial",
   caseNumber: "00056249",
   npi: "1234567890",

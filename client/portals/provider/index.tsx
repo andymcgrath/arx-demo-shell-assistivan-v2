@@ -975,7 +975,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 // The search box filters the visible Patients table directly rather than a
 // dropdown overlay, since the point here is "type until only the patient you
 // want remains, then click their row" — matching the fact that only one row
-// (Keanu Reeves) is actually wired to real patient data via usePersonaState.
+// (Keanu Dixon) is actually wired to real patient data via usePersonaState.
 //
 // Only patients with an active Rx show up by default — Keanu starts with
 // none (CoaRxForm is what creates his eRx), so he's hidden from the default
