@@ -2178,8 +2178,27 @@ export default function ProviderPortal() {
   }
 
   // Show dashboard when PA is completed. CoA_DTP already returned above via
-  // CoaProviderExperience, so flowType here is always WF1/WF2/WF4 — this
-  // stays the original generic "Recent Submissions" screen for those flows.
+  // CoaProviderExperience, so flowType here is always WF1/WF2/WF4.
+  //
+  // WF1 (Fax_QS_PA_Approved) now matches WF3's post-PA behavior exactly —
+  // same iAssist Dashboard (client/portals/iassist/pages/Dashboard.tsx),
+  // same live Keanu-Dixon-row status lookup, same click-through — instead
+  // of the plain "Recent Submissions" table below. That table's decoy rows
+  // (Sarah Mitchell/Assistimab, James Chen/Ramoni, Maria Garcia/Jascayd
+  // Income Verification, David Chen/Assistimab) don't exist in
+  // Dashboard.tsx's own SAMPLE_PATIENTS roster, so switching flows loses
+  // them — same tradeoff CoA_DTP already made for this identical swap.
+  //
+  // WF2 (Fax_PAP_Audit) wasn't part of this request and keeps the original
+  // "Recent Submissions" screen below.
+  if (providerPACompleted && flowType === "Fax_QS_PA_Approved") {
+    return (
+      <PortalRouter initialPath="/">
+        <IAssistDashboardPage />
+      </PortalRouter>
+    );
+  }
+
   if (providerPACompleted) {
     const primaryData = {
       rxName: "Assistivan Prior Authorization",
