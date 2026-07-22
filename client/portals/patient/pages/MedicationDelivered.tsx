@@ -29,7 +29,7 @@ export default function MedicationDelivered() {
 
             <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">It's time to get ready for your first dose.</p>
             <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-              Before starting, review the step-by-step guide to learn how to store, prepare, and take Assistivan safely.
+              Before starting, review the step-by-step guide to learn how to store, prepare, and take Jascayd safely.
             </p>
 
             <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">
@@ -78,7 +78,7 @@ export default function MedicationDelivered() {
                 className="w-full h-40 object-cover"
               />
               <div className="p-5">
-                <h4 className="text-lg font-bold mb-2 text-arx-slate">What makes Assistivan different?</h4>
+                <h4 className="text-lg font-bold mb-2 text-arx-slate">What makes Jascayd different?</h4>
                 <p className="text-sm leading-relaxed mb-4 text-arx-body-copy">
                   We know everybody has a unique journey and experience — but sometimes it helps to hear from someone like you.
                 </p>

@@ -18,12 +18,12 @@
  */
 
 export const MANUFACTURER = {
-  name: "CoAssist",
+  name: "Boehringer Ingelheim",
   tagline: "Patient assistance & medication access program",
   logo: {
-    colors: "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
+    colors: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fc247a0ae707a47099e0b22c5536915bd",
     requiresFilter: true,
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fbc31c9697b2a49dfb0c47fd5127c6435",
   },
   support: {
     label: "Technical Help",
@@ -39,20 +39,20 @@ export const MANUFACTURER = {
 };
 
 export const PROGRAM = {
-  name: "Assistivan",
-  drugDisplayName: "Assistivan",
-  description: "0.8 mg · 30-day supply",
+  name: "Jascayd",
+  drugDisplayName: "Jascayd",
+  description: "9 mg · 18 mg tablets",
   logo: {
     // Transparent background, brand-colored — use on white/light backgrounds
-    colors: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
+    colors: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2F097a28baebb84d83a013b3d2c73a6e77",
     // Transparent background, all white — use on teal/dark backgrounds
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd29046caf29c459a83dce15ccb37bf3a",
   },
   colors: {
     // Applied to --arx-primary, --arx-primary-dark, --arx-primary-80 in global.css
-    primary: "#007178",
-    primaryDark: "#005a5f",
-    primaryLight: "#338D93",
+    primary: "#205048",
+    primaryDark: "#0d3835",
+    primaryLight: "#3a6f68",
   },
 };
 
