@@ -17,7 +17,7 @@
  * Fields live in caseWizardStore (Zustand + sessionStorage), same pattern as
  * patientStore.ts, so the wizard's Back button doesn't throw away answers
  * (see that store's file header for the fuller rationale). Name/DOB/phone/
- * email/address default from PATIENT_SEED (Keanu Reeves) so this step shows
+ * email/address default from PATIENT_SEED (Keanu Dixon) so this step shows
  * the same patient the user just searched for / selected on the Dashboard.
  */
 import { useRef, useState } from "react";

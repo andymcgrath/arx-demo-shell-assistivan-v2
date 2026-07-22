@@ -11,7 +11,7 @@
  * (Medications section, Upcoming renewals list, floating chat button) has
  * been replaced — none of that exists in CoaDashboard.
  *
- * Only one roster row (Keanu Reeves) is backed by the live workflow actor,
+ * Only one roster row (Keanu Dixon) is backed by the live workflow actor,
  * same as CoA — everyone else is static decoy data from ../data/samplePatients.
  */
 import { useState } from "react";
@@ -95,7 +95,7 @@ export default function Dashboard() {
   const activeStatus = deriveActivePatientStatus(workflowData);
 
   const patients = SAMPLE_PATIENTS.map((p) =>
-    p.id === "keanu-reeves" && activeStatus
+    p.id === "keanu-dixon" && activeStatus
       ? { ...p, hasActiveRx: true, status: activeStatus }
       : p
   );
@@ -109,7 +109,7 @@ export default function Dashboard() {
 
   // Once Keanu has an active Rx, he surfaces at the top of the list.
   const sortedPatients = [...visiblePatients].sort((a, b) =>
-    a.id === "keanu-reeves" ? -1 : b.id === "keanu-reeves" ? 1 : 0
+    a.id === "keanu-dixon" ? -1 : b.id === "keanu-dixon" ? 1 : 0
   );
 
   return (
