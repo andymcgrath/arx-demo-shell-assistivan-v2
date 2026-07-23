@@ -2164,9 +2164,19 @@ export default function ProviderPortal() {
   // Dashboard.tsx's own SAMPLE_PATIENTS roster, so switching flows loses
   // them — same tradeoff CoA_DTP already made for this identical swap.
   //
+  // Deliberately keyed on paStatus, not providerPACompleted — same
+  // reasoning as CoA_DTP's identical check above. providerPACompleted only
+  // flips when the provider clicks "Done" on the PA Submitted screen
+  // themselves (see handleDone below), so jumping straight to this stage
+  // via the Reset dropdown, or approving PA from the CRM tab instead, would
+  // otherwise leave the provider stuck on the login lock screen — the exact
+  // opposite of what makes it easy to demo the dashboard staying in sync
+  // with stage updates. paStatus is durable and persists across
+  // remounts/tab switches regardless of how the PA got there.
+  //
   // WF2 (Fax_PAP_Audit) wasn't part of this request and keeps the original
   // "Recent Submissions" screen below.
-  if (providerPACompleted && flowType === "Fax_QS_PA_Approved") {
+  if (paStatus !== 'none' && flowType === "Fax_QS_PA_Approved") {
     return (
       <PortalRouter initialPath="/">
         <IAssistDashboardPage />
