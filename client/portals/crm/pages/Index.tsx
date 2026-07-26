@@ -721,7 +721,10 @@ export default function Index() {
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
   const closeEnrollmentFormTab = useDemoStore((s) => s.closeEnrollmentFormTab);
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
-  const isPapFlow = flowType === "Fax_PAP_Audit";
+  // PrES_PAP (WF5) is included here so CRM renders identically to WF2 for
+  // this flow, per the WF5 foundation request — its own differentiated
+  // capture happens elsewhere (Provider/Patient portals), not in CRM.
+  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   const isCoaFlow = flowType === "CoA_DTP";
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see

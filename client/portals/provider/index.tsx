@@ -1079,6 +1079,52 @@ function PrescriptionsIdlePanel({
 // the only place that mounts EhrChartShell, and it's only ever rendered when
 // flowType === "CoA_DTP" (see the isCoA branch in ProviderPortal below) — so
 // none of this reaches WF1/WF2/WF4.
+// ── WF5 (PrES_PAP) provider experience — foundation placeholder ────────────
+//
+// Stands in for whatever WF5's real provider-facing PrES (e-signature)
+// intake screen turns out to be. Isolated to its own component (not folded
+// into the generic WF1/WF2 chain above, and not touching CoaProviderExperience/
+// IAssistDashboard) so replacing it later can't affect any other flow.
+function PresPapProviderExperience({ workflowData }: { workflowData: WorkflowData }) {
+  const patientName = usePatientStore((s) => s.patientName);
+  const drugName = usePatientStore((s) => s.drugName);
+
+  return (
+    <div className="provider-portal">
+      <BrandSidebar isBranded={false} />
+      <main className="provider-content">
+        <div style={{ padding: "40px 20px", maxWidth: 720, margin: "0 auto" }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1C1C", marginBottom: 8 }}>
+            Provider Portal
+          </h1>
+          <p style={{ fontSize: 14, color: "#6F7276", marginBottom: 32 }}>
+            Workflow 5 — PrES / PAP (foundation placeholder)
+          </p>
+
+          <div style={{
+            backgroundColor: "#FFFFFF",
+            border: "1px dashed #D1D5DB",
+            borderRadius: 12,
+            padding: 24,
+          }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1C", marginBottom: 8 }}>
+              {patientName} — {drugName}
+            </p>
+            <p style={{ fontSize: 13, color: "#6F7276", lineHeight: 1.6 }}>
+              This screen stands in for WF5's real provider e-signature intake,
+              which hasn't been designed yet. It exists so this workflow is
+              isolated and reachable end-to-end today — CRM behaves the same
+              as WF2's PAP flow, and the patient portal has its own
+              placeholder e-signature step (PesSignature.tsx). Replace this
+              component's contents once the real design lands.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function CoaProviderExperience({
   step,
   setStep,
@@ -2081,6 +2127,11 @@ export default function ProviderPortal() {
   const patientName = usePatientStore((s) => s.patientName);
   const isBranded = isBrandedFlow(flowType);
   const isCoA = flowType === "CoA_DTP";
+  // WF5 (PrES_PAP) foundation placeholder — gets its own dedicated provider
+  // screen instead of falling into the generic WF1/WF2 "Recent Submissions"
+  // chain below, since WF5's real provider-facing PrES intake design hasn't
+  // landed yet. See PresPapProviderExperience.
+  const isPres = flowType === "PrES_PAP";
   const biStatus = workflowData.biStatus;
 
   const storeFlowType = useDemoStore((s) => s.flowType);
@@ -2138,6 +2189,10 @@ export default function ProviderPortal() {
 
   if (isBranded) {
     return <IAssistDashboard />;
+  }
+
+  if (isPres) {
+    return <PresPapProviderExperience workflowData={workflowData} />;
   }
 
   // CoA_DTP gets its own dedicated render path — the full Heroic EHR chart

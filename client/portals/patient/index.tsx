@@ -52,6 +52,7 @@ import Index from "./pages/Index";
 import ConfirmDetails from "./pages/ConfirmDetails";
 import Consent from "./pages/Consent";
 import Signature from "./pages/Signature";
+import PesSignature from "./pages/PesSignature";
 import UploadInsurance from "./pages/UploadInsurance";
 import EnrollmentComplete from "./pages/EnrollmentComplete";
 import PAStatus from "./pages/PAStatus";
@@ -139,6 +140,7 @@ function PatientRoutes() {
           <Route path="/confirm-details"       element={<ConfirmDetails />} />
           <Route path="/consent"               element={<Consent />} />
           <Route path="/signature"             element={<Signature />} />
+          <Route path="/pres-signature"        element={<PesSignature />} />
           <Route path="/upload-insurance"      element={<UploadInsurance />} />
           <Route path="/enrollment-complete"   element={<EnrollmentComplete />} />
           <Route path="/pa-status"             element={<PAStatus />} />

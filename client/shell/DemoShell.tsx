@@ -91,6 +91,10 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // switching to this flow, resetting it, or deep-linking via /iassist
   // should land on.
   iAssist_PA_Approved: "iassist",
+  // WF5 follows WF2's shape (see presPap.ts) so it opens on CRM too — unlike
+  // WF2, its provider tab stays visible (see getPortals below) since WF5 has
+  // its own provider-facing PrES intake placeholder.
+  PrES_PAP: "crm",
 };
 
 function getProviderPortalLabel(flowType: string): string {
@@ -114,10 +118,14 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 
 function getPortals(flowType: string) {
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
+  // provider-facing PrES intake placeholder (see provider/index.tsx's
+  // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
+  // has no provider screen at all.
   const isPapFlow = flowType === "Fax_PAP_Audit";
 
   return PORTALS_BASE.filter(p => {
-    // Show provider for workflows 1 and 3, hide for workflow 4 (iAssist —
+    // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
     // (Fax_PAP_Audit never requires a traditional PA, so there's no
     // provider-facing screen for this flow at all — see isPapFlow's use
@@ -320,7 +328,7 @@ function StepBar() {
   const biStatus        = workflowData.biStatus;
   const paStatus        = workflowData.paStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
-  const STEP_LABELS     = flowType === "Fax_PAP_Audit" ? STEP_LABELS_PAP_AUDIT
+  const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCoaFlow ? STEP_LABELS_COA
     : STEP_LABELS_DEFAULT;
   // These pulsing-ring decorations hardcode step positions. CoA_DTP's
@@ -338,7 +346,7 @@ function StepBar() {
   // this flow, see workflowMachine.ts's SEND_PAP_SMS comment), so that ring
   // guard is moot for WF2 either way.
   const biRunning       = biStatus === "running";
-  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
+  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit" && flowType !== "PrES_PAP";
   const rxInTransit     = pharmacyStatus === "processing";
   const rxProcessing    = pharmacyStatus === "ready";
   const rxShipping      = pharmacyStatus === "shipped";
@@ -566,7 +574,12 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 export default function DemoShell() {
   const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
-  const isPapFlow = flowType === "Fax_PAP_Audit";
+  // PrES_PAP (WF5) shares WF2's ladder here — its dedicated machine
+  // (presPap.ts) accepts the identical event sequence, so the same
+  // stage-jump steps apply. See STEP_LABELS_PAP_AUDIT/getPortals above for
+  // where WF5 intentionally does NOT follow WF2 (its provider tab stays
+  // visible).
+  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   const resetPatient = usePatientStore((s) => s.reset);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
@@ -1006,7 +1019,7 @@ export default function DemoShell() {
                   >
                     Reset All
                   </button>
-                  {(flowType === "Fax_PAP_Audit"
+                  {((flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP")
                     ? [
                       { stage: 1, label: "Referral Received" },
                       { stage: 2, label: "Patient Enrolled" },

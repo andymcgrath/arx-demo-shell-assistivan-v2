@@ -97,7 +97,7 @@ const MATERIAL_META: Record<string, MaterialMeta> = {
 function canAddItem(selectedId: string, consentStatus: string, workflowData: WorkflowData): boolean {
   if (selectedId === "pap-application-update") {
     return (
-      workflowData.flowType === "Fax_PAP_Audit" &&
+      (workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP") &&
       workflowData.biStatus === "complete" &&
       workflowData.biResult === "no_insurance" &&
       !workflowData.papSmsSent
@@ -533,7 +533,7 @@ export default function FulfilmentCenter() {
   const { data: patientCase, isLoading: caseLoading } = usePatientCase(CASE_ID);
   const enrollMutation = useEnrollPatient();
   const papUpdateMutation = useSendPapUpdate();
-  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
+  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
   const isPapUpdateItem = selectedItem === "pap-application-update";
   const activeMutation = isPapUpdateItem ? papUpdateMutation : enrollMutation;
 

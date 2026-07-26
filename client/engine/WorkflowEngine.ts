@@ -222,11 +222,13 @@ export function derivePatientRoute(state: MachineContext): string {
       workflowData.biStatus === 'none')
     return '/enrollment-complete';
 
-  // ── Fax_PAP_Audit (WF2/PAP): no traditional PA ──────────────────────
+  // ── Fax_PAP_Audit (WF2/PAP) and PrES_PAP (WF5): no traditional PA ────
   // BI completing with no_insurance leads into an FA eIncome check instead
   // of PA submission — paStatus stays 'none' for this flow forever, so this
   // branch has to run before the generic paStatus-driven checks below.
-  if (flowType === 'Fax_PAP_Audit') {
+  // WF5 (presPap.ts) reuses this same route chain as a foundation
+  // placeholder — its own capture screens/routes aren't designed yet.
+  if (flowType === 'Fax_PAP_Audit' || flowType === 'PrES_PAP') {
     // BI still running
     if (workflowData.biStatus !== 'complete') return '/enrollment-complete';
 
@@ -409,7 +411,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     return [];
   }
 
-  const isPapFlow = input.flowType === 'Fax_PAP_Audit';
+  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP';
 
   const items: LiveWorkItem[] = [
     {

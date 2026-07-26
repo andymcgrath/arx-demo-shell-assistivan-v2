@@ -2,10 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import { usePersonaState } from "@/engine/WorkflowProvider";
 
 export default function Consent() {
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
+  // PrES_PAP (WF5) foundation placeholder — its differentiated capture
+  // mechanism isn't designed yet, so for now it swaps in a dedicated
+  // placeholder signature page instead of reusing WF1/WF2/WF4's Signature.tsx.
+  // See client/portals/patient/pages/PesSignature.tsx.
+  const { workflowData } = usePersonaState('patient');
+  const isPresFlow = workflowData.flowType === "PrES_PAP";
+  const nextPath = isPresFlow ? "/pres-signature" : "/signature";
 
   return (
     <main className="flex-grow">
@@ -68,7 +76,7 @@ export default function Consent() {
           {/* Continue button */}
           <div className="mt-6">
             <button
-              onClick={() => navigate("/signature")}
+              onClick={() => navigate(nextPath)}
               disabled={!checked}
               className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                 checked

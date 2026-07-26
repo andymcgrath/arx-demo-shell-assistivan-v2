@@ -1,6 +1,13 @@
 export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved";
+// "PrES_PAP" (WF5) — isolated workflow that follows the same overall shape as
+// Fax_PAP_Audit (WF2: enrollment -> SMS/OTP -> consent -> BI -> PAP income
+// qualification), but captures identity/consent differently (provider
+// e-signature intake instead of WF2's fax referral). The real capture
+// mechanism/screens are still being designed — see
+// client/workflows/presPap.ts and the Provider/Patient placeholder pages
+// referenced there for what's foundation-only today.
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved" | "PrES_PAP";
 
 export interface Pharmacy {
   name: string;
