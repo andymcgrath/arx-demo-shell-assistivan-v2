@@ -50,7 +50,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     // list above — WF5 has no SMS/OTP/fax screens at all, so those entries
     // would be dead links for this flow.
     return [
-      { label: "Home", path: "/" },
+      { label: "Home", path: "/pes-home" },
       {
         group: "Enrollment Flow",
         items: [

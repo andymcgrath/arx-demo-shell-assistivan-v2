@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { usePatientStore } from "@/store/patientStore";
+import { usePresPapStore } from "@/store/presPapStore";
 import { useDemoStore } from "@/store/demoStore";
+import PesHome from "@/components/enrollment/PesHome";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { dateFromToday } from "@/lib/relativeDate";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +27,9 @@ import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
 import { PortalRouter } from "@/lib/portalRouter";
 import "./styles.css";
 
-type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent";
+type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent"
+  // WF5 (PrES_PAP) provider flow — see PresPapProviderExperience below.
+  | "pres-home" | "pres-intake" | "pres-consent" | "pres-waiting-bi" | "pres-income" | "pres-pap-terms" | "pres-complete";
 
 // ── Heroic EHR brand palette ──────────────────────────────────────────────────
 // The Provider portal for CoA_DTP represents the HCP's own EHR system — a
@@ -1079,48 +1083,303 @@ function PrescriptionsIdlePanel({
 // the only place that mounts EhrChartShell, and it's only ever rendered when
 // flowType === "CoA_DTP" (see the isCoA branch in ProviderPortal below) — so
 // none of this reaches WF1/WF2/WF4.
-// ── WF5 (PrES_PAP) provider experience — foundation placeholder ────────────
+// ── WF5 (PrES_PAP) provider experience ──────────────────────────────────────
 //
-// Stands in for whatever WF5's real provider-facing PrES (e-signature)
-// intake screen turns out to be. Isolated to its own component (not folded
-// into the generic WF1/WF2 chain above, and not touching CoaProviderExperience/
-// IAssistDashboard) so replacing it later can't affect any other flow.
-function PresPapProviderExperience({ workflowData }: { workflowData: WorkflowData }) {
-  const patientName = usePatientStore((s) => s.patientName);
+// A real, condensed provider-facing enrollment flow — replaces the earlier
+// static placeholder now that WF5's provider-side design has landed. The
+// patient portal's 6 Pes*.tsx screens (client/portals/patient/pages/) and
+// this flow both drive the exact same underlying data (presPapStore,
+// patientStore, and the shared presPap.ts machine's workflowData fields) —
+// this is a provider filling out the same PAP application on the patient's
+// behalf, condensed into fewer, denser screens (a provider workflow tool,
+// not a patient-facing wizard) plus one genuinely provider-only step
+// (prescriber/practice info) the patient never sees. That's the "subset"
+// relationship: every question the patient's flow asks, this flow also
+// asks — just organized as pres-intake / pres-consent / pres-income /
+// pres-pap-terms instead of 6 separate single-purpose screens.
+//
+// Local `step` state (not a router) matches this file's existing convention
+// for provider-side flows (see CoaProviderExperience) rather than the
+// patient portal's path-based, continuously state-driven navigation.
+function computeInitialPresProviderStep(workflowData: WorkflowData): Step {
+  if (workflowData.enrollmentStatus === 'none') return 'pres-home';
+  if (workflowData.consentStatus === 'pending') return 'pres-consent';
+  if (workflowData.consentStatus === 'confirmed' && workflowData.biStatus !== 'complete') return 'pres-waiting-bi';
+  if (workflowData.biStatus === 'complete' && workflowData.incomeStatus !== 'verified') return 'pres-income';
+  if (workflowData.incomeStatus === 'verified' && workflowData.papStatus !== 'active') return 'pres-pap-terms';
+  return 'pres-complete';
+}
+
+function PresField({ label, value, onChange, type = "text" }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string;
+}) {
+  return (
+    <div className="pa-field">
+      <label className="pa-field__label">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pa-field__input"
+      />
+      <div className={`pa-field__underline ${value ? "pa-field__underline--active" : ""}`} />
+    </div>
+  );
+}
+
+function PresYesNo({ question, value, onChange }: {
+  question: string; value: 'Yes' | 'No' | null; onChange: (v: 'Yes' | 'No') => void;
+}) {
+  return (
+    <RadioQuestion
+      question={question}
+      value={value === 'Yes' ? 'yes' : value === 'No' ? 'no' : null}
+      onChange={(v) => onChange(v === 'yes' ? 'Yes' : 'No')}
+    />
+  );
+}
+
+function PresSignatureField({ label, value, onChange, disclaimer }: {
+  label: string; value: string; onChange: (v: string) => void; disclaimer: string;
+}) {
+  return (
+    <div>
+      <PresField label={label} value={value} onChange={onChange} />
+      {value.trim() && (
+        <p style={{ fontFamily: "cursive", fontSize: 20, color: "#1C1C1C", margin: "4px 0 0" }}>{value}</p>
+      )}
+      <p style={{ fontSize: 11, color: "#6F7276", marginTop: 6, lineHeight: 1.5 }}>{disclaimer}</p>
+    </div>
+  );
+}
+
+function PresPapProviderExperience({
+  step,
+  setStep,
+  dispatch,
+  workflowData,
+}: {
+  step: Step;
+  setStep: (step: Step) => void;
+  dispatch: ReturnType<typeof useWorkflowDispatch>;
+  workflowData: WorkflowData;
+}) {
+  const patient = usePatientStore();
+  const updateIdentity = usePatientStore((s) => s.updateIdentity);
+  const data = usePresPapStore();
+  const setField = usePresPapStore((s) => s.setField);
   const drugName = usePatientStore((s) => s.drugName);
+
+  // Mirrors the patient portal's own '/enrollment-complete' waiting screen —
+  // BI runs the same way for WF5 regardless of which portal drove
+  // enrollment, so this just needs to notice biStatus flipping while the
+  // provider happens to be sitting on the waiting step.
+  useEffect(() => {
+    if (step === 'pres-waiting-bi' && workflowData.biStatus === 'complete') {
+      setStep('pres-income');
+    }
+  }, [step, workflowData.biStatus, setStep]);
+
+  let content: React.ReactNode;
+
+  if (step === 'pres-home') {
+    return (
+      <div className="provider-portal">
+        <BrandSidebar isBranded={false} />
+        <main className="provider-content">
+          <PesHome onSelectProvider={() => setStep('pres-intake')} />
+        </main>
+      </div>
+    );
+  }
+
+  if (step === 'pres-intake') {
+    const canContinue =
+      data.prescriberName.trim() && data.prescriberNPI.trim() && data.practiceName.trim() &&
+      data.hasPrescription === 'Yes' &&
+      patient.patientName.trim() && patient.patientDob;
+
+    content = (
+      <>
+        <p className="pa-section-title">Prescriber &amp; Patient Intake</p>
+        <div className="pa-fields">
+          <PresField label="Prescriber Name" value={data.prescriberName} onChange={(v) => setField('prescriberName', v)} />
+          <PresField label="Prescriber NPI" value={data.prescriberNPI} onChange={(v) => setField('prescriberNPI', v)} />
+          <PresField label="Practice Name" value={data.practiceName} onChange={(v) => setField('practiceName', v)} />
+          <PresField label="Practice Phone" value={data.practicePhone} onChange={(v) => setField('practicePhone', v)} type="tel" />
+        </div>
+
+        <PresYesNo
+          question={`Does the patient have a prescription for ${drugName} from this practice?`}
+          value={data.hasPrescription}
+          onChange={(v) => setField('hasPrescription', v)}
+        />
+
+        <div className="pa-fields" style={{ marginTop: 8 }}>
+          <PresField
+            label="Patient Full Name"
+            value={patient.patientName}
+            onChange={(v) => updateIdentity({ patientName: v })}
+          />
+          <PresField
+            label="Patient Date of Birth"
+            value={patient.patientDob}
+            onChange={(v) => updateIdentity({ patientDob: v })}
+          />
+          <PresField
+            label="Patient Phone"
+            value={patient.phone}
+            onChange={(v) => updateIdentity({ phone: v })}
+            type="tel"
+          />
+          <PresField
+            label="Patient Email"
+            value={patient.email}
+            onChange={(v) => updateIdentity({ email: v })}
+            type="email"
+          />
+        </div>
+
+        <div className="pa-action-row">
+          <button
+            className="pa-btn-primary"
+            disabled={!canContinue}
+            onClick={() => {
+              dispatch('ENROLL', { portal: 'provider' });
+              dispatch('INVITE', { portal: 'provider' });
+              dispatch('VERIFY_SMS', { portal: 'provider' });
+              dispatch('VERIFY_OTP', { portal: 'provider' });
+              setStep('pres-consent');
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </>
+    );
+  } else if (step === 'pres-consent') {
+    const canContinue =
+      data.healthInfoConsent === 'Yes' && data.healthInfoSignature.trim() &&
+      data.privacyConsent === 'Yes' && data.privacySignature.trim() &&
+      data.callsConsent === 'Yes' && data.callsSignature.trim();
+
+    content = (
+      <>
+        <p className="pa-section-title">Patient Consent</p>
+        <p style={{ fontSize: 13, color: "#6F7276", margin: "0 0 20px" }}>
+          Obtain the patient's consent for each section below on their behalf.
+        </p>
+
+        <PresYesNo question="Authorization to Share Health Information — does the patient agree?" value={data.healthInfoConsent} onChange={(v) => setField('healthInfoConsent', v)} />
+        <PresSignatureField label="Patient Signature" value={data.healthInfoSignature} onChange={(v) => setField('healthInfoSignature', v)} disclaimer="Certifies the patient has read and agreed to the Authorization to Share Health Information." />
+
+        <PresYesNo question="Privacy Notice — does the patient agree?" value={data.privacyConsent} onChange={(v) => setField('privacyConsent', v)} />
+        <PresSignatureField label="Patient Signature" value={data.privacySignature} onChange={(v) => setField('privacySignature', v)} disclaimer="Certifies the patient has read and agreed to the Privacy Notice." />
+
+        <PresYesNo question="Consent to Receive Calls and Text — does the patient agree?" value={data.callsConsent} onChange={(v) => setField('callsConsent', v)} />
+        <PresField label="Patient Cell Phone Number" value={data.cellPhone} onChange={(v) => setField('cellPhone', v)} type="tel" />
+        <PresSignatureField label="Patient Signature" value={data.callsSignature} onChange={(v) => setField('callsSignature', v)} disclaimer="Certifies the patient has read and agreed to receive calls and texts." />
+
+        <div className="pa-action-row">
+          <button
+            className="pa-btn-primary"
+            disabled={!canContinue}
+            onClick={() => {
+              dispatch('CONFIRM_CONSENT', { portal: 'provider' });
+              setStep('pres-waiting-bi');
+            }}
+          >
+            Submit Consent
+          </button>
+        </div>
+      </>
+    );
+  } else if (step === 'pres-waiting-bi') {
+    content = (
+      <div style={{ textAlign: "center", padding: "60px 0" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1C", marginBottom: 8 }}>Awaiting Benefits Investigation</h2>
+        <p style={{ fontSize: 14, color: "#6F7276" }}>
+          AssistRx is running the patient's benefits investigation. This screen will advance automatically once it's complete.
+        </p>
+      </div>
+    );
+  } else if (step === 'pres-income') {
+    const canContinue =
+      data.incomeConsent === 'Yes' && data.incomeSignature.trim() &&
+      data.householdSize.trim() && data.annualHouseholdIncome.trim();
+
+    content = (
+      <>
+        <p className="pa-section-title">Income Verification</p>
+        <PresYesNo question="Authorization for Electronic Income Verification — does the patient agree?" value={data.incomeConsent} onChange={(v) => setField('incomeConsent', v)} />
+        <PresSignatureField label="Patient Signature" value={data.incomeSignature} onChange={(v) => setField('incomeSignature', v)} disclaimer="Certifies the patient has read and agreed to income verification." />
+
+        <div className="pa-fields" style={{ marginTop: 8 }}>
+          <PresField label="Household Size" value={data.householdSize} onChange={(v) => setField('householdSize', v.replace(/\D/g, ""))} />
+          <PresField label="Annual Household Income" value={data.annualHouseholdIncome} onChange={(v) => setField('annualHouseholdIncome', v.replace(/\D/g, ""))} />
+        </div>
+
+        <div className="pa-action-row">
+          <button
+            className="pa-btn-primary"
+            disabled={!canContinue}
+            onClick={() => {
+              dispatch('START_INCOME_QUALIFICATION', { portal: 'provider' });
+              setStep('pres-pap-terms');
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </>
+    );
+  } else if (step === 'pres-pap-terms') {
+    const canContinue = data.agreePAPTerms === 'Yes';
+
+    content = (
+      <>
+        <p className="pa-section-title">Patient Assistance Program Terms</p>
+        <p style={{ fontSize: 13, color: "#6F7276", lineHeight: 1.6, marginBottom: 16 }}>
+          The Patient Assistance Program is not health insurance and is available to uninsured and underinsured
+          patients who meet eligibility and income requirements. By submitting, the provider confirms the patient
+          has reviewed and agreed to the program's terms and conditions.
+        </p>
+        <PresYesNo question="Does the patient agree to the program terms, conditions, and requirements?" value={data.agreePAPTerms} onChange={(v) => setField('agreePAPTerms', v)} />
+
+        <div className="pa-action-row">
+          <button
+            className="pa-btn-primary"
+            disabled={!canContinue}
+            onClick={() => {
+              dispatch('VERIFY_INCOME', { portal: 'provider' });
+              setStep('pres-complete');
+            }}
+          >
+            Submit Application
+          </button>
+        </div>
+      </>
+    );
+  } else {
+    content = (
+      <div style={{ textAlign: "center", padding: "60px 0" }}>
+        <svg width="56" height="56" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto" }}>
+          <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
+        </svg>
+        <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>Application Submitted</h2>
+        <p style={{ color: "#6F7276", fontSize: 14, maxWidth: 420, margin: "0 auto" }}>
+          {patient.patientName}'s Patient Assistance Program application has been submitted. AssistRx will notify
+          the patient as soon as there's an update.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="provider-portal">
       <BrandSidebar isBranded={false} />
-      <main className="provider-content">
-        <div style={{ padding: "40px 20px", maxWidth: 720, margin: "0 auto" }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1C1C", marginBottom: 8 }}>
-            Provider Portal
-          </h1>
-          <p style={{ fontSize: 14, color: "#6F7276", marginBottom: 32 }}>
-            Workflow 5 — PrES / PAP (foundation placeholder)
-          </p>
-
-          <div style={{
-            backgroundColor: "#FFFFFF",
-            border: "1px dashed #D1D5DB",
-            borderRadius: 12,
-            padding: 24,
-          }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1C", marginBottom: 8 }}>
-              {patientName} — {drugName}
-            </p>
-            <p style={{ fontSize: 13, color: "#6F7276", lineHeight: 1.6 }}>
-              This screen stands in for WF5's real provider e-signature intake,
-              which hasn't been designed yet. It exists so this workflow is
-              isolated and reachable end-to-end today — CRM behaves the same
-              as WF2's PAP flow, and the patient portal now has its own full
-              PrES/PAP capture flow (see client/portals/patient/pages/Pes*.tsx).
-              Replace this component's contents once the real provider-side
-              design lands.
-            </p>
-          </div>
-        </div>
+      <main className="provider-content provider-content--pa">
+        {content}
       </main>
     </div>
   );
@@ -2118,9 +2377,12 @@ export default function ProviderPortal() {
   // anything has happened; it doesn't change any of the state-machine-driven
   // transitions below (SUBMIT_PA, COMPLETE_PROVIDER_PA, etc. all fire the
   // same way once the provider is past this starting screen).
-  const [step, setStep] = useState<Step>(() =>
-    useDemoStore.getState().flowType === 'CoA_DTP' ? 'coa-dashboard' : 'login'
-  );
+  const [step, setStep] = useState<Step>(() => {
+    const initialFlowType = useDemoStore.getState().flowType;
+    if (initialFlowType === 'CoA_DTP') return 'coa-dashboard';
+    if (initialFlowType === 'PrES_PAP') return computeInitialPresProviderStep(workflowData);
+    return 'login';
+  });
   const dispatch = useWorkflowDispatch();
   const flowType = workflowData.flowType;
   const providerPACompleted = workflowData.providerPACompleted;
@@ -2128,10 +2390,9 @@ export default function ProviderPortal() {
   const patientName = usePatientStore((s) => s.patientName);
   const isBranded = isBrandedFlow(flowType);
   const isCoA = flowType === "CoA_DTP";
-  // WF5 (PrES_PAP) foundation placeholder — gets its own dedicated provider
-  // screen instead of falling into the generic WF1/WF2 "Recent Submissions"
-  // chain below, since WF5's real provider-facing PrES intake design hasn't
-  // landed yet. See PresPapProviderExperience.
+  // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed
+  // multi-step enrollment flow — instead of falling into the generic
+  // WF1/WF2 "Recent Submissions" chain below. See PresPapProviderExperience.
   const isPres = flowType === "PrES_PAP";
   const biStatus = workflowData.biStatus;
 
@@ -2185,7 +2446,7 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'login');
+    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
@@ -2193,7 +2454,7 @@ export default function ProviderPortal() {
   }
 
   if (isPres) {
-    return <PresPapProviderExperience workflowData={workflowData} />;
+    return <PresPapProviderExperience step={step} setStep={setStep} dispatch={dispatch} workflowData={workflowData} />;
   }
 
   // CoA_DTP gets its own dedicated render path — the full Heroic EHR chart

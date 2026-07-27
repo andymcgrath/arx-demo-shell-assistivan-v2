@@ -207,9 +207,13 @@ export function derivePatientRoute(state: MachineContext): string {
   // even though PesAttestation.tsx fires those underlying events in one
   // bundled dispatch to drive the shared machine forward.
   if (flowType === 'PrES_PAP') {
-    // Pre-enrollment: patient self-attests directly — no CRM referral/SMS
-    // needed first, unlike every other flow.
-    if (workflowData.enrollmentStatus === 'none') return '/pes-attestation';
+    // Pre-enrollment: role selection, then self-attestation directly — no
+    // CRM referral/SMS needed first, unlike every other flow. /pes-home and
+    // /pes-attestation share this exact same condition (enrollmentStatus
+    // 'none'); see DELIVERY_FLOW_PATHS in patient/index.tsx for how the
+    // portal tolerates moving from one to the other without derivePatientRoute
+    // bouncing the patient back to /pes-home.
+    if (workflowData.enrollmentStatus === 'none') return '/pes-home';
 
     // Attested but not yet consented — PesPatientInfo -> PesConsent are a
     // single manual-navigate phase, gated as one unit here (same pattern

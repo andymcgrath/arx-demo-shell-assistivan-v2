@@ -24,6 +24,18 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface PresPapApplicationData {
+  // Provider intake (client/portals/provider/index.tsx's PresPapProviderExperience,
+  // "pres-intake" step) — the one part of WF5 with no patient-side
+  // equivalent, since a patient wouldn't fill in their own prescriber's
+  // NPI. Everything else in this interface is shared between the patient's
+  // Pes*.tsx screens and the provider's condensed intake/consent/income
+  // steps — see PresPapProviderExperience's header comment for why the
+  // provider flow is a superset of the patient one rather than a separate
+  // data model.
+  prescriberName: string;
+  prescriberNPI: string;
+  practiceName: string;
+  practicePhone: string;
   // Attestation (PesAttestation.tsx)
   hasPrescription: 'Yes' | 'No' | null;
   // Patient Consent (PesConsent.tsx) — three separate consent+signature blocks
@@ -44,6 +56,10 @@ export interface PresPapApplicationData {
 }
 
 export const PRES_PAP_APPLICATION_SEED: PresPapApplicationData = {
+  prescriberName: "",
+  prescriberNPI: "",
+  practiceName: "",
+  practicePhone: "",
   hasPrescription: null,
   healthInfoConsent: null,
   healthInfoSignature: "",

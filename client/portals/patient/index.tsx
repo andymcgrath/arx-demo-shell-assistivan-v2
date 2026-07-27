@@ -40,6 +40,15 @@ const DELIVERY_FLOW_PATHS = [
   '/delivery-confirmation',
   '/order-tracker',
   '/order-shipped',
+  // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
+  // underlying machine state (enrollmentStatus 'none') — role selection and
+  // the has-prescription question both happen before ENROLL ever fires. Once
+  // the patient clicks past /pes-home to /pes-attestation, this guard keeps
+  // derivePatientRoute's still-correct-but-stale '/pes-home' target from
+  // bouncing them straight back, the same way the delivery/order paths above
+  // tolerate a manual forward navigation ahead of what the state machine has
+  // caught up to yet.
+  '/pes-attestation',
 ];
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -73,6 +82,7 @@ import MedicationDelivered from "./pages/MedicationDelivered";
 import IncomeQualification from "./pages/IncomeQualification";
 import PapIncomeVerification from "./pages/PapIncomeVerification";
 import PapEnrollmentComplete from "./pages/PapEnrollmentComplete";
+import PesHome from "./pages/PesHome";
 import PesAttestation from "./pages/PesAttestation";
 import PesPatientInfo from "./pages/PesPatientInfo";
 import PesConsent from "./pages/PesConsent";
@@ -167,6 +177,7 @@ function PatientRoutes() {
           <Route path="/income-qualification"      element={<IncomeQualification />} />
           <Route path="/pap-income-verification"  element={<PapIncomeVerification />} />
           <Route path="/pap-enrollment-complete"  element={<PapEnrollmentComplete />} />
+          <Route path="/pes-home"               element={<PesHome />} />
           <Route path="/pes-attestation"        element={<PesAttestation />} />
           <Route path="/pes-patient-info"       element={<PesPatientInfo />} />
           <Route path="/pes-consent"            element={<PesConsent />} />
