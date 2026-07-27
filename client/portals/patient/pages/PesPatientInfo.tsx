@@ -129,7 +129,7 @@ export default function PesPatientInfo() {
 
   return (
     <main className="flex-grow">
-      <EnrollmentShell icon={<User className="w-7 h-7" />} title="Patient Information" stepsFilled={2} stepsTotal={3}>
+      <EnrollmentShell icon={<User className="w-7 h-7" />} title="Patient Information" stepsFilled={2} stepsTotal={3} wide>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <FloatingInput label="First Name" value={firstName} onChange={setFirstName} />

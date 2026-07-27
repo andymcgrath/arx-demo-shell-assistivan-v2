@@ -79,6 +79,7 @@ export default function DeliveryDate() {
           title="Please select a delivery date from the available dates below"
           stepsFilled={2}
           stepsTotal={2}
+          wide={flowType === "PrES_PAP"}
         >
           <div className="space-y-5">
             <p className="text-sm leading-relaxed text-arx-body-copy">

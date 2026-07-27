@@ -71,7 +71,7 @@ export default function DeliveryAddress() {
 
   return (
     <main className="flex-grow">
-        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2}>
+        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2} wide={workflowData.flowType === "PrES_PAP"}>
           <div className="space-y-4">
             <FloatingInput label="Address" value={form.address} onChange={set("address")} required />
             <FloatingInput label="City" value={form.city} onChange={set("city")} required />

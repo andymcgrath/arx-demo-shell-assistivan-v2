@@ -34,7 +34,7 @@ export default function PesIncomeConsent() {
 
   return (
     <main className="flex-grow">
-      <EnrollmentShell icon={<FileSignature className="w-7 h-7" />} title="Income Verification Consent" stepsFilled={1} stepsTotal={3}>
+      <EnrollmentShell icon={<FileSignature className="w-7 h-7" />} title="Income Verification Consent" stepsFilled={1} stepsTotal={3} wide>
         <p className="text-sm text-arx-body-copy mb-5">
           Please provide your consent to continue the enrollment.
         </p>

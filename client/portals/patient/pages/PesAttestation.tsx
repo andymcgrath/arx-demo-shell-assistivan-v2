@@ -40,6 +40,7 @@ export default function PesAttestation() {
         title="Eligibility Information"
         stepsFilled={1}
         stepsTotal={3}
+        wide
       >
         <p className="text-sm text-arx-body-copy mb-5">
           Please provide the following information to start the enrollment.

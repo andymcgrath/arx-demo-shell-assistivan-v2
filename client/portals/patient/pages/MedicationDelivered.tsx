@@ -19,7 +19,7 @@ export default function MedicationDelivered() {
   const [showPfVideo, setShowPfVideo] = useState(false);
 
   return (
-    <main className="flex-grow pb-8">
+    <main className="flex-grow pb-8 relative">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* Arrived card */}
@@ -141,11 +141,12 @@ export default function MedicationDelivered() {
         </div>
 
         {/*
-         * Rendered inline (no portal) so it stays inside the patient portal's
-         * phone-frame viewport instead of escaping to document.body.
-         * `absolute inset-0` resolves against `.i17pro__screen` (the nearest
-         * positioned ancestor set up in DemoShell), and the phone frame's own
-         * `overflow: hidden` keeps it clipped to the screen bounds/corners.
+         * Rendered inline (no portal) so it stays inside this page instead of
+         * escaping to document.body. `absolute inset-0` resolves against this
+         * `<main>` (`relative` above) rather than assuming a specific
+         * ancestor is positioned — WF1-4 render this inside the iPhone
+         * mockup (`.i17pro__screen`, itself positioned) while WF5 renders it
+         * in the plain wide web panel with no such wrapper.
          */}
         {showPfVideo && (
           <div

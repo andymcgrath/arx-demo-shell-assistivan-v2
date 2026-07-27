@@ -37,7 +37,7 @@ export default function PesIncomeSubmission() {
 
   return (
     <main className="flex-grow">
-      <EnrollmentShell icon={<DollarSign className="w-7 h-7" />} title="Income Verification" stepsFilled={2} stepsTotal={3}>
+      <EnrollmentShell icon={<DollarSign className="w-7 h-7" />} title="Income Verification" stepsFilled={2} stepsTotal={3} wide>
         <p className="text-sm text-arx-body-copy mb-5">
           Please provide the following information to continue the enrollment.
         </p>

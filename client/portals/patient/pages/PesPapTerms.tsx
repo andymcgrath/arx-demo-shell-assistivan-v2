@@ -42,7 +42,7 @@ export default function PesPapTerms() {
 
   return (
     <main className="flex-grow">
-      <EnrollmentShell icon={<ClipboardCheck className="w-7 h-7" />} title={`${PROGRAM.name} Patient Assistance Program`} stepsFilled={3} stepsTotal={3}>
+      <EnrollmentShell icon={<ClipboardCheck className="w-7 h-7" />} title={`${PROGRAM.name} Patient Assistance Program`} stepsFilled={3} stepsTotal={3} wide>
         <p className="text-sm text-arx-body-copy mb-5">
           Please review and agree to the program terms and conditions to continue the enrollment.
         </p>

@@ -43,7 +43,7 @@ export default function PesConsent() {
 
   return (
     <main className="flex-grow">
-      <EnrollmentShell icon={<PenLine className="w-7 h-7" />} title="Patient Consent" stepsFilled={3} stepsTotal={3}>
+      <EnrollmentShell icon={<PenLine className="w-7 h-7" />} title="Patient Consent" stepsFilled={3} stepsTotal={3} wide>
         <p className="text-sm text-arx-body-copy mb-6">
           Please review and consent to each section below to continue the enrollment.
         </p>

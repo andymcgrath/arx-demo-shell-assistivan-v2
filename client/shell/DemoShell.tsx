@@ -496,7 +496,14 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * is painted relative to this box, not the viewport.
        * This keeps the shell chrome always visible at the top.
        */}
-      {portal === "patient" ? (
+      {/*
+       * PrES_PAP (WF5) is the one patient flow given a plain web-based
+       * layout instead of the iPhone mockup below — its screens were built
+       * wide (see EnrollmentShell's `wide` prop) to read as a desktop web
+       * app, matching CRM/Provider/Field, rather than a native mobile
+       * screen. All other flows keep the phone frame unchanged.
+       */}
+      {portal === "patient" && flowType !== "PrES_PAP" ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
