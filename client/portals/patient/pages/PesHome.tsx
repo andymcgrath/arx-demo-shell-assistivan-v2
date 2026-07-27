@@ -1,5 +1,6 @@
 import { useNavigate } from "@/lib/portalRouter";
 import PesHome from "@/components/enrollment/PesHome";
+import { PROGRAM } from "@/config/branding";
 
 /**
  * WF5 (PrES_PAP) patient portal entry — thin wrapper around the shared
@@ -13,7 +14,7 @@ export default function PesHomeScreen() {
   const navigate = useNavigate();
   return (
     <main className="flex-grow">
-      <PesHome onSelectPatient={() => navigate("/pes-attestation")} />
+      <PesHome programName={PROGRAM.name} onSelectPatient={() => navigate("/pes-attestation")} />
     </main>
   );
 }

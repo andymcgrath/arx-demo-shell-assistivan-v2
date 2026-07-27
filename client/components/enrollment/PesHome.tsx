@@ -1,13 +1,25 @@
 import { ArrowRight } from "lucide-react";
-import { PROGRAM } from "@/config/branding";
 
 interface PesHomeProps {
+  /**
+   * Passed in by each caller rather than imported from a branding config
+   * module here — this file lives at the shell level (client/components/),
+   * not inside any single portal, so it can't rely on the portal-local
+   * import-alias resolution that lets e.g. client/portals/patient/pages/
+   * files import "@/config/branding" (that module only exists at
+   * client/portals/patient/config/branding.ts; there's no shell-level or
+   * provider-portal equivalent, so importing it here would fail to resolve
+   * for real at build time, not just as tsc noise).
+   */
+  programName: string;
   onSelectPatient?: () => void;
   onSelectProvider?: () => void;
   onSelectPharmacist?: () => void;
 }
 
-const ROLE_LINKS: Array<{ label: string; key: keyof PesHomeProps }> = [
+type RoleKey = "onSelectPatient" | "onSelectProvider" | "onSelectPharmacist";
+
+const ROLE_LINKS: Array<{ label: string; key: RoleKey }> = [
   { label: "I am a Patient/Caregiver", key: "onSelectPatient" },
   { label: "I am a Healthcare Provider", key: "onSelectProvider" },
   { label: "I am a Pharmacist", key: "onSelectPharmacist" },
@@ -33,8 +45,8 @@ const ROLE_LINKS: Array<{ label: string; key: keyof PesHomeProps }> = [
  * prototype, where only the "Patient/Caregiver" link is actually wired and
  * Healthcare Provider / Pharmacist are no-ops.
  */
-export default function PesHome({ onSelectPatient, onSelectProvider, onSelectPharmacist }: PesHomeProps) {
-  const handlers: Record<keyof PesHomeProps, (() => void) | undefined> = {
+export default function PesHome({ programName, onSelectPatient, onSelectProvider, onSelectPharmacist }: PesHomeProps) {
+  const handlers: Record<RoleKey, (() => void) | undefined> = {
     onSelectPatient,
     onSelectProvider,
     onSelectPharmacist,
@@ -45,7 +57,7 @@ export default function PesHome({ onSelectPatient, onSelectProvider, onSelectPha
       <h1 className="text-4xl font-bold text-arx-slate leading-tight">Understanding</h1>
       <h1 className="text-4xl font-extrabold text-arx-slate leading-tight mb-6">Coverage Options</h1>
       <p className="text-arx-body-copy text-base leading-relaxed mb-10 max-w-md">
-        The {PROGRAM.name} Patient Support Program offers assistance to eligible patients. Answer a few questions to see what support is available.
+        The {programName} Patient Support Program offers assistance to eligible patients. Answer a few questions to see what support is available.
       </p>
       <div className="flex flex-col gap-5">
         {ROLE_LINKS.map(({ label, key }) => {

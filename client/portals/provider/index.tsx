@@ -1187,7 +1187,19 @@ function PresPapProviderExperience({
       <div className="provider-portal">
         <BrandSidebar isBranded={false} />
         <main className="provider-content">
-          <PesHome onSelectProvider={() => setStep('pres-intake')} />
+          {/*
+           * PesHome uses the arx-* design tokens (--arx-slate, --arx-primary,
+           * etc.), which client/global.css only defines inside ".portal-patient"
+           * — the provider portal's own root div is ".provider-portal" and has
+           * no equivalent scope. Wrapping just this one screen in
+           * ".portal-patient" here (a plain CSS class, unrelated to routing)
+           * pulls in those variable definitions so the shared screen renders
+           * identically to the patient portal's own copy of it, instead of
+           * falling back to unstyled/black text.
+           */}
+          <div className="portal-patient">
+            <PesHome programName={drugName} onSelectProvider={() => setStep('pres-intake')} />
+          </div>
         </main>
       </div>
     );
