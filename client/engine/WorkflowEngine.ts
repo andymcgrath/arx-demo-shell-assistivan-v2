@@ -197,6 +197,66 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/lock-screen';
   }
 
+  // ── PrES_PAP (WF5): its own capture flow, entirely separate from the
+  // shared WF1/WF2/WF4 onboarding logic below ──────────────────────────
+  // Self-attestation, patient info, and typed e-signature consent replace
+  // the SMS/OTP-based onboarding every other flow uses (see presPap.ts's
+  // header comment and the Pes*.tsx screens). Returns early so none of the
+  // generic otpVerified-gated logic below ever runs for this flow — WF5's
+  // real UI never shows /lock-screen, /sms-message, or /otp-verification,
+  // even though PesAttestation.tsx fires those underlying events in one
+  // bundled dispatch to drive the shared machine forward.
+  if (flowType === 'PrES_PAP') {
+    // Pre-enrollment: patient self-attests directly — no CRM referral/SMS
+    // needed first, unlike every other flow.
+    if (workflowData.enrollmentStatus === 'none') return '/pes-attestation';
+
+    // Attested but not yet consented — PesPatientInfo -> PesConsent are a
+    // single manual-navigate phase, gated as one unit here (same pattern
+    // ConfirmDetails -> Consent -> Signature already uses elsewhere: only
+    // the phase's entry screen is derived; the pages navigate() between
+    // themselves without an intermediate actor dispatch in between).
+    if (workflowData.consentStatus === 'pending') return '/pes-patient-info';
+
+    // Consent confirmed — waiting for BI. Same shared waiting screen WF2
+    // uses; CRM's BI mechanics are completely unchanged for WF5.
+    if (workflowData.consentStatus === 'confirmed' && workflowData.biStatus !== 'complete')
+      return '/enrollment-complete';
+
+    // BI complete — income verification phase (PesIncomeConsent ->
+    // PesIncomeSubmission -> PesPapTerms), same single-gate-per-phase
+    // pattern as above. incomeStatus 'pending' covers both of the last two
+    // screens — a reload mid-submission or mid-terms bounces back to
+    // PesIncomeConsent, matching this shell's existing behavior for
+    // similar mid-phase reloads elsewhere (e.g. WF1's Consent/Signature).
+    if (workflowData.biStatus === 'complete' && workflowData.incomeStatus !== 'verified') {
+      return workflowData.incomeStatus === 'none' ? '/pes-income-consent' : '/pes-income-submission';
+    }
+
+    // Income verified, PAP terms agreed → PAP active. Same address/date
+    // beat WF2/CoA_DTP/iAssist use (PATIENT_SETS_ADDRESS/
+    // PATIENT_SELECTS_SHIP_DATE, DeliveryAddress.tsx/DeliveryDate.tsx,
+    // unchanged).
+    if (workflowData.pharmacyStatus === 'none') {
+      if (workflowData.dispatchStatus === 'none' || workflowData.dispatchStatus === 'pending_selection')
+        return '/delivery-address';
+
+      if (workflowData.patientShipDate === null) return '/delivery-date';
+
+      // Address + date done — CRM handles Triage/dispatch from here, same
+      // as WF2. PesConfirmation.tsx is WF5's own version of
+      // PapEnrollmentComplete.tsx.
+      return '/pes-confirmation';
+    }
+
+    if (workflowData.pharmacyStatus === 'processing' || workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
+
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    return '/medication-delivered';
+  }
+
   // ── Phase gate: once otpVerified, NEVER return to pre-OTP screens ────
   const onboardingComplete = workflowData.otpVerified === true;
 
@@ -222,13 +282,13 @@ export function derivePatientRoute(state: MachineContext): string {
       workflowData.biStatus === 'none')
     return '/enrollment-complete';
 
-  // ── Fax_PAP_Audit (WF2/PAP) and PrES_PAP (WF5): no traditional PA ────
+  // ── Fax_PAP_Audit (WF2/PAP): no traditional PA ──────────────────────
   // BI completing with no_insurance leads into an FA eIncome check instead
   // of PA submission — paStatus stays 'none' for this flow forever, so this
   // branch has to run before the generic paStatus-driven checks below.
-  // WF5 (presPap.ts) reuses this same route chain as a foundation
-  // placeholder — its own capture screens/routes aren't designed yet.
-  if (flowType === 'Fax_PAP_Audit' || flowType === 'PrES_PAP') {
+  // PrES_PAP (WF5) has its own dedicated branch above and never reaches
+  // here.
+  if (flowType === 'Fax_PAP_Audit') {
     // BI still running
     if (workflowData.biStatus !== 'complete') return '/enrollment-complete';
 

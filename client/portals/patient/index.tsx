@@ -52,7 +52,6 @@ import Index from "./pages/Index";
 import ConfirmDetails from "./pages/ConfirmDetails";
 import Consent from "./pages/Consent";
 import Signature from "./pages/Signature";
-import PesSignature from "./pages/PesSignature";
 import UploadInsurance from "./pages/UploadInsurance";
 import EnrollmentComplete from "./pages/EnrollmentComplete";
 import PAStatus from "./pages/PAStatus";
@@ -74,6 +73,13 @@ import MedicationDelivered from "./pages/MedicationDelivered";
 import IncomeQualification from "./pages/IncomeQualification";
 import PapIncomeVerification from "./pages/PapIncomeVerification";
 import PapEnrollmentComplete from "./pages/PapEnrollmentComplete";
+import PesAttestation from "./pages/PesAttestation";
+import PesPatientInfo from "./pages/PesPatientInfo";
+import PesConsent from "./pages/PesConsent";
+import PesIncomeConsent from "./pages/PesIncomeConsent";
+import PesIncomeSubmission from "./pages/PesIncomeSubmission";
+import PesPapTerms from "./pages/PesPapTerms";
+import PesConfirmation from "./pages/PesConfirmation";
 
 
 /** Watches actor state and navigates the patient portal accordingly */
@@ -140,7 +146,6 @@ function PatientRoutes() {
           <Route path="/confirm-details"       element={<ConfirmDetails />} />
           <Route path="/consent"               element={<Consent />} />
           <Route path="/signature"             element={<Signature />} />
-          <Route path="/pres-signature"        element={<PesSignature />} />
           <Route path="/upload-insurance"      element={<UploadInsurance />} />
           <Route path="/enrollment-complete"   element={<EnrollmentComplete />} />
           <Route path="/pa-status"             element={<PAStatus />} />
@@ -162,6 +167,13 @@ function PatientRoutes() {
           <Route path="/income-qualification"      element={<IncomeQualification />} />
           <Route path="/pap-income-verification"  element={<PapIncomeVerification />} />
           <Route path="/pap-enrollment-complete"  element={<PapEnrollmentComplete />} />
+          <Route path="/pes-attestation"        element={<PesAttestation />} />
+          <Route path="/pes-patient-info"       element={<PesPatientInfo />} />
+          <Route path="/pes-consent"            element={<PesConsent />} />
+          <Route path="/pes-income-consent"     element={<PesIncomeConsent />} />
+          <Route path="/pes-income-submission"  element={<PesIncomeSubmission />} />
+          <Route path="/pes-pap-terms"          element={<PesPapTerms />} />
+          <Route path="/pes-confirmation"       element={<PesConfirmation />} />
         </Routes>
         {ctx?.chatOpen && <ChatModal onClose={ctx.closeChat} />}
       </div>

@@ -35,28 +35,40 @@ export default function DeliveryDate() {
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
   const isCoA = flowType === "CoA_DTP";
   const isIAssist = flowType === "iAssist_PA_Approved";
-  const isPapFlow = flowType === "Fax_PAP_Audit";
+  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
   // isn't payment, and testing confirmed Copay doesn't collect payment
   // through this flow at all, so it now skips /delivery-payment the same
   // way WF1 does. Retail/Mail are unchanged — they still visit
   // /delivery-payment as a cost-summary screen (no change requested there).
   // iAssist replicates this exactly (same self_pay-only gate). Fax_PAP_Audit
-  // has no pricing/payment concept at all (Free Goods program, see
-  // Index.tsx's papStage) — always skips straight to the confirmation
-  // screen, same as WF1.
+  // and PrES_PAP have no pricing/payment concept at all (Free Goods
+  // program, see Index.tsx's papStage) — always skip straight to the
+  // confirmation screen, same as WF1.
   const skipPayment = isWorkflow1 || isPapFlow || ((isCoA || isIAssist) && workflowData.pricingOption === "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
 
-  // Records the ship date on the workflow (CoA_DTP, iAssist, and
-  // Fax_PAP_Audit — see DeliveryAddress.tsx's PATIENT_SETS_ADDRESS for why
+  // Records the ship date on the workflow (CoA_DTP, iAssist, Fax_PAP_Audit,
+  // and PrES_PAP — see DeliveryAddress.tsx's PATIENT_SETS_ADDRESS for why
   // this matters: without it the actor's real patientShipDate never gets
   // set, so a portal remount falls back to an earlier screen).
   function handleSave() {
     if (!selected) return;
     if (isCoA || isIAssist || isPapFlow) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    // WF2/WF5 each have their own terminal "nothing more to do" screen
+    // (pap-enrollment-complete / pes-confirmation) that derivePatientRoute
+    // expects to show once address+date are both done. Routing them through
+    // the generic /delivery-confirmation instead would strand the patient
+    // there — it's one of the DELIVERY_FLOW_PATHS (see patient/index.tsx)
+    // StateDrivenNav's guard leaves alone once landed on, so the
+    // state-driven correction to the real target route never fires and
+    // "Got it" just bounces straight to /order-tracker instead.
+    if (isPapFlow) {
+      navigate(flowType === "PrES_PAP" ? "/pes-confirmation" : "/pap-enrollment-complete");
+      return;
+    }
     navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment");
   }
 

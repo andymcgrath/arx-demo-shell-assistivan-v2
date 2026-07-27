@@ -20,6 +20,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
+import { usePresPapStore } from "@/store/presPapStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -581,6 +582,12 @@ export default function DemoShell() {
   // visible).
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   const resetPatient = usePatientStore((s) => s.reset);
+  // WF5's own captured-application-data store — reset alongside patientStore
+  // wherever patientStore itself gets a full reset() call below (stale
+  // session cleanup, "Reset All"). The stage-jump ladder buttons don't call
+  // resetPatient() either, only clear its sessionStorage key — presPapStore
+  // mirrors that same behavior there for consistency.
+  const resetPresPap = usePresPapStore((s) => s.reset);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const actor = useWorkflowActor();
@@ -634,8 +641,10 @@ export default function DemoShell() {
     if (isStaleSession) {
       sessionStorage.setItem('arx-demo-session', 'active');
       sessionStorage.removeItem('arx-patient-identity');
+      sessionStorage.removeItem('arx-prespap-application');
       resetDemo();
       resetPatient();
+      resetPresPap();
     }
   }, []);
 
@@ -985,6 +994,7 @@ export default function DemoShell() {
                     onClick={() => {
                       resetDemo();
                       resetPatient();
+                      resetPresPap();
                       // Wipe every OTHER flow's cached progress too, not just
                       // the active one — resetDemo()/resetCurrentWorkflowActor
                       // only clear the current flow's slot, so an older
@@ -1003,6 +1013,7 @@ export default function DemoShell() {
                       // to WF1. This was the root cause of "workflow flips back to
                       // WF1" reports.
                       sessionStorage.removeItem('arx-patient-identity');
+                      sessionStorage.removeItem('arx-prespap-application');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
                       // Reset means "start over" — return to this flow's
@@ -1061,6 +1072,7 @@ export default function DemoShell() {
                         // write reverts the workflow to WF1.
                         sessionStorage.removeItem('arx-patient-identity');
                         sessionStorage.removeItem('arxWorkflow_v2');
+                        sessionStorage.removeItem('arx-prespap-application');
                         setShowStageReset(false);
                       }}
                       className={cn(

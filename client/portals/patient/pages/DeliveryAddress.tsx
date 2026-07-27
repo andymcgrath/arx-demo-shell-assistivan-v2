@@ -44,13 +44,13 @@ export default function DeliveryAddress() {
   const { workflowData } = usePersonaState('patient');
   const isCoA = workflowData.flowType === "CoA_DTP";
   const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
-  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
+  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));
 
-  // Records the address on the workflow (CoA_DTP, iAssist, and Fax_PAP_Audit
-  // — dispatchStatus → "selected"). Previously nothing dispatched this at all,
+  // Records the address on the workflow (CoA_DTP, iAssist, Fax_PAP_Audit,
+  // and PrES_PAP — dispatchStatus → "selected"). Previously nothing dispatched this at all,
   // so the coaDtp actor's real state never left "pricingSelected":
   // derivePatientRoute's rule for "pricingOption set, dispatchStatus none →
   // /delivery-address" then matched forever, and any remount of the patient

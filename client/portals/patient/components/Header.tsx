@@ -44,6 +44,44 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     ];
   }
 
+  if (flowType === "PrES_PAP") {
+    // Mirrors presPap.ts's real screen sequence (see WorkflowEngine.ts's
+    // dedicated PrES_PAP branch) rather than the generic Fax_PAP_Audit nav
+    // list above — WF5 has no SMS/OTP/fax screens at all, so those entries
+    // would be dead links for this flow.
+    return [
+      { label: "Home", path: "/" },
+      {
+        group: "Enrollment Flow",
+        items: [
+          { label: "Attestation",       path: "/pes-attestation" },
+          { label: "Patient Info",      path: "/pes-patient-info" },
+          { label: "Consent",           path: "/pes-consent" },
+          { label: "Enrollment Complete", path: "/enrollment-complete" },
+        ],
+      },
+      {
+        group: "Income Verification",
+        items: [
+          { label: "Income Consent",    path: "/pes-income-consent" },
+          { label: "Income Submission", path: "/pes-income-submission" },
+          { label: "PAP Terms",         path: "/pes-pap-terms" },
+        ],
+      },
+      {
+        group: `${PROGRAM.name} PAP Program Order`,
+        items: [
+          { label: "Delivery Address",   path: "/delivery-address" },
+          { label: "Delivery Date",      path: "/delivery-date" },
+          { label: "Confirmation",       path: "/pes-confirmation" },
+          { label: "Order Tracker",      path: "/order-tracker" },
+          { label: "Order Shipped / In Transit", path: "/order-shipped" },
+          { label: "Medication Delivered", path: "/medication-delivered" },
+        ],
+      },
+    ];
+  }
+
   if (flowType === "CoA_DTP") {
     // Mirrors coaDtp.ts's actual state chain (see WorkflowEngine's isCoA
     // routing) rather than the generic enrollment steps other flows use —

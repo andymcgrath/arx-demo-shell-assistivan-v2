@@ -1114,9 +1114,10 @@ function PresPapProviderExperience({ workflowData }: { workflowData: WorkflowDat
               This screen stands in for WF5's real provider e-signature intake,
               which hasn't been designed yet. It exists so this workflow is
               isolated and reachable end-to-end today — CRM behaves the same
-              as WF2's PAP flow, and the patient portal has its own
-              placeholder e-signature step (PesSignature.tsx). Replace this
-              component's contents once the real design lands.
+              as WF2's PAP flow, and the patient portal now has its own full
+              PrES/PAP capture flow (see client/portals/patient/pages/Pes*.tsx).
+              Replace this component's contents once the real provider-side
+              design lands.
             </p>
           </div>
         </div>
