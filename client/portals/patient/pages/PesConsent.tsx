@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { PenLine, ChevronRight } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
@@ -5,6 +6,7 @@ import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
 import YesNoToggle from "@/components/enrollment/YesNoToggle";
 import SignatureField from "@/components/enrollment/SignatureField";
 import { usePresPapStore } from "@/store/presPapStore";
+import { usePatientStore } from "@/store/patientStore";
 import { PROGRAM } from "@/config/branding";
 
 const HEALTH_INFO_CONSENT = `By signing this form, I give my permission for my physicians, pharmacies, laboratories, and other healthcare providers ("Healthcare Providers") and my health insurers to share my health information with the organization administering the ${PROGRAM.name} Patient Assistance Program and its vendors and affiliates. This authorization will expire one (1) year from the date I sign below. I understand I have the right to revoke this authorization at any time by contacting the program administrator.`;
@@ -29,6 +31,16 @@ export default function PesConsent() {
   const dispatch = useWorkflowDispatch();
   const data = usePresPapStore();
   const setField = usePresPapStore((s) => s.setField);
+  const patientPhone = usePatientStore((s) => s.phone);
+
+  // Pre-fill from the phone number already captured on PesPatientInfo.tsx
+  // (previous step) instead of asking the patient to retype it. Only runs
+  // once, and only if the field is still empty, so it never clobbers an
+  // edit the patient made here directly.
+  useEffect(() => {
+    if (!data.cellPhone && patientPhone) setField("cellPhone", patientPhone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const canContinue =
     data.healthInfoConsent === "Yes" && data.healthInfoSignature.trim() &&
