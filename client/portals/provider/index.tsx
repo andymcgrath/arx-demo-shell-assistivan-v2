@@ -551,11 +551,16 @@ function RadioQuestion({
   value,
   onChange,
   accentColor = "#007178",
+  yesLabel = "Yes",
+  noLabel = "No",
 }: {
   question: string;
   value: string | null;
   onChange: (v: string) => void;
   accentColor?: string;
+  /** Override the visible option text without changing the "yes"/"no" values passed to onChange — used by PresPapProviderExperience's "Who is authorizing?" question ("Patient" / "Legal Representative"). */
+  yesLabel?: string;
+  noLabel?: string;
 }) {
   return (
     <div className="pa-question">
@@ -570,7 +575,7 @@ function RadioQuestion({
           >
             {value === "yes" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
-          <span className="pa-radio-label">Yes</span>
+          <span className="pa-radio-label">{yesLabel}</span>
         </label>
         <label className="pa-radio-option">
           <button
@@ -581,7 +586,7 @@ function RadioQuestion({
           >
             {value === "no" ? <RadioCheckedIcon color={accentColor} /> : <RadioUncheckedIcon />}
           </button>
-          <span className="pa-radio-label">No</span>
+          <span className="pa-radio-label">{noLabel}</span>
         </label>
       </div>
     </div>
@@ -1524,6 +1529,8 @@ function PresPapProviderExperience({
           question="Who is authorizing?"
           value={data.consentAuthorizedBy === 'Patient' ? 'yes' : data.consentAuthorizedBy === 'Legal Representative' ? 'no' : null}
           onChange={(v) => setField('consentAuthorizedBy', v === 'yes' ? 'Patient' : 'Legal Representative')}
+          yesLabel="Patient"
+          noLabel="Legal Representative"
         />
         {data.consentAuthorizedBy === 'Legal Representative' && (
           <div className="pa-fields" style={{ marginTop: 8, marginBottom: 16 }}>
