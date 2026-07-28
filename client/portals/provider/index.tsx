@@ -1289,6 +1289,15 @@ function PresPapProviderExperience({
   const [selectedDrug, setSelectedDrug] = useState(drugName);
   const [signatureFullName, setSignatureFullName] = useState("");
 
+  // Pre-fill the consent step's cell phone field from the patient's own
+  // record instead of asking the provider to retype it — same rationale as
+  // the equivalent fix on the patient portal's own PesConsent.tsx. Only
+  // runs once and only if still empty, so it never clobbers a manual edit.
+  useEffect(() => {
+    if (!data.cellPhone && patient.phone) setField('cellPhone', patient.phone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Prescriber search — local UI state only; the resolved prescriber gets
   // written into presPapStore once picked or manually entered.
   const [prescriberMode, setPrescriberMode] = useState<'search' | 'results' | 'no-results' | 'manual'>('search');
