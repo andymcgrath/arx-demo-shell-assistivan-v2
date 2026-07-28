@@ -25,20 +25,36 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface PresPapApplicationData {
   // Provider intake (client/portals/provider/index.tsx's PresPapProviderExperience,
-  // "pres-intake" step) — the one part of WF5 with no patient-side
+  // "pres-prescriber" step) — the one part of WF5 with no patient-side
   // equivalent, since a patient wouldn't fill in their own prescriber's
   // NPI. Everything else in this interface is shared between the patient's
-  // Pes*.tsx screens and the provider's condensed intake/consent/income
-  // steps — see PresPapProviderExperience's header comment for why the
-  // provider flow is a superset of the patient one rather than a separate
-  // data model.
+  // Pes*.tsx screens and the provider's own patient-info/consent/insurance/
+  // financial steps — see PresPapProviderExperience's header comment for why
+  // the provider flow is a superset of the patient one rather than a
+  // separate data model.
   prescriberName: string;
   prescriberNPI: string;
   practiceName: string;
   practicePhone: string;
+  // Provider intake, prescriber sub-step (pres-prescriber) — populated either
+  // by picking a result from the mocked NPI search or by the "add manually"
+  // form when search returns nothing. Not asked of the patient.
+  prescriberAddress1: string;
+  prescriberAddress2: string;
+  prescriberCity: string;
+  prescriberState: string;
+  prescriberZip: string;
+  prescriberFax: string;
+  // Note: the insurance eligibility check (pres-insurance step) has no field
+  // here — it reads the real shared workflowData.biStatus/biResult directly
+  // instead of tracking its own parallel copy. See PresPapProviderExperience's
+  // header comment in client/portals/provider/index.tsx.
   // Attestation (PesAttestation.tsx)
   hasPrescription: 'Yes' | 'No' | null;
   // Patient Consent (PesConsent.tsx) — three separate consent+signature blocks
+  consentAuthorizedBy: 'Patient' | 'Legal Representative' | null;
+  representativeName: string;
+  representativeRelationship: string;
   healthInfoConsent: 'Yes' | 'No' | null;
   healthInfoSignature: string;
   privacyConsent: 'Yes' | 'No' | null;
@@ -60,7 +76,16 @@ export const PRES_PAP_APPLICATION_SEED: PresPapApplicationData = {
   prescriberNPI: "",
   practiceName: "",
   practicePhone: "",
+  prescriberAddress1: "",
+  prescriberAddress2: "",
+  prescriberCity: "",
+  prescriberState: "",
+  prescriberZip: "",
+  prescriberFax: "",
   hasPrescription: null,
+  consentAuthorizedBy: null,
+  representativeName: "",
+  representativeRelationship: "",
   healthInfoConsent: null,
   healthInfoSignature: "",
   privacyConsent: null,
