@@ -1139,6 +1139,40 @@ interface MockPrescriber {
 // demo — no backend NPI registry to call. A very short last name (<2 chars)
 // simulates the "no results found" screen, matching the reference's own
 // dedicated empty-state design without needing a real lookup to fail against.
+// Same wording as the patient portal's own consent screen
+// (client/portals/patient/pages/PesConsent.tsx's HEALTH_INFO_CONSENT /
+// PRIVACY_CONSENT / CALLS_CONSENT) so both portals present identical legal
+// language — duplicated here rather than imported since this file can't
+// reach across portal boundaries (see PesHome.tsx's programName prop for
+// the same constraint). APPLICANT_DECLARATIONS_TEXT additionally folds in
+// what the patient's flow shows as its own PesPapTerms.tsx screen.
+function getHealthInfoConsentText(drugName: string) {
+  return `By signing this form, I give my permission for my physicians, pharmacies, laboratories, and other healthcare providers ("Healthcare Providers") and my health insurers to share my health information with the organization administering the ${drugName} Patient Assistance Program and its vendors and affiliates. This authorization will expire one (1) year from the date I sign below. I understand I have the right to revoke this authorization at any time by contacting the program administrator.`;
+}
+const APPLICANT_DECLARATIONS_TEXT = `By signing below, I certify that all information provided in this application, including household income, is complete and accurate. I understand that program assistance will terminate if AssistRx becomes aware of any false or inaccurate information, or if this medication is no longer prescribed for the patient. Free product received through this program is for the patient's own use only and may not be sold, resold, bartered, or traded. Completing this application does not guarantee eligibility. AssistRx reserves the right to modify or discontinue this program, or the terms of this application, at any time without notice.`;
+const TEXT_MESSAGE_AUTH_TEXT = `By providing a mobile number and agreeing below, the patient agrees to receive calls and texts from the program administrator or parties acting on its behalf to determine eligibility, provide benefits verification, financial assistance resources, refill reminders, and other support services. Message and data rates may apply. The patient may opt out at any time.`;
+
+function PresConsentText({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      maxHeight: 140, overflowY: "auto", border: "1px solid #E0E0E0", borderRadius: 8,
+      padding: 12, fontSize: 12, color: "#4B4B4B", lineHeight: 1.6, background: "#FAFAFA",
+      marginTop: 8, marginBottom: 8,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function PresConsentCheckbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
+  return (
+    <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, color: "#1C1C1C", cursor: "pointer" }}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ marginTop: 3, flexShrink: 0 }} />
+      <span>{children}</span>
+    </label>
+  );
+}
+
 function searchMockPrescribers(lastName: string, city: string, state: string): MockPrescriber[] {
   if (lastName.trim().length < 2) return [];
   const firstNames = ["Sarah", "James", "Linda"];
@@ -1248,6 +1282,7 @@ function PresPapProviderExperience({
   const setField = usePresPapStore((s) => s.setField);
   const drugName = usePatientStore((s) => s.drugName);
   const [selectedDrug, setSelectedDrug] = useState(drugName);
+  const [signatureFullName, setSignatureFullName] = useState("");
 
   // Prescriber search — local UI state only; the resolved prescriber gets
   // written into presPapStore once picked or manually entered.
@@ -1471,17 +1506,18 @@ function PresPapProviderExperience({
   } else if (step === 'pres-consent') {
     const canContinue =
       data.consentAuthorizedBy &&
-      (data.consentAuthorizedBy === 'Patient' || data.representativeName.trim()) &&
-      data.healthInfoConsent === 'Yes' && data.healthInfoSignature.trim() &&
-      data.privacyConsent === 'Yes' && data.privacySignature.trim() &&
-      data.callsConsent === 'Yes' && data.callsSignature.trim() &&
-      data.agreePAPTerms === 'Yes';
+      (data.consentAuthorizedBy === 'Patient' || (data.representativeName.trim() && data.representativeRelationship.trim())) &&
+      data.healthInfoConsent === 'Yes' &&
+      data.privacyConsent === 'Yes' &&
+      data.callsConsent === 'Yes' &&
+      data.cellPhone.trim() &&
+      signatureFullName.trim();
 
     content = (
       <>
         <p className="pa-section-title">Patient Consent</p>
         <p style={{ fontSize: 13, color: "#6F7276", margin: "0 0 20px" }}>
-          Obtain the patient's (or their legal representative's) consent for each section below on their behalf.
+          Please provide consent on the patient's behalf to continue. If the patient is under 18, a parent or legal representative must provide consent.
         </p>
 
         <RadioQuestion
@@ -1496,37 +1532,68 @@ function PresPapProviderExperience({
           </div>
         )}
 
-        <PresYesNo question="Authorization to Share Health Information — does the patient agree?" value={data.healthInfoConsent} onChange={(v) => setField('healthInfoConsent', v)} />
-        <PresSignatureField label="Signature" value={data.healthInfoSignature} onChange={(v) => setField('healthInfoSignature', v)} disclaimer="Certifies the patient (or their representative) has read and agreed to the Authorization to Share Health Information." />
+        <p className="pa-section-title" style={{ fontSize: 14, marginTop: 20, marginBottom: 0 }}>
+          PATIENT AUTHORIZATION FOR USE AND DISCLOSURE OF PERSONAL HEALTH INFORMATION
+        </p>
+        <PresConsentText>{getHealthInfoConsentText(drugName)}</PresConsentText>
+        <PresConsentCheckbox checked={data.healthInfoConsent === 'Yes'} onChange={(v) => setField('healthInfoConsent', v ? 'Yes' : 'No')}>
+          By checking this box, I acknowledge that I have read and understand the Patient Authorization for Use and Disclosure of Personal Health Information.
+        </PresConsentCheckbox>
 
         {/* Folds in what the patient's own flow shows as a separate PAP Terms
             screen (PesPapTerms.tsx) — the reference material bundles the
             equivalent "Applicant Consent and Declarations" into this same
             page rather than a standalone step, so this does too. Setting
             agreePAPTerms alongside privacyConsent here (rather than as its
-            own question) is what keeps that equivalence — same signal, one
-            fewer redundant toggle for the provider to click. */}
-        <PresYesNo
-          question="Applicant Consent and Declarations — does the patient agree to the program terms and certify the information provided is accurate?"
-          value={data.privacyConsent}
-          onChange={(v) => { setField('privacyConsent', v); setField('agreePAPTerms', v); }}
-        />
-        <PresSignatureField label="Signature" value={data.privacySignature} onChange={(v) => setField('privacySignature', v)} disclaimer="Certifies the patient understands the Patient Assistance Program terms, including that free product is for personal use only and cannot be resold or claimed for insurance reimbursement." />
+            own checkbox) is what keeps that equivalence — same signal, one
+            fewer redundant checkbox for the provider to click. */}
+        <p className="pa-section-title" style={{ fontSize: 14, marginTop: 20, marginBottom: 0 }}>APPLICANT CONSENT AND DECLARATIONS</p>
+        <PresConsentText>{APPLICANT_DECLARATIONS_TEXT}</PresConsentText>
+        <PresConsentCheckbox
+          checked={data.privacyConsent === 'Yes'}
+          onChange={(v) => { setField('privacyConsent', v ? 'Yes' : 'No'); setField('agreePAPTerms', v ? 'Yes' : 'No'); }}
+        >
+          By checking this box, I acknowledge that I have read and understand the Applicant Consent and Declarations.
+        </PresConsentCheckbox>
 
-        <PresYesNo question="Text/Communication Authorization — does the patient agree to receive program communications by text, phone, or mail?" value={data.callsConsent} onChange={(v) => setField('callsConsent', v)} />
-        <PresField label="Patient Cell Phone Number" value={data.cellPhone} onChange={(v) => setField('cellPhone', v)} type="tel" />
-        <PresSignatureField label="Signature" value={data.callsSignature} onChange={(v) => setField('callsSignature', v)} disclaimer="Certifies the patient has read and agreed to receive program communications as described above." />
+        <p className="pa-section-title" style={{ fontSize: 14, marginTop: 20, marginBottom: 0 }}>TEXT MESSAGE AUTHORIZATION</p>
+        <PresConsentText>{TEXT_MESSAGE_AUTH_TEXT}</PresConsentText>
+        <PresConsentCheckbox checked={data.callsConsent === 'Yes'} onChange={(v) => setField('callsConsent', v ? 'Yes' : 'No')}>
+          By checking this box, I agree to receive pharmacy-related text messages as described above.
+        </PresConsentCheckbox>
+        <div style={{ maxWidth: 320, marginTop: 12 }}>
+          <PresField label="Patient Cell Phone Number" value={data.cellPhone} onChange={(v) => setField('cellPhone', v)} type="tel" />
+        </div>
+
+        <div style={{ marginTop: 24, maxWidth: 320 }}>
+          <PresField label="Full Name" value={signatureFullName} onChange={setSignatureFullName} />
+        </div>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1C", marginTop: 16, marginBottom: 8 }}>Signature Preview</p>
+        <div style={{ maxWidth: 320, padding: "16px 14px", borderRadius: 8, border: "1px solid #E0E0E0", background: "#fff" }}>
+          <p style={{ fontFamily: "cursive", fontSize: 24, color: signatureFullName.trim() ? "#1C1C1C" : "#B0B0B0" }}>
+            {signatureFullName.trim() || "Patient Name"}
+          </p>
+        </div>
 
         <div className="pa-action-row">
           <button
             className="pa-btn-primary"
             disabled={!canContinue}
             onClick={() => {
+              // The store still models one signature per consent section
+              // (shared with the patient's own PesConsent.tsx data shape) —
+              // this page collects the name once and applies it to all
+              // three, rather than asking the provider to retype it.
+              usePresPapStore.getState().setFields({
+                healthInfoSignature: signatureFullName,
+                privacySignature: signatureFullName,
+                callsSignature: signatureFullName,
+              });
               dispatch('CONFIRM_CONSENT', { portal: 'provider' });
               setStep('pres-insurance');
             }}
           >
-            Submit Consent
+            Continue
           </button>
         </div>
       </>
