@@ -1153,12 +1153,25 @@ function searchMockPrescribers(lastName: string, city: string, state: string): M
   }));
 }
 
-function PresField({ label, value, onChange, type = "text" }: {
+function PresField({ label, value, onChange, type = "text", onLabelClick }: {
   label: string; value: string; onChange: (v: string) => void; type?: string;
+  /**
+   * Optional convenience fill, same pattern as LoginStep's NPI label
+   * elsewhere in this file (line ~709: `<button className="pa-field__label"
+   * onClick={fillDemoValues}>`) — the label itself becomes the click
+   * target, reusing the exact same "pa-field__label" class so it still
+   * looks like a plain label (bold, dark, no underline/blue link styling),
+   * not a hyperlink.
+   */
+  onLabelClick?: () => void;
 }) {
   return (
     <div className="pa-field">
-      <label className="pa-field__label">{label}</label>
+      {onLabelClick ? (
+        <button type="button" onClick={onLabelClick} className="pa-field__label">{label}</button>
+      ) : (
+        <label className="pa-field__label">{label}</label>
+      )}
       <input
         type={type}
         value={value}
@@ -1362,7 +1375,12 @@ function PresPapProviderExperience({
           <p className="pa-section-title">Prescriber Information</p>
           <p style={{ fontSize: 13, color: "#6F7276", margin: "0 0 20px" }}>Search for the prescribing provider.</p>
           <div className="pa-fields">
-            <PresField label="Prescriber First Name" value={searchForm.firstName} onChange={(v) => setSearchForm((f) => ({ ...f, firstName: v }))} />
+            <PresField
+              label="Prescriber First Name"
+              value={searchForm.firstName}
+              onChange={(v) => setSearchForm((f) => ({ ...f, firstName: v }))}
+              onLabelClick={() => setSearchForm({ firstName: "Sarah", lastName: "Chen", city: "Austin", state: "TX", phone: "(512) 555-0199" })}
+            />
             <PresField label="Prescriber Last Name" value={searchForm.lastName} onChange={(v) => setSearchForm((f) => ({ ...f, lastName: v }))} />
             <PresField label="City" value={searchForm.city} onChange={(v) => setSearchForm((f) => ({ ...f, city: v }))} />
             <PresField label="State" value={searchForm.state} onChange={(v) => setSearchForm((f) => ({ ...f, state: v }))} />
