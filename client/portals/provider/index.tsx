@@ -1289,6 +1289,30 @@ function PresPapProviderExperience({
   const [selectedDrug, setSelectedDrug] = useState(drugName);
   const [signatureFullName, setSignatureFullName] = useState("");
 
+  // Drives the pres-insurance eligibility check itself rather than passively
+  // waiting on biStatus the way the patient portal's own /enrollment-complete
+  // screen does — that screen can rely on a CRM operator opening the BI
+  // stage tab elsewhere to advance it, but the provider flow is meant to be
+  // self-contained, so it fires the same RUN_BI -> COMPLETE_BI sequence CRM
+  // would eventually fire on its own timer (client/portals/crm/pages/
+  // Index.tsx's "Auto-complete BI when agent opens the BI stage tab"
+  // effect), instead of requiring a second tab to be open at all.
+  useEffect(() => {
+    if (step !== 'pres-insurance') return;
+    if (workflowData.biStatus === 'none') {
+      dispatch('RUN_BI', { portal: 'provider' });
+    }
+  }, [step, workflowData.biStatus, dispatch]);
+
+  useEffect(() => {
+    if (step !== 'pres-insurance') return;
+    if (workflowData.biStatus !== 'running') return;
+    const timer = setTimeout(() => {
+      dispatch('COMPLETE_BI', { portal: 'provider', result: 'no_insurance' });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [step, workflowData.biStatus, dispatch]);
+
   // Pre-fill the consent step's cell phone field from the patient's own
   // record instead of asking the provider to retype it — same rationale as
   // the equivalent fix on the patient portal's own PesConsent.tsx. Only
