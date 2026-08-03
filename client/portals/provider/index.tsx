@@ -1270,6 +1270,86 @@ function PresUploadStub({ label, hint, fileName }: { label: string; hint: string
   );
 }
 
+// The reference material's "Preview" link opens a real generated PDF in a
+// new tab — this demo has no document-generation backend to produce one, so
+// instead of leaving the button decorative (as it was before), this renders
+// a read-only summary of what was actually captured across the flow, using
+// the same presPapStore/patientStore data the submission itself was built
+// from. Not a PDF, but not a dead button either.
+function EnrollmentFormPreviewModal({
+  patient, data, drugName, signatureFullName, onClose,
+}: {
+  patient: ReturnType<typeof usePatientStore.getState>;
+  data: ReturnType<typeof usePresPapStore.getState>;
+  drugName: string;
+  signatureFullName: string;
+  onClose: () => void;
+}) {
+  const row = (label: string, value: string) => (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "6px 0", borderBottom: "1px solid #F0F0F0" }}>
+      <span style={{ fontSize: 12, color: "#6F7276" }}>{label}</span>
+      <span style={{ fontSize: 12, color: "#1C1C1C", fontWeight: 600, textAlign: "right" }}>{value || "—"}</span>
+    </div>
+  );
+  const section = (title: string, children: React.ReactNode) => (
+    <div style={{ marginBottom: 20 }}>
+      <p style={{ fontSize: 12, fontWeight: 700, color: "#007178", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{title}</p>
+      {children}
+    </div>
+  );
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: "#fff", borderRadius: 12, maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", padding: 28 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#1C1C1C" }}>Enrollment Form</p>
+            <p style={{ fontSize: 12, color: "#6F7276" }}>Patient Assistance Program — {drugName}</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#6F7276", lineHeight: 1 }}>×</button>
+        </div>
+
+        {section("Patient", <>
+          {row("Name", patient.patientName)}
+          {row("Date of Birth", patient.patientDob)}
+          {row("Address", patient.deliveryAddress)}
+          {row("Phone", patient.phone)}
+          {row("Email", patient.email)}
+        </>)}
+
+        {section("Prescriber", <>
+          {row("Name", data.prescriberName)}
+          {row("NPI", data.prescriberNPI)}
+          {row("Practice", data.practiceName)}
+          {row("Address", [data.prescriberAddress1, data.prescriberCity, data.prescriberState, data.prescriberZip].filter(Boolean).join(", "))}
+          {row("Phone", data.practicePhone)}
+        </>)}
+
+        {section("Consent", <>
+          {row("Authorized By", data.consentAuthorizedBy === 'Legal Representative' ? `${data.representativeName} (${data.representativeRelationship})` : "Patient")}
+          {row("Health Information Authorization", data.healthInfoConsent === 'Yes' ? "Agreed" : "—")}
+          {row("Applicant Consent & Declarations", data.privacyConsent === 'Yes' ? "Agreed" : "—")}
+          {row("Text Message Authorization", data.callsConsent === 'Yes' ? "Agreed" : "—")}
+          {row("Signature", signatureFullName)}
+        </>)}
+
+        {section("Financial Information", <>
+          {row("Household Size", data.householdSize)}
+          {row("Annual Household Income", data.annualHouseholdIncome ? `$${Number(data.annualHouseholdIncome).toLocaleString("en-US")}` : "")}
+        </>)}
+
+        <button className="pa-btn-secondary" style={{ width: "100%", marginTop: 8 }} onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 function PresPapProviderExperience({
   step,
   setStep,
@@ -1288,6 +1368,7 @@ function PresPapProviderExperience({
   const drugName = usePatientStore((s) => s.drugName);
   const [selectedDrug, setSelectedDrug] = useState(drugName);
   const [signatureFullName, setSignatureFullName] = useState("");
+  const [showEnrollmentPreview, setShowEnrollmentPreview] = useState(false);
 
   // Drives the pres-insurance eligibility check itself rather than passively
   // waiting on biStatus the way the patient portal's own /enrollment-complete
@@ -1713,8 +1794,22 @@ function PresPapProviderExperience({
         </p>
         <div style={{ maxWidth: 420, margin: "0 auto", padding: "14px 16px", borderRadius: 10, border: "1px solid #E0E0E0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "#1C1C1C" }}>Enrollment Form (please print for your records)</span>
-          <span style={{ fontSize: 13, color: "#007178", fontWeight: 600 }}>Preview</span>
+          <button
+            onClick={() => setShowEnrollmentPreview(true)}
+            style={{ fontSize: 13, color: "#007178", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            Preview
+          </button>
         </div>
+        {showEnrollmentPreview && (
+          <EnrollmentFormPreviewModal
+            patient={patient}
+            data={data}
+            drugName={selectedDrug}
+            signatureFullName={signatureFullName}
+            onClose={() => setShowEnrollmentPreview(false)}
+          />
+        )}
       </div>
     );
   }
