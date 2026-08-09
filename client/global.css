@@ -234,6 +234,20 @@
   min-height: 100vh;
   background: var(--pa-bg);
   font-family: "Open Sans", -apple-system, Roboto, Helvetica, sans-serif;
+  /*
+   * Containing block for the pres-* flow's absolutely-positioned overlays
+   * (EnrollmentFormPreviewModal, PresNavDrawer in provider/index.tsx). Those
+   * use position:absolute rather than fixed because this whole portal
+   * already sits inside DemoShell's own transform:translateZ(0) scroll pane
+   * (see DemoShell.tsx's comment on that div) — a position:fixed child would
+   * be pinned to THAT shorter, viewport-sized pane instead of scrolling with
+   * this portal's actual (min-height:100vh, sometimes taller) content,
+   * leaving a gap of bare --pa-bg background below the overlay whenever this
+   * portal's real content is shorter than one viewport. position:relative
+   * here makes position:absolute descendants size to this box's real height
+   * instead, so the overlay always matches what's actually on screen.
+   */
+  position: relative;
 }
 
 /* Sidebar */

@@ -222,19 +222,39 @@ export function derivePatientRoute(state: MachineContext): string {
     // themselves without an intermediate actor dispatch in between).
     if (workflowData.consentStatus === 'pending') return '/pes-patient-info';
 
-    // Consent confirmed — waiting for BI. Same shared waiting screen WF2
-    // uses; CRM's BI mechanics are completely unchanged for WF5.
-    if (workflowData.consentStatus === 'confirmed' && workflowData.biStatus !== 'complete')
-      return '/enrollment-complete';
+    // Consent confirmed — the provider's referral already covered
+    // attestation, patient info, and consent, so from here the patient
+    // portal has nothing active for the patient to do until the
+    // Fulfillment Center's PAP "application update" SMS goes out. BI runs
+    // automatically the moment consent confirms (CRM Index.tsx's generic
+    // consentStatus-confirmed effect — not flow-specific) and completes
+    // with biResult 'no_insurance' once a CRM agent opens the BI stage tab
+    // (also generic — see isPapFlow there); none of that needs a
+    // patient-facing screen, so the portal just parks on pes-home for the
+    // whole wait instead of the shared /enrollment-complete screen every
+    // other flow uses here.
+    if (workflowData.consentStatus === 'confirmed' && !workflowData.papSmsSent) {
+      return '/pes-home';
+    }
 
-    // BI complete — income verification phase (PesIncomeConsent ->
-    // PesIncomeSubmission -> PesPapTerms), same single-gate-per-phase
-    // pattern as above. incomeStatus 'pending' covers both of the last two
-    // screens — a reload mid-submission or mid-terms bounces back to
-    // PesIncomeConsent, matching this shell's existing behavior for
-    // similar mid-phase reloads elsewhere (e.g. WF1's Consent/Signature).
-    if (workflowData.biStatus === 'complete' && workflowData.incomeStatus !== 'verified') {
-      return workflowData.incomeStatus === 'none' ? '/pes-income-consent' : '/pes-income-submission';
+    // Fulfillment Center sent the update — same SMS bubble WF2 uses
+    // (mirrored here as PesPapUpdateSms.tsx via FulfilmentCenter.tsx's
+    // already-generic isPapFlow handling), until the patient taps through.
+    // WF5 has no separate code-verification screen the way WF2's
+    // /pap-update-otp does — tapping the message goes straight back to
+    // pes-home (see PesPapUpdateSms.tsx), where the "I am a Patient/
+    // Caregiver" link now continues into income verification instead of
+    // attestation (see pes-home's patient wrapper).
+    if (!workflowData.papSmsVerified) return '/pes-pap-update-sms';
+
+    // Tapped — parked on pes-home again until the patient clicks through
+    // into income verification (PesIncomeConsent -> PesIncomeSubmission ->
+    // PesPapTerms), same single-gate-per-phase pattern as every other
+    // phase here. /pes-income-consent is in patient/index.tsx's
+    // DELIVERY_FLOW_PATHS so that manual click isn't bounced back to
+    // pes-home before incomeStatus actually changes.
+    if (workflowData.incomeStatus !== 'verified') {
+      return workflowData.incomeStatus === 'none' ? '/pes-home' : '/pes-income-submission';
     }
 
     // Income verified, PAP terms agreed → PAP active. Same address/date

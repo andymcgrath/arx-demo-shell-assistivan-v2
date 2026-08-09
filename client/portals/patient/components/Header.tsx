@@ -48,7 +48,11 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     // Mirrors presPap.ts's real screen sequence (see WorkflowEngine.ts's
     // dedicated PrES_PAP branch) rather than the generic Fax_PAP_Audit nav
     // list above — WF5 has no SMS/OTP/fax screens at all, so those entries
-    // would be dead links for this flow.
+    // would be dead links for this flow. "Attestation"/"Patient Info"/
+    // "Consent" only apply to a patient-initiated referral (provider
+    // referrals cover the same ground on the provider's own screens) —
+    // "Application Update SMS" is what a provider-referred patient actually
+    // sees once BI clears and the Fulfillment Center sends its update.
     return [
       { label: "Home", path: "/pes-home" },
       {
@@ -57,7 +61,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
           { label: "Attestation",       path: "/pes-attestation" },
           { label: "Patient Info",      path: "/pes-patient-info" },
           { label: "Consent",           path: "/pes-consent" },
-          { label: "Enrollment Complete", path: "/enrollment-complete" },
+          { label: "Application Update SMS", path: "/pes-pap-update-sms" },
         ],
       },
       {

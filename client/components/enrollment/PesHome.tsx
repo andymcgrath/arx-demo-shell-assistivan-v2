@@ -15,6 +15,14 @@ interface PesHomeProps {
   onSelectPatient?: () => void;
   onSelectProvider?: () => void;
   onSelectPharmacist?: () => void;
+  /**
+   * Optional short status message rendered under the intro copy, above the
+   * role links — used by the patient portal to explain why "I am a
+   * Patient/Caregiver" is temporarily disabled while a provider referral is
+   * waiting on the Fulfillment Center (see PesHome.tsx's patient wrapper).
+   * Unused (and harmless) for the provider/pharmacist callers.
+   */
+  note?: string;
 }
 
 type RoleKey = "onSelectPatient" | "onSelectProvider" | "onSelectPharmacist";
@@ -45,7 +53,7 @@ const ROLE_LINKS: Array<{ label: string; key: RoleKey }> = [
  * prototype, where only the "Patient/Caregiver" link is actually wired and
  * Healthcare Provider / Pharmacist are no-ops.
  */
-export default function PesHome({ programName, onSelectPatient, onSelectProvider, onSelectPharmacist }: PesHomeProps) {
+export default function PesHome({ programName, onSelectPatient, onSelectProvider, onSelectPharmacist, note }: PesHomeProps) {
   const handlers: Record<RoleKey, (() => void) | undefined> = {
     onSelectPatient,
     onSelectProvider,
@@ -56,9 +64,14 @@ export default function PesHome({ programName, onSelectPatient, onSelectProvider
     <div className="max-w-3xl mx-auto px-6 py-14">
       <h1 className="text-4xl font-bold text-arx-slate leading-tight">Understanding</h1>
       <h1 className="text-4xl font-extrabold text-arx-slate leading-tight mb-6">Coverage Options</h1>
-      <p className="text-arx-body-copy text-base leading-relaxed mb-10 max-w-md">
+      <p className={`text-arx-body-copy text-base leading-relaxed max-w-md ${note ? "mb-6" : "mb-10"}`}>
         The {programName} Patient Support Program offers assistance to eligible patients. Answer a few questions to see what support is available.
       </p>
+      {note && (
+        <p className="text-sm text-arx-slate bg-arx-sky/30 border border-arx-borders rounded-lg px-4 py-3 mb-8 max-w-md">
+          {note}
+        </p>
+      )}
       <div className="flex flex-col gap-5">
         {ROLE_LINKS.map(({ label, key }) => {
           const handler = handlers[key];

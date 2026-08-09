@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Search, Plus, Bell, ChevronDown, Settings, Users, Calendar,
   ClipboardList, Pill, FlaskConical, Image as ImageIcon, FolderOpen,
-  Syringe, Share2, Mail, CheckSquare, MoreHorizontal,
+  Syringe, Share2, Mail, CheckSquare, MoreHorizontal, Menu, X,
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
@@ -30,7 +30,7 @@ import "./styles.css";
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent"
   // WF5 (PrES_PAP) provider flow — see PresPapProviderExperience below.
   | "pres-home" | "pres-drug" | "pres-patient-info" | "pres-prescriber"
-  | "pres-consent" | "pres-insurance" | "pres-financial" | "pres-complete";
+  | "pres-consent" | "pres-complete";
 
 // ── Heroic EHR brand palette ──────────────────────────────────────────────────
 // The Provider portal for CoA_DTP represents the HCP's own EHR system — a
@@ -1095,24 +1095,26 @@ function PrescriptionsIdlePanel({
 // flow (an "Advancing Access"-style PAP/MAP intake tool): Drug confirmation
 // -> Patient Information -> Prescriber Search (results / no-results / add
 // manually) -> Patient Consent (who's authorizing, health-info authorization,
-// applicant declarations, text/communication preferences, e-signature) ->
-// Insurance Eligibility Check -> Financial Information (income + proof-of-
-// income upload) -> Thank You. Content/copy is genericized to this shell's
-// own AssistRx/Assistivan branding rather than the reference's literal
-// Gilead trademarked text.
+// text/communication preferences, e-signature) -> Thank You. Content/copy is
+// genericized to this shell's own AssistRx/Assistivan branding rather than
+// the reference's literal Gilead trademarked text.
 //
-// Two deliberate deviations from the reference, both scoped down rather than
-// silently dropped:
-//   - The reference's page order puts Insurance before Consent; this shell's
-//     shared presPap.ts machine only lets BI (the mechanic this step reuses)
-//     run after CONFIRM_CONSENT, so Insurance stays after Consent here
-//     rather than reordering the machine's own gating.
-//   - The reference's insurance-check has a "found active commercial
-//     coverage -> denied" branch. This shell's CRM always resolves PAP/MAP
-//     flows' biResult to 'no_insurance' (see WorkflowEngine.ts's isPapFlow
-//     handling) — there's no real state that could ever produce a denial
-//     here, so that branch isn't built; every WF5 provider application in
-//     this demo reaches the same "no active coverage found" outcome.
+// Deliberately scoped down from the reference and from an earlier version of
+// this file: the reference (and an earlier build here) also had the
+// prescriber submit an Insurance Eligibility Check, an "Applicant Consent
+// and Declarations" section, and Financial Information (household income +
+// proof-of-income upload) on the provider's behalf. Per request, all three
+// are cut from the provider side — the patient portal's own screens
+// (PesConsent's PAP-terms equivalent, PesIncomeConsent.tsx,
+// PesIncomeSubmission.tsx, PesPapTerms.tsx) cover that instead, so the
+// provider's job here is just the referral: drug, patient info, prescriber,
+// and the two consents that are specifically about a *provider* submitting
+// on the patient's behalf (health info authorization + text message
+// authorization). RUN_BI/COMPLETE_BI/START_INCOME_QUALIFICATION/
+// VERIFY_INCOME are no longer dispatched from this file — CONFIRM_CONSENT is
+// the last event the provider flow fires; the patient continues the rest of
+// the machine's progression (BI, income) from their own portal exactly as
+// WF5 already lets them.
 //
 // Local `step` state (not a router) matches this file's existing convention
 // for provider-side flows (see CoaProviderExperience) rather than the
@@ -1120,13 +1122,6 @@ function PrescriptionsIdlePanel({
 function computeInitialPresProviderStep(workflowData: WorkflowData): Step {
   if (workflowData.enrollmentStatus === 'none') return 'pres-home';
   if (workflowData.consentStatus === 'pending') return 'pres-patient-info';
-  // Covers both "still checking" and "check finished, hasn't clicked
-  // Continue yet" — pres-insurance itself picks the right sub-view from
-  // biStatus. Routing straight to pres-financial once biStatus happens to
-  // already be 'complete' (e.g. a remount after switching demo shell tabs)
-  // would skip the "no insurance found" result the provider is otherwise
-  // shown live, so this stays on pres-insurance until incomeStatus moves.
-  if (workflowData.consentStatus === 'confirmed' && workflowData.incomeStatus !== 'verified') return 'pres-insurance';
   return 'pres-complete';
 }
 
@@ -1149,12 +1144,10 @@ interface MockPrescriber {
 // PRIVACY_CONSENT / CALLS_CONSENT) so both portals present identical legal
 // language — duplicated here rather than imported since this file can't
 // reach across portal boundaries (see PesHome.tsx's programName prop for
-// the same constraint). APPLICANT_DECLARATIONS_TEXT additionally folds in
-// what the patient's flow shows as its own PesPapTerms.tsx screen.
+// the same constraint).
 function getHealthInfoConsentText(drugName: string) {
   return `By signing this form, I give my permission for my physicians, pharmacies, laboratories, and other healthcare providers ("Healthcare Providers") and my health insurers to share my health information with the organization administering the ${drugName} Patient Assistance Program and its vendors and affiliates. This authorization will expire one (1) year from the date I sign below. I understand I have the right to revoke this authorization at any time by contacting the program administrator.`;
 }
-const APPLICANT_DECLARATIONS_TEXT = `By signing below, I certify that all information provided in this application, including household income, is complete and accurate. I understand that program assistance will terminate if AssistRx becomes aware of any false or inaccurate information, or if this medication is no longer prescribed for the patient. Free product received through this program is for the patient's own use only and may not be sold, resold, bartered, or traded. Completing this application does not guarantee eligibility. AssistRx reserves the right to modify or discontinue this program, or the terms of this application, at any time without notice.`;
 const TEXT_MESSAGE_AUTH_TEXT = `By providing a mobile number and agreeing below, the patient agrees to receive calls and texts from the program administrator or parties acting on its behalf to determine eligibility, provide benefits verification, financial assistance resources, refill reminders, and other support services. Message and data rates may apply. The patient may opt out at any time.`;
 
 function PresConsentText({ children }: { children: React.ReactNode }) {
@@ -1222,54 +1215,6 @@ function PresField({ label, value, onChange, type = "text", onLabelClick }: {
   );
 }
 
-function PresYesNo({ question, value, onChange }: {
-  question: string; value: 'Yes' | 'No' | null; onChange: (v: 'Yes' | 'No') => void;
-}) {
-  return (
-    <RadioQuestion
-      question={question}
-      value={value === 'Yes' ? 'yes' : value === 'No' ? 'no' : null}
-      onChange={(v) => onChange(v === 'yes' ? 'Yes' : 'No')}
-    />
-  );
-}
-
-function PresSignatureField({ label, value, onChange, disclaimer }: {
-  label: string; value: string; onChange: (v: string) => void; disclaimer: string;
-}) {
-  return (
-    <div>
-      <PresField label={label} value={value} onChange={onChange} />
-      {value.trim() && (
-        <p style={{ fontFamily: "cursive", fontSize: 20, color: "#1C1C1C", margin: "4px 0 0" }}>{value}</p>
-      )}
-      <p style={{ fontSize: 11, color: "#6F7276", marginTop: 6, lineHeight: 1.5 }}>{disclaimer}</p>
-    </div>
-  );
-}
-
-// Decorative — no backend to receive an upload in this demo. Mirrors the
-// reference's document-upload steps (insurance card, proof of income)
-// structurally: a button that toggles a fake "uploaded" state, so the step
-// looks and behaves like it has this requirement without a real file picker
-// that has nowhere to send its file.
-function PresUploadStub({ label, hint, fileName }: { label: string; hint: string; fileName: string }) {
-  const [uploaded, setUploaded] = useState(false);
-  return (
-    <div style={{ marginTop: 16 }}>
-      <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1C", marginBottom: 6 }}>{label}</p>
-      <button type="button" className="pa-btn-secondary" style={{ fontSize: 13 }} onClick={() => setUploaded((v) => !v)}>
-        {uploaded ? "Remove Document" : "Upload Document"}
-      </button>
-      {uploaded ? (
-        <p style={{ fontSize: 12, color: "#2e844a", marginTop: 6 }}>✓ {fileName} uploaded</p>
-      ) : (
-        <p style={{ fontSize: 11, color: "#6F7276", marginTop: 6, lineHeight: 1.5 }}>{hint}</p>
-      )}
-    </div>
-  );
-}
-
 // The reference material's "Preview" link opens a real generated PDF in a
 // new tab — this demo has no document-generation backend to produce one, so
 // instead of leaving the button decorative (as it was before), this renders
@@ -1300,7 +1245,14 @@ function EnrollmentFormPreviewModal({
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+      // position:absolute (not fixed) — see .provider-portal's own comment
+      // in client/global.css for why: this portal already sits inside
+      // DemoShell's shorter, viewport-height scroll pane, so a fixed overlay
+      // pins to that pane instead of this portal's real (possibly shorter or
+      // taller) content, leaving a gap of bare background below it.
+      // .provider-portal is position:relative so this sizes to its actual
+      // content height instead.
+      style={{ position: "absolute", inset: 0, minHeight: "100%", background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
       onClick={onClose}
     >
       <div
@@ -1334,19 +1286,121 @@ function EnrollmentFormPreviewModal({
         {section("Consent", <>
           {row("Authorized By", data.consentAuthorizedBy === 'Legal Representative' ? `${data.representativeName} (${data.representativeRelationship})` : "Patient")}
           {row("Health Information Authorization", data.healthInfoConsent === 'Yes' ? "Agreed" : "—")}
-          {row("Applicant Consent & Declarations", data.privacyConsent === 'Yes' ? "Agreed" : "—")}
           {row("Text Message Authorization", data.callsConsent === 'Yes' ? "Agreed" : "—")}
           {row("Signature", signatureFullName)}
         </>)}
 
-        {section("Financial Information", <>
-          {row("Household Size", data.householdSize)}
-          {row("Annual Household Income", data.annualHouseholdIncome ? `$${Number(data.annualHouseholdIncome).toLocaleString("en-US")}` : "")}
-        </>)}
+        <p style={{ fontSize: 11, color: "#6F7276", marginBottom: 16 }}>
+          Income verification and PAP terms are completed by the patient from their own portal and aren't part of this referral.
+        </p>
 
         <button className="pa-btn-secondary" style={{ width: "100%", marginTop: 8 }} onClick={onClose}>Close</button>
       </div>
     </div>
+  );
+}
+
+// ── WF5 provider quick-links nav ────────────────────────────────────────────
+//
+// Mirrors the patient portal's own hamburger drawer (client/portals/patient/
+// components/Header.tsx's buildNavLinks "PrES_PAP" branch / slide-down
+// drawer markup) so the provider side has the same quick-jump convenience,
+// but can't reuse that component directly: Header.tsx imports @/config/
+// branding (patient-portal-only, see PesHome.tsx's programName prop for the
+// same constraint) and relies on --arx-* CSS tokens that client/global.css
+// only defines inside ".portal-patient". This is a from-scratch equivalent
+// styled with the same plain hex values already used throughout this file's
+// pres-* steps, and it calls setStep(...) instead of navigate(path) since
+// the provider flow is local `step` state, not a route.
+const PRES_NAV_GROUPS: { group?: string; items: { step: Step; label: string }[] }[] = [
+  { items: [{ step: "pres-home", label: "Home" }] },
+  {
+    group: "Referral Flow",
+    items: [
+      { step: "pres-drug", label: "Confirm Medication" },
+      { step: "pres-patient-info", label: "Patient Info" },
+      { step: "pres-prescriber", label: "Prescriber" },
+      { step: "pres-consent", label: "Consent" },
+      { step: "pres-complete", label: "Referral Complete" },
+    ],
+  },
+];
+
+function PresNavHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+      <button
+        type="button"
+        onClick={onOpenMenu}
+        aria-label="Open navigation menu"
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#1C1C1C", padding: 4, display: "flex" }}
+      >
+        <Menu size={20} />
+      </button>
+      <span style={{ fontSize: 12, fontWeight: 600, color: "#6F7276", textTransform: "uppercase", letterSpacing: 0.4 }}>
+        Patient Assistance Program — Provider Referral
+      </span>
+    </div>
+  );
+}
+
+function PresNavDrawer({ step, setStep, open, onClose }: {
+  step: Step; setStep: (step: Step) => void; open: boolean; onClose: () => void;
+}) {
+  if (!open) return null;
+  // position:absolute (not fixed) on both the backdrop and the drawer — same
+  // reasoning as EnrollmentFormPreviewModal above / .provider-portal's own
+  // comment in client/global.css: a fixed overlay here pins to DemoShell's
+  // shorter viewport-height scroll pane instead of this portal's actual
+  // content height, leaving a gap of bare background below it.
+  return (
+    <>
+      <div style={{ position: "absolute", inset: 0, minHeight: "100%", background: "rgba(28,28,28,0.3)", zIndex: 200 }} onClick={onClose} />
+      <nav style={{
+        position: "absolute", top: 0, left: 0, bottom: 0, zIndex: 201, minHeight: "100%", width: 260,
+        background: "#fff", boxShadow: "2px 0 16px rgba(0,0,0,0.15)", display: "flex",
+        flexDirection: "column", overflowY: "auto", borderRight: "1px solid #E0E0E0",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid #E0E0E0" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1C" }}>Provider Portal</span>
+          <button onClick={onClose} aria-label="Close menu" type="button" style={{ background: "none", border: "none", cursor: "pointer", color: "#6F7276", display: "flex" }}>
+            <X size={18} />
+          </button>
+        </div>
+        <div style={{ flex: 1, padding: "16px 12px" }}>
+          {PRES_NAV_GROUPS.map((g, i) => (
+            <div key={g.group ?? `top-${i}`} style={{ marginBottom: 20 }}>
+              {g.group && (
+                <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "#6F7276", padding: "0 12px", marginBottom: 8 }}>
+                  {g.group}
+                </p>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {g.items.map((item) => {
+                  const isActive = step === item.step;
+                  return (
+                    <button
+                      key={item.step}
+                      type="button"
+                      onClick={() => { setStep(item.step); onClose(); }}
+                      style={{
+                        textAlign: "left", padding: "8px 12px", borderRadius: 8, fontSize: 13,
+                        fontWeight: isActive ? 700 : 500,
+                        color: isActive ? "#007178" : "#414042",
+                        background: isActive ? "#ADE2E340" : "transparent",
+                        border: "none", cursor: "pointer",
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </nav>
+    </>
   );
 }
 
@@ -1369,30 +1423,7 @@ function PresPapProviderExperience({
   const [selectedDrug, setSelectedDrug] = useState(drugName);
   const [signatureFullName, setSignatureFullName] = useState("");
   const [showEnrollmentPreview, setShowEnrollmentPreview] = useState(false);
-
-  // Drives the pres-insurance eligibility check itself rather than passively
-  // waiting on biStatus the way the patient portal's own /enrollment-complete
-  // screen does — that screen can rely on a CRM operator opening the BI
-  // stage tab elsewhere to advance it, but the provider flow is meant to be
-  // self-contained, so it fires the same RUN_BI -> COMPLETE_BI sequence CRM
-  // would eventually fire on its own timer (client/portals/crm/pages/
-  // Index.tsx's "Auto-complete BI when agent opens the BI stage tab"
-  // effect), instead of requiring a second tab to be open at all.
-  useEffect(() => {
-    if (step !== 'pres-insurance') return;
-    if (workflowData.biStatus === 'none') {
-      dispatch('RUN_BI', { portal: 'provider' });
-    }
-  }, [step, workflowData.biStatus, dispatch]);
-
-  useEffect(() => {
-    if (step !== 'pres-insurance') return;
-    if (workflowData.biStatus !== 'running') return;
-    const timer = setTimeout(() => {
-      dispatch('COMPLETE_BI', { portal: 'provider', result: 'no_insurance' });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [step, workflowData.biStatus, dispatch]);
+  const [navOpen, setNavOpen] = useState(false);
 
   // Pre-fill the consent step's cell phone field from the patient's own
   // record instead of asking the provider to retype it — same rationale as
@@ -1422,13 +1453,6 @@ function PresPapProviderExperience({
     setStep('pres-consent');
   }
 
-  // Insurance eligibility check (pres-insurance) reads workflowData.biStatus
-  // directly at render time below rather than needing an effect here — it's
-  // the same real shared biStatus/biResult mechanic CRM's BI stage drives
-  // for every other flow, not a separate fake field, so it stays truthful to
-  // what the demo can actually simulate. See this component's header
-  // comment for why there's no denial branch.
-
   let content: React.ReactNode;
 
   if (step === 'pres-home') {
@@ -1436,6 +1460,8 @@ function PresPapProviderExperience({
       <div className="provider-portal">
         <BrandSidebar isBranded={false} />
         <main className="provider-content">
+          <PresNavHeader onOpenMenu={() => setNavOpen(true)} />
+          <PresNavDrawer step={step} setStep={setStep} open={navOpen} onClose={() => setNavOpen(false)} />
           {/*
            * PesHome uses the arx-* design tokens (--arx-slate, --arx-primary,
            * etc.), which client/global.css only defines inside ".portal-patient"
@@ -1627,7 +1653,6 @@ function PresPapProviderExperience({
       data.consentAuthorizedBy &&
       (data.consentAuthorizedBy === 'Patient' || (data.representativeName.trim() && data.representativeRelationship.trim())) &&
       data.healthInfoConsent === 'Yes' &&
-      data.privacyConsent === 'Yes' &&
       data.callsConsent === 'Yes' &&
       data.cellPhone.trim() &&
       signatureFullName.trim();
@@ -1661,22 +1686,6 @@ function PresPapProviderExperience({
           By checking this box, I acknowledge that I have read and understand the Patient Authorization for Use and Disclosure of Personal Health Information.
         </PresConsentCheckbox>
 
-        {/* Folds in what the patient's own flow shows as a separate PAP Terms
-            screen (PesPapTerms.tsx) — the reference material bundles the
-            equivalent "Applicant Consent and Declarations" into this same
-            page rather than a standalone step, so this does too. Setting
-            agreePAPTerms alongside privacyConsent here (rather than as its
-            own checkbox) is what keeps that equivalence — same signal, one
-            fewer redundant checkbox for the provider to click. */}
-        <p className="pa-section-title" style={{ fontSize: 14, marginTop: 20, marginBottom: 0 }}>APPLICANT CONSENT AND DECLARATIONS</p>
-        <PresConsentText>{APPLICANT_DECLARATIONS_TEXT}</PresConsentText>
-        <PresConsentCheckbox
-          checked={data.privacyConsent === 'Yes'}
-          onChange={(v) => { setField('privacyConsent', v ? 'Yes' : 'No'); setField('agreePAPTerms', v ? 'Yes' : 'No'); }}
-        >
-          By checking this box, I acknowledge that I have read and understand the Applicant Consent and Declarations.
-        </PresConsentCheckbox>
-
         <p className="pa-section-title" style={{ fontSize: 14, marginTop: 20, marginBottom: 0 }}>TEXT MESSAGE AUTHORIZATION</p>
         <PresConsentText>{TEXT_MESSAGE_AUTH_TEXT}</PresConsentText>
         <PresConsentCheckbox checked={data.callsConsent === 'Yes'} onChange={(v) => setField('callsConsent', v ? 'Yes' : 'No')}>
@@ -1703,80 +1712,22 @@ function PresPapProviderExperience({
             onClick={() => {
               // The store still models one signature per consent section
               // (shared with the patient's own PesConsent.tsx data shape) —
-              // this page collects the name once and applies it to all
-              // three, rather than asking the provider to retype it.
+              // this page collects the name once and applies it to both
+              // consents captured here, rather than asking the provider to
+              // retype it.
               usePresPapStore.getState().setFields({
                 healthInfoSignature: signatureFullName,
-                privacySignature: signatureFullName,
                 callsSignature: signatureFullName,
               });
+              // CONFIRM_CONSENT is the last event the provider flow fires —
+              // insurance eligibility and financial/income verification are
+              // handled entirely by the patient portal's own screens from
+              // here (see this component's header comment).
               dispatch('CONFIRM_CONSENT', { portal: 'provider' });
-              setStep('pres-insurance');
-            }}
-          >
-            Continue
-          </button>
-        </div>
-      </>
-    );
-  } else if (step === 'pres-insurance') {
-    const checking = workflowData.biStatus !== 'complete';
-    content = (
-      <div style={{ textAlign: "center", padding: "60px 0" }}>
-        {checking ? (
-          <>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1C", marginBottom: 8 }}>Checking Insurance Eligibility</h2>
-            <p style={{ fontSize: 14, color: "#6F7276" }}>
-              AssistRx is running an automated eligibility check for the patient. This screen will advance automatically once it's complete.
-            </p>
-          </>
-        ) : (
-          <>
-            <svg width="48" height="48" viewBox="0 0 16 16" fill="none" style={{ margin: "0 auto 12px" }}>
-              <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58171 16 0 12.4183 0 8C0 3.58171 3.58171 0 8 0C12.4183 0 16 3.58171 16 8ZM7.07464 12.2359L13.0101 6.30045C13.2117 6.0989 13.2117 5.7721 13.0101 5.57055L12.2802 4.84064C12.0787 4.63906 11.7519 4.63906 11.5503 4.84064L6.70968 9.68123L4.44971 7.42126C4.24816 7.21971 3.92135 7.21971 3.71977 7.42126L2.98987 8.15116C2.78832 8.35271 2.78832 8.67952 2.98987 8.88106L6.34471 12.2359C6.54629 12.4375 6.87306 12.4375 7.07464 12.2359Z" fill="#007178" />
-            </svg>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1C1C1C", marginBottom: 8 }}>No Active Commercial Insurance Found</h2>
-            <p style={{ fontSize: 14, color: "#6F7276", maxWidth: 420, margin: "0 auto 20px" }}>
-              The patient appears uninsured and may qualify for the Patient Assistance Program. Continue to financial information.
-            </p>
-            <button className="pa-btn-primary" onClick={() => setStep('pres-financial')}>Continue</button>
-          </>
-        )}
-      </div>
-    );
-  } else if (step === 'pres-financial') {
-    const canContinue =
-      data.incomeConsent === 'Yes' && data.incomeSignature.trim() &&
-      data.householdSize.trim() && data.annualHouseholdIncome.trim();
-
-    content = (
-      <>
-        <p className="pa-section-title">Financial Information</p>
-        <PresYesNo question="Authorization for Electronic Income Verification — does the patient agree?" value={data.incomeConsent} onChange={(v) => setField('incomeConsent', v)} />
-        <PresSignatureField label="Signature" value={data.incomeSignature} onChange={(v) => setField('incomeSignature', v)} disclaimer="Certifies the patient has read and agreed to income verification." />
-
-        <div className="pa-fields" style={{ marginTop: 8 }}>
-          <PresField label="Household Size" value={data.householdSize} onChange={(v) => setField('householdSize', v.replace(/\D/g, ""))} />
-          <PresField label="Annual Household Income" value={data.annualHouseholdIncome} onChange={(v) => setField('annualHouseholdIncome', v.replace(/\D/g, ""))} />
-        </div>
-
-        <PresUploadStub
-          label="Proof of Income (optional)"
-          hint="Failure to upload proof of income may delay processing. Accepted: tax return, W-2, or last two pay stubs."
-          fileName="income-verification.pdf"
-        />
-
-        <div className="pa-action-row">
-          <button
-            className="pa-btn-primary"
-            disabled={!canContinue}
-            onClick={() => {
-              dispatch('START_INCOME_QUALIFICATION', { portal: 'provider' });
-              dispatch('VERIFY_INCOME', { portal: 'provider' });
               setStep('pres-complete');
             }}
           >
-            Submit Application
+            Continue
           </button>
         </div>
       </>
@@ -1789,8 +1740,8 @@ function PresPapProviderExperience({
         </svg>
         <h2 style={{ marginTop: 16, marginBottom: 8, fontSize: 20, fontWeight: 700, color: "#1C1C1C" }}>Thank You!</h2>
         <p style={{ color: "#6F7276", fontSize: 14, maxWidth: 440, margin: "0 auto 20px" }}>
-          Thank you for submitting {patient.patientName}'s enrollment into the {selectedDrug} Patient Assistance Program.
-          The patient will receive a call from an AssistRx program specialist within 2 business days.
+          Thank you for submitting {patient.patientName}'s referral to the {selectedDrug} Patient Assistance Program.
+          The patient will get a link to finish their income verification and complete enrollment from their own portal.
         </p>
         <div style={{ maxWidth: 420, margin: "0 auto", padding: "14px 16px", borderRadius: 10, border: "1px solid #E0E0E0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "#1C1C1C" }}>Enrollment Form (please print for your records)</span>
@@ -1818,6 +1769,8 @@ function PresPapProviderExperience({
     <div className="provider-portal">
       <BrandSidebar isBranded={false} />
       <main className="provider-content provider-content--pa">
+        <PresNavHeader onOpenMenu={() => setNavOpen(true)} />
+        <PresNavDrawer step={step} setStep={setStep} open={navOpen} onClose={() => setNavOpen(false)} />
         {content}
       </main>
     </div>

@@ -24,7 +24,7 @@ import { PortalRouter, Routes, Route, useNavigate, useLocation } from "@/lib/por
 import { ChatProvider, useChatContext } from "./components/ChatContext";
 import ChatModal from "./components/ChatModal";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
-import { useWorkflowActor } from "@/engine/WorkflowProvider";
+import { useWorkflowActor, usePersonaState } from "@/engine/WorkflowProvider";
 import { useSelector } from "@xstate/react";
 import { useDemoStore } from "@/store/demoStore";
 
@@ -49,6 +49,14 @@ const DELIVERY_FLOW_PATHS = [
   // tolerate a manual forward navigation ahead of what the state machine has
   // caught up to yet.
   '/pes-attestation',
+  // WF5 (PrES_PAP) only: /pes-home and /pes-income-consent share the same
+  // gate (papSmsVerified === true && incomeStatus === 'none') once a
+  // provider's referral has cleared BI and the Fulfillment Center's
+  // "application update" SMS has been tapped — see WorkflowEngine.ts's
+  // PrES_PAP branch and pes-home's own patient wrapper, which is what
+  // actually navigates here. Same tolerance as the /pes-attestation entry
+  // above, one phase later.
+  '/pes-income-consent',
 ];
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -83,6 +91,7 @@ import IncomeQualification from "./pages/IncomeQualification";
 import PapIncomeVerification from "./pages/PapIncomeVerification";
 import PapEnrollmentComplete from "./pages/PapEnrollmentComplete";
 import PesHome from "./pages/PesHome";
+import PesPapUpdateSms from "./pages/PesPapUpdateSms";
 import PesAttestation from "./pages/PesAttestation";
 import PesPatientInfo from "./pages/PesPatientInfo";
 import PesConsent from "./pages/PesConsent";
@@ -137,13 +146,31 @@ function StateDrivenNav() {
 function PatientRoutes() {
   const ctx = useChatContext();
   const { pathname } = useLocation();
+  const { workflowData } = usePersonaState('patient');
+
+  // WF5 (PrES_PAP) is the one flow rendered as a plain (tall, scrollable)
+  // web page rather than inside the fixed-height iPhone mockup (see
+  // DemoShell.tsx's Panel) — its outer wrapper needs min-h-full instead of
+  // h-full so it can actually grow past one viewport's height. h-full
+  // (height: 100%) caps this div to DemoShell's wide-pane height no matter
+  // how tall the real page content is, which was forcing Footer to dock at
+  // that fixed height and overlap/truncate whatever card content didn't
+  // fit — see PatientPortal's matching root-div fix below. Every other
+  // flow keeps h-full unchanged (their phone-mockup ancestor is a fixed,
+  // overflow:hidden box either way, so min-h-full wouldn't help them and
+  // risks changing behavior that already works for those flows).
+  const isWideFlow = workflowData.flowType === 'PrES_PAP';
 
   // Show header and footer starting from phone verification onwards
-  // (not for lock-screen and sms-message which should feel like a phone)
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms";
+  // (not for lock-screen and sms-message which should feel like a phone).
+  // /pes-pap-update-sms (WF5) joins this list too — DemoShell.tsx's Panel
+  // renders it inside the real iPhone-mockup frame (see
+  // showPesPapUpdateSmsPhone there), so it needs to feel like a phone
+  // screen the same way, with no CoAssist web chrome around it.
+  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms";
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
       {showHeaderFooter && <Header />}
       <div className="flex-1 overflow-x-hidden">
         <StateDrivenNav />
@@ -178,6 +205,7 @@ function PatientRoutes() {
           <Route path="/pap-income-verification"  element={<PapIncomeVerification />} />
           <Route path="/pap-enrollment-complete"  element={<PapEnrollmentComplete />} />
           <Route path="/pes-home"               element={<PesHome />} />
+          <Route path="/pes-pap-update-sms"     element={<PesPapUpdateSms />} />
           <Route path="/pes-attestation"        element={<PesAttestation />} />
           <Route path="/pes-patient-info"       element={<PesPatientInfo />} />
           <Route path="/pes-consent"            element={<PesConsent />} />
@@ -196,8 +224,13 @@ function PatientRoutes() {
 export default function PatientPortal() {
   const actor = useWorkflowActor();
   const initialPath = derivePatientRoute(actor.getSnapshot().context);
+  // Mirrors PatientRoutes' own isWideFlow check just below — this outer
+  // root div needs the same min-h-full-instead-of-h-full treatment for WF5,
+  // otherwise this box caps back to one viewport height one level higher up
+  // and the fix inside PatientRoutes never gets the chance to matter.
+  const isWideFlow = actor.getSnapshot().context.workflowData.flowType === 'PrES_PAP';
   return (
-    <div className="portal-patient h-full flex flex-col">
+    <div className={`portal-patient flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
       <PortalRouter initialPath={initialPath}>
         <ChatProvider>
           <PatientRoutes />

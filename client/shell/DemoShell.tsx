@@ -92,10 +92,10 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // switching to this flow, resetting it, or deep-linking via /iassist
   // should land on.
   iAssist_PA_Approved: "iassist",
-  // WF5 follows WF2's shape (see presPap.ts) so it opens on CRM too — unlike
-  // WF2, its provider tab stays visible (see getPortals below) since WF5 has
-  // its own provider-facing PrES intake placeholder.
-  PrES_PAP: "crm",
+  // WF5's shared patient/provider web experience starts on the Provider
+  // portal's own home screen (PesHome) — the provider is the one who starts
+  // a referral, and the role-selection home screen routes from there.
+  PrES_PAP: "provider",
 };
 
 function getProviderPortalLabel(flowType: string): string {
@@ -466,6 +466,20 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
   // If portal is no longer available in this flow, don't render
   if (!info) return null;
 
+  // WF5 (PrES_PAP) renders as a plain web page everywhere else (see the
+  // comment below), but the Fulfillment Center's "application update" SMS
+  // is meant to look exactly like the phone-mockup SMS screens every other
+  // flow uses (PapUpdateSms.tsx etc.) — same iPhone frame, not a card on a
+  // web page. usePersonaState('patient') reads the same shared workflowData
+  // regardless of which persona string is passed, so this doesn't need
+  // threading through as a prop. The window this covers (papSmsSent &&
+  // !papSmsVerified) corresponds exactly to WorkflowEngine.ts's PrES_PAP
+  // branch returning '/pes-pap-update-sms' — nothing else briefly flips
+  // into the phone frame by accident.
+  const { workflowData } = usePersonaState('patient');
+  const showPesPapUpdateSmsPhone =
+    flowType === 'PrES_PAP' && workflowData.papSmsSent && !workflowData.papSmsVerified;
+
   return (
     <div className="flex flex-col flex-1 min-w-0 border-r border-slate-700/50 last:border-r-0">
       {/* Per-panel portal selector (multi-panel mode only) */}
@@ -501,9 +515,12 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * layout instead of the iPhone mockup below — its screens were built
        * wide (see EnrollmentShell's `wide` prop) to read as a desktop web
        * app, matching CRM/Provider/Field, rather than a native mobile
-       * screen. All other flows keep the phone frame unchanged.
+       * screen. All other flows keep the phone frame unchanged. The one
+       * exception is the PAP "application update" SMS screen
+       * (showPesPapUpdateSmsPhone, computed above) — that one screen still
+       * uses the phone frame, matching every other flow's SMS screens.
        */}
-      {portal === "patient" && flowType !== "PrES_PAP" ? (
+      {portal === "patient" && (flowType !== "PrES_PAP" || showPesPapUpdateSmsPhone) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
