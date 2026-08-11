@@ -888,6 +888,23 @@ export default function DemoShell() {
           portal: 'crm',
           pharmacy
         });
+
+        // APPROVE_APPEAL above unlocks fulfillment but leaves infusionDate
+        // null — derivePatientRoute (WorkflowEngine.ts) treats "appeal
+        // approved, no date yet" as /pa-approved (Schedule Infusion), not
+        // this flow's real terminal screen. Without picking a date the same
+        // way InfusionDate.tsx would, jumping straight to Stage 6 landed on
+        // "Great news! Your appeal was approved" instead of Medication
+        // Delivered, even though Stage 6's whole premise is that dispatch is
+        // already complete.
+        const infusionDate = new Date();
+        infusionDate.setDate(infusionDate.getDate() + 7);
+        infusionDate.setHours(9, 0, 0, 0);
+        actor.send({
+          type: 'PATIENT_SELECTS_INFUSION_DATE',
+          portal: 'patient',
+          date: infusionDate.toISOString(),
+        });
       }
       return;
     }

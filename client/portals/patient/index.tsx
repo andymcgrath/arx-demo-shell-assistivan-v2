@@ -43,18 +43,19 @@ const DELIVERY_FLOW_PATHS = [
   // iAssist_PAP (WF5) only: /infusion-date is this flow's replacement for
   // /delivery-date (see InfusionDate.tsx) — same manual-navigation
   // tolerance while the patient is mid-selection, before
-  // PATIENT_SELECTS_INFUSION_DATE has fired. /appointment-confirmation is
-  // this flow's terminal screen; included here too so it isn't treated
-  // differently from every other screen in this list once landed on.
+  // PATIENT_SELECTS_INFUSION_DATE has fired. InfusionDate.tsx's handleSave()
+  // then does a one-time manual navigate() to /appointment-confirmation (a
+  // "text from the doctor's office" beat) even though derivePatientRoute
+  // itself now targets /medication-delivered the moment infusionDate is set
+  // — without this entry, that fresh derivePatientRoute computation would
+  // bounce the patient off the SMS screen before they've read it.
   '/infusion-date',
   '/appointment-confirmation',
-  // iAssist_PAP (WF5) only: derivePatientRoute keeps returning
-  // '/appointment-confirmation' forever once appealStatus is 'approved' and
-  // infusionDate is set (it's this flow's terminal state — see
-  // WorkflowEngine.ts). AppointmentConfirmation.tsx's Hero Card now lets the
-  // patient manually tap through to /medication-delivered from there; without
-  // this entry, that manual jump would be indistinguishable from every other
-  // untolerated path and risk getting bounced straight back.
+  // /medication-delivered is every flow's shared terminal "what's next"
+  // screen, including iAssist_PAP (WF5) since derivePatientRoute now points
+  // there once appealStatus is 'approved' and infusionDate is set (see
+  // WorkflowEngine.ts) — AppointmentConfirmation.tsx's own link forward
+  // lands here too, same as every other flow's dispatch-complete state.
   '/medication-delivered',
   // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
   // underlying machine state (enrollmentStatus 'none') — role selection and

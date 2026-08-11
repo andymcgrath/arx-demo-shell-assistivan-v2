@@ -398,10 +398,18 @@ export function derivePatientRoute(state: MachineContext): string {
     // shipment — so it never touches pharmacyStatus at all (that field stays
     // 'none' for this flow's whole post-appeal path; see crm/pages/Index.tsx's
     // SITES_OF_CARE/officeDispenseOptions and the Dispatch to Triage stage).
-    // Once the patient has picked an infusion date, this is a terminal
-    // screen — CRM handles dispatch to the site of care from here with no
-    // further patient-facing screens (AppointmentConfirmation.tsx).
-    if (workflowData.infusionDate !== null) return '/appointment-confirmation';
+    // Once the patient has picked an infusion date, this flow is done —
+    // CRM handles dispatch to the site of care from here with no further
+    // patient-facing steps. /medication-delivered (shared with every other
+    // flow's "what's next" screen) is the real terminal screen; it shows
+    // the Infusion Appointment details up top for this flow. InfusionDate.tsx
+    // still lands the patient on /appointment-confirmation immediately after
+    // picking a date (a one-time "text from the doctor's office" beat,
+    // tolerated by DELIVERY_FLOW_PATHS) — but the route this function itself
+    // computes is the actual terminal one, so reset/state-driven navigation
+    // (and AppointmentConfirmation's own link onward) lands here, not on a
+    // screen that requires a manual tap to leave.
+    if (workflowData.infusionDate !== null) return '/medication-delivered';
 
     // Not yet scheduled — patient picks a date on InfusionDate.tsx.
     return '/pa-approved';

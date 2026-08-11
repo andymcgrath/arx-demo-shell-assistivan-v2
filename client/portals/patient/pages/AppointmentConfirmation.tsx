@@ -1,18 +1,19 @@
-import { Mic, Calendar, MapPin, Phone, ChevronRight } from "lucide-react";
+import { Mic } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 
-// iAssist_PAP (WF5) only — terminal screen for this flow, styled as a text
-// message from the doctor's office confirming the infusion appointment
-// (mirrors SMSMessage.tsx's bubble pattern). derivePatientRoute
-// (WorkflowEngine.ts) lands the patient here once infusionDate is set and
-// keeps targeting this route forever after, since dispatch to the site of
-// care ("Keanu to facility") happens entirely on the CRM side from this
-// point on. The Hero Card below is the one manual way off this screen — it
-// sends the patient to MedicationDelivered.tsx; see the
-// '/medication-delivered' entry in patient/index.tsx's DELIVERY_FLOW_PATHS
-// for why that jump doesn't get bounced back here.
+// iAssist_PAP (WF5) only — a one-time "text from the doctor's office" beat
+// (mirrors SMSMessage.tsx's bubble pattern) shown right after InfusionDate.tsx
+// saves a date. derivePatientRoute (WorkflowEngine.ts) now targets
+// /medication-delivered as this flow's actual terminal screen — the site of
+// care/appointment details card that used to live here as a "Hero Card"
+// attachment moved there (it isn't an SMS attachment, it's ongoing info the
+// patient should be able to come back to). The link below is this screen's
+// only way forward; patient/index.tsx's DELIVERY_FLOW_PATHS tolerates
+// sitting on this screen so a fresh derivePatientRoute computation (which
+// now points straight at /medication-delivered) doesn't bounce the patient
+// off it before they've read the text.
 
 function formatDate(iso: string | null): string {
   if (!iso) return "your scheduled date";
@@ -52,55 +53,20 @@ export default function AppointmentConfirmation() {
             <p className="mb-2">
               Hi Keanu, this is Dr. Chen's office. Your infusion appointment is confirmed for {dateStr} at our {KEANU_SITE_OF_CARE_FACTS.city} site of care. We look forward to seeing you.
             </p>
-            <p className="text-xs text-gray-300">
+            {/* Plain in-message link, like a real appointment-reminder text —
+                not a rich attachment card (that content now lives on
+                MedicationDelivered.tsx, since it's ongoing info rather than
+                part of the SMS itself). This is the only way off this screen. */}
+            <button
+              onClick={() => navigate("/medication-delivered")}
+              className="text-blue-400 underline underline-offset-2 hover:text-blue-300 transition-colors"
+            >
+              View appointment details
+            </button>
+            <p className="text-xs text-gray-300 mt-2">
               Reply STOP to opt out, HELP for help. Msg&data rates may apply.
             </p>
           </div>
-        </div>
-
-        {/* Hero Card — rich-message attachment under the SMS bubble, mirroring
-            iMessage-style link previews. Tapping it hands the patient to
-            MedicationDelivered.tsx, the same "what's next" screen every other
-            workflow lands on post-dispatch. */}
-        <div className="flex justify-start">
-          <button
-            onClick={() => navigate("/medication-delivered")}
-            className="max-w-xs w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left hover:opacity-90 transition-opacity"
-          >
-            <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-white" />
-              <span className="text-sm font-semibold text-white">Infusion Appointment</span>
-            </div>
-            <div className="p-4 space-y-3">
-              <div>
-                <p className="text-base font-bold text-arx-slate">{dateStr}</p>
-                <p className="text-xs text-arx-body-copy">Infusion visit</p>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.facilityName}</p>
-                  <p className="text-xs text-arx-body-copy">
-                    {KEANU_SITE_OF_CARE_FACTS.address}, {KEANU_SITE_OF_CARE_FACTS.city}, {KEANU_SITE_OF_CARE_FACTS.state} {KEANU_SITE_OF_CARE_FACTS.zip}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <Phone className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.contactName}</p>
-                  <p className="text-xs text-arx-body-copy">{KEANU_SITE_OF_CARE_FACTS.contactPhone}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-arx-borders">
-                <span className="text-sm font-semibold text-arx-primary">View details</span>
-                <ChevronRight className="w-4 h-4 text-arx-primary" />
-              </div>
-            </div>
-          </button>
         </div>
       </div>
 
