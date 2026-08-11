@@ -1,15 +1,15 @@
 {
   "manufacturer": {
-    "name": "Boehringer Ingelheim",
-    "tagline": "Patient assistance & medication access program",
+    "name": "TG Therapuetics",
+    "tagline": "",
     "logo": {
-      "colors": "/uploads/1786378955144-imgi_5_boehringer-ingelheim-logo.png",
-      "white": "/uploads/1786424553210-imgi_3_primary-logo-white.svg",
+      "colors": "/uploads/1786444819116-TGT_Logo_RGB-1.svg-1.svg",
+      "white": "/uploads/1786447172989-TG_Therapeutics_Logo-revised_colors-white.png",
       "requiresFilter": false
     },
     "support": {
-      "label": "Technical Help",
-      "phone": "877-450-4412"
+      "label": "Customer Support",
+      "phone": "800-555-2323"
     },
     "legal": {
       "privacyUrl": "#",
@@ -17,29 +17,30 @@
       "safetyUrl": "#",
       "prescribingUrl": "#"
     },
-    "copyright": "©{{YEAR}} Boehringer Ingelheim. All Rights Reserved. Intended for US residents only."
+    "copyright": "©{{YEAR}} TG Therapuetics. All Rights Reserved. Intended for US residents only."
   },
   "program": {
-    "name": "Jascayd",
-    "drugDisplayName": "Jascayd",
-    "description": "Add product details here",
+    "name": "BRIUMVI Patient Support Program",
+    "drugDisplayName": "BRIUMVI®",
+    "description": "BRIUMVI is a prescription medication used to treat adults with relapsing forms of multiple sclerosis (MS).",
     "logo": {
-      "colors": "/uploads/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
-      "white": "/uploads/1786385297021-jascayd-logo-white.svg"
+      "colors": "/uploads/1786445499203-imgi_1_briumvi-logo2-sm.png",
+      "white": "/uploads/1786447170235-imgi_1_briumvi-logo2-sm-white.png",
+      "requiresFilter": false
     },
     "colors": {
-      "primary": "#08312A",
-      "primaryDark": "#051F1A",
-      "primaryLight": "#00E47C",
-      "primaryWash": "#B6D2CE"
+      "primary": "#009CA6",
+      "primaryDark": "#24525C",
+      "primaryLight": "#f7be69",
+      "primaryWash": "#fffdfb"
     },
     "educationVideo": {
-      "title": "What's a healthy lung vs. a lung with inflammation and fibrosis?",
-      "description": "A short animation on the basics of pulmonary fibrosis — 2 min watch.",
-      "thumbnail": "https://images.pexels.com/photos/7579819/pexels-photo-7579819.jpeg?auto=compress&cs=tinysrgb&w=600",
-      "embedUrl": "https://player.vimeo.com/video/1127637881?h=cee031093d"
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": "https://www.youtube.com/watch?v=DQmclRmqjz0"
     }
   },
   "chatbotIcon": "/uploads/1786424090136-482GS01.svg",
-  "favicon": "/uploads/1786424540808-apple-touch-icon.png"
+  "favicon": "/uploads/1786446283623-icon-32x32.png"
 }

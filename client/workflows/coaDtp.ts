@@ -36,6 +36,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   appealStatus: "none",
+  infusionDate: null,
 }
 
 const initialContext: MachineContext = {

@@ -40,6 +40,14 @@ const DELIVERY_FLOW_PATHS = [
   '/delivery-confirmation',
   '/order-tracker',
   '/order-shipped',
+  // iAssist_PAP (WF5) only: /infusion-date is this flow's replacement for
+  // /delivery-date (see InfusionDate.tsx) — same manual-navigation
+  // tolerance while the patient is mid-selection, before
+  // PATIENT_SELECTS_INFUSION_DATE has fired. /appointment-confirmation is
+  // this flow's terminal screen; included here too so it isn't treated
+  // differently from every other screen in this list once landed on.
+  '/infusion-date',
+  '/appointment-confirmation',
   // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
   // underlying machine state (enrollmentStatus 'none') — role selection and
   // the has-prescription question both happen before ENROLL ever fires. Once
@@ -99,6 +107,8 @@ import PesIncomeConsent from "./pages/PesIncomeConsent";
 import PesIncomeSubmission from "./pages/PesIncomeSubmission";
 import PesPapTerms from "./pages/PesPapTerms";
 import PesConfirmation from "./pages/PesConfirmation";
+import InfusionDate from "./pages/InfusionDate";
+import AppointmentConfirmation from "./pages/AppointmentConfirmation";
 
 
 /** Watches actor state and navigates the patient portal accordingly */
@@ -167,7 +177,12 @@ function PatientRoutes() {
   // renders it inside the real iPhone-mockup frame (see
   // showPesPapUpdateSmsPhone there), so it needs to feel like a phone
   // screen the same way, with no CoAssist web chrome around it.
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms";
+  // /appointment-confirmation (iAssist_PAP/WF5 only) is the same "doctor's
+  // office text message" pattern as /sms-message — it was left out of this
+  // list originally, which is why it rendered sandwiched between the white
+  // Header/Footer instead of full-screen black like every other SMS-bubble
+  // screen (AppointmentConfirmation.tsx).
+  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation";
 
   return (
     <div className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
@@ -213,6 +228,8 @@ function PatientRoutes() {
           <Route path="/pes-income-submission"  element={<PesIncomeSubmission />} />
           <Route path="/pes-pap-terms"          element={<PesPapTerms />} />
           <Route path="/pes-confirmation"       element={<PesConfirmation />} />
+          <Route path="/infusion-date"          element={<InfusionDate />} />
+          <Route path="/appointment-confirmation" element={<AppointmentConfirmation />} />
         </Routes>
         {ctx?.chatOpen && <ChatModal onClose={ctx.closeChat} />}
       </div>
