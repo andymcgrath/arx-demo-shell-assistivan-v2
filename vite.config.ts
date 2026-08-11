@@ -149,6 +149,7 @@ function brandAdminPlugin(rootDir: string): Plugin {
                 colors: { ...existing.program.colors, ...(body.program?.colors ?? {}) },
               },
               chatbotIcon: body.chatbotIcon ?? existing.chatbotIcon,
+              favicon: body.favicon ?? existing.favicon,
             };
 
             fs.writeFileSync(activeBrandPath, JSON.stringify(merged, null, 2));
@@ -198,6 +199,27 @@ function brandAdminPlugin(rootDir: string): Plugin {
             if (!fs.existsSync(uploadsDir)) return send(res, 200, []);
             const files = fs.readdirSync(uploadsDir).filter(f => !f.startsWith("."));
             return send(res, 200, files.map(f => ({ url: `/uploads/${f}`, filename: f })));
+          }
+
+          // Deletes an uploaded file from disk. This only removes the file
+          // itself — any brand (active or saved preset) still pointing at
+          // that /uploads/<filename> URL will just show a broken image; we
+          // don't scan/rewrite branding JSON on delete, so the person doing
+          // the deleting should know the asset is unused first.
+          const assetMatch = pathname.match(/^\/api\/admin\/assets\/([^/]+)$/);
+          if (assetMatch && req.method === "DELETE") {
+            const filename = decodeURIComponent(assetMatch[1]);
+            // Reject anything that isn't a bare filename (no path traversal
+            // via ../, no nested paths) — upload always writes bare
+            // filenames into uploadsDir, so a legitimate delete request
+            // never needs to be anything else.
+            if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) {
+              return send(res, 400, { error: "Invalid filename" });
+            }
+            const filePath = path.join(uploadsDir, filename);
+            if (!fs.existsSync(filePath)) return send(res, 404, { error: "Asset not found" });
+            fs.unlinkSync(filePath);
+            return send(res, 200, { success: true });
           }
 
           if (pathname === "/api/admin/upload" && req.method === "POST") {

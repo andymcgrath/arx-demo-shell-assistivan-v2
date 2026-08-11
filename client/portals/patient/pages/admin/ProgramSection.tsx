@@ -26,10 +26,26 @@ export default function ProgramSection({ data, onChange }: Props) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Program Name" value={data.name} onChange={v => set("name", v)} />
-        <Field label="Drug Display Name" value={data.drugDisplayName} onChange={v => set("drugDisplayName", v)} />
+        <Field
+          label="Program Name"
+          hint="Internal name for this program — used to label saved brand presets in the admin screen."
+          value={data.name}
+          onChange={v => set("name", v)}
+        />
+        <Field
+          label="Drug Display Name"
+          hint="Patient-facing drug name shown throughout the portal. Falls back to Program Name if left blank."
+          value={data.drugDisplayName}
+          onChange={v => set("drugDisplayName", v)}
+        />
       </div>
-      <Field label="Description" value={data.description} onChange={v => set("description", v)} placeholder="e.g. 0.8 mg · 30-day supply" />
+      <Field
+        label="Description"
+        hint="Short medication detail shown near the drug name — e.g. dosage and supply period."
+        value={data.description}
+        onChange={v => set("description", v)}
+        placeholder="e.g. 0.8 mg · 30-day supply"
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <LogoPicker
@@ -97,10 +113,11 @@ export default function ProgramSection({ data, onChange }: Props) {
   );
 }
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function Field({ label, hint, value, onChange, placeholder }: { label: string; hint?: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div className="space-y-1">
       <label className="block text-sm font-medium text-[--arx-slate]">{label}</label>
+      {hint && <p className="text-xs text-[--arx-inactive]">{hint}</p>}
       <input
         type="text"
         value={value}
@@ -116,7 +133,11 @@ function ColorField({ label, hint, value, onChange }: { label: string; hint: str
   return (
     <div className="space-y-1">
       <label className="block text-sm font-medium text-[--arx-slate]">{label}</label>
-      <p className="text-xs text-[--arx-inactive]">{hint}</p>
+      {/* Fixed min-height (fits two lines of text-xs) so all four color
+          inputs in the row below line up regardless of which hints happen
+          to wrap to a second line (e.g. "Primary Wash"'s hint is longer
+          than the others) — see feedback: "fix the Brand color alignment". */}
+      <p className="text-xs text-[--arx-inactive] min-h-[2rem]">{hint}</p>
       <div className="flex items-center gap-2 border border-[--arx-borders] rounded-lg px-3 py-2 bg-white">
         <input
           type="color"

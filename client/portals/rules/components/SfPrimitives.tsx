@@ -73,9 +73,27 @@ export function SfLink({
 }
 
 /**
- * Label-above-value row. Pass `value` for a static row, or `children` (e.g.
- * an <SfSelect>) to render an editable row in the same slot — used by the
- * Profile page's Enrollment Welcome Kit section while in edit mode.
+ * Inline label/value row -- label in a fixed-width left column, value
+ * filling the rest, both on the same line. Pass `value` for a static row, or
+ * `children` (e.g. an <SfSelect>) to render an editable row in the same slot
+ * -- used by the Profile page's Enrollment Welcome Kit section while in edit
+ * mode.
+ *
+ * This mirrors the recording's actual detail-page layout (confirmed against
+ * the Profile/Case/Stage screens): label and value sit side by side, not
+ * label-above-value -- see the "4-column layout" feedback that prompted
+ * this rewrite (it previously stacked label above value).
+ *
+ * `break-all` on the value column matters more than it looks: fields like
+ * Service Types/Offerings/Rules Of Engagement are long semicolon-joined
+ * strings with NO spaces, so the browser has no natural point to wrap on.
+ * Without a word-break rule those values render as one unbreakable run that
+ * overflows straight past this column's width and visually collides with
+ * the column to its right (see the "overlapping layout" feedback). The
+ * recording itself wraps these values mid-word (e.g. "Reen" / "rollment"
+ * split across two lines) -- `break-all` reproduces that exact behavior
+ * rather than the more conservative `break-words`, which would refuse to
+ * split "Reenrollment" and overflow anyway since there's no earlier space.
  */
 export function FieldRow({
   label,
@@ -87,9 +105,27 @@ export function FieldRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col px-3 py-2 border-b border-[#dddbda] min-h-[44px]">
-      <span className="text-[11px] text-[#706e6b] mb-0.5 uppercase tracking-wide font-medium leading-tight">{label}</span>
-      {children ?? <span className="text-[13px] text-[#3e3e3c]">{value ?? " "}</span>}
+    <div className="flex items-start gap-3 px-3 py-2.5 border-b border-[#dddbda] min-h-[42px]">
+      <span className="w-[180px] shrink-0 text-[13px] text-[#3e3e3c] leading-snug">{label}</span>
+      <div className="flex-1 min-w-0 break-all text-[13px] text-[#3e3e3c] leading-snug">{children ?? (value || " ")}</div>
+    </div>
+  );
+}
+
+/**
+ * Two independent field lists rendered side by side (left column fully
+ * top-to-bottom, then right column) -- NOT a single grid that interleaves
+ * items row-by-row. The recording's Profile/Case/Stage detail pages all use
+ * explicit, hand-assigned column placement (e.g. General's left column is
+ * Profile Name through Access Pathway while the right column is Quick Start
+ * Description through Brand -- not an alternating pattern), so callers pass
+ * the exact left/right split rather than one flat list.
+ */
+export function TwoColumnFields({ left, right }: { left: ReactNode; right: ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2">
+      <div className="md:border-r border-[#dddbda]">{left}</div>
+      <div>{right}</div>
     </div>
   );
 }

@@ -37,9 +37,21 @@ export const PROGRAM = activeBrand.program;
 
 export const CHATBOT_ICON = activeBrand.chatbotIcon;
 
-// Push PROGRAM.colors into the --arx-primary* CSS variables at runtime.
-// Re-runs on every full page load, including the reload that follows a
-// save in /admin.
+export const FAVICON = (activeBrand as { favicon?: string }).favicon ?? "";
+
+// Push PROGRAM.colors into the --arx-primary* CSS variables, and swap the
+// browser tab icon to the admin-configured favicon (falls back to the
+// static /favicon.svg in index.html when none is set). Re-runs on every
+// full page load, including the reload that follows a save in /admin.
 if (typeof document !== "undefined") {
   applyBrandCssVars(PROGRAM.colors);
+  if (FAVICON) {
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = FAVICON;
+  }
 }

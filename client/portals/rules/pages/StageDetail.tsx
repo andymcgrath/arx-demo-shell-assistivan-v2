@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import RulesAppShell from "../components/RulesAppShell";
 import { useToast } from "../components/Toast";
-import { SfButton, SfPrimaryButton, SfLink, SfSelect } from "../components/SfPrimitives";
+import { SfButton, SfPrimaryButton, SfLink, SfSelect, FieldRow, TwoColumnFields } from "../components/SfPrimitives";
 import { useRulesPortalStore, type RulesStageStatus } from "@/store/rulesPortalStore";
 import { usePatientStore } from "@/store/patientStore";
 
@@ -94,69 +94,69 @@ export default function StageDetail({ stageId }: { stageId: string }) {
               <div className="text-[12px] text-[#706e6b] py-8 text-center">Nothing to show here for this demo.</div>
             ) : (
               <div className="border border-[#dddbda] rounded overflow-hidden">
-                <div className="grid grid-cols-1 sm:grid-cols-2">
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Record Type Name</span>
-                    <span className="text-[13px] text-[#3e3e3c]">Enrollment Assistance</span>
-                    <span className="text-[10.5px] text-[#706e6b] mt-0.5">Calculated on save</span>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Owner</span>
-                    <span className="text-[13px] text-[#3e3e3c]">Zackary Baker</span>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Stage Name</span>
-                    <span className="text-[13px] text-[#3e3e3c]">{stage.stageName}</span>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Service Type Name</span>
-                    <span className="text-[13px] text-[#3e3e3c]">Onboarding</span>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Case</span>
-                    <SfLink onClick={() => navigate(`/case/${kase.id}`)}>{kase.caseNumber}</SfLink>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Prescription</span>
-                    <input
-                      disabled
-                      placeholder="Search Prescriptions..."
-                      className="text-[13px] border border-[#dddbda] rounded px-2 py-1 bg-[#f3f3f3] text-[#706e6b]"
-                    />
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Status</span>
-                    <SfSelect
-                      value={draftStatus}
-                      onChange={(v) => {
-                        const next = v as RulesStageStatus;
-                        setDraftStatus(next);
-                        if (next !== "Complete") setDraftSubStatus("--None--");
-                      }}
-                      options={STATUS_OPTIONS}
-                    />
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Sub-Status</span>
-                    <SfSelect value={draftSubStatus} onChange={setDraftSubStatus} options={subStatusOptions} />
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Subject</span>
-                    <span className="text-[13px] text-[#3e3e3c]">--None--</span>
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Reason</span>
-                    <input
-                      disabled
-                      placeholder="Search Reasons..."
-                      className="text-[13px] border border-[#dddbda] rounded px-2 py-1 bg-[#f3f3f3] text-[#706e6b]"
-                    />
-                  </div>
-                  <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                    <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Product Family</span>
-                    <span className="text-[13px] text-[#3e3e3c]">{drugName}</span>
-                  </div>
-                </div>
+                {/* Left/right split matches the recording: Record Type Name,
+                    Owner, Status, Sub-Status, Subject, Reason, Product Family
+                    on the left; Stage Name, Service Type Name, Case,
+                    Prescription on the right. */}
+                <TwoColumnFields
+                  left={
+                    <>
+                      <FieldRow
+                        label="Record Type Name"
+                        value={
+                          <>
+                            Enrollment Assistance
+                            <div className="text-[10.5px] text-[#706e6b] mt-0.5">Calculated on save</div>
+                          </>
+                        }
+                      />
+                      <FieldRow label="Owner" value="Zackary Baker" />
+                      <FieldRow label="Status">
+                        <SfSelect
+                          value={draftStatus}
+                          onChange={(v) => {
+                            const next = v as RulesStageStatus;
+                            setDraftStatus(next);
+                            if (next !== "Complete") setDraftSubStatus("--None--");
+                          }}
+                          options={STATUS_OPTIONS}
+                        />
+                      </FieldRow>
+                      <FieldRow label="Sub-Status">
+                        <SfSelect value={draftSubStatus} onChange={setDraftSubStatus} options={subStatusOptions} />
+                      </FieldRow>
+                      <FieldRow label="Subject" value="--None--" />
+                      <FieldRow
+                        label="Reason"
+                        value={
+                          <input
+                            disabled
+                            placeholder="Search Reasons..."
+                            className="text-[13px] border border-[#dddbda] rounded px-2 py-1 bg-[#f3f3f3] text-[#706e6b] w-full"
+                          />
+                        }
+                      />
+                      <FieldRow label="Product Family" value={drugName} />
+                    </>
+                  }
+                  right={
+                    <>
+                      <FieldRow label="Stage Name" value={stage.stageName} />
+                      <FieldRow label="Service Type Name" value="Onboarding" />
+                      <FieldRow label="Case" value={<SfLink onClick={() => navigate(`/case/${kase.id}`)}>{kase.caseNumber}</SfLink>} />
+                      <FieldRow
+                        label="Prescription"
+                        value={
+                          <input
+                            disabled
+                            placeholder="Search Prescriptions..."
+                            className="text-[13px] border border-[#dddbda] rounded px-2 py-1 bg-[#f3f3f3] text-[#706e6b] w-full"
+                          />
+                        }
+                      />
+                    </>
+                  }
+                />
 
                 <div className="px-3 py-2 bg-[#f3f3f3] border-y border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]">Notes</div>
                 <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">

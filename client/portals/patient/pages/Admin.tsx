@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { hexToColorFilter } from "@/lib/brandFilter";
 import { usePatientStore } from "@/store/patientStore";
-import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2, FilePlus2 } from "lucide-react";
 import ManufacturerSection from "./admin/ManufacturerSection";
 import ProgramSection from "./admin/ProgramSection";
 import BrandingPreview from "./admin/BrandingPreview";
+import LogoPicker from "./admin/LogoPicker";
 
 type Tab = "manufacturer" | "program";
 type SaveState = "idle" | "saving" | "success" | "error";
@@ -29,6 +30,7 @@ interface BrandingData {
     colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
   };
   chatbotIcon: string;
+  favicon: string;
 }
 
 const EMPTY: BrandingData = {
@@ -47,7 +49,26 @@ const EMPTY: BrandingData = {
     colors: { primary: "#007178", primaryDark: "#005a5f", primaryLight: "#338D93", primaryWash: "#B1D5D8" },
   },
   chatbotIcon: "",
+  favicon: "",
 };
+
+/** Backfills fields that older saved presets / active-brand.json snapshots
+ * may not have (e.g. `favicon` didn't exist before this admin update), so
+ * the rest of this page can always assume a complete BrandingData shape. */
+function normalize(raw: any): BrandingData {
+  return {
+    ...EMPTY,
+    ...raw,
+    manufacturer: { ...EMPTY.manufacturer, ...raw?.manufacturer },
+    program: {
+      ...EMPTY.program,
+      ...raw?.program,
+      colors: { ...EMPTY.program.colors, ...raw?.program?.colors },
+    },
+    chatbotIcon: raw?.chatbotIcon ?? "",
+    favicon: raw?.favicon ?? "",
+  };
+}
 
 export default function Admin() {
   const [data, setData] = useState<BrandingData>(EMPTY);
@@ -61,15 +82,46 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/branding")
-      .then(r => r.json())
-      .then(d => {
-        setData(d);
-        setPresetName(d?.program?.name ?? "");
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-    refreshBrandList();
+    let cancelled = false;
+
+    async function init() {
+      try {
+        const [brandingData, brandList] = await Promise.all([
+          fetch("/api/admin/branding").then(r => r.json()),
+          fetch("/api/admin/brands").then(r => r.json()),
+        ]);
+        if (cancelled) return;
+        const normalized = normalize(brandingData);
+        setData(normalized);
+        setBrands(brandList);
+
+        // "Preset name" should reflect the name of whichever saved brand is
+        // actually active right now — not a guess derived from the program
+        // name. Check each saved preset for an exact match against what's
+        // currently live; if one matches, select it in the dropdown and show
+        // its real preset name. If nothing matches (e.g. active-brand.json
+        // has been hand-edited since it was last saved as a preset), leave
+        // both blank — there genuinely is no "currently selected brand".
+        for (const b of brandList as BrandListItem[]) {
+          try {
+            const preset = await fetch(`/api/admin/brands/${b.slug}`).then(r => r.json());
+            if (cancelled) return;
+            if (JSON.stringify(normalize(preset.data)) === JSON.stringify(normalized)) {
+              setSelectedSlug(b.slug);
+              setPresetName(preset.presetName);
+              break;
+            }
+          } catch {
+            // Skip unreadable presets — not fatal to the match search.
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    init();
+    return () => { cancelled = true; };
   }, []);
 
   function refreshBrandList() {
@@ -86,12 +138,24 @@ export default function Admin() {
       const res = await fetch(`/api/admin/brands/${slug}`);
       if (!res.ok) throw new Error("Failed to load brand");
       const preset = await res.json();
-      setData(preset.data);
+      setData(normalize(preset.data));
       setPresetName(preset.presetName);
       setSaveState("idle");
     } catch {
       setSaveState("error");
     }
+  }
+
+  /** Clears the form to a blank entry so a new brand can be filled in from
+   * scratch, instead of always starting from whatever was last loaded. */
+  function handleNewBrand() {
+    if (!window.confirm("Start a new blank brand? Unsaved changes to the current one will be lost (the live site is unaffected until you hit Save).")) {
+      return;
+    }
+    setData(EMPTY);
+    setSelectedSlug("");
+    setPresetName("");
+    setSaveState("idle");
   }
 
   async function handleDeleteBrand() {
@@ -199,6 +263,14 @@ export default function Admin() {
               >
                 {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
               </button>
+              <button
+                onClick={handleNewBrand}
+                title="Start a new blank brand"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-[--arx-borders] rounded-lg hover:bg-gray-50 transition-colors text-[--arx-body-copy] whitespace-nowrap flex-shrink-0"
+              >
+                <FilePlus2 size={14} />
+                New Brand
+              </button>
             </div>
             <div className="flex-1 flex items-center gap-2">
               <label className="text-sm text-[--arx-body-copy] whitespace-nowrap">Preset name</label>
@@ -206,7 +278,7 @@ export default function Admin() {
                 type="text"
                 value={presetName}
                 onChange={e => setPresetName(e.target.value)}
-                placeholder="e.g. Boehringer"
+                placeholder={selectedSlug ? "e.g. Boehringer" : "No brand selected — type a name to save as new"}
                 className="flex-1 text-sm border border-[--arx-borders] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
               />
             </div>
@@ -248,23 +320,28 @@ export default function Admin() {
             )}
           </div>
 
+          {/* Favicon */}
+          <div className="bg-white rounded-xl border border-[--arx-borders] p-6 shadow-sm mt-4">
+            <h2 className="text-base font-semibold text-[--arx-slate] mb-4">Favicon</h2>
+            <LogoPicker
+              label="Favicon"
+              hint="Small icon shown in the browser tab. Square images work best (e.g. 32×32 or 64×64)."
+              value={data.favicon}
+              onChange={url => setData(d => ({ ...d, favicon: url }))}
+            />
+          </div>
+
           {/* Chatbot icon */}
           <div className="bg-white rounded-xl border border-[--arx-borders] p-6 shadow-sm mt-4">
-            <h2 className="text-base font-semibold text-[--arx-slate] mb-1">Chatbot Icon</h2>
-            <p className="text-sm text-[--arx-body-copy] mb-4">URL for the floating chat assistant icon. Automatically colored to match the primary brand color.</p>
-            <input
-              type="url"
+            <h2 className="text-base font-semibold text-[--arx-slate] mb-4">Chatbot Icon</h2>
+            <LogoPicker
+              label="Chatbot Icon"
+              hint="Icon for the floating chat assistant. Automatically colored to match the primary brand color wherever it's shown."
               value={data.chatbotIcon}
-              onChange={e => setData(d => ({ ...d, chatbotIcon: e.target.value }))}
-              placeholder="https://..."
-              className="w-full text-sm border border-[--arx-borders] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+              onChange={url => setData(d => ({ ...d, chatbotIcon: url }))}
             />
             {data.chatbotIcon && (
               <div className="mt-3 flex items-center gap-6">
-                <div className="text-center space-y-1">
-                  <p className="text-xs text-[--arx-inactive]">Original</p>
-                  <img src={data.chatbotIcon} alt="Chatbot icon" className="h-10 object-contain" />
-                </div>
                 <div className="text-center space-y-1">
                   <p className="text-xs text-[--arx-inactive]">With brand color</p>
                   <img

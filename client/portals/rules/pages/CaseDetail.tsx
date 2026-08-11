@@ -8,10 +8,10 @@
  * this table and populates "Upcoming & Overdue" with the generated tasks,
  * no manual refresh needed (better than the recording, which needed one).
  */
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import RulesAppShell from "../components/RulesAppShell";
-import { SfButton, SfLink } from "../components/SfPrimitives";
+import { SfButton, SfLink, FieldRow, TwoColumnFields } from "../components/SfPrimitives";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { usePatientStore } from "@/store/patientStore";
 
@@ -140,27 +140,30 @@ export default function CaseDetail({ caseId }: { caseId: string }) {
                     <div className="px-3 py-2 bg-[#f3f3f3] border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]">
                       Case Summary
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2">
-                      {(
-                        [
-                          ["Account Name", <SfLink key="acct">{kase.accountName}</SfLink>],
-                          ["Service Type", kase.serviceType],
-                          ["Status", "Open"],
-                          ["Referral Source", kase.referralSource],
-                          ["Case Record Type", "Patient Solutions"],
-                          ["Priority", "Medium"],
-                          ["Case Origin", kase.caseOrigin],
-                          ["Origin NCPDP Id", "—"],
-                          ["Product", drugName],
-                          ["FRM Contact", "—"],
-                        ] as [string, ReactNode][]
-                      ).map(([label, value]) => (
-                        <div key={label} className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                          <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">{label}</span>
-                          <span className="text-[13px] text-[#3e3e3c]">{value}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {/* Left/right split matches the recording: Account Name,
+                        Service Type, Status, Referral Source on the left;
+                        Case Record Type, Priority, Case Origin, Origin
+                        NCPDP Id, Product, FRM Contact on the right. */}
+                    <TwoColumnFields
+                      left={
+                        <>
+                          <FieldRow label="Account Name" value={<SfLink>{kase.accountName}</SfLink>} />
+                          <FieldRow label="Service Type" value={kase.serviceType} />
+                          <FieldRow label="Status" value="Open" />
+                          <FieldRow label="Referral Source" value={kase.referralSource} />
+                        </>
+                      }
+                      right={
+                        <>
+                          <FieldRow label="Case Record Type" value="Patient Solutions" />
+                          <FieldRow label="Priority" value="Medium" />
+                          <FieldRow label="Case Origin" value={kase.caseOrigin} />
+                          <FieldRow label="Origin NCPDP Id" value="—" />
+                          <FieldRow label="Product" value={drugName} />
+                          <FieldRow label="FRM Contact" value="—" />
+                        </>
+                      }
+                    />
                   </div>
                 ) : (
                   <div className="text-[12px] text-[#706e6b] py-8 text-center">Nothing to show here for this demo.</div>

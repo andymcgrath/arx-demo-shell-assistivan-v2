@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Upload, ImageIcon } from "lucide-react";
+import { X, Upload, ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { readFileAsDataUrl } from "./fileUtils";
 
@@ -17,6 +17,7 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [deletingFilename, setDeletingFilename] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,6 +60,24 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
     if (selected) onSelect(selected);
   }
 
+  async function handleDelete(e: React.MouseEvent, asset: Asset) {
+    e.stopPropagation(); // don't also trigger the thumbnail's select handler
+    if (!window.confirm(`Delete "${asset.filename}"? This can't be undone. Any brand still using this image will show a broken image.`)) {
+      return;
+    }
+    setDeletingFilename(asset.filename);
+    try {
+      const res = await fetch(`/api/admin/assets/${encodeURIComponent(asset.filename)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete asset");
+      setAssets(prev => prev.filter(a => a.filename !== asset.filename));
+      if (selected === asset.url) setSelected(null);
+    } catch {
+      window.alert("Couldn't delete that asset. Check the dev server console for details.");
+    } finally {
+      setDeletingFilename(null);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
@@ -94,31 +113,51 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
               {assets.map(asset => (
-                <button
-                  key={asset.url}
-                  onClick={() => setSelected(asset.url === selected ? null : asset.url)}
-                  className={cn(
-                    "relative aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-50",
-                    selected === asset.url
-                      ? "border-[hsl(var(--arx-primary))] ring-2 ring-[hsl(var(--arx-primary))/30]"
-                      : "border-transparent hover:border-gray-300"
-                  )}
-                >
-                  <img
-                    src={asset.url}
-                    alt={asset.filename}
-                    className="w-full h-full object-contain p-2"
-                  />
-                  {selected === asset.url && (
-                    <div className="absolute inset-0 bg-[hsl(var(--arx-primary))]/10 flex items-center justify-center">
-                      <div className="w-5 h-5 rounded-full bg-[hsl(var(--arx-primary))] flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+                <div key={asset.url} className="group relative">
+                  <button
+                    onClick={() => setSelected(asset.url === selected ? null : asset.url)}
+                    className={cn(
+                      "relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-50",
+                      selected === asset.url
+                        ? "border-[hsl(var(--arx-primary))] ring-2 ring-[hsl(var(--arx-primary))/30]"
+                        : "border-transparent hover:border-gray-300"
+                    )}
+                  >
+                    <img
+                      src={asset.url}
+                      alt={asset.filename}
+                      className="w-full h-full object-contain p-2"
+                    />
+                    {selected === asset.url && (
+                      <div className="absolute inset-0 bg-[hsl(var(--arx-primary))]/10 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-[hsl(var(--arx-primary))] flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </button>
+                    )}
+                  </button>
+
+                  {/* Delete — shown on hover (always visible while its own
+                      delete is in flight so the spinner doesn't vanish). */}
+                  <button
+                    onClick={e => handleDelete(e, asset)}
+                    disabled={deletingFilename === asset.filename}
+                    title={`Delete ${asset.filename}`}
+                    aria-label={`Delete ${asset.filename}`}
+                    className={cn(
+                      "absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow transition-opacity hover:bg-red-600",
+                      deletingFilename === asset.filename ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    {deletingFilename === asset.filename ? (
+                      <Loader2 size={10} className="animate-spin" />
+                    ) : (
+                      <X size={10} />
+                    )}
+                  </button>
+                </div>
               ))}
             </div>
           )}
