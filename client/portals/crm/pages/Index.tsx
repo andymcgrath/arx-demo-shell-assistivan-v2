@@ -3326,6 +3326,7 @@ export default function Index() {
                       consentStatus,
                       biStatus,
                       paStatus,
+                      appealStatus,
                       flowType,
                     }).map((item) => (
                       <tr key={item.id} className="hover:bg-[#f3f3f3] transition-colors">

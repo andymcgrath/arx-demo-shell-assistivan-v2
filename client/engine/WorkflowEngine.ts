@@ -281,8 +281,24 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/medication-delivered';
   }
 
+  // ── iAssist_PAP (WF5) fast-forward ────────────────────────────────────
+  // This flow's BI/PA/Appeal race ahead of the patient's own SMS/OTP/consent
+  // pace the moment ENROLL fires (see workflows/iAssistPap.ts) — a real,
+  // reachable state is "appeal already filed or approved, patient portal
+  // never opened yet, consentStatus still 'pending'". Without this, opening
+  // the portal for the first time at that point would force the patient
+  // through lock-screen/SMS/OTP/confirm-details before ever reaching the
+  // denial/appeal screens CRM, iAssist, and Field already show — a jarring
+  // interrupt with no real purpose, since there's nothing left for the
+  // patient to actually consent to that hasn't already happened. Assume
+  // consent so routing skips straight to the resolved state instead.
+  const assumeConsentGiven =
+    flowType === 'iAssist_PAP' &&
+    workflowData.appealStatus !== 'none' &&
+    workflowData.consentStatus === 'pending';
+
   // ── Phase gate: once otpVerified, NEVER return to pre-OTP screens ────
-  const onboardingComplete = workflowData.otpVerified === true;
+  const onboardingComplete = workflowData.otpVerified === true || assumeConsentGiven;
 
   // ── Pre-enrollment ──────────────────────────────────────────────────
   if (!onboardingComplete) {
@@ -295,7 +311,7 @@ export function derivePatientRoute(state: MachineContext): string {
   }
 
   // ── Onboarding (otpVerified = true, consent pending) ────────────────
-  if (workflowData.consentStatus === 'pending')
+  if (workflowData.consentStatus === 'pending' && !assumeConsentGiven)
     return '/confirm-details';
 
   // ── Post-consent waiting state ───────────────────────────────────────
@@ -366,6 +382,32 @@ export function derivePatientRoute(state: MachineContext): string {
   }
 
   // ── Clinical workflow ────────────────────────────────────────────────
+  // iAssist_PAP (WF5): its PA stays 'denied' forever (see iAssistPap.ts) —
+  // once the appeal is approved (appealStatus flips via APPROVE_APPEAL in
+  // crm/pages/Index.tsx), the patient should see the same approval
+  // messaging/next-steps any other flow's approved PA gets, not keep
+  // sitting on /pa-denied's "still working on it" copy. Checked before the
+  // generic paStatus === 'denied' fallback right below, which would
+  // otherwise catch this flow forever since paStatus itself never changes.
+  // No SMS/OTP re-verify or pricing gate here (unlike iAssist_PA_Approved's
+  // own post-approval branch above) — that scheduling chain was never part
+  // of this flow's intended script (see iAssistPap.ts's header), dispatch
+  // already unlocked the moment the appeal was filed.
+  if (flowType === 'iAssist_PAP' && workflowData.appealStatus === 'approved') {
+    if (workflowData.pharmacyStatus === 'processing' ||
+        workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
+
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    if (workflowData.pharmacyStatus === 'delivered') return '/medication-delivered';
+
+    // Covers "not yet dispatched" through "pharmacy chosen, not yet filled"
+    // — same single screen WF1's generic delivery-flow check further below
+    // uses for the equivalent window.
+    return '/pa-approved';
+  }
+
   if (workflowData.paStatus === 'denied') return '/pa-denied';
 
   if (workflowData.biStatus !== 'none' &&
@@ -478,6 +520,11 @@ export interface LiveWorkItemInputs {
   consentStatus: string;
   biStatus: string;
   paStatus: string;
+  // iAssist_PAP (WF5) only — its paStatus stays 'denied' forever even after
+  // a payer overturns that denial on appeal (see workflows/iAssistPap.ts),
+  // so the PA task below needs this to know the PA is actually resolved.
+  // Stays 'none' for every other flow, so it never affects them.
+  appealStatus: string;
   // Fax_PAP_Audit patients never have insurance (CRM's own BI stage always
   // resolves biResult to 'no_insurance' for this flow — see paStage's
   // `!isPapFlow` check in crm/pages/Index.tsx), so there's no real Prior
@@ -521,11 +568,33 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     items.push({
       id: 'pa-submission-required',
       refId: 'Prior Authorization Requested',
-      status: input.paStatus === 'approved' ? 'Closed' : 'Open',
+      // appealStatus === 'approved' covers iAssist_PAP (WF5): its paStatus
+      // never itself flips to 'approved' (see comment above), so without
+      // this the task sat "Open" forever even after the payer overturned
+      // the denial on appeal and every other portal had moved on.
+      status: (input.paStatus === 'approved' || input.appealStatus === 'approved') ? 'Closed' : 'Open',
       priority: 'High',
       dueDate: daysFromToday(2),
       assignedTo: 'Sarah Mitchell',
       description: 'Submit Prior Authorization request to payer',
+    });
+  }
+
+  // iAssist_PAP (WF5) only — appealStatus stays 'none' for every other flow
+  // (see engine/types.ts), so this never appears elsewhere. Without a
+  // dedicated task, the only place the appeal itself showed up was a
+  // generic default-case "Status Update" email in getGeneratedEmails()
+  // below linking to the live CASE — no task in Field Portal or CRM's
+  // Related Tasks ever mentioned the appeal existed, filed or approved.
+  if (input.appealStatus !== 'none') {
+    items.push({
+      id: 'appeal-review',
+      refId: 'Appeal Filed with Payer',
+      status: input.appealStatus === 'approved' ? 'Closed' : 'Open',
+      priority: 'High',
+      dueDate: daysFromToday(10),
+      assignedTo: 'Sarah Mitchell',
+      description: 'Monitor payer response to the Prior Authorization appeal',
     });
   }
 
@@ -559,6 +628,8 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
 export const LIVE_CASE_ID = 'LIVE-CASE-AS164543';
 export const LIVE_MISSING_INFO_TASK_ID = 'LIVE-MISSING-INFORMATION';
 export const LIVE_PA_TASK_ID = 'LIVE-PA-SUBMISSION-REQUIRED';
+/** iAssist_PAP (WF5) only — see getLiveWorkItems' 'appeal-review' item above. */
+export const LIVE_APPEAL_TASK_ID = 'LIVE-APPEAL-REVIEW';
 
 /** Minimal event shape this function needs — matches useDemoState()'s
  * snake_case DemoEvent so callers can pass that array through unchanged. */
@@ -754,6 +825,32 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
           ],
           linkedItemId: LIVE_PA_TASK_ID,
           linkedItemLabel: 'View Task: Prior Authorization Requested',
+        });
+        break;
+
+      case 'INITIATE_APPEAL':
+        emails.push({
+          ...base,
+          subject: `Appeal Filed - ${patientName}`,
+          bodyParagraphs: [
+            `An appeal was filed with the payer on ${patientName}'s prior authorization denial.`,
+            `Fulfillment has moved forward while the appeal is under review — AssistRx is monitoring for the payer's response.`,
+          ],
+          linkedItemId: LIVE_APPEAL_TASK_ID,
+          linkedItemLabel: 'View Task: Appeal Filed with Payer',
+        });
+        break;
+
+      case 'APPROVE_APPEAL':
+        emails.push({
+          ...base,
+          subject: `Appeal Approved - ${patientName}`,
+          bodyParagraphs: [
+            `The payer approved the appeal and overturned the original prior authorization denial for ${patientName}.`,
+            `No further action is needed on this appeal.`,
+          ],
+          linkedItemId: LIVE_APPEAL_TASK_ID,
+          linkedItemLabel: 'View Task: Appeal Filed with Payer',
         });
         break;
 

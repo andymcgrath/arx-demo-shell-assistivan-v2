@@ -29,6 +29,9 @@ export interface DemoState {
   bi_status: "none" | "running" | "complete";
   bi_result: "coverage_found" | "no_coverage" | "no_insurance" | null;
   pa_status: "none" | "submitted" | "approved" | "denied";
+  // iAssist_PAP (WF5) only — see engine/types.ts's WorkflowData.appealStatus.
+  // Stays "none" for every other flow.
+  appeal_status: "none" | "initiated" | "approved";
   qs_status: "none" | "active" | "discontinued";
   pap_status: "none" | "active" | "audit_pending" | "discontinued";
   pharmacy_status: "none" | "processing" | "ready" | "shipped" | "delivered";
@@ -59,6 +62,7 @@ function toSnakeCaseShape(w: WorkflowData): DemoState {
     bi_status:         w.biStatus as any,
     bi_result:         (w as any).biResult ?? null,
     pa_status:         w.paStatus,
+    appeal_status:     w.appealStatus,
     qs_status:         (w as any).qsStatus ?? "none",
     pap_status:        (w as any).papStatus ?? "none",
     pharmacy_status:   w.pharmacyStatus,

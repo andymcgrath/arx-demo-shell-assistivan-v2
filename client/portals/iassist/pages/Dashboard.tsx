@@ -56,6 +56,18 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
     return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
   }
   if (workflowData.paStatus === "denied") {
+    // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
+    // workflows/iAssistPap.ts) — this roster row otherwise sat on "PA
+    // Denied" forever once the Action Factory rule (or a CRM agent) filed
+    // and later resolved the appeal, even though the CRM/patient portal had
+    // both moved on. Every other flow leaves appealStatus at 'none' forever,
+    // so this only ever branches for WF5 in practice.
+    if (workflowData.appealStatus === "approved") {
+      return { label: "Appeal Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+    }
+    if (workflowData.appealStatus === "initiated") {
+      return { label: "Appeal Filed", color: "warning", dots: ["completed", "completed", "completed", "pending", "pending", "disabled"] };
+    }
     return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] };
   }
   if (workflowData.paStatus === "submitted") {

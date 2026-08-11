@@ -12,6 +12,13 @@ export default function PAApproved() {
   const paStatus = workflowData.paStatus;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
   const isCoA = flowType === "CoA_DTP";
+  // iAssist_PAP (WF5) reaches this screen via an approved APPEAL, not a
+  // straight-through PA approval (see WorkflowEngine.ts's derivePatientRoute
+  // and workflows/iAssistPap.ts's appealStatus) — the generic "covered by
+  // your insurance" headline reads like a non sequitur right after the
+  // patient was told PA was denied, so this flow gets its own headline that
+  // closes that loop instead of silently reusing WF1's copy.
+  const isIAssistPap = flowType === "iAssist_PAP";
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -29,7 +36,7 @@ export default function PAApproved() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                Great news! Assistivan is covered by your insurance
+                {isIAssistPap ? "Great news! Your appeal was approved" : "Great news! Assistivan is covered by your insurance"}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
                 <span className="text-lg font-bold text-arx-primary">Rx</span>

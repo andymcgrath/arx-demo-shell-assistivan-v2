@@ -24,6 +24,7 @@ import {
   LIVE_CASE_ID,
   LIVE_MISSING_INFO_TASK_ID,
   LIVE_PA_TASK_ID,
+  LIVE_APPEAL_TASK_ID,
 } from "@/engine/WorkflowEngine";
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
 
@@ -188,6 +189,7 @@ export default function FieldPortal() {
 
   // Workflow state from actor (via useDemoState)
   const paStatus = state.pa_status;
+  const appealStatus = state.appeal_status;
   const consentStatus = state.consent_status;
   const enrollmentStatus = state.enrollment_status;
   const biStatus = state.bi_status;
@@ -334,13 +336,18 @@ export default function FieldPortal() {
     consentStatus,
     biStatus,
     paStatus,
+    appealStatus,
     flowType: state.flow_type,
   }).map((item) => ({
     // Matches the ids getGeneratedEmails' notifications link back to
-    // (LIVE_MISSING_INFO_TASK_ID / LIVE_PA_TASK_ID, imported from the same
-    // WorkflowEngine.ts module) rather than recomputing an equivalent
-    // string here, so the two can't quietly drift apart.
-    id: item.id === "missing-information" ? LIVE_MISSING_INFO_TASK_ID : LIVE_PA_TASK_ID,
+    // (LIVE_MISSING_INFO_TASK_ID / LIVE_PA_TASK_ID / LIVE_APPEAL_TASK_ID,
+    // imported from the same WorkflowEngine.ts module) rather than
+    // recomputing an equivalent string here, so the two can't quietly drift
+    // apart. appeal-review (iAssist_PAP/WF5 only) is the third possible id —
+    // this used to be a plain two-way ternary that silently mapped it to
+    // LIVE_PA_TASK_ID instead, which is how an Appeal Approved email could
+    // point at a task that never mentioned the appeal at all.
+    id: item.id === "missing-information" ? LIVE_MISSING_INFO_TASK_ID : item.id === "pa-submission-required" ? LIVE_PA_TASK_ID : LIVE_APPEAL_TASK_ID,
     kind: "Task",
     refId: item.refId,
     status: item.status,
@@ -357,14 +364,14 @@ export default function FieldPortal() {
     prescriber: "Dr. Sarah Chen",
     territory: "Texas",
     assignedTo: item.assignedTo,
-    subStatus: item.status === "Closed" ? "Complete" : item.id === "missing-information" ? "Awaiting Consent" : "Awaiting Submission",
+    subStatus: item.status === "Closed" ? "Complete" : item.id === "missing-information" ? "Awaiting Consent" : item.id === "pa-submission-required" ? "Awaiting Submission" : "Awaiting Payer Response",
     description: item.description,
     // Both live tasks belong to this patient's one live case, same "Stage"
     // pattern used on the seeded patients' tasks — matches the reference's
     // "Related Item: PA-25842, Stage: Prior Authorization" shape instead of
     // showing the bare patient id.
     relatedCaseId: LIVE_CASE_ID,
-    stageName: item.id === "missing-information" ? "Enrollment" : "Prior Authorization",
+    stageName: item.id === "missing-information" ? "Enrollment" : item.id === "pa-submission-required" ? "Prior Authorization" : "Appeals",
   }));
 
   // The one case behind this patient's live tasks — same onboarding/PA
