@@ -443,10 +443,10 @@ export default function FieldPortal() {
   // truth for this facility's facts — also referenced by CRM's Office
   // Dispense dropdown (WF5/iAssist_PAP only) so the two can't drift apart.
   const liveSOCs: FieldSOC[] = [
-    { id: "SOC-HOU", ...KEANU_SITE_OF_CARE_FACTS },
+    { id: "SOC-ORL", ...KEANU_SITE_OF_CARE_FACTS },
   ];
   const liveSOCLinks: FieldPatientSOCLink[] = isEnrolled ? [
-    { id: "LIVE-PSOC-1", patientId: "AS-164543", socId: "SOC-HOU", isPrimary: true },
+    { id: "LIVE-PSOC-1", patientId: "AS-164543", socId: "SOC-ORL", isPrimary: true },
   ] : [];
 
   const livePrescriptions: FieldPrescription[] = isEnrolled ? [
@@ -517,10 +517,10 @@ export default function FieldPortal() {
     externalPatientId: "000007088",
     accountStatus: "Active",
     allergies: "Latex",
-    territory: "Texas",
-    region: "South",
+    territory: "Florida",
+    region: "Southeast",
     primaryPrescriber: "Dr. Sarah Chen",
-    primarySOC: "Houston SOC",
+    primarySOC: "Orlando SOC",
     consentExpiration: consentStatus === "confirmed" ? daysFromToday(700) : "---",
     enrollmentDate: daysFromToday(0),
     homePhone: patientState.phone,
@@ -531,10 +531,13 @@ export default function FieldPortal() {
     email: patientState.email,
     preferredMethodOfContact: patientState.preferredMethodOfContact,
     bestTimeToContact: "Afternoon",
-    address: "456 Oak Ave",
-    city: "Houston",
-    state: "Texas",
-    zip: "77001",
+    // Matches PATIENT_SEED.deliveryAddress in patientStore.ts (123 Main
+    // Street, Orlando, FL 32801) — this record previously hardcoded a
+    // Houston address, contradicting the patient's real home on file.
+    address: "123 Main Street",
+    city: "Orlando",
+    state: "Florida",
+    zip: "32801",
   };
 
   // Same "one shared dataset, filtered differently" principle as allItems

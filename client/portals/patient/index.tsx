@@ -48,6 +48,14 @@ const DELIVERY_FLOW_PATHS = [
   // differently from every other screen in this list once landed on.
   '/infusion-date',
   '/appointment-confirmation',
+  // iAssist_PAP (WF5) only: derivePatientRoute keeps returning
+  // '/appointment-confirmation' forever once appealStatus is 'approved' and
+  // infusionDate is set (it's this flow's terminal state — see
+  // WorkflowEngine.ts). AppointmentConfirmation.tsx's Hero Card now lets the
+  // patient manually tap through to /medication-delivered from there; without
+  // this entry, that manual jump would be indistinguishable from every other
+  // untolerated path and risk getting bounced straight back.
+  '/medication-delivered',
   // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
   // underlying machine state (enrollmentStatus 'none') — role selection and
   // the has-prescription question both happen before ENROLL ever fires. Once

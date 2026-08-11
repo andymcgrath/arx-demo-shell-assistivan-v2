@@ -500,10 +500,10 @@ const SITES_OF_CARE: PharmacyOption[] = [
     zip: KEANU_SITE_OF_CARE_FACTS.zip,
     phone: KEANU_SITE_OF_CARE_FACTS.contactPhone,
   },
-  { name: "Westgate Infusion Clinic", address: "4100 Westheimer Rd", city: "Houston", state: "TX", zip: "77027", phone: "(713) 555-4821" },
-  { name: "Memorial Hermann Infusion Center", address: "6411 Fannin St", city: "Houston", state: "TX", zip: "77030", phone: "(713) 555-2290" },
-  { name: "Texas Medical Center Infusion Suite", address: "7200 Cambridge St", city: "Houston", state: "TX", zip: "77030", phone: "(713) 555-6634" },
-  { name: "Heights Ambulatory Infusion", address: "1917 Ashland St", city: "Houston", state: "TX", zip: "77008", phone: "(713) 555-7712" },
+  { name: "Westgate Infusion Clinic", address: "8323 International Dr", city: "Orlando", state: "FL", zip: "32819", phone: "(407) 555-4821" },
+  { name: "Orlando Health Infusion Center", address: "1222 S Orange Ave", city: "Orlando", state: "FL", zip: "32806", phone: "(407) 555-2290" },
+  { name: "AdventHealth Infusion Suite", address: "601 E Rollins St", city: "Orlando", state: "FL", zip: "32803", phone: "(407) 555-6634" },
+  { name: "Lake Eola Ambulatory Infusion", address: "200 S Eola Dr", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-7712" },
 ];
 
 // ─── My Cases list (CoA_DTP default screen) ─────────────────────────────────
