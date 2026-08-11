@@ -5,6 +5,7 @@ interface ProgramData {
   name: string;
   drugDisplayName: string;
   description: string;
+  dosageForm: string;
   logo: { colors: string; white: string; requiresFilter?: boolean };
   colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
 }
@@ -45,6 +46,13 @@ export default function ProgramSection({ data, onChange }: Props) {
         value={data.description}
         onChange={v => set("description", v)}
         placeholder="e.g. 0.8 mg · 30-day supply"
+      />
+      <Field
+        label="Dosage / Form"
+        hint="Strength, form, and route — shown wherever this medication's dosage appears (CRM, Provider, iAssist), not just the Patient Portal."
+        value={data.dosageForm}
+        onChange={v => set("dosageForm", v)}
+        placeholder="e.g. 150 mg/6 mL Injection for IV"
       />
 
       <div className="grid grid-cols-2 gap-4">

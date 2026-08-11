@@ -63,7 +63,21 @@ export function expandStateAbbreviation(state: string) {
 
 // Prescriber directory — shared between Step 1 (where it's picked) and
 // Step 6 (where the pick becomes the default shipping office contact).
-export const PRESCRIBER_OPTIONS = [{ id: "1", npi: "1234567890", name: "Sarah Chen, MD" }];
+// officeAddress/officePhone/officeFax are new — WF1 doesn't surface them
+// anywhere itself (Step 6's "Shipping Information" address is the
+// patient's own delivery address, not the prescriber's office), but forms
+// like the Boehringer Cares PAP application ask for the prescriber's own
+// office contact info, so it's captured here once as the shared source.
+export const PRESCRIBER_OPTIONS = [
+  {
+    id: "1",
+    npi: "1234567890",
+    name: "Sarah Chen, MD",
+    officeAddress: "4820 Boulevard Del Norte, Orlando, FL 32804",
+    officePhone: "(555) 219-4470",
+    officeFax: "(555) 219-4471",
+  },
+];
 
 export function prescriberNameById(id: string) {
   return PRESCRIBER_OPTIONS.find((p) => p.id === id)?.name ?? "";
@@ -73,13 +87,16 @@ export function prescriberNameById(id: string) {
 // it's picked/edited) and the Dashboard's "Commonly Prescribed" row (which
 // seeds a medication choice before Step 2 is ever visited).
 //
-// Entry [0] is the demo's active/branded product — its drug name comes from
-// PATIENT_SEED (which itself tracks the Branding Admin screen's active
-// brand), with the dosage/NDC suffix left as fixed placeholder content since
-// Admin doesn't manage those. MEDICATION_CODES is keyed off this same
-// computed string (not a duplicated literal) so the two can never drift out
-// of sync when the drug name changes. Entries [1]-[3] are stable decoys.
-const ACTIVE_MEDICATION_OPTION = `${PATIENT_SEED.drugName} 10 MG ORAL TABLET 100 EA NDC 123456789`;
+// Entry [0] is the demo's active/branded product — its drug name AND
+// dosage/form now both come from PATIENT_SEED (which itself tracks the
+// Branding Admin screen's active brand, including the new Dosage/Form
+// field), so this no longer hand-types an oral-tablet suffix that
+// contradicts brands like BRIUMVI (an IV injection). The quantity/NDC
+// portion stays fixed placeholder content — Admin doesn't manage those.
+// MEDICATION_CODES is keyed off this same computed string (not a
+// duplicated literal) so the two can never drift out of sync when the
+// drug name changes. Entries [1]-[3] are stable decoys.
+const ACTIVE_MEDICATION_OPTION = `${PATIENT_SEED.drugName} ${PATIENT_SEED.dosageForm} 100 EA NDC 123456789`;
 
 export const MEDICATION_OPTIONS = [
   ACTIVE_MEDICATION_OPTION,
@@ -279,8 +296,8 @@ function buildInitialState() {
     consentMethod: "now",
     phiAgreed: false,
     hasSignature: false,
-    householdSize: "",
-    householdIncome: "",
+    householdSize: PATIENT_SEED.householdSize,
+    householdIncome: PATIENT_SEED.householdIncome,
   };
 
   const medication: MedicationData = {

@@ -1,16 +1,22 @@
 import { useState } from "react";
-import { ArrowRight, ChevronRight, Play, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Play, X, Calendar, MapPin, Phone } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useChatContext } from "@patient/components/ChatContext";
 import ProgramLogo from "@patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
 // Admin-configured (Branding Admin → Education Video). Absent/blank
 // embedUrl hides the whole card — see the `educationVideo &&` guard below.
 const educationVideo = (PROGRAM as { educationVideo?: { title: string; description: string; thumbnail: string; embedUrl: string } }).educationVideo;
 const hasEducationVideo = Boolean(educationVideo?.embedUrl);
+
+function formatInfusionDate(iso: string | null): string {
+  if (!iso) return "your scheduled date";
+  return new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
 
 export default function MedicationDelivered() {
   const navigate = useNavigate();
@@ -20,9 +26,53 @@ export default function MedicationDelivered() {
   const [showPfVideo, setShowPfVideo] = useState(false);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
+  // iAssist_PAP (WF5) only — this flow's terminal state (see
+  // derivePatientRoute in WorkflowEngine.ts) dispatches to a site of care
+  // instead of shipping medication, so it gets its own info card here
+  // instead of the Arrived card below. Previously lived as a "Hero Card"
+  // rich-message attachment on AppointmentConfirmation.tsx's SMS screen —
+  // moved here since it's ongoing appointment info the patient should be
+  // able to come back to, not part of a one-time text message.
+  const isIAssistPap = workflowData.flowType === 'iAssist_PAP';
+  const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
+
   return (
     <main className="flex-grow pt-5 pb-8 relative">
         <div className="max-w-lg mx-auto px-4 space-y-5">
+
+          {/* Infusion Appointment card — see hasInfusionAppointment above. */}
+          {hasInfusionAppointment && (
+            <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+              <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-white" />
+                <span className="text-sm font-semibold text-white">Infusion Appointment</span>
+              </div>
+              <div className="p-5 space-y-3">
+                <div>
+                  <p className="text-base font-bold text-arx-slate">{formatInfusionDate(workflowData.infusionDate)}</p>
+                  <p className="text-xs text-arx-body-copy">Infusion visit</p>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.facilityName}</p>
+                    <p className="text-xs text-arx-body-copy">
+                      {KEANU_SITE_OF_CARE_FACTS.address}, {KEANU_SITE_OF_CARE_FACTS.city}, {KEANU_SITE_OF_CARE_FACTS.state} {KEANU_SITE_OF_CARE_FACTS.zip}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Phone className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.contactName}</p>
+                    <p className="text-xs text-arx-body-copy">{KEANU_SITE_OF_CARE_FACTS.contactPhone}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Arrived card */}
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">

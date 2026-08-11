@@ -28,6 +28,7 @@ interface BrandingData {
     name: string;
     drugDisplayName: string;
     description: string;
+    dosageForm: string;
     logo: { colors: string; white: string; requiresFilter?: boolean };
     colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
     educationVideo: EducationVideoData;
@@ -48,6 +49,7 @@ const EMPTY: BrandingData = {
     name: "",
     drugDisplayName: "",
     description: "",
+    dosageForm: "",
     logo: { colors: "", white: "", requiresFilter: false },
     colors: { primary: "#007178", primaryDark: "#005a5f", primaryLight: "#338D93", primaryWash: "#B1D5D8" },
     educationVideo: { title: "", description: "", thumbnail: "", embedUrl: "" },
@@ -194,15 +196,17 @@ export default function Admin() {
       });
       const result = await res.json();
       if (result.success) {
-        // The medication name is the one piece of branding shared with every
-        // other portal (CRM, Provider, iAssist) via usePatientStore — but
-        // that store is persisted to sessionStorage, so without this the
-        // cached "Assistivan" would keep shadowing the new brand everywhere
-        // outside the Patient Portal until someone hit "Reset Everything."
+        // The medication name (and now dosage/form) are the pieces of
+        // branding shared with every other portal (CRM, Provider, iAssist)
+        // via usePatientStore — but that store is persisted to
+        // sessionStorage, so without this the cached previous brand's
+        // values would keep shadowing the new brand everywhere outside the
+        // Patient Portal until someone hit "Reset Everything."
         const newDrugName = data.program.drugDisplayName || data.program.name;
         if (newDrugName) {
           usePatientStore.setState({ drugName: newDrugName });
         }
+        usePatientStore.setState({ dosageForm: data.program.dosageForm ?? "" });
         setSaveState("success");
         refreshBrandList();
         setTimeout(() => setSaveState("idle"), 3000);

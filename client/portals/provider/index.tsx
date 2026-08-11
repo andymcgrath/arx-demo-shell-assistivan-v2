@@ -518,11 +518,12 @@ function PaSummaryTable({ isSubmitted = false, accentColor = "#007178" }: { isSu
   const patientName = usePatientStore((s) => s.patientName);
   const patientDob = usePatientStore((s) => s.patientDob);
   const drugName = usePatientStore((s) => s.drugName);
+  const dosageForm = usePatientStore((s) => s.dosageForm);
   const payer = usePatientStore((s) => s.payer);
 
   const paInfoItems = [
     { label: "MEDICATION",          value: `${drugName} • NDC: 72266-0180-30`,   done: true },
-    { label: "MEDICATION DETAILS",  value: "18 mg · 30-day supply",                            done: true },
+    { label: "MEDICATION DETAILS",  value: `${dosageForm} · 30-day supply`,                            done: true },
     { label: "PATIENT",             value: `${patientName} • ${patientDob}`,                         done: true },
     { label: "PRESCRIBER",          value: "Sarah Chen, MD",                                   done: true },
     { label: "INSURANCE",           value: payer,                  done: true },

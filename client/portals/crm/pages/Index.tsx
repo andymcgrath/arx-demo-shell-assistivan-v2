@@ -717,6 +717,7 @@ export default function Index() {
 
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
+  const dosageForm = usePatientStore((s) => s.dosageForm);
   const phone = usePatientStore((s) => s.phone);
   const payer = usePatientStore((s) => s.payer);
   const caseNumber = usePatientStore((s) => s.caseNumber);
@@ -1555,11 +1556,11 @@ export default function Index() {
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
                   <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>4</span>
-                  <span className="text-[13px] font-semibold text-[#3e3e3c]">Prescription for {drugName} tablets</span>
+                  <span className="text-[13px] font-semibold text-[#3e3e3c]">Prescription for {drugName}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
                   <FieldRow label="Drug" value={drugName} />
-                  <FieldRow label="Strength" value="18 mg" />
+                  <FieldRow label="Strength / Form" value={dosageForm} />
                   <FieldRow label="Sig" value="Take one tablet by mouth twice per day" />
                   <FieldRow label="Quantity" value="30-day supply" />
                   <FieldRow label="Refills" value="0" />
