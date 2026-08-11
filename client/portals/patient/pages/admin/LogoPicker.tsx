@@ -16,6 +16,7 @@ export default function LogoPicker({ label, value, onChange, hint, bgClass = "bg
   const [showLibrary, setShowLibrary] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState(value);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -49,8 +50,16 @@ export default function LogoPicker({ label, value, onChange, hint, bgClass = "bg
 
       {/* Preview */}
       <div className={`${bgClass} border border-[--arx-borders] rounded-lg p-4 flex items-center justify-center min-h-[80px]`}>
-        {value ? (
-          <img src={value} alt={label} className="max-h-12 max-w-full object-contain" />
+        {value && !previewFailed ? (
+          <img
+            src={value}
+            alt={label}
+            className="max-h-12 max-w-full object-contain"
+            onLoad={() => setPreviewFailed(false)}
+            onError={() => setPreviewFailed(true)}
+          />
+        ) : value && previewFailed ? (
+          <span className="text-xs text-red-500">Image failed to load — check the URL</span>
         ) : (
           <span className="text-xs text-[--arx-inactive]">No logo set</span>
         )}

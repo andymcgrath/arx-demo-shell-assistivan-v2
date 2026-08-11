@@ -8,6 +8,7 @@ import { dateFromToday, daysFromToday } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
+import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
 import {
   ChevronDown,
@@ -894,6 +895,48 @@ export default function Index() {
   // a denial → cash-pay one) — the generic auto-approve effect above already
   // covers this since it isn't gated to a specific flowType.
 
+  // Action Factory bridge: once the presenter creates & activates the
+  // "Initiate Appeal — Upon PA Denial" rule in the Rules portal
+  // (rulesPortalStore's appealRuleActive — see that store's "Bridge to the
+  // real engine" header section), auto-file the appeal on any iAssist_PAP
+  // case currently sitting at PA Denied — including one that got there
+  // before the rule existed. That's the live "watch the stuck case spring
+  // into motion" moment the rule was built to demonstrate, not a "reset and
+  // rerun" requirement. appealStatus flipping to 'initiated' after the first
+  // run is what stops this from re-firing on every re-render/tab switch.
+  const appealRuleActive = useRulesPortalStore((s) => s.appealRuleActive);
+  useEffect(() => {
+    if (flowType !== 'iAssist_PAP') return;
+    if (!appealRuleActive) return;
+    if (paStatus !== 'denied') return;
+    if (appealStatus !== 'none') return;
+
+    const timer = setTimeout(() => {
+      dispatch('INITIATE_APPEAL', { portal: 'crm' });
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [flowType, appealRuleActive, paStatus, appealStatus, dispatch]);
+
+  // Payer-response follow-up: once the appeal has been filed, opening the
+  // Appeals stage tab auto-resolves it to 'approved' after a few seconds —
+  // same "watch it happen" pattern as the BI/PA auto-complete effects above,
+  // giving the Appeals stage its own resolved detail view (see the
+  // "Appeal Approval Detail View" block below and appealStage's 'approved'
+  // branch) instead of sitting at "awaiting payer response" indefinitely.
+  // Purely cosmetic — canFillRX already unlocked fulfillment when the appeal
+  // was first initiated, this doesn't gate anything further.
+  useEffect(() => {
+    if (activeTopTab !== 'A-14275') return;
+    if (appealStatus !== 'initiated') return;
+
+    const timer = setTimeout(() => {
+      dispatch('APPROVE_APPEAL', { portal: 'crm' });
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [activeTopTab, appealStatus, dispatch]);
+
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.
   // Does not update any store state.
@@ -965,13 +1008,16 @@ export default function Index() {
     : { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Complete", statusDetail: "Insurance found — PA required", isComplete: true, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   // iAssist_PAP (WF5) is the one flow that actually files a real Appeal
-  // (appealStatus flips 'initiated' via INITIATE_APPEAL — see
-  // workflows/iAssistPap.ts) after its PA is denied. Every other flow
-  // leaves appealStatus at 'none' forever, so this only ever shows "Filed"
-  // for WF5, matching paStage's existing "PA Denied — Appeal initiated"
-  // copy for the first time instead of contradicting it.
+  // (appealStatus flips 'initiated' via INITIATE_APPEAL, then 'approved' via
+  // APPROVE_APPEAL once the agent opens this stage's tab — see
+  // workflows/iAssistPap.ts). Every other flow leaves appealStatus at 'none'
+  // forever, so this only ever shows "Filed"/"Approved" for WF5, matching
+  // paStage's existing "PA Denied — Appeal initiated" copy for the first
+  // time instead of contradicting it.
   const appealStage: Stage = paStatus === "approved"
     ? { id: "A-14275", name: "Appeals", statusLabel: "Not needed", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : appealStatus === "approved"
+    ? { id: "A-14275", name: "Appeals", statusLabel: "Approved", statusDetail: "Appeal approved — payer overturned the denial", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : appealStatus === "initiated"
     ? { id: "A-14275", name: "Appeals", statusLabel: "Filed", statusDetail: "Appeal submitted — awaiting payer response", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "A-14275", name: "Appeals", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: null, lastUpdatedAgo: null };
@@ -1755,7 +1801,7 @@ export default function Index() {
                     </div>
                     <div>
                       <FieldRow label="Status" value="Denied" />
-                      <FieldRow label="Sub-Status" value={appealStatus === "initiated" ? "Denied — Appeal Filed" : "Denied — Appeal Eligible"} />
+                      <FieldRow label="Sub-Status" value={appealStatus === "approved" ? "Denied — Appeal Approved" : appealStatus === "initiated" ? "Denied — Appeal Filed" : "Denied — Appeal Eligible"} />
                       <FieldRow label="No Status Change Needed" value="—" />
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
@@ -1774,7 +1820,7 @@ export default function Index() {
                       <FieldRow label="Call Reference Number" value="REF-789456" />
                       <FieldRow label="Initiation Source" value="Fax" />
                       <FieldRow label="External Comments" value="Denied — medical necessity not established" />
-                      <FieldRow label="Internal Comments" value={appealStatus === "initiated" ? "PA denied by payer; appeal filed and awaiting response" : "PA denied by payer; appeal recommended"} />
+                      <FieldRow label="Internal Comments" value={appealStatus === "approved" ? "PA denied by payer; appeal filed and approved on review" : appealStatus === "initiated" ? "PA denied by payer; appeal filed and awaiting response" : "PA denied by payer; appeal recommended"} />
                       <FieldRow label="Payer Notes" value="Appeal rights available within 60 days" />
                     </div>
                     <div>
@@ -1809,7 +1855,14 @@ export default function Index() {
                     own field, see workflows/iAssistPap.ts); every other flow
                     leaves appealStatus at 'none' so it always shows the
                     "recommended" copy below. */}
-                {appealStatus === "initiated" ? (
+                {appealStatus === "approved" ? (
+                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
+                    <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved</p>
+                    <p className="text-[12px]" style={{ color: "#1a4d2a" }}>
+                      The payer overturned this denial on appeal. See the Appeals stage for the full outcome.
+                    </p>
+                  </div>
+                ) : appealStatus === "initiated" ? (
                   <div className="border-l-4 p-4 rounded" style={{ borderColor: "#0176d3", background: "#eef4ff" }}>
                     <p className="text-[13px] font-semibold mb-2" style={{ color: "#014486" }}>Appeal Filed</p>
                     <p className="text-[12px]" style={{ color: "#014486" }}>
@@ -1851,8 +1904,8 @@ export default function Index() {
                       <div className="text-[13px] text-[#3e3e3c]">{new Date().toLocaleDateString()}</div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-[#706e6b] mb-1">{appealStatus === "initiated" ? "Appeal Status" : "Appeal Deadline"}</div>
-                      <div className="text-[13px] text-[#3e3e3c]">{appealStatus === "initiated" ? "Filed — Awaiting Response" : dateFromToday(57).toLocaleDateString()}</div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">{appealStatus !== "none" ? "Appeal Status" : "Appeal Deadline"}</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{appealStatus === "approved" ? "Approved" : appealStatus === "initiated" ? "Filed — Awaiting Response" : dateFromToday(57).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>
@@ -1979,6 +2032,125 @@ export default function Index() {
                     <div>
                       <div className="text-[11px] text-[#706e6b] mb-1">Valid Until</div>
                       <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(365).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : activeStage.id === "A-14275" && appealStatus === "approved" ? (
+          /* ── Appeal Approval Detail View (post-payer-response) ────────────
+             Mirrors the PA Approval Detail View's structure above — same
+             record-header/Information/right-rail shape, relabeled for the
+             Appeals stage's own resolved outcome. Only reachable for
+             iAssist_PAP (WF5); see appealStage's 'approved' branch and the
+             auto-resolve effect above (activeTopTab === 'A-14275'). */
+          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+            {/* Appeal Record Header */}
+            <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
+              <div className="text-[11px] text-[#706e6b] mb-0.5">Appeal Approval</div>
+              <div className="flex items-center justify-between py-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
+                    style={{ width: 36, height: 36, background: "linear-gradient(135deg, #2e844a 0%, #1a4d2a 100%)" }}
+                  >
+                    A
+                  </div>
+                  <h1 className="text-[20px] font-bold text-[#3e3e3c]">A-14275</h1>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                    ✓ Approved
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-0 overflow-hidden">
+              {/* Left: Information section */}
+              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+                {/* Information section */}
+                <div className="border border-[#dddbda] rounded">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <ChevronDown size={14} className="text-[#706e6b]" />
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
+                    <div>
+                      <FieldRow label="Patient" value={patientName} isLink />
+                      <FieldRow label="Case" value={caseNumber} isLink />
+                      <FieldRow label="Appeal Reason" value="Prior authorization denial — medical necessity" />
+                      <FieldRow label="Stage Age (Business Hours)" value="2 hours, 30 minutes" />
+                    </div>
+                    <div>
+                      <FieldRow label="Status" value="Approved" />
+                      <FieldRow label="Sub-Status" value="Approved on Appeal" />
+                      <FieldRow label="No Status Change Needed" value="—" />
+                      <FieldRow label="Owner" value="Product Owner" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Appeal Information section */}
+                <div className="border border-[#dddbda] rounded">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <ChevronDown size={14} className="text-[#706e6b]" />
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Appeal Information</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
+                    <div>
+                      <FieldRow label="Appeal Number" value="APL-2026-000842" />
+                      <FieldRow label="Related Authorization" value="PA-2026-001234" isLink />
+                      <FieldRow label="Submission Source" value="Action Factory — Automated" />
+                      <FieldRow label="External Comments" value="Appeal approved — original denial overturned" />
+                      <FieldRow label="Internal Comments" value="Payer reversed decision on clinical review" />
+                    </div>
+                    <div>
+                      <FieldRow label="Submitted Date" value={new Date().toLocaleDateString()} />
+                      <FieldRow label="Payer Response Date" value={new Date().toLocaleDateString()} />
+                      <FieldRow label="Payer" value={payer} />
+                      <FieldRow label="Coverage Effective" value={dateFromToday(0).toLocaleDateString()} />
+                      <FieldRow label="Coverage Expiration" value={dateFromToday(365).toLocaleDateString()} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
+                  <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved — Fulfillment Continuing</p>
+                  <p className="text-[12px]" style={{ color: "#1a4d2a" }}>
+                    The payer reversed the original Prior Authorization denial on appeal. No further action is needed on this stage — dispatch to pharmacy already moved forward when the appeal was filed.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Approval Status Panel */}
+              <div className="shrink-0 border-l border-[#dddbda] p-4" style={{ width: 260 }}>
+                <div className="border border-[#dddbda] rounded">
+                  <div className="px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Approval Status</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#2e844a" }}>
+                        ✓
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-[#706e6b]">Status</div>
+                        <div className="text-[13px] font-semibold text-[#3e3e3c]">Approved</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">Approved By</div>
+                      <div className="text-[13px] text-[#3e3e3c]">Payer — {payer}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">Decision Date</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{new Date().toLocaleDateString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">Coverage Effective</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(0).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>

@@ -12,6 +12,20 @@ export default function PADenied() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isCoA = flowType === 'CoA_DTP';
+  // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
+  // workflows/iAssistPap.ts) — its copy below reacts to whether an appeal
+  // has actually been filed instead of always claiming one has. Every other
+  // flow reaching this screen (WF1) keeps its original, unconditional
+  // "we submitted an appeal" copy untouched — appealStatus stays 'none'
+  // forever for those flows, so branching on it there would silently change
+  // established WF1 behavior no one asked to change.
+  const isIAssistPap = flowType === 'iAssist_PAP';
+  // !== 'none' rather than === 'initiated': appealStatus advances to
+  // 'approved' once the CRM agent opens the Appeals tab (see
+  // workflows/iAssistPap.ts's APPROVE_APPEAL) — this patient-facing "we've
+  // filed an appeal" copy is still accurate at that point, so it shouldn't
+  // revert to the pre-appeal copy just because the payer has since responded.
+  const appealFiled = workflowData.appealStatus !== 'none';
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -72,7 +86,11 @@ export default function PADenied() {
               </div>
 
               <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-                Your insurance company denied payment for Assistivan, but we submitted an appeal. We'll let you know when we have an update. It could take up to 10 days.
+                {isIAssistPap
+                  ? appealFiled
+                    ? "Your insurance company denied payment for Assistivan, but we've already filed an appeal on your behalf. We'll let you know when we have an update. It could take up to 10 days."
+                    : "Your insurance company denied payment for Assistivan. We're reviewing your options and will let you know what's next."
+                  : "Your insurance company denied payment for Assistivan, but we submitted an appeal. We'll let you know when we have an update. It could take up to 10 days."}
               </p>
 
               <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">
@@ -130,7 +148,9 @@ export default function PADenied() {
               <button className="w-full flex items-center gap-4 text-arx-slate rounded-xl px-4 py-3.5 border-2 border-arx-borders hover:bg-arx-background transition-colors">
                 <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0" />
                 <div className="flex-1 text-left">
-                  <p className="text-xs text-arx-body-copy">Appeal submitted</p>
+                  <p className="text-xs text-arx-body-copy">
+                    {isIAssistPap ? (appealFiled ? "Appeal submitted" : "Reviewing your options") : "Appeal submitted"}
+                  </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-arx-body-copy" />
               </button>
@@ -158,7 +178,11 @@ export default function PADenied() {
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-                  Your appeal is still under review. Even if your insurance denies coverage, there are available programs to help you.
+                  {isIAssistPap
+                    ? appealFiled
+                      ? "Your appeal is still under review. Even if your insurance denies coverage, there are available programs to help you."
+                      : "Even if your insurance denies coverage, there are available programs to help you."
+                    : "Your appeal is still under review. Even if your insurance denies coverage, there are available programs to help you."}
                 </p>
                 <button
                   onClick={() => navigate("/")}

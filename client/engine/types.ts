@@ -78,12 +78,16 @@ export interface WorkflowData {
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;
   paApprovedOtpVerified: boolean;
-  /** iAssist_PAP (WF5) only: has the Appeal milestone been filed after a PA
-   *  denial? 'initiated' is what unlocks dispatch/fulfillment for this flow
-   *  in place of paStatus === 'approved' (which this flow's PA never
-   *  reaches — see canFillRX in workflows/iAssistPap.ts). Stays 'none' for
-   *  every other flow. */
-  appealStatus: 'none' | 'initiated';
+  /** iAssist_PAP (WF5) only: tracks the Appeal milestone after a PA denial.
+   *  'initiated' is what unlocks dispatch/fulfillment for this flow in place
+   *  of paStatus === 'approved' (which this flow's PA never reaches — see
+   *  canFillRX in workflows/iAssistPap.ts); fulfillment doesn't wait for
+   *  'approved'. 'approved' is a payer-response outcome layered on top,
+   *  populated when the CRM agent opens the Appeals stage tab (see
+   *  APPROVE_APPEAL/updateApproveAppeal there) — it only changes what the
+   *  Appeals stage detail view displays, not what's already unlocked. Stays
+   *  'none' for every other flow. */
+  appealStatus: 'none' | 'initiated' | 'approved';
 }
 
 export interface DemoEvent {

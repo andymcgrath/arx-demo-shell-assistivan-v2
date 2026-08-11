@@ -1,8 +1,32 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronLeft, Mic } from "lucide-react";
+import { usePersonaState } from "@/engine/WorkflowProvider";
+
+// iAssist_PAP (WF5) auto-submits AND auto-resolves BI/PA the moment ENROLL
+// fires (see workflows/iAssistPap.ts) — independent of the patient's own
+// pace through this very first SMS/OTP/consent beat. That means a PA can
+// already be Denied (and even appealed) before the patient has tapped this
+// message, so the generic "your prescription is ready to process" copy
+// would be actively wrong by the time they open it. Every other flow either
+// never resolves PA this early (WF1) or never denies it in its demo path
+// (WF4), so this only ever branches for WF5 in practice.
+function getMessageCopy(paStatus: string, appealStatus: string): string {
+  if (paStatus === "denied") {
+    // !== "none" rather than === "initiated": stays accurate once the CRM
+    // agent resolves the appeal to "approved" (see workflows/iAssistPap.ts's
+    // APPROVE_APPEAL) — an appeal was still filed on the patient's behalf
+    // either way, this copy doesn't need to change based on the outcome.
+    return appealStatus !== "none"
+      ? "Update: your prior authorization wasn't approved, but we've already filed an appeal on your behalf. Tap here for next steps:"
+      : "Update: your prior authorization needs additional review. Tap here for next steps:";
+  }
+  return "Welcome! Your prescription is ready to process. Complete next step here:";
+}
 
 export default function SMSMessage() {
   const navigate = useNavigate();
+  const { workflowData } = usePersonaState('patient');
+  const messageCopy = getMessageCopy(workflowData.paStatus, workflowData.appealStatus);
 
   const handleTapMessage = () => {
     navigate("/phone-verification");
@@ -38,7 +62,7 @@ export default function SMSMessage() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              Welcome! Your prescription is ready to process. Complete next step here:
+              {messageCopy}
             </p>
             <button
               onClick={handleTapMessage}

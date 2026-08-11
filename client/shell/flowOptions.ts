@@ -46,7 +46,7 @@ export const FLOW_OPTIONS: FlowOption[] = [
   },
   {
     value: "iAssist_PAP",
-    label: "5. iAssist PAP",
+    label: "5. iAssist Appeal",
     description: "Structural clone of iAssist (WF4), but the PA is denied instead of approved — sets up the Action Factory appeal-rule demo",
   },
   {

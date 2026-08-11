@@ -59,7 +59,7 @@ workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {
 });
 
 workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, {
-  label: "iAssist PAP",
+  label: "iAssist Appeal",
   description: "Structural clone of iAssist (WF4) with PA denied instead of approved",
 });
 

@@ -4,6 +4,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useChatContext } from "@patient/components/ChatContext";
 import ProgramLogo from "@patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@patient/config/branding";
+import { usePersonaState } from "@/engine/WorkflowProvider";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
 // Admin-configured (Branding Admin → Education Video). Absent/blank
@@ -14,10 +15,13 @@ const hasEducationVideo = Boolean(educationVideo?.embedUrl);
 export default function MedicationDelivered() {
   const navigate = useNavigate();
   const { openChat } = useChatContext();
+  const { workflowData } = usePersonaState('patient');
+  const isWideFlow = workflowData.flowType === 'PrES_PAP';
   const [showPfVideo, setShowPfVideo] = useState(false);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
   return (
-    <main className="flex-grow pt-5 pb-8">
+    <main className="flex-grow pt-5 pb-8 relative">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* Arrived card */}
@@ -65,13 +69,20 @@ export default function MedicationDelivered() {
                 className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
               >
                 <div className="relative w-full h-40 bg-arx-slate/10">
-                  {educationVideo!.thumbnail && (
+                  {educationVideo!.thumbnail && !thumbnailFailed && (
                     <img
                       src={educationVideo!.thumbnail}
                       alt={educationVideo!.title}
                       className="w-full h-40 object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      onError={() => {
+                        // Surface broken thumbnail URLs (e.g. a gated/expired
+                        // vendor link saved via Admin) instead of silently
+                        // hiding the image and leaving only the gray
+                        // placeholder — that made this bug invisible.
+                        console.warn(
+                          `[MedicationDelivered] Education video thumbnail failed to load: ${educationVideo!.thumbnail}`
+                        );
+                        setThumbnailFailed(true);
                       }}
                     />
                   )}
@@ -159,7 +170,7 @@ export default function MedicationDelivered() {
             onClick={() => setShowPfVideo(false)}
           >
             <div
-              className="bg-white rounded-2xl overflow-hidden w-full max-w-sm"
+              className={`bg-white rounded-2xl overflow-hidden w-full ${isWideFlow ? "max-w-[500px]" : "max-w-sm"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-arx-borders">

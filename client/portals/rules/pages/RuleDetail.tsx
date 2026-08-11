@@ -12,6 +12,7 @@ import RulesAppShell from "../components/RulesAppShell";
 import { useToast } from "../components/Toast";
 import { RULES } from "../data/rulesData";
 import { usePatientStore } from "@/store/patientStore";
+import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { SfButton, SfLink, Pill, SectionHeader } from "../components/SfPrimitives";
 
 const ACTION_SUBTABS = [
@@ -25,7 +26,11 @@ export default function RuleDetail({ externalId }: { externalId: string }) {
   const navigate = useNavigate();
   const showToast = useToast();
   const drugName = usePatientStore((s) => s.drugName);
-  const rule = RULES.find((r) => r.externalId === externalId);
+  // Rules created live in this portal (e.g. the Appeal-on-Denial rule) live
+  // in rulesPortalStore's customRules, not the static RULES catalog — merge
+  // both so this page renders instead of 404ing once one exists.
+  const customRules = useRulesPortalStore((s) => s.customRules);
+  const rule = [...RULES, ...customRules].find((r) => r.externalId === externalId);
 
   const [activeSubTab, setActiveSubTab] = useState<(typeof ACTION_SUBTABS)[number]["id"]>("create-task");
   const [moreOpen, setMoreOpen] = useState(false);

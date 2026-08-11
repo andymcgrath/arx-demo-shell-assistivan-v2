@@ -46,6 +46,16 @@ export default function PhoneVerification() {
     }
   };
 
+  // Secret demo shortcut for a presenter who doesn't have the seeded phone
+  // number memorized — same pattern as the Provider portal's NPI field
+  // label (provider/index.tsx's fillDemoValues): "Get help" looks like a
+  // normal support link, but actually just autofills the real last-4 so
+  // Send Code enables immediately. No real help flow exists in this demo.
+  const handleGetHelp = () => {
+    setLastFourInput(actualLastFour);
+    setError("");
+  };
+
   return (
     <div className="bg-arx-neutral-100 px-4 py-4 flex items-center justify-center">
       <div className="w-full max-w-sm">
@@ -122,7 +132,7 @@ export default function PhoneVerification() {
         {/* Support Link */}
         <p className="text-xs text-arx-inactive/70 text-center">
           Is this the right number?{" "}
-          <button className="text-arx-links hover:underline font-medium">
+          <button onClick={handleGetHelp} className="text-arx-links hover:underline font-medium">
             Get help
           </button>
         </p>

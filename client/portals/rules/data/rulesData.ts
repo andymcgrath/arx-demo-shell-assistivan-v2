@@ -44,10 +44,14 @@ export interface RuleTaskAction {
 export interface RuleRecord {
   externalId: string;
   ruleName: string;
-  /** Grouping category used by the Rules LIST (all 9 rules key off the
-   * Enrollment Assistance stage, so they all bucket under one "Enrollment"
-   * group header — matches the recording's "Enrollment (10+)" section). */
-  listCategory: "Enrollment";
+  /** Grouping category used by the Rules LIST. The 9 seeded rules all key
+   * off the Enrollment Assistance stage, so they bucket under one
+   * "Enrollment" group header — matches the recording's "Enrollment (10+)"
+   * section. "Prior Authorization" is a second group added for the
+   * presenter-created Appeal-on-Denial rule (see rulesPortalStore.ts's
+   * customRules) — a distinct stage from Enrollment, so it gets its own
+   * section rather than being folded into the existing one. */
+  listCategory: "Enrollment" | "Prior Authorization";
   /** Rule detail's own Category field — a separate, more granular tag. */
   category: string;
   description: string;

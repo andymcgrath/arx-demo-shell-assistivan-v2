@@ -41,9 +41,27 @@
  * Persisted to sessionStorage under its own key ("arx-rules-portal"),
  * separate from every other store's key, so reloading the page or
  * switching tabs keeps whatever the presenter has clicked through.
+ *
+ * ── Bridge to the real engine (WF5 / iAssist_PAP) ───────────────────────────
+ * `appealRuleActive` + `customRules` are the one deliberate exception to this
+ * store's total isolation from demoStore/XState (see above): they're a
+ * minimal, one-way flag that client/portals/crm/pages/Index.tsx reads to
+ * decide whether to auto-dispatch INITIATE_APPEAL on a real WF5 case whose PA
+ * has been denied — recreating the "no rule exists to initiate an appeal;
+ * build one live" demo moment. Unlike completeEnrollmentStage()'s one-shot,
+ * non-retroactive evaluation (which only ever applies to THIS store's own
+ * sandbox cases going forward), activating this rule is intentionally
+ * evaluated live against whatever the real case's current state is —
+ * including a case that's already sitting at PA Denied when the rule gets
+ * created. That's the point of the demo: the presenter creates the rule and
+ * watches the already-stuck case spring into motion, not a "you'll need to
+ * reset and rerun the case" caveat. It still can't double-fire: the engine's
+ * appealStatus flips to 'initiated' the first time it runs, and the CRM
+ * effect's own guard (appealStatus === 'none') stops re-checking after that.
  */
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { RuleRecord } from "@/portals/rules/data/rulesData";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -173,6 +191,45 @@ function seedCases(): RulesCase[] {
   ];
 }
 
+// The rule the presenter "builds live" in the Rules portal — same
+// condition-chip treatment as WEG-WK-01/WEG-WC-01 in rulesData.ts (the only
+// other rules that get it), since this is the other rule this demo actually
+// exercises live. Defined here rather than in rulesData.ts because it's
+// created at runtime, not part of the static seeded catalog — see the header
+// comment above.
+const APPEAL_RULE: RuleRecord = {
+  externalId: "WEG-PA-01",
+  ruleName: "Initiate Appeal — Upon PA Denial",
+  listCategory: "Prior Authorization",
+  category: "Prior Authorization",
+  description:
+    "Automatically initiates an appeal when the Prior Authorization stage reaches Status = Complete with a Denied outcome on an Onboarding case.",
+  issue: "None",
+  sourceObject: "Stage",
+  recordType: "Prior Authorization",
+  conditionChips: ["Status = Complete", "PA Result = Denied", "Service Type Name = Onboarding"],
+  conditions: [
+    { conditionNumber: "CON-000200", fieldObject: "Source Object", fieldApiName: "Status", operator: "Equals", comparisonValue: "Complete", valueType: "Picklist" },
+    { conditionNumber: "CON-000201", fieldObject: "Source Object", fieldApiName: "PA Result", operator: "Equals", comparisonValue: "Denied", valueType: "Picklist" },
+    { conditionNumber: "CON-000202", fieldObject: "Source Object", fieldApiName: "Service Type Name", operator: "Equals", comparisonValue: "Onboarding", valueType: "Text" },
+  ],
+  taskActions: [
+    {
+      actionName: "PA-01 Action — Initiate Appeal",
+      taskSubjectTemplate: "Initiate Appeal",
+      taskDescriptionTemplate: "File an appeal on the patient's behalf following prior authorization denial.",
+      taskType: "Appeal",
+      taskStatus: "Open",
+      whatIdStrategy: "Source Record",
+      ownerStrategy: "Source Owner",
+      sequence: 1,
+      active: true,
+      errorBehavior: "Skip Action",
+      dispatchMode: "Async",
+    },
+  ],
+};
+
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 interface RulesPortalState {
@@ -191,6 +248,26 @@ interface RulesPortalState {
   /** User-typed comments default to isPublic=false — per the transcript,
    * only automated/templated system comments default to public. */
   addComment: (caseId: string, comment: string, isPublic?: boolean) => void;
+  /** True once the presenter has created & activated the "Initiate Appeal —
+   * Upon PA Denial" rule (see APPEAL_RULE above and the header comment's
+   * "Bridge to the real engine" section) — read by crm/pages/Index.tsx. */
+  appealRuleActive: boolean;
+  /** Rules created live in this portal (currently just APPEAL_RULE, if
+   * activated) — merged with the static RULES catalog for display. */
+  customRules: RuleRecord[];
+  /** Idempotent: calling this again (e.g. a presenter clicking Save twice)
+   * does not duplicate the rule in customRules. */
+  activateAppealRule: () => void;
+  /**
+   * Un-does activateAppealRule() — clears appealRuleActive and removes just
+   * APPEAL_RULE from customRules, leaving profile/cases/every other rule
+   * untouched. Exists so DemoShell's WF5 "Reset All" can let a presenter
+   * repeat the "no rule exists; build one live" demo moment from scratch
+   * without also wiping the separate Enrollment Welcome Kit/Call demo this
+   * store otherwise backs (see header comment) — that state has nothing to
+   * do with WF5 and a WF5 reset has no business touching it.
+   */
+  deactivateAppealRule: () => void;
   resetRulesPortal: () => void;
 }
 
@@ -199,6 +276,8 @@ export const useRulesPortalStore = create<RulesPortalState>()(
     (set, get) => ({
       profile: SEED_PROFILE,
       cases: seedCases(),
+      appealRuleActive: false,
+      customRules: [],
 
       updateProfile: (patch) =>
         set((state) => ({ profile: { ...state.profile, ...patch } })),
@@ -320,7 +399,21 @@ export const useRulesPortalStore = create<RulesPortalState>()(
           ),
         })),
 
-      resetRulesPortal: () => set({ profile: SEED_PROFILE, cases: seedCases() }),
+      activateAppealRule: () =>
+        set((s) =>
+          s.appealRuleActive
+            ? s
+            : { appealRuleActive: true, customRules: [...s.customRules, APPEAL_RULE] }
+        ),
+
+      deactivateAppealRule: () =>
+        set((s) => ({
+          appealRuleActive: false,
+          customRules: s.customRules.filter((r) => r.externalId !== APPEAL_RULE.externalId),
+        })),
+
+      resetRulesPortal: () =>
+        set({ profile: SEED_PROFILE, cases: seedCases(), appealRuleActive: false, customRules: [] }),
     }),
     {
       name: "arx-rules-portal",

@@ -31,6 +31,7 @@ import { ToastProvider } from "./components/Toast";
 import ProfileDetail from "./pages/ProfileDetail";
 import RulesList from "./pages/RulesList";
 import RuleDetail from "./pages/RuleDetail";
+import NewRule from "./pages/NewRule";
 import ActionDetail from "./pages/ActionDetail";
 import CaseDetail from "./pages/CaseDetail";
 import StageDetail from "./pages/StageDetail";
@@ -55,6 +56,9 @@ function RulesPortalRoutes() {
   if (path === "/" || path === "/profile/wegovy") return <ProfileDetail />;
   if (path.startsWith("/profile/")) return <ProfileDetail />; // only one profile exists in this demo
   if (path === "/rules") return <RulesList />;
+  // Checked before the "/rule/" prefix match below — "/rule/new" would
+  // otherwise be parsed as RuleDetail's externalId param and 404 there.
+  if (path === "/rule/new") return <NewRule />;
   if (path.startsWith("/rule/")) return <RuleDetail externalId={decodeURIComponent(path.slice("/rule/".length))} />;
   if (path.startsWith("/action/")) return <ActionDetail ruleExternalId={decodeURIComponent(path.slice("/action/".length))} />;
   if (path.startsWith("/case/")) return <CaseDetail caseId={decodeURIComponent(path.slice("/case/".length))} />;

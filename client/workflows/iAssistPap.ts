@@ -12,12 +12,20 @@
  * script just never used it), then INITIATE_APPEAL, which files the Appeal
  * milestone and unlocks fulfillment (dispatchStatus) the same way an
  * approval normally would — see canFillRX and updateInitiateAppeal below.
- * This exists as a real, dispatchable event (not gated behind any Action
- * Factory rule) so the reset ladder can walk this flow all the way to
- * Medication Delivered. The still-open question is whether that dispatch
- * should eventually be gated by/routed through a live Action Factory rule
- * (see engine/types.ts's FlowType comment and the appealStage discussion in
- * crm/pages/Index.tsx) instead of firing unconditionally like it does today.
+ * INITIATE_APPEAL stays a plain, unconditionally-dispatchable event here (so
+ * the reset ladder can still walk this flow straight to Medication
+ * Delivered) — it's the CALLER that's gated: crm/pages/Index.tsx only
+ * dispatches it automatically once the presenter has created & activated
+ * the "Initiate Appeal — Upon PA Denial" rule in the Rules portal (see
+ * rulesPortalStore.ts's "Bridge to the real engine" section).
+ *
+ * APPROVE_APPEAL is a separate, purely cosmetic follow-up: crm/pages/
+ * Index.tsx dispatches it a few seconds after the agent opens the Appeals
+ * stage tab (mirroring the existing auto-approve/deny-PA pattern), moving
+ * appealStatus from 'initiated' to 'approved' so that stage's own detail
+ * view can show a resolved, payer-responded state instead of sitting at
+ * "awaiting payer response" forever. It doesn't gate anything — canFillRX
+ * already unlocks off 'initiated'.
  */
 
 import { createMachine, assign } from 'xstate';
@@ -86,7 +94,12 @@ const createEvent = (
 });
 
 const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
-  const updated = [...snapshots, context];
+  // Strip _snapshots before storing — otherwise each stored snapshot embeds
+  // every prior snapshot's own history, doubling the serialized context size
+  // on every transition. That blows past sessionStorage's quota partway
+  // through a flow, after which persistSnapshot() starts silently failing
+  // and a reload restores stale, earlier-stage progress.
+  const updated = [...snapshots, { ...context, _snapshots: [] }];
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
 
@@ -134,6 +147,14 @@ export const iAssistPapMachine = createMachine(
       // as SELECT_PHARMACY/DENY_PA above.
       INITIATE_APPEAL: {
         actions: 'updateInitiateAppeal',
+      },
+      // Payer-response outcome, dispatched by crm/pages/Index.tsx a few
+      // seconds after the agent opens the Appeals stage tab (mirrors the
+      // existing auto-approve/deny-PA pattern) — purely cosmetic for the
+      // Appeals stage's own detail view; fulfillment already unlocked the
+      // moment INITIATE_APPEAL fired above, this doesn't gate anything.
+      APPROVE_APPEAL: {
+        actions: 'updateApproveAppeal',
       },
       READY_RX: {
         actions: 'updatePharmacyReady',
@@ -446,6 +467,14 @@ export const iAssistPapMachine = createMachine(
         events: [...context.events, createEvent(context, 'INITIATE_APPEAL', 'crm', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
+      updateApproveAppeal: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          appealStatus: 'approved',
+        },
+        events: [...context.events, createEvent(context, 'APPROVE_APPEAL', 'crm', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
       updatePharmacyShipped: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
@@ -553,8 +582,12 @@ export const iAssistPapMachine = createMachine(
       canRunBI: ({ context }) => context.workflowData.consentStatus === 'confirmed',
       canSubmitPA: ({ context }) => context.workflowData.biStatus === 'complete',
       // This flow's PA never reaches 'approved' (see file header) — an
-      // initiated Appeal is what clears fulfillment here instead.
-      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved' || context.workflowData.appealStatus === 'initiated',
+      // appealStatus other than 'none' is what clears fulfillment here
+      // instead, from the moment INITIATE_APPEAL fires. Must not check
+      // strictly `=== 'initiated'` — appealStatus later advances to
+      // 'approved' (see APPROVE_APPEAL/updateApproveAppeal above), which
+      // would otherwise silently re-lock this guard after already unlocking it.
+      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved' || context.workflowData.appealStatus !== 'none',
     },
   }
 );

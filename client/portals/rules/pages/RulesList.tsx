@@ -15,7 +15,7 @@ import RulesAppShell from "../components/RulesAppShell";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { usePatientStore } from "@/store/patientStore";
 import { RULES } from "../data/rulesData";
-import { SfLink } from "../components/SfPrimitives";
+import { SfLink, SfPrimaryButton } from "../components/SfPrimitives";
 
 function truncate(text: string, max = 100) {
   return text.length > max ? text.slice(0, max).trimEnd() + "..." : text;
@@ -24,25 +24,34 @@ function truncate(text: string, max = 100) {
 export default function RulesList() {
   const navigate = useNavigate();
   const cases = useRulesPortalStore((s) => s.cases);
+  const customRules = useRulesPortalStore((s) => s.customRules);
   const drugName = usePatientStore((s) => s.drugName);
 
+  // customRules holds rules the presenter creates live (see
+  // rulesPortalStore.ts's "Bridge to the real engine" section) — merged in
+  // here so a newly created rule appears in this list exactly like the 9
+  // seeded ones, under its own category group.
+  const allRules = [...RULES, ...customRules];
   const grouped: Record<string, typeof RULES> = {};
-  for (const r of RULES) {
+  for (const r of allRules) {
     (grouped[r.listCategory] ??= []).push(r);
   }
 
   return (
     <RulesAppShell active="rules">
       <div className="bg-white p-5">
-        <div className="mb-1 text-[12px] text-[#706e6b]">
-          Profile: <SfLink onClick={() => navigate("/profile/wegovy")}>{drugName}</SfLink>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="text-[12px] text-[#706e6b]">
+            Profile: <SfLink onClick={() => navigate("/profile/wegovy")}>{drugName}</SfLink>
+          </div>
+          <SfPrimaryButton onClick={() => navigate("/rule/new")}>+ New Rule</SfPrimaryButton>
         </div>
         <h1 className="text-[20px] font-bold text-[#3e3e3c] mb-4">Active Business Rules</h1>
 
         {Object.entries(grouped).map(([category, rules]) => (
           <div key={category} className="mb-6 border border-[#dddbda] rounded overflow-hidden">
             <div className="px-3 py-2 bg-[#f3f3f3] border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]">
-              {category} (10+)
+              {category} ({rules.length}{category === "Enrollment" ? "+" : ""})
             </div>
             <table className="w-full text-[13px]">
               <thead>

@@ -21,6 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePresPapStore } from "@/store/presPapStore";
+import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -343,7 +344,13 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
     consentStatus === 'confirmed',                 // 2 Patient Enrolled
     biStatus === 'complete',                       // 3 Benefits Investigation
     paStatus === 'denied' || paStatus === 'approved', // 4 Prior Authorization — this flow resolves to denied
-    appealStatus === 'initiated',                  // 5 Appeal
+    // Only 'approved' counts as done — per request, this step shouldn't
+    // check off just because the appeal was sent (appealStatus ===
+    // 'initiated'); it should wait for the payer response (see
+    // workflows/iAssistPap.ts's APPROVE_APPEAL). While 'initiated', StepBar
+    // below gives it the same pending/pulsing treatment as Prior
+    // Authorization while awaiting its own response.
+    appealStatus === 'approved',                   // 5 Appeal
     dispatched || pastDispatch,                    // 6 Dispatch to Triage
     pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 7 Rx Processing
     pharmacyStatus === 'delivered',                // 8 Rx Shipped
@@ -389,6 +396,7 @@ function StepBar() {
 
   const biStatus        = workflowData.biStatus;
   const paStatus        = workflowData.paStatus;
+  const appealStatus    = workflowData.appealStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
   const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCoaFlow ? STEP_LABELS_COA
@@ -410,6 +418,14 @@ function StepBar() {
   // guard is moot for WF2 either way.
   const biRunning       = biStatus === "running";
   const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit" && flowType !== "PrES_PAP";
+  // WF5 (iAssist_PAP) only — appealStatus never leaves 'none' for any other
+  // flow (see engine/types.ts), so no explicit isIAssistPapFlow guard is
+  // needed here, same reasoning as paProcessing's flow exclusions above.
+  // Sits at the dedicated "Appeal" step (n=5, see STEP_LABELS_IASSIST_PAP)
+  // while the appeal has been sent but the payer hasn't responded yet —
+  // same "sent, awaiting response" moment paProcessing captures for PA.
+  const appealPending   = appealStatus === "initiated";
+  const appealStepN     = 5;
   const rxInTransit     = pharmacyStatus === "processing";
   const rxProcessing    = pharmacyStatus === "ready";
   const rxShipping      = pharmacyStatus === "shipped";
@@ -432,8 +448,8 @@ function StepBar() {
         const active = iAssistStepDone
           ? !iAssistStepDone[i] && iAssistStepDone.slice(0, i).every(Boolean)
           : workflowStep === n;
-        // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
-        const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
+        // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; step 4→5 (WF5 only) while the appeal is pending a payer response; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
+        const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || (appealPending && n === appealStepN - 1) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
         return (
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-0.5 relative">
@@ -443,6 +459,10 @@ function StepBar() {
               )}
               {/* Pulsing ring behind the step-4 dot while PA is processing */}
               {paProcessing && n === 4 && (
+                <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
+              )}
+              {/* Pulsing ring behind the Appeal dot while awaiting payer response */}
+              {appealPending && n === appealStepN && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
               {/* Pulsing ring behind the Rx Processing dot while rx is in transit */}
@@ -464,9 +484,10 @@ function StepBar() {
                   active && "bg-white/30 text-white border-white scale-110",
                   biRunning && n === 3 && "border-white/60 text-white/60",
                   paProcessing && n === 4 && "border-white/60 text-white/60",
+                  appealPending && n === appealStepN && "border-white/60 text-white/60",
                   (rxInTransit || rxProcessing) && n === rxProcessingStepN && "border-white/60 text-white/60",
                   rxShipping && n === rxShippedStepN && "border-white/60 text-white/60",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "bg-transparent text-white/40 border-white/25"
+                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "bg-transparent text-white/40 border-white/25"
                 )}
               >
                 {done ? "✓" : n}
@@ -478,12 +499,13 @@ function StepBar() {
                   done   && "text-white/70",
                   biRunning && n === 3 && "text-white/60 animate-pulse",
                   paProcessing && n === 4 && "text-white/60 animate-pulse",
+                  appealPending && n === appealStepN && "text-white/60 animate-pulse",
                   (rxInTransit || rxProcessing) && n === rxProcessingStepN && "text-white/60 animate-pulse",
                   rxShipping && n === rxShippedStepN && "text-white/60 animate-pulse",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "text-white/30"
+                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "text-white/30"
                 )}
               >
-                {biRunning && n === 3 ? "Running…" : paProcessing && n === 4 ? "Pending…" : rxInTransit && n === rxProcessingStepN ? "In Transit…" : rxProcessing && n === rxProcessingStepN ? "Processing…" : rxShipping && n === rxShippedStepN ? "Shipping…" : label}
+                {biRunning && n === 3 ? "Running…" : paProcessing && n === 4 ? "Pending…" : appealPending && n === appealStepN ? "Awaiting Response…" : rxInTransit && n === rxProcessingStepN ? "In Transit…" : rxProcessing && n === rxProcessingStepN ? "Processing…" : rxShipping && n === rxShippedStepN ? "Shipping…" : label}
               </span>
             </div>
             {i < STEP_LABELS.length - 1 && (
@@ -684,6 +706,13 @@ export default function DemoShell() {
   // resetPatient() either, only clear its sessionStorage key — presPapStore
   // mirrors that same behavior there for consistency.
   const resetPresPap = usePresPapStore((s) => s.reset);
+  // Only ever called from WF5's own "Reset All" (see isIAssistPapFlow guard
+  // below) — rulesPortalStore's profile/cases back a totally separate,
+  // unrelated Enrollment demo (see that store's header comment), so this
+  // must NOT be a blanket resetRulesPortal() call or resetting any other
+  // flow would silently wipe a presenter's in-progress Welcome Kit/Call
+  // walkthrough too.
+  const deactivateAppealRule = useRulesPortalStore((s) => s.deactivateAppealRule);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const actor = useWorkflowActor();
@@ -1146,6 +1175,16 @@ export default function DemoShell() {
                       // it, looking like the demo had reverted.
                       resetAllWorkflowSnapshots();
                       switchWorkflow(flowType);
+                      // WF5-only: undo the "Initiate Appeal — Upon PA
+                      // Denial" rule's live activation (see
+                      // rulesPortalStore.ts) so the "no rule exists; build
+                      // one live" moment can be repeated from scratch on the
+                      // next run-through, without touching any other flow's
+                      // reset (that store's rule state has nothing to do
+                      // with WF1-4/6).
+                      if (isIAssistPapFlow) {
+                        deactivateAppealRule();
+                      }
                       sessionStorage.removeItem('arxWorkflow_v2');
                       // NOTE: do NOT removeItem('arx-demo-shell') here — resetDemo()
                       // above already wrote the correct flowType into that key via

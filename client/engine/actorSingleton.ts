@@ -94,10 +94,13 @@ function persistSnapshot(flowType: FlowType, snapshot: unknown): void {
     const all = readSnapshotStore();
     all[flowType] = snapshot;
     sessionStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(all));
-  } catch {
+  } catch (e) {
     // sessionStorage unavailable (private browsing, quota, etc.) — the
     // in-memory Map above still covers same-session flow switching, this
-    // only means a hard reload won't be able to restore progress.
+    // only means a hard reload won't be able to restore progress. Log it so
+    // a quota failure (which silently freezes reload-restore at whatever
+    // stage last fit) is visible instead of looking like a random regression.
+    console.warn(`[actorSingleton] Failed to persist "${flowType}" workflow snapshot — a reload will restore stale progress from before this point`, e);
   }
 }
 

@@ -86,7 +86,12 @@ const createEvent = (
 });
 
 const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
-  const updated = [...snapshots, context];
+  // Strip _snapshots before storing — otherwise each stored snapshot embeds
+  // every prior snapshot's own history, doubling the serialized context size
+  // on every transition. That blows past sessionStorage's quota partway
+  // through a flow, after which persistSnapshot() starts silently failing
+  // and a reload restores stale, earlier-stage progress.
+  const updated = [...snapshots, { ...context, _snapshots: [] }];
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
 
