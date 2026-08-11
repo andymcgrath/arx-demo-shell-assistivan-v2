@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { hexToColorFilter } from "@/lib/brandFilter";
 import { usePatientStore } from "@/store/patientStore";
-import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2, FilePlus2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2, FilePlus2, ArrowLeft } from "lucide-react";
 import ManufacturerSection from "./admin/ManufacturerSection";
 import ProgramSection from "./admin/ProgramSection";
 import BrandingPreview from "./admin/BrandingPreview";
@@ -75,6 +76,7 @@ function normalize(raw: any): BrandingData {
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
   const [data, setData] = useState<BrandingData>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("manufacturer");
@@ -224,9 +226,29 @@ export default function Admin() {
     <div className="min-h-screen bg-[--arx-background]">
       {/* Top bar */}
       <div className="bg-white border-b border-[--arx-borders] px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <div>
-          <h1 className="text-xl font-bold text-[--arx-slate]">Branding Admin</h1>
-          <p className="text-sm text-[--arx-body-copy]">Manage logos, colors, and brand text</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              // /admin is a real top-level route (see App.tsx) reachable
+              // either from DemoShell's "Branding" button or a direct/
+              // bookmarked URL — history.length > 1 tells those apart.
+              // Coming from DemoShell, back() returns to whichever portal
+              // was actually showing; landing here with no prior entry
+              // (a fresh tab/bookmark) falls back to the demo's default
+              // route instead of leaving the user stuck or exiting the app.
+              if (window.history.length > 1) navigate(-1);
+              else navigate("/hub");
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[--arx-borders] rounded-lg hover:bg-gray-50 transition-colors text-[--arx-body-copy] flex-shrink-0"
+            aria-label="Back to demo"
+          >
+            <ArrowLeft size={15} />
+            Back to Demo
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-[--arx-slate]">Branding Admin</h1>
+            <p className="text-sm text-[--arx-body-copy]">Manage logos, colors, and brand text</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button

@@ -666,14 +666,18 @@ export const LIVE_INFUSION_TASK_ID = 'LIVE-INFUSION-SCHEDULED';
  * to for his infusion.
  */
 export const KEANU_SITE_OF_CARE_FACTS = {
-  facilityName: 'Houston SOC',
+  // Orlando, not Houston — Keanu's home address (see PATIENT_SEED in
+  // patientStore.ts) is 123 Main Street, Orlando, FL 32801. His site of
+  // care needs to be somewhere he'd realistically drive to for an
+  // infusion, not a facility 900+ miles away in a different state.
+  facilityName: 'Orlando SOC',
   npi: '1699006677',
   contactName: 'Priya Sandhu',
-  contactPhone: '(713) 555-3006',
-  address: '800 Bagby St',
-  city: 'Houston',
-  state: 'Texas',
-  zip: '77002',
+  contactPhone: '(407) 555-3006',
+  address: '1414 Kuhl Ave',
+  city: 'Orlando',
+  state: 'Florida',
+  zip: '32806',
 };
 
 /** Minimal event shape this function needs — matches useDemoState()'s

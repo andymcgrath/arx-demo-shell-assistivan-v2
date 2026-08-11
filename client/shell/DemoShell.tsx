@@ -863,6 +863,18 @@ export default function DemoShell() {
         actor.send({ type: 'INITIATE_APPEAL', portal: 'crm' });
       }
       if (stage >= 6) {
+        // Stage 6 ("Dispatch to Triage") only happens once the payer has
+        // overturned the denial — SELECT_PHARMACY below presupposes the
+        // appeal already unlocked fulfillment. Without this, appealStatus
+        // stayed stuck at 'initiated' from the stage-5 dispatch above (the
+        // only other path to 'approved' is crm/pages/Index.tsx's 2.5s
+        // Appeals-tab auto-resolve effect, which requires that tab to be
+        // open — but the reset this function starts with force-closes it),
+        // so jumping straight to stage 6 landed the patient back on
+        // AppointmentConfirmation.tsx's "Awaiting Response" state instead of
+        // treating the appeal as resolved and immutable.
+        actor.send({ type: 'APPROVE_APPEAL', portal: 'crm' });
+
         const pharmacy = {
           name: KEANU_SITE_OF_CARE_FACTS.facilityName,
           address: KEANU_SITE_OF_CARE_FACTS.address,
