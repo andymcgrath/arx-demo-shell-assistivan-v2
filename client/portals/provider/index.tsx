@@ -1,10 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-<<<<<<< HEAD
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
-=======
-import { usePatientStore } from "@/store/patientStore";
 import { usePresPapStore } from "@/store/presPapStore";
->>>>>>> WF5-PrES-PAP
 import { useDemoStore } from "@/store/demoStore";
 import PesHome from "@/components/enrollment/PesHome";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
@@ -2861,12 +2857,8 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-<<<<<<< HEAD
     emailSurfacedRef.current = false;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'login');
-=======
     setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
->>>>>>> WF5-PrES-PAP
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
