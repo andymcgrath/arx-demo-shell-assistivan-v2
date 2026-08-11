@@ -197,6 +197,90 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/lock-screen';
   }
 
+  // ── PrES_PAP (WF5): its own capture flow, entirely separate from the
+  // shared WF1/WF2/WF4 onboarding logic below ──────────────────────────
+  // Self-attestation, patient info, and typed e-signature consent replace
+  // the SMS/OTP-based onboarding every other flow uses (see presPap.ts's
+  // header comment and the Pes*.tsx screens). Returns early so none of the
+  // generic otpVerified-gated logic below ever runs for this flow — WF5's
+  // real UI never shows /lock-screen, /sms-message, or /otp-verification,
+  // even though PesAttestation.tsx fires those underlying events in one
+  // bundled dispatch to drive the shared machine forward.
+  if (flowType === 'PrES_PAP') {
+    // Pre-enrollment: role selection, then self-attestation directly — no
+    // CRM referral/SMS needed first, unlike every other flow. /pes-home and
+    // /pes-attestation share this exact same condition (enrollmentStatus
+    // 'none'); see DELIVERY_FLOW_PATHS in patient/index.tsx for how the
+    // portal tolerates moving from one to the other without derivePatientRoute
+    // bouncing the patient back to /pes-home.
+    if (workflowData.enrollmentStatus === 'none') return '/pes-home';
+
+    // Attested but not yet consented — PesPatientInfo -> PesConsent are a
+    // single manual-navigate phase, gated as one unit here (same pattern
+    // ConfirmDetails -> Consent -> Signature already uses elsewhere: only
+    // the phase's entry screen is derived; the pages navigate() between
+    // themselves without an intermediate actor dispatch in between).
+    if (workflowData.consentStatus === 'pending') return '/pes-patient-info';
+
+    // Consent confirmed — the provider's referral already covered
+    // attestation, patient info, and consent, so from here the patient
+    // portal has nothing active for the patient to do until the
+    // Fulfillment Center's PAP "application update" SMS goes out. BI runs
+    // automatically the moment consent confirms (CRM Index.tsx's generic
+    // consentStatus-confirmed effect — not flow-specific) and completes
+    // with biResult 'no_insurance' once a CRM agent opens the BI stage tab
+    // (also generic — see isPapFlow there); none of that needs a
+    // patient-facing screen, so the portal just parks on pes-home for the
+    // whole wait instead of the shared /enrollment-complete screen every
+    // other flow uses here.
+    if (workflowData.consentStatus === 'confirmed' && !workflowData.papSmsSent) {
+      return '/pes-home';
+    }
+
+    // Fulfillment Center sent the update — same SMS bubble WF2 uses
+    // (mirrored here as PesPapUpdateSms.tsx via FulfilmentCenter.tsx's
+    // already-generic isPapFlow handling), until the patient taps through.
+    // WF5 has no separate code-verification screen the way WF2's
+    // /pap-update-otp does — tapping the message goes straight back to
+    // pes-home (see PesPapUpdateSms.tsx), where the "I am a Patient/
+    // Caregiver" link now continues into income verification instead of
+    // attestation (see pes-home's patient wrapper).
+    if (!workflowData.papSmsVerified) return '/pes-pap-update-sms';
+
+    // Tapped — parked on pes-home again until the patient clicks through
+    // into income verification (PesIncomeConsent -> PesIncomeSubmission ->
+    // PesPapTerms), same single-gate-per-phase pattern as every other
+    // phase here. /pes-income-consent is in patient/index.tsx's
+    // DELIVERY_FLOW_PATHS so that manual click isn't bounced back to
+    // pes-home before incomeStatus actually changes.
+    if (workflowData.incomeStatus !== 'verified') {
+      return workflowData.incomeStatus === 'none' ? '/pes-home' : '/pes-income-submission';
+    }
+
+    // Income verified, PAP terms agreed → PAP active. Same address/date
+    // beat WF2/CoA_DTP/iAssist use (PATIENT_SETS_ADDRESS/
+    // PATIENT_SELECTS_SHIP_DATE, DeliveryAddress.tsx/DeliveryDate.tsx,
+    // unchanged).
+    if (workflowData.pharmacyStatus === 'none') {
+      if (workflowData.dispatchStatus === 'none' || workflowData.dispatchStatus === 'pending_selection')
+        return '/delivery-address';
+
+      if (workflowData.patientShipDate === null) return '/delivery-date';
+
+      // Address + date done — CRM handles Triage/dispatch from here, same
+      // as WF2. PesConfirmation.tsx is WF5's own version of
+      // PapEnrollmentComplete.tsx.
+      return '/pes-confirmation';
+    }
+
+    if (workflowData.pharmacyStatus === 'processing' || workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
+
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    return '/medication-delivered';
+  }
+
   // ── Phase gate: once otpVerified, NEVER return to pre-OTP screens ────
   const onboardingComplete = workflowData.otpVerified === true;
 
@@ -226,6 +310,8 @@ export function derivePatientRoute(state: MachineContext): string {
   // BI completing with no_insurance leads into an FA eIncome check instead
   // of PA submission — paStatus stays 'none' for this flow forever, so this
   // branch has to run before the generic paStatus-driven checks below.
+  // PrES_PAP (WF5) has its own dedicated branch above and never reaches
+  // here.
   if (flowType === 'Fax_PAP_Audit') {
     // BI still running
     if (workflowData.biStatus !== 'complete') return '/enrollment-complete';
@@ -409,7 +495,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     return [];
   }
 
-  const isPapFlow = input.flowType === 'Fax_PAP_Audit';
+  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP';
 
   const items: LiveWorkItem[] = [
     {

@@ -20,6 +20,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
+import { usePresPapStore } from "@/store/presPapStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -94,6 +95,10 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // switching to this flow, resetting it, or deep-linking via /iassist
   // should land on.
   iAssist_PA_Approved: "iassist",
+  // WF5's shared patient/provider web experience starts on the Provider
+  // portal's own home screen (PesHome) — the provider is the one who starts
+  // a referral, and the role-selection home screen routes from there.
+  PrES_PAP: "provider",
 };
 
 function getProviderPortalLabel(flowType: string): string {
@@ -121,10 +126,14 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 
 function getPortals(flowType: string) {
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
+  // provider-facing PrES intake placeholder (see provider/index.tsx's
+  // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
+  // has no provider screen at all.
   const isPapFlow = flowType === "Fax_PAP_Audit";
 
   return PORTALS_BASE.filter(p => {
-    // Show provider for workflows 1 and 3, hide for workflow 4 (iAssist —
+    // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
     // (Fax_PAP_Audit never requires a traditional PA, so there's no
     // provider-facing screen for this flow at all — see isPapFlow's use
@@ -329,7 +338,7 @@ function StepBar() {
   const biStatus        = workflowData.biStatus;
   const paStatus        = workflowData.paStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
-  const STEP_LABELS     = flowType === "Fax_PAP_Audit" ? STEP_LABELS_PAP_AUDIT
+  const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCoaFlow ? STEP_LABELS_COA
     : STEP_LABELS_DEFAULT;
   // These pulsing-ring decorations hardcode step positions. CoA_DTP's
@@ -347,7 +356,7 @@ function StepBar() {
   // this flow, see workflowMachine.ts's SEND_PAP_SMS comment), so that ring
   // guard is moot for WF2 either way.
   const biRunning       = biStatus === "running";
-  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit";
+  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit" && flowType !== "PrES_PAP";
   const rxInTransit     = pharmacyStatus === "processing";
   const rxProcessing    = pharmacyStatus === "ready";
   const rxShipping      = pharmacyStatus === "shipped";
@@ -466,6 +475,20 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
   // If portal is no longer available in this flow, don't render
   if (!info) return null;
 
+  // WF5 (PrES_PAP) renders as a plain web page everywhere else (see the
+  // comment below), but the Fulfillment Center's "application update" SMS
+  // is meant to look exactly like the phone-mockup SMS screens every other
+  // flow uses (PapUpdateSms.tsx etc.) — same iPhone frame, not a card on a
+  // web page. usePersonaState('patient') reads the same shared workflowData
+  // regardless of which persona string is passed, so this doesn't need
+  // threading through as a prop. The window this covers (papSmsSent &&
+  // !papSmsVerified) corresponds exactly to WorkflowEngine.ts's PrES_PAP
+  // branch returning '/pes-pap-update-sms' — nothing else briefly flips
+  // into the phone frame by accident.
+  const { workflowData } = usePersonaState('patient');
+  const showPesPapUpdateSmsPhone =
+    flowType === 'PrES_PAP' && workflowData.papSmsSent && !workflowData.papSmsVerified;
+
   return (
     <div className="flex flex-col flex-1 min-w-0 border-r border-slate-700/50 last:border-r-0">
       {/* Per-panel portal selector (multi-panel mode only) */}
@@ -496,7 +519,17 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * is painted relative to this box, not the viewport.
        * This keeps the shell chrome always visible at the top.
        */}
-      {portal === "patient" ? (
+      {/*
+       * PrES_PAP (WF5) is the one patient flow given a plain web-based
+       * layout instead of the iPhone mockup below — its screens were built
+       * wide (see EnrollmentShell's `wide` prop) to read as a desktop web
+       * app, matching CRM/Provider/Field, rather than a native mobile
+       * screen. All other flows keep the phone frame unchanged. The one
+       * exception is the PAP "application update" SMS screen
+       * (showPesPapUpdateSmsPhone, computed above) — that one screen still
+       * uses the phone frame, matching every other flow's SMS screens.
+       */}
+      {portal === "patient" && (flowType !== "PrES_PAP" || showPesPapUpdateSmsPhone) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
@@ -575,8 +608,19 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 export default function DemoShell() {
   const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
-  const isPapFlow = flowType === "Fax_PAP_Audit";
+  // PrES_PAP (WF5) shares WF2's ladder here — its dedicated machine
+  // (presPap.ts) accepts the identical event sequence, so the same
+  // stage-jump steps apply. See STEP_LABELS_PAP_AUDIT/getPortals above for
+  // where WF5 intentionally does NOT follow WF2 (its provider tab stays
+  // visible).
+  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   const resetPatient = usePatientStore((s) => s.reset);
+  // WF5's own captured-application-data store — reset alongside patientStore
+  // wherever patientStore itself gets a full reset() call below (stale
+  // session cleanup, "Reset All"). The stage-jump ladder buttons don't call
+  // resetPatient() either, only clear its sessionStorage key — presPapStore
+  // mirrors that same behavior there for consistency.
+  const resetPresPap = usePresPapStore((s) => s.reset);
   const [showStageReset, setShowStageReset] = useState(false);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const actor = useWorkflowActor();
@@ -630,8 +674,10 @@ export default function DemoShell() {
     if (isStaleSession) {
       sessionStorage.setItem('arx-demo-session', 'active');
       sessionStorage.removeItem('arx-patient-identity');
+      sessionStorage.removeItem('arx-prespap-application');
       resetDemo();
       resetPatient();
+      resetPresPap();
     }
   }, []);
 
@@ -981,6 +1027,7 @@ export default function DemoShell() {
                     onClick={() => {
                       resetDemo();
                       resetPatient();
+                      resetPresPap();
                       // Wipe every OTHER flow's cached progress too, not just
                       // the active one — resetDemo()/resetCurrentWorkflowActor
                       // only clear the current flow's slot, so an older
@@ -999,6 +1046,7 @@ export default function DemoShell() {
                       // to WF1. This was the root cause of "workflow flips back to
                       // WF1" reports.
                       sessionStorage.removeItem('arx-patient-identity');
+                      sessionStorage.removeItem('arx-prespap-application');
                       sessionStorage.removeItem('arx-demo-session');
                       setShowStageReset(false);
                       // Reset means "start over" — return to this flow's
@@ -1015,7 +1063,7 @@ export default function DemoShell() {
                   >
                     Reset All
                   </button>
-                  {(flowType === "Fax_PAP_Audit"
+                  {((flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP")
                     ? [
                       { stage: 1, label: "Referral Received" },
                       { stage: 2, label: "Patient Enrolled" },
@@ -1057,6 +1105,7 @@ export default function DemoShell() {
                         // write reverts the workflow to WF1.
                         sessionStorage.removeItem('arx-patient-identity');
                         sessionStorage.removeItem('arxWorkflow_v2');
+                        sessionStorage.removeItem('arx-prespap-application');
                         setShowStageReset(false);
                       }}
                       className={cn(

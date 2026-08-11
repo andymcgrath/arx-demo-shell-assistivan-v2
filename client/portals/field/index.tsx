@@ -490,7 +490,7 @@ export default function FieldPortal() {
     id: "AS-164543",
     name: patientState.patientName,
     dob: patientState.patientDob,
-    gender: "Male",
+    gender: patientState.gender,
     externalPatientId: "000007088",
     accountStatus: "Active",
     allergies: "Latex",

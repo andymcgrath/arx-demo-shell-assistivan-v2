@@ -8,6 +8,7 @@
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coaDtpMachine } from "@/workflows/coaDtp";
 import { iAssistMachine } from "@/workflows/iAssist";
+import { presPapMachine } from "@/workflows/presPap";
 
 export interface WorkflowMetadata {
   id: string;
@@ -54,4 +55,9 @@ workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",
+});
+
+workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, {
+  label: "PrES / PAP",
+  description: "Provider e-signature intake workflow with PAP income-qualification (foundation placeholder)",
 });

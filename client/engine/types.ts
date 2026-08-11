@@ -1,6 +1,13 @@
 export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved";
+// "PrES_PAP" (WF5) — isolated workflow that follows the same overall shape as
+// Fax_PAP_Audit (WF2: enrollment -> SMS/OTP -> consent -> BI -> PAP income
+// qualification), but captures identity/consent differently (provider
+// e-signature intake instead of WF2's fax referral). The real capture
+// mechanism/screens are still being designed — see
+// client/workflows/presPap.ts and the Provider/Patient placeholder pages
+// referenced there for what's foundation-only today.
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved" | "PrES_PAP";
 
 export interface Pharmacy {
   name: string;
@@ -30,16 +37,19 @@ export interface WorkflowData {
   dispatchStatus: 'none' | 'pending_selection' | 'selected' | 'dispatched';
   qsStatus: 'none' | 'active' | 'complete';
   papStatus: 'none' | 'active' | 'complete' | 'audit_pending';
-  /** Fax_PAP_Audit only: has the Fulfillment Center staged the "application
-   *  update" message to the patient after BI comes back with no_insurance?
-   *  Mirrors enrollmentInviteSent — gates /pap-update-sms. */
+  /** Fax_PAP_Audit and PrES_PAP: has the Fulfillment Center staged the
+   *  "application update" message to the patient after BI comes back with
+   *  no_insurance? Mirrors enrollmentInviteSent — gates /pap-update-sms
+   *  (Fax_PAP_Audit) / /pes-pap-update-sms (PrES_PAP). */
   papSmsSent: boolean;
-  /** Fax_PAP_Audit only: patient tapped the "application update" SMS link.
-   *  Mirrors smsVerified — gates /pap-update-otp. */
+  /** Fax_PAP_Audit and PrES_PAP: patient tapped the "application update"
+   *  SMS link. Mirrors smsVerified — gates /pap-update-otp for
+   *  Fax_PAP_Audit; for PrES_PAP it instead unlocks income verification
+   *  from pes-home directly (no separate code-verification screen). */
   papSmsVerified: boolean;
   /** Fax_PAP_Audit only: patient entered the code sent with the
    *  application-update SMS. Mirrors otpVerified — unlocks
-   *  /income-qualification. */
+   *  /income-qualification. Unused by PrES_PAP (no OTP beat here). */
   papOtpVerified: boolean;
   /** Fax_PAP_Audit only: patient's FA eIncome check (IncomeQualification.tsx)
    *  result. 'verified' is what flips papStatus to 'active' and opens up
