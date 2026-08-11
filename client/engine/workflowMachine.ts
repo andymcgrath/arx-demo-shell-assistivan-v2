@@ -32,6 +32,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paymentVerified: false,
   patientShipDate: null,
   appealStatus: "none",
+  infusionDate: null,
 };
 
 const initialContext: MachineContext = {

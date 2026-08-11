@@ -22,10 +22,12 @@
  */
 import { useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { Info, X, Plus, Trash2, Upload } from "lucide-react";
+import { Info, X, Plus, Trash2, Upload, CalendarCheck } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, PRESCRIBER_OPTIONS, type PhoneEntry, type SignSource, type ConsentMethod } from "@/store/caseWizardStore";
+import { usePersonaState } from "@/engine/WorkflowProvider";
+import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 
 type SignatureMode = "type" | "draw";
 
@@ -157,6 +159,20 @@ export default function NewCasePatient() {
   const patient = useCaseWizardStore((s) => s.patient);
   const setPatient = useCaseWizardStore((s) => s.setPatient);
 
+  // This wizard is otherwise a self-contained, live-actor-agnostic form (see
+  // file header) — but iAssist_PAP (WF5) is the one flow where reopening
+  // Keanu's Patient Information after his appeal is approved and an
+  // infusion date is picked (InfusionDate.tsx, PATIENT_SELECTS_INFUSION_DATE
+  // — see workflows/iAssistPap.ts) should surface that appointment right
+  // here, closing the "record added to iAssist" narrative beat. "provider"
+  // persona id used only for tagging, same as Dashboard.tsx's own read of
+  // this same live actor — no events are dispatched from this screen.
+  const { workflowData } = usePersonaState("provider");
+  const showInfusionCard = workflowData.flowType === "iAssist_PAP" && workflowData.infusionDate !== null;
+  const infusionDateLabel = workflowData.infusionDate
+    ? new Date(workflowData.infusionDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+    : null;
+
   function updatePhone(id: string, patch: Partial<PhoneEntry>) {
     setPatient({ phones: patient.phones.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   }
@@ -194,6 +210,29 @@ export default function NewCasePatient() {
 
         <div className="flex-1 overflow-auto p-4 sm:p-8">
           <div className="max-w-3xl mx-auto space-y-6">
+
+            {/* Infusion Appointment — iAssist_PAP (WF5) only, once the
+                patient has picked an infusion date post-appeal-approval. */}
+            {showInfusionCard && (
+              <section className="bg-white rounded-xl p-6 space-y-3" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
+                <div className="flex items-center gap-2">
+                  <CalendarCheck size={18} className="text-[#007178]" />
+                  <h2 className="text-base font-semibold text-[#1D1D1D]">Infusion Appointment</h2>
+                  <span className="text-xs font-semibold text-[#007178] bg-[#EEF9F9] rounded-full px-2 py-0.5">Scheduled</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-semibold text-[#6F7276] uppercase tracking-wide mb-1">Appointment Date</div>
+                    <div className="text-sm text-[#1D1D1D]">{infusionDateLabel}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-[#6F7276] uppercase tracking-wide mb-1">Site of Care</div>
+                    <div className="text-sm text-[#1D1D1D]">{KEANU_SITE_OF_CARE_FACTS.facilityName}</div>
+                    <div className="text-sm text-[#6F7276]">{KEANU_SITE_OF_CARE_FACTS.address}, {KEANU_SITE_OF_CARE_FACTS.city}, {KEANU_SITE_OF_CARE_FACTS.state} {KEANU_SITE_OF_CARE_FACTS.zip}</div>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Demographics */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
