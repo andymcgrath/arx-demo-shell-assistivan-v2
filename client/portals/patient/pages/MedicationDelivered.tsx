@@ -19,10 +19,7 @@ export default function MedicationDelivered() {
   const [showPfVideo, setShowPfVideo] = useState(false);
 
   return (
-<<<<<<< HEAD
     <main className="flex-grow pt-5 pb-8">
-=======
->>>>>>> WF5-PrES-PAP
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* Arrived card */}
