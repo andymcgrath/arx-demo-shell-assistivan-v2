@@ -225,6 +225,21 @@ const STEP_LABELS_PAP_AUDIT = [
   "Medication Delivered",
 ];
 
+// WF5 (iAssist_PAP) — WF4's STEP_LABELS_DEFAULT with one extra "Appeal"
+// milestone inserted after Prior Authorization, matching this flow's
+// denied-PA-then-appeal path (see computeIAssistPapStepDone above).
+const STEP_LABELS_IASSIST_PAP = [
+  "Referral Received",
+  "Patient Enrolled",
+  "Benefits Investigation",
+  "Prior Authorization",
+  "Appeal",
+  "Dispatch to Triage",
+  "Rx Processing",
+  "Rx Shipped",
+  "Medication Delivered",
+];
+
 // "Copay Enrollment" and "Patient Payment" used to be two separate steps,
 // but Benefit Pricing covers Retail/Mail/Copay uniformly now (see
 // BenefitPricing.tsx) — there's no distinct "enrollment" milestone that
@@ -311,16 +326,45 @@ function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>
   ];
 }
 
+// WF5 (iAssist_PAP) variant of computeIAssistStepDone above — identical
+// except it inserts its own "Appeal" milestone right after Prior
+// Authorization (step 5 here vs. Dispatch to Triage at step 5 in WF4's
+// 8-step version), shifting the dispense tail down by one. Step 4 (Prior
+// Authorization) is judged as "resolved" on denial, not approval — this
+// flow's PA never reaches 'approved' (see workflows/iAssistPap.ts) — and
+// step 5 only ticks once the Appeal is actually filed (appealStatus,
+// INITIATE_APPEAL), which is also what unlocks dispatch/fulfillment here.
+function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, paStatus, appealStatus, dispatchStatus, pharmacyStatus } = workflowData;
+  const dispatched = dispatchStatus === 'selected' || dispatchStatus === 'dispatched';
+  const pastDispatch = pharmacyStatus === 'processing' || pharmacyStatus === 'ready' || pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered';
+  return [
+    enrollmentStatus !== 'none',                  // 1 Referral Received
+    consentStatus === 'confirmed',                 // 2 Patient Enrolled
+    biStatus === 'complete',                       // 3 Benefits Investigation
+    paStatus === 'denied' || paStatus === 'approved', // 4 Prior Authorization — this flow resolves to denied
+    appealStatus === 'initiated',                  // 5 Appeal
+    dispatched || pastDispatch,                    // 6 Dispatch to Triage
+    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 7 Rx Processing
+    pharmacyStatus === 'delivered',                // 8 Rx Shipped
+    pharmacyStatus === 'delivered',                // 9 Medication Delivered
+  ];
+}
+
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
   const isCoaFlow = flowType === "CoA_DTP";
-  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4) — WF5's PA
-  // never ticks "done" here since it resolves to Denied, not Approved,
-  // which is the accurate representation (see engine/types.ts's FlowType
-  // comment on this flow).
+  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4). WF5 uses
+  // its own computeIAssistPapStepDone (extra "Appeal" step) below instead
+  // of WF4's — see isIAssistPapFlow.
   const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
-  const iAssistStepDone = isIAssistFlow ? computeIAssistStepDone(workflowData) : null;
+  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  const iAssistStepDone = isIAssistPapFlow
+    ? computeIAssistPapStepDone(workflowData)
+    : isIAssistFlow
+    ? computeIAssistStepDone(workflowData)
+    : null;
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
@@ -348,6 +392,7 @@ function StepBar() {
   const pharmacyStatus  = workflowData.pharmacyStatus;
   const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCoaFlow ? STEP_LABELS_COA
+    : isIAssistPapFlow ? STEP_LABELS_IASSIST_PAP
     : STEP_LABELS_DEFAULT;
   // These pulsing-ring decorations hardcode step positions. CoA_DTP's
   // 9-step bar now shares WF1's exact Benefits Investigation (n=3) and
@@ -369,9 +414,10 @@ function StepBar() {
   const rxProcessing    = pharmacyStatus === "ready";
   const rxShipping      = pharmacyStatus === "shipped";
   // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
-  // pushes everything after it back by one).
-  const rxProcessingStepN = isCoaFlow ? 7 : 6;
-  const rxShippedStepN    = isCoaFlow ? 8 : 7;
+  // pushes everything after it back by one). WF5 (iAssist_PAP): also n=7/8
+  // (its extra "Appeal" step pushes the dispense tail back by one too).
+  const rxProcessingStepN = (isCoaFlow || isIAssistPapFlow) ? 7 : 6;
+  const rxShippedStepN    = (isCoaFlow || isIAssistPapFlow) ? 8 : 7;
 
 
   return (
@@ -759,9 +805,10 @@ export default function DemoShell() {
 
     // WF5's own ladder — checked before the shared isIAssistFlow block below
     // (isIAssistFlow is true for WF5 too) since it diverges at stage 4: PA
-    // resolves to Denied instead of Approved, and the ladder stops there —
-    // there's no fulfillment path once a PA is denied, matching WF4's own
-    // dead end at that state (see engine/types.ts's FlowType comment).
+    // resolves to Denied instead of Approved. Stage 5 files the Appeal
+    // (INITIATE_APPEAL — see workflows/iAssistPap.ts), which unlocks
+    // fulfillment the same way an approval normally would, so stages 6-8
+    // mirror WF4's own Dispatch/Ship/Deliver tail exactly.
     if (isIAssistPapFlow) {
       if (stage >= 2) {
         actor.send({ type: 'ENROLL', portal: 'provider' });
@@ -773,6 +820,31 @@ export default function DemoShell() {
       }
       if (stage >= 4) {
         actor.send({ type: 'DENY_PA', portal: 'crm' });
+      }
+      if (stage >= 5) {
+        actor.send({ type: 'INITIATE_APPEAL', portal: 'crm' });
+      }
+      if (stage >= 6) {
+        const pharmacy = {
+          name: 'CoAssist Pharmacy',
+          address: '2400 Sand Lake Road, Suite 200',
+          city: 'Orlando',
+          state: 'FL',
+          zip: '32809',
+          phone: '(800) 555-0175',
+        };
+        actor.send({
+          type: 'SELECT_PHARMACY',
+          portal: 'crm',
+          pharmacy
+        });
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 8) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
       }
       return;
     }
@@ -1117,6 +1189,10 @@ export default function DemoShell() {
                       { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
                       { stage: 3, label: "Patient Enrolled" },
                       { stage: 4, label: "PA Denied" },
+                      { stage: 5, label: "Appeal Filed" },
+                      { stage: 6, label: "Dispatch to Triage" },
+                      { stage: 7, label: "Rx Shipped" },
+                      { stage: 8, label: "Medication Delivered" },
                     ]
                     : isIAssistFlow
                     ? [

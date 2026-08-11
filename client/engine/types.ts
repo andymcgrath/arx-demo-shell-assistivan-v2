@@ -78,6 +78,12 @@ export interface WorkflowData {
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;
   paApprovedOtpVerified: boolean;
+  /** iAssist_PAP (WF5) only: has the Appeal milestone been filed after a PA
+   *  denial? 'initiated' is what unlocks dispatch/fulfillment for this flow
+   *  in place of paStatus === 'approved' (which this flow's PA never
+   *  reaches — see canFillRX in workflows/iAssistPap.ts). Stays 'none' for
+   *  every other flow. */
+  appealStatus: 'none' | 'initiated';
 }
 
 export interface DemoEvent {

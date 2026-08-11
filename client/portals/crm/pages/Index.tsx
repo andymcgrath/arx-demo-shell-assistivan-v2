@@ -717,6 +717,7 @@ export default function Index() {
   const biStatus = workflowData.biStatus;
   const biResult = workflowData.biResult;
   const paStatus = workflowData.paStatus;
+  const appealStatus = workflowData.appealStatus;
   const paApprovedAt = workflowData.paApprovedAt;
   const papStatus = workflowData.papStatus;
   const papSmsSent = workflowData.papSmsSent;
@@ -963,8 +964,16 @@ export default function Index() {
     ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "In Progress", statusDetail: "Conducting ABV audit — insurance found", isComplete: false, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Complete", statusDetail: "Insurance found — PA required", isComplete: true, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
+  // iAssist_PAP (WF5) is the one flow that actually files a real Appeal
+  // (appealStatus flips 'initiated' via INITIATE_APPEAL — see
+  // workflows/iAssistPap.ts) after its PA is denied. Every other flow
+  // leaves appealStatus at 'none' forever, so this only ever shows "Filed"
+  // for WF5, matching paStage's existing "PA Denied — Appeal initiated"
+  // copy for the first time instead of contradicting it.
   const appealStage: Stage = paStatus === "approved"
     ? { id: "A-14275", name: "Appeals", statusLabel: "Not needed", statusDetail: "PA Approved", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : appealStatus === "initiated"
+    ? { id: "A-14275", name: "Appeals", statusLabel: "Filed", statusDetail: "Appeal submitted — awaiting payer response", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "A-14275", name: "Appeals", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Pharmacy Notes", value: null }, { label: "Shipment Date", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
   // For the PAP flow, Financial Assistance tracks the FA eIncome check
@@ -1692,6 +1701,158 @@ export default function Index() {
                     <div>
                       <div className="text-[11px] text-[#706e6b] mb-1">Appeal Deadline</div>
                       <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(57).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : !isCoaFlow && activeStage.id === "PA-14274" && paStatus === "denied" ? (
+          /* ── PA Denial Detail View (mirrors approval structure) ────────────
+             WF1/WF4/WF5's denial path — CoA_DTP has its own version above
+             (cash-pay offer instead of an appeal, its own record data).
+             iAssist_PAP (WF5) is the one flow with a real appealStatus field
+             (see workflows/iAssistPap.ts) — the info box below and the right
+             rail react to it live; every other flow leaves appealStatus at
+             'none' forever, so they always see the "recommended" copy. */
+          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+            {/* PA Record Header */}
+            <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
+              <div className="text-[11px] text-[#706e6b] mb-0.5">Prior Authorization Denial</div>
+              <div className="flex items-center justify-between py-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
+                    style={{ width: 36, height: 36, background: "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)" }}
+                  >
+                    PA
+                  </div>
+                  <h1 className="text-[20px] font-bold text-[#3e3e3c]">PA-14274</h1>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                    ✕ Denied
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-0 overflow-hidden">
+              {/* Left: Information section */}
+              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+                {/* Information section */}
+                <div className="border border-[#dddbda] rounded">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <ChevronDown size={14} className="text-[#706e6b]" />
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
+                    <div>
+                      <FieldRow label="Patient" value={patientName} isLink />
+                      <FieldRow label="Case" value={caseNumber} isLink />
+                      <FieldRow label="Denial Reason" value="Medical necessity criteria not met" />
+                      <FieldRow label="Stage Age (Business Hours)" value="1 hour, 45 minutes" />
+                    </div>
+                    <div>
+                      <FieldRow label="Status" value="Denied" />
+                      <FieldRow label="Sub-Status" value={appealStatus === "initiated" ? "Denied — Appeal Filed" : "Denied — Appeal Eligible"} />
+                      <FieldRow label="No Status Change Needed" value="—" />
+                      <FieldRow label="Owner" value="Product Owner" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prior Authorization Information section */}
+                <div className="border border-[#dddbda] rounded">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <ChevronDown size={14} className="text-[#706e6b]" />
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
+                    <div>
+                      <FieldRow label="Authorization Number" value="PA-2026-001234" />
+                      <FieldRow label="Call Reference Number" value="REF-789456" />
+                      <FieldRow label="Initiation Source" value="Fax" />
+                      <FieldRow label="External Comments" value="Denied — medical necessity not established" />
+                      <FieldRow label="Internal Comments" value={appealStatus === "initiated" ? "PA denied by payer; appeal filed and awaiting response" : "PA denied by payer; appeal recommended"} />
+                      <FieldRow label="Payer Notes" value="Appeal rights available within 60 days" />
+                    </div>
+                    <div>
+                      <FieldRow label="Prior Authorization ID" value="SELECTED_Template_51" />
+                      <FieldRow label="Last PA Fax Sent Date" value={dateFromToday(-3).toLocaleDateString()} />
+                      <FieldRow label="Denial Date" value={new Date().toLocaleDateString()} />
+                      <FieldRow label="Appeal Deadline" value={dateFromToday(57).toLocaleDateString()} />
+                      <FieldRow label="PA Requirements Communicated" value="Yes" />
+                      <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Call Details section */}
+                <div className="border border-[#dddbda] rounded">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <ChevronDown size={14} className="text-[#706e6b]" />
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
+                    <div>
+                      <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
+                      <FieldRow label="Prior Authorization Phone #" value="(407) 885-9999" />
+                    </div>
+                    <div>
+                      <FieldRow label="Auth Decision (Fax #)" value="Denied" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box — reacts live to appealStatus (iAssist_PAP/WF5's
+                    own field, see workflows/iAssistPap.ts); every other flow
+                    leaves appealStatus at 'none' so it always shows the
+                    "recommended" copy below. */}
+                {appealStatus === "initiated" ? (
+                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#0176d3", background: "#eef4ff" }}>
+                    <p className="text-[13px] font-semibold mb-2" style={{ color: "#014486" }}>Appeal Filed</p>
+                    <p className="text-[12px]" style={{ color: "#014486" }}>
+                      An appeal has been submitted on this denial. See the Appeals stage for status — fulfillment has moved forward while the payer reviews it.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#F59E0B", background: "#FEF3C7" }}>
+                    <p className="text-[13px] font-semibold mb-2" style={{ color: "#92400E" }}>Appeal Recommended</p>
+                    <p className="text-[12px]" style={{ color: "#92400E" }}>
+                      Prior authorization was denied. File an appeal from the Appeals stage to continue toward fulfillment.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Denial Status Panel */}
+              <div className="shrink-0 border-l border-[#dddbda] p-4" style={{ width: 260 }}>
+                <div className="border border-[#dddbda] rounded">
+                  <div className="px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Denial Status</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "#dc2626" }}>
+                        ✕
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-[#706e6b]">Status</div>
+                        <div className="text-[13px] font-semibold text-[#3e3e3c]">Denied</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">Denied By</div>
+                      <div className="text-[13px] text-[#3e3e3c]">Payer — {payer}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">Denial Date</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{new Date().toLocaleDateString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-[#706e6b] mb-1">{appealStatus === "initiated" ? "Appeal Status" : "Appeal Deadline"}</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{appealStatus === "initiated" ? "Filed — Awaiting Response" : dateFromToday(57).toLocaleDateString()}</div>
                     </div>
                   </div>
                 </div>

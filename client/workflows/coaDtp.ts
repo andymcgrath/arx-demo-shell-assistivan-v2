@@ -35,6 +35,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   pricingOption: null,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
+  appealStatus: "none",
 }
 
 const initialContext: MachineContext = {

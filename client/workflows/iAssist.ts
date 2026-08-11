@@ -61,6 +61,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   cashOfferStatus: "none",
   paymentVerified: false,
   patientShipDate: null,
+  appealStatus: "none",
 };
 
 const initialContext: MachineContext = {

@@ -9,12 +9,15 @@
  * The intended demo path differs from WF4: instead of a CRM agent clicking
  * APPROVE_PA, this flow is meant to be walked to DENY_PA (already a valid
  * transition here, same as WF4 — iAssist.ts never removed it, WF4's demo
- * script just never used it). That's it for now — priorAuth.denied is a
- * dead end here exactly like it is in every other flow's machine, on
- * purpose: this flow exists to demo Action Factory closing that gap live
- * (see engine/types.ts's FlowType comment), not to pre-solve it in the
- * machine itself. The appeal-initiation event/field gets added here once
- * that live-rule integration is built.
+ * script just never used it), then INITIATE_APPEAL, which files the Appeal
+ * milestone and unlocks fulfillment (dispatchStatus) the same way an
+ * approval normally would — see canFillRX and updateInitiateAppeal below.
+ * This exists as a real, dispatchable event (not gated behind any Action
+ * Factory rule) so the reset ladder can walk this flow all the way to
+ * Medication Delivered. The still-open question is whether that dispatch
+ * should eventually be gated by/routed through a live Action Factory rule
+ * (see engine/types.ts's FlowType comment and the appealStage discussion in
+ * crm/pages/Index.tsx) instead of firing unconditionally like it does today.
  */
 
 import { createMachine, assign } from 'xstate';
@@ -58,6 +61,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   cashOfferStatus: "none",
   paymentVerified: false,
   patientShipDate: null,
+  appealStatus: "none",
 };
 
 const initialContext: MachineContext = {
@@ -121,6 +125,15 @@ export const iAssistPapMachine = createMachine(
       },
       DENY_PA: {
         actions: 'updateDenyPA',
+      },
+      // Files the Appeal milestone after a denial and unlocks fulfillment
+      // (dispatchStatus -> 'pending_selection') the same way updatePAApproved
+      // does for an approved PA — this flow's PA stays 'denied' forever (it
+      // never flips to 'approved'), so canFillRX below checks appealStatus
+      // instead for this flow. Root-level action-only handler, same pattern
+      // as SELECT_PHARMACY/DENY_PA above.
+      INITIATE_APPEAL: {
+        actions: 'updateInitiateAppeal',
       },
       READY_RX: {
         actions: 'updatePharmacyReady',
@@ -424,6 +437,15 @@ export const iAssistPapMachine = createMachine(
         events: [...context.events, createEvent(context, 'DENY_PA', 'provider', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
+      updateInitiateAppeal: assign(({ context }) => ({
+        workflowData: {
+          ...context.workflowData,
+          appealStatus: 'initiated',
+          dispatchStatus: 'pending_selection',
+        },
+        events: [...context.events, createEvent(context, 'INITIATE_APPEAL', 'crm', 9)],
+        _snapshots: pushSnapshot(context._snapshots, context),
+      })),
       updatePharmacyShipped: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
@@ -530,7 +552,9 @@ export const iAssistPapMachine = createMachine(
     guards: {
       canRunBI: ({ context }) => context.workflowData.consentStatus === 'confirmed',
       canSubmitPA: ({ context }) => context.workflowData.biStatus === 'complete',
-      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved',
+      // This flow's PA never reaches 'approved' (see file header) — an
+      // initiated Appeal is what clears fulfillment here instead.
+      canFillRX: ({ context }) => context.workflowData.paStatus === 'approved' || context.workflowData.appealStatus === 'initiated',
     },
   }
 );
