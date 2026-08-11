@@ -1,5 +1,5 @@
 /**
- * FLOW_OPTIONS — the single source of truth for the 5 demo workflows
+ * FLOW_OPTIONS — the single source of truth for the 6 demo workflows
  *
  * Every FlowType (client/engine/types.ts) needs exactly one entry here.
  * DemoShell's flow dropdown and DemoConfigurator's workflow selector both
@@ -45,8 +45,13 @@ export const FLOW_OPTIONS: FlowOption[] = [
     description: "Internal iAssist platform workflow with prior authorization approval",
   },
   {
+    value: "iAssist_PAP",
+    label: "5. iAssist PAP",
+    description: "Structural clone of iAssist (WF4), but the PA is denied instead of approved — sets up the Action Factory appeal-rule demo",
+  },
+  {
     value: "PrES_PAP",
-    label: "5. PrES PAP",
+    label: "6. PrES PAP",
     description: "Provider e-signature intake with PAP income-qualification (foundation placeholder — capture screens pending)",
   },
 ];

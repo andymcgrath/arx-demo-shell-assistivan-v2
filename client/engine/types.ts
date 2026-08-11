@@ -7,7 +7,19 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 // mechanism/screens are still being designed — see
 // client/workflows/presPap.ts and the Provider/Patient placeholder pages
 // referenced there for what's foundation-only today.
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved" | "PrES_PAP";
+// "iAssist_PAP" (WF5) — structural clone of WF4 (iAssist_PA_Approved): same
+// auto-BI/auto-PA-submission behavior, same portals (iAssist tab, no
+// Provider tab). The one difference is the demo's PA resolves to Denied
+// instead of Approved, which is meant to lead into an Appeal — today that
+// dead-ends exactly like WF4's own PA-denied path does (see
+// crm/pages/Index.tsx's appealStage and iAssist Dashboard's "PA Denied"
+// status), since Action Factory has no rule to act on a denial yet. This
+// flow exists so that gap can be demoed live, then fixed live. NOTE: "PAP"
+// here is shorthand tied to this flow's name, unrelated to the "Patient
+// Assistance Program" PAP used by Fax_PAP_Audit/PrES_PAP — don't assume it
+// shares any of that logic (papSmsSent/papStatus/incomeStatus etc. don't
+// apply here).
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP";
 
 export interface Pharmacy {
   name: string;

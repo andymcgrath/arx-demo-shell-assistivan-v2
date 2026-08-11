@@ -6,12 +6,10 @@ import ProgramLogo from "@patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@patient/config/branding";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
-// Sourced from Boehringer Ingelheim's "Life with Pulmonary Fibrosis" video library
-// (patient.boehringer-ingelheim.com/lwpf/resources/video-library)
-const PF_VIDEO_ID = "1127637881";
-const PF_VIDEO_HASH = "cee031093d";
-const PF_VIDEO_THUMBNAIL =
-  "https://patient.boehringer-ingelheim.com/lwpf/sites/default/files/bi_vimeo/1127637881_382_1779988135.jpg";
+// Admin-configured (Branding Admin → Education Video). Absent/blank
+// embedUrl hides the whole card — see the `educationVideo &&` guard below.
+const educationVideo = (PROGRAM as { educationVideo?: { title: string; description: string; thumbnail: string; embedUrl: string } }).educationVideo;
+const hasEducationVideo = Boolean(educationVideo?.embedUrl);
 
 export default function MedicationDelivered() {
   const navigate = useNavigate();
@@ -53,42 +51,49 @@ export default function MedicationDelivered() {
             </button>
           </div>
 
-          {/* Pulmonary fibrosis basics video */}
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Pulmonary fibrosis basics</h3>
-            </div>
+          {/* Education video — hidden entirely when no video is configured
+              in Branding Admin (Program → Education Video). */}
+          {hasEducationVideo && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
+                <h3 className="font-semibold text-sm text-arx-primary">Education video</h3>
+              </div>
 
-            <button
-              onClick={() => setShowPfVideo(true)}
-              className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
-            >
-              <div className="relative w-full h-40 bg-arx-slate/10">
-                <img
-                  src={PF_VIDEO_THUMBNAIL}
-                  alt="What's a healthy lung vs. a lung with inflammation and fibrosis"
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                  <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
-                    <Play className="w-6 h-6 text-arx-primary fill-arx-primary" />
+              <button
+                onClick={() => setShowPfVideo(true)}
+                className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
+              >
+                <div className="relative w-full h-40 bg-arx-slate/10">
+                  {educationVideo!.thumbnail && (
+                    <img
+                      src={educationVideo!.thumbnail}
+                      alt={educationVideo!.title}
+                      className="w-full h-40 object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                      <Play className="w-6 h-6 text-arx-primary fill-arx-primary" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="p-5">
-                <h4 className="text-lg font-bold mb-2 text-arx-slate">
-                  What's a healthy lung vs. a lung with inflammation and fibrosis?
-                </h4>
-                <p className="text-sm leading-relaxed text-arx-body-copy">
-                  A short animation on the basics of pulmonary fibrosis — 2 min watch.
-                </p>
-              </div>
-            </button>
-          </section>
+                <div className="p-5">
+                  <h4 className="text-lg font-bold mb-2 text-arx-slate">
+                    {educationVideo!.title}
+                  </h4>
+                  {educationVideo!.description && (
+                    <p className="text-sm leading-relaxed text-arx-body-copy">
+                      {educationVideo!.description}
+                    </p>
+                  )}
+                </div>
+              </button>
+            </section>
+          )}
 
           {/* Prescriptions section */}
           <section>
@@ -148,7 +153,7 @@ export default function MedicationDelivered() {
          * mockup (`.i17pro__screen`, itself positioned) while WF5 renders it
          * in the plain wide web panel with no such wrapper.
          */}
-        {showPfVideo && (
+        {showPfVideo && hasEducationVideo && (
           <div
             className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
             onClick={() => setShowPfVideo(false)}
@@ -158,7 +163,7 @@ export default function MedicationDelivered() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-arx-borders">
-                <span className="text-sm font-semibold text-arx-slate">Pulmonary fibrosis basics</span>
+                <span className="text-sm font-semibold text-arx-slate">{educationVideo!.title}</span>
                 <button
                   onClick={() => setShowPfVideo(false)}
                   className="text-arx-body-copy hover:text-arx-slate"
@@ -169,11 +174,11 @@ export default function MedicationDelivered() {
               </div>
               <div className="aspect-video bg-black">
                 <iframe
-                  src={`https://player.vimeo.com/video/${PF_VIDEO_ID}?h=${PF_VIDEO_HASH}&autoplay=1`}
+                  src={`${educationVideo!.embedUrl}${educationVideo!.embedUrl.includes("?") ? "&" : "?"}autoplay=1`}
                   className="w-full h-full"
                   frameBorder="0"
                   allow="autoplay; fullscreen; picture-in-picture"
-                  title="Pulmonary fibrosis basics"
+                  title={educationVideo!.title}
                 />
               </div>
             </div>

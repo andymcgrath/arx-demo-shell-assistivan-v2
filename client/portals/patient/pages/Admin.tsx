@@ -6,6 +6,7 @@ import ManufacturerSection from "./admin/ManufacturerSection";
 import ProgramSection from "./admin/ProgramSection";
 import BrandingPreview from "./admin/BrandingPreview";
 import LogoPicker from "./admin/LogoPicker";
+import EducationVideoSection, { EducationVideoData } from "./admin/EducationVideoSection";
 
 type Tab = "manufacturer" | "program";
 type SaveState = "idle" | "saving" | "success" | "error";
@@ -28,6 +29,7 @@ interface BrandingData {
     description: string;
     logo: { colors: string; white: string; requiresFilter?: boolean };
     colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
+    educationVideo: EducationVideoData;
   };
   chatbotIcon: string;
   favicon: string;
@@ -47,6 +49,7 @@ const EMPTY: BrandingData = {
     description: "",
     logo: { colors: "", white: "", requiresFilter: false },
     colors: { primary: "#007178", primaryDark: "#005a5f", primaryLight: "#338D93", primaryWash: "#B1D5D8" },
+    educationVideo: { title: "", description: "", thumbnail: "", embedUrl: "" },
   },
   chatbotIcon: "",
   favicon: "",
@@ -64,6 +67,7 @@ function normalize(raw: any): BrandingData {
       ...EMPTY.program,
       ...raw?.program,
       colors: { ...EMPTY.program.colors, ...raw?.program?.colors },
+      educationVideo: { ...EMPTY.program.educationVideo, ...raw?.program?.educationVideo },
     },
     chatbotIcon: raw?.chatbotIcon ?? "",
     favicon: raw?.favicon ?? "",
@@ -314,7 +318,7 @@ export default function Admin() {
                 </div>
                 <ProgramSection
                   data={data.program}
-                  onChange={p => setData(d => ({ ...d, program: p }))}
+                  onChange={p => setData(d => ({ ...d, program: { ...p, educationVideo: d.program.educationVideo } }))}
                 />
               </>
             )}
@@ -359,6 +363,18 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Education video */}
+          <div className="bg-white rounded-xl border border-[--arx-borders] p-6 shadow-sm mt-4">
+            <h2 className="text-base font-semibold text-[--arx-slate] mb-1">Education Video</h2>
+            <p className="text-sm text-[--arx-body-copy] mb-4">
+              Optional resource card on the patient portal's Delivered page. Leave the Video Embed URL blank to hide it.
+            </p>
+            <EducationVideoSection
+              data={data.program.educationVideo}
+              onChange={v => setData(d => ({ ...d, program: { ...d.program, educationVideo: v } }))}
+            />
           </div>
 
           {saveState === "error" && (

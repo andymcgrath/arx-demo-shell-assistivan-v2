@@ -34,6 +34,12 @@
         "primaryDark": "#051F1A",
         "primaryLight": "#00E47C",
         "primaryWash": "#B6D2CE"
+      },
+      "educationVideo": {
+        "title": "What's a healthy lung vs. a lung with inflammation and fibrosis?",
+        "description": "A short animation on the basics of pulmonary fibrosis — 2 min watch.",
+        "thumbnail": "https://patient.boehringer-ingelheim.com/lwpf/sites/default/files/bi_vimeo/1127637881_382_1779988135.jpg",
+        "embedUrl": "https://player.vimeo.com/video/1127637881?h=cee031093d"
       }
     },
     "chatbotIcon": "/uploads/1786424090136-482GS01.svg",

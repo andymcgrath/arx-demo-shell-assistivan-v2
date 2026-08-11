@@ -95,7 +95,9 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // switching to this flow, resetting it, or deep-linking via /iassist
   // should land on.
   iAssist_PA_Approved: "iassist",
-  // WF5's shared patient/provider web experience starts on the Provider
+  // iAssist_PAP (WF5) is a structural clone of WF4 — same starting portal.
+  iAssist_PAP: "iassist",
+  // WF6's shared patient/provider web experience starts on the Provider
   // portal's own home screen (PesHome) — the provider is the one who starts
   // a referral, and the role-selection home screen routes from there.
   PrES_PAP: "provider",
@@ -125,7 +127,9 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 ];
 
 function getPortals(flowType: string) {
-  const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
+  // is a structural clone of the former, same tab layout.
+  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
@@ -311,7 +315,11 @@ function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
   const isCoaFlow = flowType === "CoA_DTP";
-  const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4) — WF5's PA
+  // never ticks "done" here since it resolves to Denied, not Approved,
+  // which is the accurate representation (see engine/types.ts's FlowType
+  // comment on this flow).
+  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
   const iAssistStepDone = isIAssistFlow ? computeIAssistStepDone(workflowData) : null;
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
@@ -607,8 +615,17 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 
 export default function DemoShell() {
   const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
-  const isIAssistFlow = flowType === "iAssist_PA_Approved";
-  // PrES_PAP (WF5) shares WF2's ladder here — its dedicated machine
+  // Covers WF4 and WF5 — see getPortals/StepBar above. Only used below for
+  // tab-visibility-adjacent behavior; the reset ladder and stage-button
+  // labels branch on isIAssistPapFlow specifically where WF5's denied-PA
+  // path actually diverges from WF4's approved-PA path.
+  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
+  // WF5 (iAssist_PAP) — structural clone of WF4, but the demo's PA resolves
+  // to Denied instead of Approved (see engine/types.ts's FlowType comment),
+  // so its reset ladder and stage-button labels need their own short list
+  // instead of reusing WF4's approved-path one below.
+  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  // PrES_PAP (WF6) shares WF2's ladder here — its dedicated machine
   // (presPap.ts) accepts the identical event sequence, so the same
   // stage-jump steps apply. See STEP_LABELS_PAP_AUDIT/getPortals above for
   // where WF5 intentionally does NOT follow WF2 (its provider tab stays
@@ -739,6 +756,26 @@ export default function DemoShell() {
 
     // Always start with a full reset
     actor.send({ type: 'RESET' });
+
+    // WF5's own ladder — checked before the shared isIAssistFlow block below
+    // (isIAssistFlow is true for WF5 too) since it diverges at stage 4: PA
+    // resolves to Denied instead of Approved, and the ladder stops there —
+    // there's no fulfillment path once a PA is denied, matching WF4's own
+    // dead end at that state (see engine/types.ts's FlowType comment).
+    if (isIAssistPapFlow) {
+      if (stage >= 2) {
+        actor.send({ type: 'ENROLL', portal: 'provider' });
+      }
+      if (stage >= 3) {
+        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
+        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
+      }
+      if (stage >= 4) {
+        actor.send({ type: 'DENY_PA', portal: 'crm' });
+      }
+      return;
+    }
 
     if (isIAssistFlow) {
       // iAssist's own ladder — a single ENROLL now auto-completes BI and
@@ -909,7 +946,7 @@ export default function DemoShell() {
     if (stage >= 8) {
       actor.send({ type: 'DELIVER_RX', portal: 'crm' });
     }
-  }, [resetDemo, isIAssistFlow, isPapFlow]);
+  }, [resetDemo, isIAssistFlow, isIAssistPapFlow, isPapFlow]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -1073,6 +1110,13 @@ export default function DemoShell() {
                       { stage: 6, label: "Rx Processing" },
                       { stage: 7, label: "Rx Shipped" },
                       { stage: 8, label: "Medication Delivered" },
+                    ]
+                    : isIAssistPapFlow
+                    ? [
+                      { stage: 1, label: "Referral Received" },
+                      { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
+                      { stage: 3, label: "Patient Enrolled" },
+                      { stage: 4, label: "PA Denied" },
                     ]
                     : isIAssistFlow
                     ? [

@@ -8,6 +8,7 @@
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coaDtpMachine } from "@/workflows/coaDtp";
 import { iAssistMachine } from "@/workflows/iAssist";
+import { iAssistPapMachine } from "@/workflows/iAssistPap";
 import { presPapMachine } from "@/workflows/presPap";
 
 export interface WorkflowMetadata {
@@ -55,6 +56,11 @@ workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",
+});
+
+workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, {
+  label: "iAssist PAP",
+  description: "Structural clone of iAssist (WF4) with PA denied instead of approved",
 });
 
 workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, {

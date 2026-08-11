@@ -470,6 +470,18 @@ const SPECIALTY_PHARMACIES: PharmacyOption[] = [
   { name: "PharMerica Specialty", address: "333 Wellness Ave", city: "Sarasota", state: "FL", zip: "34236", phone: "(941) 555-0123" },
 ];
 
+// PAP/Income Verification flows (Fax_PAP_Audit, PrES_PAP) route through
+// ARx Pharmacy in addition to the standard specialty pharmacy list — see
+// isPapFlow below, which gates this addition onto SPECIALTY_PHARMACIES.
+const ARX_PHARMACY: PharmacyOption = {
+  name: "ARx Pharmacy",
+  address: "1 ARx Way",
+  city: "Orlando",
+  state: "FL",
+  zip: "32819",
+  phone: "(800) 555-2790",
+};
+
 // ─── My Cases list (CoA_DTP default screen) ─────────────────────────────────
 //
 // Mimics a Salesforce Service Console "My Cases" list view. This is what the
@@ -725,8 +737,16 @@ export default function Index() {
   // this flow, per the WF5 foundation request — its own differentiated
   // capture happens elsewhere (Provider/Patient portals), not in CRM.
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  // Triage pharmacy dropdowns include ARx Pharmacy only for PAP/Income
+  // Verification workflows.
+  const pharmacyOptions = isPapFlow ? [...SPECIALTY_PHARMACIES, ARX_PHARMACY] : SPECIALTY_PHARMACIES;
   const isCoaFlow = flowType === "CoA_DTP";
-  const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
+  // resolves to Denied instead of Approved — see engine/types.ts's FlowType
+  // comment). Only affects the eaStage "Welcome message sent" copy below;
+  // everything else (paStage, appealStage, STAGES fallback) already handles
+  // paStatus === 'denied' generically with no flow-specific branching needed.
+  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).
@@ -850,17 +870,24 @@ export default function Index() {
     }
   }, [activeTopTab, biStatus, isCoaFlow, dispatch]);
 
-  // Auto-approve PA when agent opens the PA stage tab
+  // Auto-approve PA when agent opens the PA stage tab. iAssist_PAP (WF5) is
+  // the one flow whose demo path resolves to Denied instead — without this
+  // guard, simply opening the PA tab would silently flip it to Approved
+  // after 3s, the opposite of what this flow exists to demonstrate (see
+  // engine/types.ts's FlowType comment). Auto-deny for that flow instead, so
+  // opening the tab still resolves the PA the same "watch it happen" way
+  // every other flow does, just to the outcome WF5 is actually about.
   useEffect(() => {
     if (activeTopTab !== 'PA-14274') return;
     if (paStatus !== 'submitted') return;
 
+    const eventType = flowType === 'iAssist_PAP' ? 'DENY_PA' : 'APPROVE_PA';
     const timer = setTimeout(() => {
-      dispatch('APPROVE_PA', { portal: 'crm' });
+      dispatch(eventType, { portal: 'crm' });
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [activeTopTab, paStatus, dispatch]);
+  }, [activeTopTab, paStatus, dispatch, flowType]);
 
   // CoA_DTP's PA always approves (CoAssist is an insurance-covered flow, not
   // a denial → cash-pay one) — the generic auto-approve effect above already
@@ -2108,7 +2135,7 @@ export default function Index() {
                         disabled={selectedPharmacyType !== null && selectedPharmacyType !== "preferred"}
                         onChange={(e) => {
                           if (e.target.value) {
-                            const pharm = SPECIALTY_PHARMACIES.find(p => p.name === e.target.value);
+                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
                             if (pharm) {
                               setPreferredPharmacy(pharm);
                               setPayerPharmacy(null);
@@ -2124,7 +2151,7 @@ export default function Index() {
                         value={preferredPharmacy?.name || ""}
                       >
                         <option value="">Select...</option>
-                        {SPECIALTY_PHARMACIES.map((p) => (
+                        {pharmacyOptions.map((p) => (
                           <option key={p.name} value={p.name}>
                             {p.name}
                           </option>
@@ -2139,7 +2166,7 @@ export default function Index() {
                         disabled={selectedPharmacyType !== null && selectedPharmacyType !== "payer"}
                         onChange={(e) => {
                           if (e.target.value) {
-                            const pharm = SPECIALTY_PHARMACIES.find(p => p.name === e.target.value);
+                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
                             if (pharm) {
                               setPayerPharmacy(pharm);
                               setPreferredPharmacy(null);
@@ -2155,7 +2182,7 @@ export default function Index() {
                         value={payerPharmacy?.name || ""}
                       >
                         <option value="">Select...</option>
-                        {SPECIALTY_PHARMACIES.map((p) => (
+                        {pharmacyOptions.map((p) => (
                           <option key={p.name} value={p.name}>
                             {p.name}
                           </option>
@@ -2170,7 +2197,7 @@ export default function Index() {
                         disabled={selectedPharmacyType !== null && selectedPharmacyType !== "program"}
                         onChange={(e) => {
                           if (e.target.value) {
-                            const pharm = SPECIALTY_PHARMACIES.find(p => p.name === e.target.value);
+                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
                             if (pharm) {
                               setProgramPharmacy(pharm);
                               setPreferredPharmacy(null);
@@ -2186,7 +2213,7 @@ export default function Index() {
                         value={programPharmacy?.name || ""}
                       >
                         <option value="">Select...</option>
-                        {SPECIALTY_PHARMACIES.map((p) => (
+                        {pharmacyOptions.map((p) => (
                           <option key={p.name} value={p.name}>
                             {p.name}
                           </option>
@@ -2201,7 +2228,7 @@ export default function Index() {
                         disabled={selectedPharmacyType !== null && selectedPharmacyType !== "dispenser"}
                         onChange={(e) => {
                           if (e.target.value) {
-                            const pharm = SPECIALTY_PHARMACIES.find(p => p.name === e.target.value);
+                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
                             if (pharm) {
                               setDispenserPharmacy(pharm);
                               setPreferredPharmacy(null);
@@ -2217,7 +2244,7 @@ export default function Index() {
                         value={dispenserPharmacy?.name || ""}
                       >
                         <option value="">Select...</option>
-                        {SPECIALTY_PHARMACIES.map((p) => (
+                        {pharmacyOptions.map((p) => (
                           <option key={p.name} value={p.name}>
                             {p.name}
                           </option>
