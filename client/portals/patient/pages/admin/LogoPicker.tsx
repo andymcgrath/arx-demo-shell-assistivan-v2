@@ -31,20 +31,7 @@ export default function LogoPicker({ label, value, onChange, hint, bgClass = "bg
         body: JSON.stringify({ filename: file.name, dataUrl }),
       });
       const data = await res.json();
-      // The dev server writes the file to /uploads before it can fail on
-      // anything else, so a non-ok response (or a 200 missing `url`, in
-      // case that ever happens) previously left the upload silently
-      // no-op'd — the file would show up in the Asset Library but never
-      // get applied as the active logo, with no indication anything went
-      // wrong. Surface it instead, same convention as handleDelete in
-      // AssetLibraryModal.tsx.
-      if (!res.ok || !data.url) {
-        window.alert(data?.error || "Upload failed. Check the dev server console for details.");
-        return;
-      }
-      onChange(data.url);
-    } catch {
-      window.alert("Upload failed. Check the dev server console for details.");
+      if (data.url) onChange(data.url);
     } finally {
       setUploading(false);
       e.target.value = "";

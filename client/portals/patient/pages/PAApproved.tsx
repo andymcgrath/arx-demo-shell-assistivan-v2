@@ -44,26 +44,23 @@ export default function PAApproved() {
             </div>
 
             <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-              {isIAssistPap
-                ? "Now let's get your infusion scheduled. Choose a date that works for you."
-                : "Now we can arrange for delivery. Complete a short form and choose a delivery date that works for you."}
+              Now we can arrange for delivery. Complete a short form and choose a delivery date that works for you.
             </p>
 
             <button
               onClick={() => {
-                navigate(isIAssistPap ? "/infusion-date" : isCoA ? "/benefit-pricing" : "/delivery-address");
+                navigate(isCoA ? "/benefit-pricing" : "/delivery-address");
               }}
               className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-primary-dark transition-colors"
             >
-              <span>{isIAssistPap ? "Schedule infusion" : "Schedule delivery now"}</span>
+              <span>Schedule delivery now</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
           {/* Copay card — CoA_DTP shows its own copay banner on the Benefit
-              Pricing screen that follows; iAssist_PAP (WF5) dispenses via a
-              site of care, not a pharmacy copay, so skip it here too. */}
-          {!isWorkflow1 && !isCoA && !isIAssistPap && (
+              Pricing screen that follows, so skip the duplicate prompt here. */}
+          {!isWorkflow1 && !isCoA && (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">

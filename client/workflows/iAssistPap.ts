@@ -70,7 +70,6 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paymentVerified: false,
   patientShipDate: null,
   appealStatus: "none",
-  infusionDate: null,
 };
 
 const initialContext: MachineContext = {
@@ -156,16 +155,6 @@ export const iAssistPapMachine = createMachine(
       // moment INITIATE_APPEAL fired above, this doesn't gate anything.
       APPROVE_APPEAL: {
         actions: 'updateApproveAppeal',
-      },
-      // WF5's replacement for the pharmacy-shipping chain below (READY_RX/
-      // SHIP_RX/DELIVER_RX are kept only for structural parity with
-      // iAssist.ts and go unused on this flow's real path). Patient picks an
-      // infusion date on InfusionDate.tsx once the appeal is approved; MPX
-      // "captures" it (cosmetic) and it's reflected into iAssist's dashboard
-      // (see Dashboard.tsx's "Infusion Scheduled" status). Root-level
-      // action-only handler, same pattern as SELECT_PHARMACY/DENY_PA above.
-      PATIENT_SELECTS_INFUSION_DATE: {
-        actions: 'updateSelectInfusionDate',
       },
       READY_RX: {
         actions: 'updatePharmacyReady',
@@ -484,14 +473,6 @@ export const iAssistPapMachine = createMachine(
           appealStatus: 'approved',
         },
         events: [...context.events, createEvent(context, 'APPROVE_APPEAL', 'crm', 9)],
-        _snapshots: pushSnapshot(context._snapshots, context),
-      })),
-      updateSelectInfusionDate: assign(({ context, event }: any) => ({
-        workflowData: {
-          ...context.workflowData,
-          infusionDate: event.date ?? null,
-        },
-        events: [...context.events, createEvent(context, 'PATIENT_SELECTS_INFUSION_DATE', 'patient', 9)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updatePharmacyShipped: assign(({ context }) => ({

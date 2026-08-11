@@ -63,29 +63,9 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
     // both moved on. Every other flow leaves appealStatus at 'none' forever,
     // so this only ever branches for WF5 in practice.
     if (workflowData.appealStatus === "approved") {
-      // WF5 only — once the patient has picked an infusion date
-      // (InfusionDate.tsx, PATIENT_SELECTS_INFUSION_DATE), MPX "captures"
-      // it (cosmetic) and this roster row reflects it as its own status
-      // rather than sitting on "Appeal Approved" once there's actually a
-      // scheduled appointment to show. Final status for this flow — the
-      // "Dispatch to Triage" milestone (site of care selected) is folded
-      // into the same completed dot here since WF5 has no dispense tail
-      // left to distinguish it from.
-      if (workflowData.infusionDate !== null) {
-        return { label: "Infusion Scheduled", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
-      }
       return { label: "Appeal Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
     }
     if (workflowData.appealStatus === "initiated") {
-      // Reset ladder's Stage 6 fires INITIATE_APPEAL then SELECT_PHARMACY
-      // (Keanu's site of care) in the same jump — appealStatus only reaches
-      // 'approved' later, via the separate cosmetic APPROVE_APPEAL auto-fire
-      // in crm/pages/Index.tsx. Without this check, Stage 6 fell straight
-      // into "Appeal Filed" below even though the site of care was already
-      // selected, so "Reset → Stage 6" visibly resolved to Stage 5.
-      if (workflowData.selectedPharmacy !== null) {
-        return { label: "Dispatch to Triage", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
-      }
       return { label: "Appeal Filed", color: "warning", dots: ["completed", "completed", "completed", "pending", "pending", "disabled"] };
     }
     return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] };

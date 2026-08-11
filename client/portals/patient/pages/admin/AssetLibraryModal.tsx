@@ -46,18 +46,10 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
         body: JSON.stringify({ filename: file.name, dataUrl }),
       });
       const data = await res.json();
-      // Same silent-failure bug as LogoPicker.tsx's handleFileUpload — a
-      // non-ok response used to just do nothing, with no way to tell an
-      // upload had failed. Surface it, same convention as handleDelete
-      // below.
-      if (!res.ok || !data.url) {
-        window.alert(data?.error || "Upload failed. Check the dev server console for details.");
-        return;
+      if (data.url) {
+        setAssets(prev => [{ url: data.url, filename: data.filename }, ...prev]);
+        setSelected(data.url);
       }
-      setAssets(prev => [{ url: data.url, filename: data.filename }, ...prev]);
-      setSelected(data.url);
-    } catch {
-      window.alert("Upload failed. Check the dev server console for details.");
     } finally {
       setUploading(false);
       e.target.value = "";

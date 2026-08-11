@@ -88,14 +88,6 @@ export interface WorkflowData {
    *  Appeals stage detail view displays, not what's already unlocked. Stays
    *  'none' for every other flow. */
   appealStatus: 'none' | 'initiated' | 'approved';
-  /** iAssist_PAP (WF5) only: the infusion date the patient picks once the
-   *  appeal is approved (InfusionDate.tsx). MPX captures it and it's
-   *  reflected into iAssist (see Dashboard.tsx's "Infusion Scheduled"
-   *  status) — this is WF5's replacement for pharmacyStatus-driven
-   *  fulfillment, since this flow dispatches to a site of care instead of
-   *  shipping through a pharmacy. Null until the patient picks a date;
-   *  stays null for every other flow. */
-  infusionDate: string | null;
 }
 
 export interface DemoEvent {

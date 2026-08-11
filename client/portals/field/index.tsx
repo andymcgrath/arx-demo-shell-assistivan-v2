@@ -25,8 +25,6 @@ import {
   LIVE_MISSING_INFO_TASK_ID,
   LIVE_PA_TASK_ID,
   LIVE_APPEAL_TASK_ID,
-  LIVE_INFUSION_TASK_ID,
-  KEANU_SITE_OF_CARE_FACTS,
 } from "@/engine/WorkflowEngine";
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
 
@@ -192,7 +190,6 @@ export default function FieldPortal() {
   // Workflow state from actor (via useDemoState)
   const paStatus = state.pa_status;
   const appealStatus = state.appeal_status;
-  const infusionDate = state.infusion_date;
   const consentStatus = state.consent_status;
   const enrollmentStatus = state.enrollment_status;
   const biStatus = state.bi_status;
@@ -276,7 +273,6 @@ export default function FieldPortal() {
     prescriberName: PRESCRIBER_NAME,
     frmName: FRM_NAME,
     biResult,
-    infusionDate,
   });
   const selectedEmail = selectedEmailId ? generatedEmails.find((e) => e.id === selectedEmailId) ?? null : null;
 
@@ -341,23 +337,17 @@ export default function FieldPortal() {
     biStatus,
     paStatus,
     appealStatus,
-    infusionDate,
     flowType: state.flow_type,
   }).map((item) => ({
     // Matches the ids getGeneratedEmails' notifications link back to
-    // (LIVE_MISSING_INFO_TASK_ID / LIVE_PA_TASK_ID / LIVE_APPEAL_TASK_ID /
-    // LIVE_INFUSION_TASK_ID, imported from the same WorkflowEngine.ts
-    // module) rather than recomputing an equivalent string here, so the two
-    // can't quietly drift apart. appeal-review and infusion-scheduled
-    // (iAssist_PAP/WF5 only) are the third and fourth possible ids — this
-    // used to be a plain two-way (then three-way) ternary that silently
-    // mapped anything past the first two ids to the wrong task, which is
-    // how a notification email could point at a task that never mentioned
-    // what it was actually about.
-    id: item.id === "missing-information" ? LIVE_MISSING_INFO_TASK_ID
-      : item.id === "pa-submission-required" ? LIVE_PA_TASK_ID
-      : item.id === "appeal-review" ? LIVE_APPEAL_TASK_ID
-      : LIVE_INFUSION_TASK_ID,
+    // (LIVE_MISSING_INFO_TASK_ID / LIVE_PA_TASK_ID / LIVE_APPEAL_TASK_ID,
+    // imported from the same WorkflowEngine.ts module) rather than
+    // recomputing an equivalent string here, so the two can't quietly drift
+    // apart. appeal-review (iAssist_PAP/WF5 only) is the third possible id —
+    // this used to be a plain two-way ternary that silently mapped it to
+    // LIVE_PA_TASK_ID instead, which is how an Appeal Approved email could
+    // point at a task that never mentioned the appeal at all.
+    id: item.id === "missing-information" ? LIVE_MISSING_INFO_TASK_ID : item.id === "pa-submission-required" ? LIVE_PA_TASK_ID : LIVE_APPEAL_TASK_ID,
     kind: "Task",
     refId: item.refId,
     status: item.status,
@@ -381,10 +371,7 @@ export default function FieldPortal() {
     // "Related Item: PA-25842, Stage: Prior Authorization" shape instead of
     // showing the bare patient id.
     relatedCaseId: LIVE_CASE_ID,
-    stageName: item.id === "missing-information" ? "Enrollment"
-      : item.id === "pa-submission-required" ? "Prior Authorization"
-      : item.id === "appeal-review" ? "Appeals"
-      : "Dispatch to Triage",
+    stageName: item.id === "missing-information" ? "Enrollment" : item.id === "pa-submission-required" ? "Prior Authorization" : "Appeals",
   }));
 
   // The one case behind this patient's live tasks — same onboarding/PA
@@ -439,11 +426,8 @@ export default function FieldPortal() {
     { id: "LIVE-PHCP-2", patientId: "AS-164543", hcpId: "NPI-REYES", role: "Secondary" },
   ] : [];
 
-  // KEANU_SITE_OF_CARE_FACTS (WorkflowEngine.ts) is the single source of
-  // truth for this facility's facts — also referenced by CRM's Office
-  // Dispense dropdown (WF5/iAssist_PAP only) so the two can't drift apart.
   const liveSOCs: FieldSOC[] = [
-    { id: "SOC-HOU", ...KEANU_SITE_OF_CARE_FACTS },
+    { id: "SOC-HOU", facilityName: "Houston SOC", npi: "1699006677", contactName: "Priya Sandhu", contactPhone: "(713) 555-3006", address: "800 Bagby St", city: "Houston", state: "Texas", zip: "77002" },
   ];
   const liveSOCLinks: FieldPatientSOCLink[] = isEnrolled ? [
     { id: "LIVE-PSOC-1", patientId: "AS-164543", socId: "SOC-HOU", isPrimary: true },

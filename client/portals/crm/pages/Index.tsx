@@ -3,7 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { getLiveWorkItems, KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { getLiveWorkItems } from "@/engine/WorkflowEngine";
 import { dateFromToday, daysFromToday } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
@@ -483,29 +483,6 @@ const ARX_PHARMACY: PharmacyOption = {
   phone: "(800) 555-2790",
 };
 
-// iAssist_PAP (WF5) dispenses in-office rather than shipping through a
-// specialty pharmacy — "Keanu to facility," not "pharmacy to Keanu." The
-// Office Dispense dropdown swaps SPECIALTY_PHARMACIES for this list of
-// sites of care instead. Keanu's own site (built from
-// KEANU_SITE_OF_CARE_FACTS, the same facts Field Portal reads via
-// getLiveWorkItems/liveSOCs — see WorkflowEngine.ts) leads the list; the
-// rest are mocked decoy clinics so the dropdown doesn't look suspiciously
-// short next to the other three.
-const SITES_OF_CARE: PharmacyOption[] = [
-  {
-    name: KEANU_SITE_OF_CARE_FACTS.facilityName,
-    address: KEANU_SITE_OF_CARE_FACTS.address,
-    city: KEANU_SITE_OF_CARE_FACTS.city,
-    state: KEANU_SITE_OF_CARE_FACTS.state,
-    zip: KEANU_SITE_OF_CARE_FACTS.zip,
-    phone: KEANU_SITE_OF_CARE_FACTS.contactPhone,
-  },
-  { name: "Westgate Infusion Clinic", address: "4100 Westheimer Rd", city: "Houston", state: "TX", zip: "77027", phone: "(713) 555-4821" },
-  { name: "Memorial Hermann Infusion Center", address: "6411 Fannin St", city: "Houston", state: "TX", zip: "77030", phone: "(713) 555-2290" },
-  { name: "Texas Medical Center Infusion Suite", address: "7200 Cambridge St", city: "Houston", state: "TX", zip: "77030", phone: "(713) 555-6634" },
-  { name: "Heights Ambulatory Infusion", address: "1917 Ashland St", city: "Houston", state: "TX", zip: "77008", phone: "(713) 555-7712" },
-];
-
 // ─── My Cases list (CoA_DTP default screen) ─────────────────────────────────
 //
 // Mimics a Salesforce Service Console "My Cases" list view. This is what the
@@ -765,13 +742,6 @@ export default function Index() {
   // Triage pharmacy dropdowns include ARx Pharmacy only for PAP/Income
   // Verification workflows.
   const pharmacyOptions = isPapFlow ? [...SPECIALTY_PHARMACIES, ARX_PHARMACY] : SPECIALTY_PHARMACIES;
-  // iAssist_PAP (WF5) dispenses via an in-house site of care rather than a
-  // specialty pharmacy — only the Office Dispense dropdown swaps to
-  // SITES_OF_CARE; Patient Preferred/Payer Mandated/Program Mandated stay on
-  // the standard pharmacyOptions list since those still describe a
-  // hypothetical outside pharmacy the case COULD have used.
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
-  const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP";
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
   // resolves to Denied instead of Approved — see engine/types.ts's FlowType
@@ -812,32 +782,6 @@ export default function Index() {
     () => enrollmentFormTabOpen ? "enrollment-form" : "onboarding"
   );
   const openSubTabs: Array<"onboarding" | "enrollment-form"> = ["onboarding", ...(enrollmentFormTabOpen ? ["enrollment-form" as const] : [])];
-
-  // Tab state above is local and has no memory of the outer workflow reset —
-  // CrmPortal's ResetToHome only resets the *router path* ("/" -> "/" is a
-  // no-op that doesn't remount this component), so a previously-open stage
-  // tab (e.g. "Appeal") survives both "Reset All" and the stage-jump ladder.
-  // That's how a reset to WF5's Stage 6 could appear to silently resolve the
-  // Appeal to "Approved": if the Appeal tab (A-14275) was already active,
-  // resetActorToStage()'s DENY_PA→INITIATE_APPEAL jump flips appealStatus to
-  // 'initiated' while that tab is still open, which immediately (and
-  // invisibly, from the user's perspective) satisfies the "opened Appeals
-  // tab + appealStatus initiated" auto-resolve effect below — 2.5s later the
-  // appeal shows Approved despite nobody having actually opened that tab
-  // themselves in this session. Snapping back to the "keanu" home tab on
-  // every reset (mirroring ResetToHome/StateDrivenNav's own resetNonce
-  // pattern) means that effect can only fire from a deliberate, fresh click
-  // into the tab afterward, not as a side effect of the reset itself.
-  const resetNonce = useDemoStore((s) => s.resetNonce);
-  const lastResetNonceRef = useRef(resetNonce);
-  useEffect(() => {
-    if (resetNonce === lastResetNonceRef.current) return;
-    lastResetNonceRef.current = resetNonce;
-    setOpenStageTabs([]);
-    setOpenBipcTabs([]);
-    setBipcParentTabs({});
-    setActiveTopTab("keanu");
-  }, [resetNonce]);
 
   const biCompletionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const biCompletionScheduledRef = useRef(false);
@@ -1040,16 +984,8 @@ export default function Index() {
     ? { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Audit Pending", statusDetail: "Insurance audit initiated", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }, { label: "Income Status", value: "Verified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "PAP-14279", name: "PAP Enrollment", statusLabel: "Discontinued", statusDetail: "Patient has insurance — PAP discontinued", isComplete: false, isNotStarted: false, fields: [{ label: "Program", value: "Free Goods" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
-  // iAssist_PAP (WF5) dispenses "Keanu to facility" — a site of care, not a
-  // pharmacy shipment — so this stage is this flow's FINAL step (see
-  // engine/WorkflowEngine.ts's derivePatientRoute and DemoShell.tsx's
-  // 6-step WF5 stepper). It completes the moment a site of care is picked;
-  // there's no separate Rx Processing/Shipped/Delivered chain to wait on.
-  const tpStage: Stage = isIAssistPapFlow
-    ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
-      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
-      : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
-    : dispatchStatus === "pending_selection" || dispatchStatus === "none"
+  const tpStage: Stage =
+    dispatchStatus === "pending_selection" || dispatchStatus === "none"
     ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : dispatchStatus === "selected"
     ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
@@ -1183,24 +1119,6 @@ export default function Index() {
         : s.id === "PAP-14279" ? papStage
         : s.id === "TP-14277" ? tpStage
         : s.id === "PS-14278" ? psStage
-        : s.id === "FA-14276" ? faStage
-        : s
-      )
-    : isIAssistPapFlow
-    // WF5 dispenses "Keanu to facility" — a site of care, not a pharmacy
-    // shipment (see tpStage/SITES_OF_CARE above) — so "Pharmacy Status"
-    // (PS-14278) doesn't apply to this flow at all and never resolves past
-    // "Stage not started," sitting as dead weight in the Stage Quick View
-    // list. Dropped here instead of just leaving it permanently "not
-    // started" like WF1/WF4 do for their own inapplicable stages, since
-    // this one specifically described a pharmacy-shipping concept WF5 no
-    // longer has any path to.
-    ? STAGES.filter((s) => s.id !== "PS-14278").map((s) =>
-        s.id === "EA-14272" ? eaStage
-        : s.id === "BI-14273" ? biStage
-        : s.id === "PA-14274" ? paStage
-        : s.id === "TP-14277" ? tpStage
-        : s.id === "A-14275" ? appealStage
         : s.id === "FA-14276" ? faStage
         : s
       )
@@ -2194,12 +2112,6 @@ export default function Index() {
                       <FieldRow label="Payer" value={payer} />
                       <FieldRow label="Coverage Effective" value={dateFromToday(0).toLocaleDateString()} />
                       <FieldRow label="Coverage Expiration" value={dateFromToday(365).toLocaleDateString()} />
-                      {/* Cosmetic flavor text only — matches the "Appeal
-                          result emailed to HCP" narrative beat, no actual
-                          inbox UI exists for this (see Field Portal's own
-                          generated-email surface for the patient-facing
-                          equivalent). */}
-                      <FieldRow label="HCP Notified" value="Sarah Chen, MD — notified via email" />
                     </div>
                   </div>
                 </div>
@@ -2207,7 +2119,7 @@ export default function Index() {
                 <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
                   <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved — Fulfillment Continuing</p>
                   <p className="text-[12px]" style={{ color: "#1a4d2a" }}>
-                    The payer reversed the original Prior Authorization denial on appeal. The prescriber has been notified by email, and dispatch to the patient's site of care already moved forward when the appeal was filed — no further action is needed on this stage.
+                    The payer reversed the original Prior Authorization denial on appeal. No further action is needed on this stage — dispatch to pharmacy already moved forward when the appeal was filed.
                   </p>
                 </div>
               </div>
@@ -2411,13 +2323,7 @@ export default function Index() {
               <span className="text-[13px] font-semibold text-[#3e3e3c]">
                 {activeStage.name} {activeStage.id}
               </span>
-              {/* iAssist_PAP (WF5) dispatches the moment a site of care is
-                  picked (see tpStage above) — there's no separate "Dispatch
-                  to Pharmacy" step or Rx Processing/Shipped/Delivered chain
-                  to wait on for this flow, so this button never applies to
-                  it even though canDispatchToPharmacy would otherwise be
-                  true once dispatchStatus flips to 'selected'. */}
-              {canDispatchToPharmacy && !isIAssistPapFlow && (
+              {canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -2442,14 +2348,13 @@ export default function Index() {
                   </div>
                 </div>
 
-                {/* Pharmacy Details Section — relabeled for WF5, which
-                    dispatches to a site of care instead of a pharmacy. */}
+                {/* Pharmacy Details Section */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="px-3 py-2 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{isIAssistPapFlow ? "Site of Care Details" : "Triage Pharmacy Details"}</span>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Triage Pharmacy Details</span>
                   </div>
                   <div className="space-y-0">
-                    <FieldRow label={isIAssistPapFlow ? "Site of Care Name" : "Pharmacy Name"} value={selectedPharmacy?.name || ""} />
+                    <FieldRow label="Pharmacy Name" value={selectedPharmacy?.name || ""} />
                     <FieldRow label="Address" value={selectedPharmacy?.address || ""} />
                     <FieldRow label="City" value={selectedPharmacy?.city || ""} />
                     <FieldRow label="State" value={selectedPharmacy?.state || ""} />
@@ -2459,35 +2364,14 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* Right column: Pharmacy/Site of Care Selection Card */}
+              {/* Right column: Pharmacy Selection Card */}
               <div>
                 <div className="border border-[#dddbda] rounded flex flex-col">
                   <div className="px-4 py-3 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{isIAssistPapFlow ? "Select Site of Care" : "Select Triage Pharmacy"}</span>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Select Triage Pharmacy</span>
                   </div>
                   <div className="flex flex-col items-center justify-center p-4 gap-4">
-                    {isIAssistPapFlow ? (
-                      // WF5 dispatches the instant a site of care is picked —
-                      // no separate "Dispatch to Pharmacy" click, no
-                      // Processing/Shipping cosmetic states (those all belong
-                      // to the Rx Processing/Shipped/Delivered chain this
-                      // flow doesn't have — see tpStage above).
-                      selectedPharmacy ? (
-                        <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#e8f4ef" }}>
-                          <span className="text-[12px] font-semibold" style={{ color: "#2e844a" }}>
-                            Dispatched — Keanu to Facility
-                          </span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setPharmacyModalOpen(true)}
-                          className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-                          style={{ background: FC_BLUE }}
-                        >
-                          Select Site of Care
-                        </button>
-                      )
-                    ) : (pharmacyStatus === "shipped" || pharmacyStatus === "delivered" || triageDispatched) ? (
+                    {(pharmacyStatus === "shipped" || pharmacyStatus === "delivered" || triageDispatched) ? (
                       <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#e8f4ef" }}>
                         <span className="text-[12px] font-semibold" style={{ color: "#2e844a" }}>
                           Dispatched
@@ -2671,15 +2555,13 @@ export default function Index() {
                     </div>
 
                     <div>
-                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">
-                        {isIAssistPapFlow ? "Office Dispense — Site of Care" : "Office Dispense"}
-                      </label>
+                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">Office Dispense</label>
                       <select
                         className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
                         disabled={selectedPharmacyType !== null && selectedPharmacyType !== "dispenser"}
                         onChange={(e) => {
                           if (e.target.value) {
-                            const pharm = officeDispenseOptions.find(p => p.name === e.target.value);
+                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
                             if (pharm) {
                               setDispenserPharmacy(pharm);
                               setPreferredPharmacy(null);
@@ -2695,7 +2577,7 @@ export default function Index() {
                         value={dispenserPharmacy?.name || ""}
                       >
                         <option value="">Select...</option>
-                        {officeDispenseOptions.map((p) => (
+                        {pharmacyOptions.map((p) => (
                           <option key={p.name} value={p.name}>
                             {p.name}
                           </option>
@@ -2886,7 +2768,7 @@ export default function Index() {
                   Approved
                 </span>
               )}
-              {activeStage.id === "TP-14277" && canDispatchToPharmacy && !isIAssistPapFlow && (
+              {activeStage.id === "TP-14277" && canDispatchToPharmacy && (
                 <button
                   onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -2896,12 +2778,7 @@ export default function Index() {
                   Dispatch to Pharmacy
                 </button>
               )}
-              {activeStage.id === "TP-14277" && isIAssistPapFlow && selectedPharmacy && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
-                  Dispatched
-                </span>
-              )}
-              {activeStage.id === "TP-14277" && !isIAssistPapFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
+              {activeStage.id === "TP-14277" && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "#e8f0fa", color: FC_BLUE }}>
                   Processing…
                 </span>
@@ -3450,7 +3327,6 @@ export default function Index() {
                       biStatus,
                       paStatus,
                       appealStatus,
-                      infusionDate: workflowData.infusionDate,
                       flowType,
                     }).map((item) => (
                       <tr key={item.id} className="hover:bg-[#f3f3f3] transition-colors">

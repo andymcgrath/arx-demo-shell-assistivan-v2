@@ -22,7 +22,6 @@ import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePresPapStore } from "@/store/presPapStore";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
-import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -228,12 +227,8 @@ const STEP_LABELS_PAP_AUDIT = [
 ];
 
 // WF5 (iAssist_PAP) — WF4's STEP_LABELS_DEFAULT with one extra "Appeal"
-// milestone inserted after Prior Authorization (matching this flow's
-// denied-PA-then-appeal path — see computeIAssistPapStepDone above), but
-// WITHOUT WF4's Rx Processing/Rx Shipped/Medication Delivered tail: WF5
-// dispenses "Keanu to facility" (a site of care, not a pharmacy shipment —
-// see crm/pages/Index.tsx's SITES_OF_CARE/officeDispenseOptions), so
-// "Dispatch to Triage" is this flow's final, terminal step.
+// milestone inserted after Prior Authorization, matching this flow's
+// denied-PA-then-appeal path (see computeIAssistPapStepDone above).
 const STEP_LABELS_IASSIST_PAP = [
   "Referral Received",
   "Patient Enrolled",
@@ -241,6 +236,9 @@ const STEP_LABELS_IASSIST_PAP = [
   "Prior Authorization",
   "Appeal",
   "Dispatch to Triage",
+  "Rx Processing",
+  "Rx Shipped",
+  "Medication Delivered",
 ];
 
 // "Copay Enrollment" and "Patient Payment" used to be two separate steps,
@@ -331,17 +329,16 @@ function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>
 
 // WF5 (iAssist_PAP) variant of computeIAssistStepDone above — identical
 // except it inserts its own "Appeal" milestone right after Prior
-// Authorization, and has no dispense tail at all: WF5 dispenses "Keanu to
-// facility" (a site of care, not a pharmacy shipment), so "Dispatch to
-// Triage" (step 6) is this flow's final step — it never touches
-// pharmacyStatus. Step 4 (Prior Authorization) is judged as "resolved" on
-// denial, not approval — this flow's PA never reaches 'approved' (see
-// workflows/iAssistPap.ts) — and step 5 only ticks once the Appeal is
-// actually filed (appealStatus, INITIATE_APPEAL), which is also what
-// unlocks dispatch/fulfillment here.
+// Authorization (step 5 here vs. Dispatch to Triage at step 5 in WF4's
+// 8-step version), shifting the dispense tail down by one. Step 4 (Prior
+// Authorization) is judged as "resolved" on denial, not approval — this
+// flow's PA never reaches 'approved' (see workflows/iAssistPap.ts) — and
+// step 5 only ticks once the Appeal is actually filed (appealStatus,
+// INITIATE_APPEAL), which is also what unlocks dispatch/fulfillment here.
 function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, paStatus, appealStatus, dispatchStatus } = workflowData;
+  const { enrollmentStatus, consentStatus, biStatus, paStatus, appealStatus, dispatchStatus, pharmacyStatus } = workflowData;
   const dispatched = dispatchStatus === 'selected' || dispatchStatus === 'dispatched';
+  const pastDispatch = pharmacyStatus === 'processing' || pharmacyStatus === 'ready' || pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered';
   return [
     enrollmentStatus !== 'none',                  // 1 Referral Received
     consentStatus === 'confirmed',                 // 2 Patient Enrolled
@@ -354,7 +351,10 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
     // below gives it the same pending/pulsing treatment as Prior
     // Authorization while awaiting its own response.
     appealStatus === 'approved',                   // 5 Appeal
-    dispatched,                                    // 6 Dispatch to Triage — final step, ticks once a site of care is selected
+    dispatched || pastDispatch,                    // 6 Dispatch to Triage
+    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 7 Rx Processing
+    pharmacyStatus === 'delivered',                // 8 Rx Shipped
+    pharmacyStatus === 'delivered',                // 9 Medication Delivered
   ];
 }
 
@@ -430,14 +430,10 @@ function StepBar() {
   const rxProcessing    = pharmacyStatus === "ready";
   const rxShipping      = pharmacyStatus === "shipped";
   // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
-  // pushes everything after it back by one). WF5 (iAssist_PAP) has no Rx
-  // Processing/Rx Shipped steps at all anymore (dispatch to a site of care
-  // is this flow's final step — see STEP_LABELS_IASSIST_PAP/
-  // computeIAssistPapStepDone above), so it no longer needs an offset here;
-  // pharmacyStatus stays 'none' for this flow forever either way, so these
-  // constants are simply unreachable for WF5's own bar.
-  const rxProcessingStepN = isCoaFlow ? 7 : 6;
-  const rxShippedStepN    = isCoaFlow ? 8 : 7;
+  // pushes everything after it back by one). WF5 (iAssist_PAP): also n=7/8
+  // (its extra "Appeal" step pushes the dispense tail back by one too).
+  const rxProcessingStepN = (isCoaFlow || isIAssistPapFlow) ? 7 : 6;
+  const rxShippedStepN    = (isCoaFlow || isIAssistPapFlow) ? 8 : 7;
 
 
   return (
@@ -840,13 +836,8 @@ export default function DemoShell() {
     // (isIAssistFlow is true for WF5 too) since it diverges at stage 4: PA
     // resolves to Denied instead of Approved. Stage 5 files the Appeal
     // (INITIATE_APPEAL — see workflows/iAssistPap.ts), which unlocks
-    // fulfillment the same way an approval normally would. Unlike WF4, this
-    // flow's tail is only 6 stages, not 8 — WF5 dispenses "Keanu to
-    // facility" (a site of care, not a pharmacy shipment), so there's no
-    // Rx Processing/Rx Shipped/Medication Delivered chain to jump through;
-    // stage 6 (SELECT_PHARMACY with Keanu's own site of care — see
-    // engine/WorkflowEngine.ts's KEANU_SITE_OF_CARE_FACTS) is this flow's
-    // final, terminal stage.
+    // fulfillment the same way an approval normally would, so stages 6-8
+    // mirror WF4's own Dispatch/Ship/Deliver tail exactly.
     if (isIAssistPapFlow) {
       if (stage >= 2) {
         actor.send({ type: 'ENROLL', portal: 'provider' });
@@ -864,18 +855,25 @@ export default function DemoShell() {
       }
       if (stage >= 6) {
         const pharmacy = {
-          name: KEANU_SITE_OF_CARE_FACTS.facilityName,
-          address: KEANU_SITE_OF_CARE_FACTS.address,
-          city: KEANU_SITE_OF_CARE_FACTS.city,
-          state: KEANU_SITE_OF_CARE_FACTS.state,
-          zip: KEANU_SITE_OF_CARE_FACTS.zip,
-          phone: KEANU_SITE_OF_CARE_FACTS.contactPhone,
+          name: 'CoAssist Pharmacy',
+          address: '2400 Sand Lake Road, Suite 200',
+          city: 'Orlando',
+          state: 'FL',
+          zip: '32809',
+          phone: '(800) 555-0175',
         };
         actor.send({
           type: 'SELECT_PHARMACY',
           portal: 'crm',
           pharmacy
         });
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 8) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
       }
       return;
     }
@@ -1231,7 +1229,9 @@ export default function DemoShell() {
                       { stage: 3, label: "Patient Enrolled" },
                       { stage: 4, label: "PA Denied" },
                       { stage: 5, label: "Appeal Filed" },
-                      { stage: 6, label: "Dispatch to Triage (Keanu to Facility)" },
+                      { stage: 6, label: "Dispatch to Triage" },
+                      { stage: 7, label: "Rx Shipped" },
+                      { stage: 8, label: "Medication Delivered" },
                     ]
                     : isIAssistFlow
                     ? [

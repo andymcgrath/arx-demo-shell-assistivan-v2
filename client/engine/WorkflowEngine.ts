@@ -394,16 +394,17 @@ export function derivePatientRoute(state: MachineContext): string {
   // of this flow's intended script (see iAssistPap.ts's header), dispatch
   // already unlocked the moment the appeal was filed.
   if (flowType === 'iAssist_PAP' && workflowData.appealStatus === 'approved') {
-    // WF5 dispenses "Keanu to facility" — a site of care, not a pharmacy
-    // shipment — so it never touches pharmacyStatus at all (that field stays
-    // 'none' for this flow's whole post-appeal path; see crm/pages/Index.tsx's
-    // SITES_OF_CARE/officeDispenseOptions and the Dispatch to Triage stage).
-    // Once the patient has picked an infusion date, this is a terminal
-    // screen — CRM handles dispatch to the site of care from here with no
-    // further patient-facing screens (AppointmentConfirmation.tsx).
-    if (workflowData.infusionDate !== null) return '/appointment-confirmation';
+    if (workflowData.pharmacyStatus === 'processing' ||
+        workflowData.pharmacyStatus === 'ready')
+      return '/order-tracker';
 
-    // Not yet scheduled — patient picks a date on InfusionDate.tsx.
+    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+    if (workflowData.pharmacyStatus === 'delivered') return '/medication-delivered';
+
+    // Covers "not yet dispatched" through "pharmacy chosen, not yet filled"
+    // — same single screen WF1's generic delivery-flow check further below
+    // uses for the equivalent window.
     return '/pa-approved';
   }
 
@@ -508,10 +509,7 @@ export interface LiveWorkItem {
   id: string;
   refId: string;
   status: 'Open' | 'Closed';
-  // Every item was 'High' until the infusion-scheduled item below, which is
-  // purely informational (nothing left to action) — 'Medium' distinguishes
-  // it from the genuinely urgent items above.
-  priority: 'High' | 'Medium';
+  priority: 'High';
   dueDate: string;
   assignedTo: string;
   description: string;
@@ -527,9 +525,6 @@ export interface LiveWorkItemInputs {
   // so the PA task below needs this to know the PA is actually resolved.
   // Stays 'none' for every other flow, so it never affects them.
   appealStatus: string;
-  // iAssist_PAP (WF5) only — drives the 'infusion-scheduled' live item
-  // below. Null for every other flow.
-  infusionDate: string | null;
   // Fax_PAP_Audit patients never have insurance (CRM's own BI stage always
   // resolves biResult to 'no_insurance' for this flow — see paStage's
   // `!isPapFlow` check in crm/pages/Index.tsx), so there's no real Prior
@@ -603,23 +598,6 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     });
   }
 
-  // iAssist_PAP (WF5) only — infusionDate stays null for every other flow
-  // (see engine/types.ts). Purely informational once scheduled — there's
-  // nothing further for Field Portal to action, unlike the Appeal task
-  // above, so this opens Closed rather than sitting Open until something
-  // else resolves it.
-  if (input.infusionDate !== null) {
-    items.push({
-      id: 'infusion-scheduled',
-      refId: 'Infusion Appointment Scheduled',
-      status: 'Closed',
-      priority: 'Medium',
-      dueDate: new Date(input.infusionDate).toLocaleDateString(),
-      assignedTo: 'Sarah Mitchell',
-      description: 'Patient scheduled an infusion appointment at their site of care',
-    });
-  }
-
   return items;
 }
 
@@ -652,29 +630,6 @@ export const LIVE_MISSING_INFO_TASK_ID = 'LIVE-MISSING-INFORMATION';
 export const LIVE_PA_TASK_ID = 'LIVE-PA-SUBMISSION-REQUIRED';
 /** iAssist_PAP (WF5) only — see getLiveWorkItems' 'appeal-review' item above. */
 export const LIVE_APPEAL_TASK_ID = 'LIVE-APPEAL-REVIEW';
-/** iAssist_PAP (WF5) only — see getLiveWorkItems' 'infusion-scheduled' item above. */
-export const LIVE_INFUSION_TASK_ID = 'LIVE-INFUSION-SCHEDULED';
-
-/**
- * Keanu Dixon's one seeded Site of Care — shared raw facts (not a full
- * FieldSOC/Pharmacy record, since Field Portal's SOC shape and CRM's
- * Pharmacy/dispense shape differ) so field/index.tsx's liveSOCs entry and
- * crm/pages/Index.tsx's Office Dispense options describe the exact same
- * facility instead of two hand-typed copies that could quietly drift.
- * iAssist_PAP (WF5) only — this is where "Office Dispense" stops meaning a
- * specialty pharmacy and starts meaning the facility Keanu physically goes
- * to for his infusion.
- */
-export const KEANU_SITE_OF_CARE_FACTS = {
-  facilityName: 'Houston SOC',
-  npi: '1699006677',
-  contactName: 'Priya Sandhu',
-  contactPhone: '(713) 555-3006',
-  address: '800 Bagby St',
-  city: 'Houston',
-  state: 'Texas',
-  zip: '77002',
-};
 
 /** Minimal event shape this function needs — matches useDemoState()'s
  * snake_case DemoEvent so callers can pass that array through unchanged. */
@@ -704,12 +659,6 @@ export interface GeneratedEmailInputs {
   prescriberName: string;
   frmName: string;
   biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | null;
-  // iAssist_PAP (WF5) only — read directly off current workflow state
-  // (like biResult above) rather than event.metadata, since createEvent()
-  // never populates metadata (see workflows/iAssistPap.ts) — the event log
-  // alone can't say WHICH date got picked, just that the event fired. Null
-  // for every other flow.
-  infusionDate: string | null;
 }
 
 // Identity-verification substeps and the welcome-banner dismissal aren't
@@ -745,7 +694,7 @@ function friendlyEventLabel(eventType: string): string {
  * happened while nobody was looking at the email client.
  */
 export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[] {
-  const { events, patientName, prescriberName, frmName, biResult, infusionDate } = input;
+  const { events, patientName, prescriberName, frmName, biResult } = input;
   const emails: GeneratedEmail[] = [];
 
   for (const event of events) {
@@ -902,20 +851,6 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
           ],
           linkedItemId: LIVE_APPEAL_TASK_ID,
           linkedItemLabel: 'View Task: Appeal Filed with Payer',
-        });
-        break;
-
-      case 'PATIENT_SELECTS_INFUSION_DATE':
-        emails.push({
-          ...base,
-          subject: `Infusion Appointment Scheduled - ${patientName}`,
-          bodyParagraphs: [
-            `${patientName} scheduled their infusion appointment${infusionDate ? ` for ${new Date(infusionDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}` : ''}.`,
-            `Site of Care: ${KEANU_SITE_OF_CARE_FACTS.facilityName}, ${KEANU_SITE_OF_CARE_FACTS.address}, ${KEANU_SITE_OF_CARE_FACTS.city}, ${KEANU_SITE_OF_CARE_FACTS.state} ${KEANU_SITE_OF_CARE_FACTS.zip} (${KEANU_SITE_OF_CARE_FACTS.contactPhone}).`,
-            `No further action is needed — the patient has already received an appointment confirmation.`,
-          ],
-          linkedItemId: LIVE_INFUSION_TASK_ID,
-          linkedItemLabel: 'View Task: Infusion Appointment Scheduled',
         });
         break;
 
