@@ -93,7 +93,7 @@ export default function BrandingPreview({ data }: Props) {
       {/* Color swatches */}
       <div className="space-y-1">
         <p className="text-xs font-medium text-[--arx-slate]">Brand Colors</p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <ColorSwatch label="Primary" color={p.colors.primary} />
           <ColorSwatch label="Dark" color={p.colors.primaryDark} />
           <ColorSwatch label="Light" color={p.colors.primaryLight} />

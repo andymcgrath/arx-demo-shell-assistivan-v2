@@ -40,8 +40,9 @@ import InsightsPortal from "@/portals/insights/index";
 import FieldPortal    from "@/portals/field/index";
 import ProviderPortal from "@/portals/provider/index";
 import IAssistPortal from "@/portals/iassist/index";
+import RulesPortal from "@/portals/rules/index";
 
-export type PortalId = "crm" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist";
+export type PortalId = "crm" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist" | "rules";
 
 // NOTE: the iAssist portal tab's URL slug is "iassist-hub", NOT "iassist".
 // "/iassist" is a separate, pre-existing top-level deep-link route (see
@@ -60,6 +61,7 @@ export const PORTAL_SLUG: Record<PortalId, string> = {
   field: "field",
   provider: "provider",
   iassist: "iassist-hub",
+  rules: "rules",
 };
 
 const SLUG_TO_PORTAL: Record<string, PortalId> = {
@@ -70,6 +72,7 @@ const SLUG_TO_PORTAL: Record<string, PortalId> = {
   field: "field",
   provider: "provider",
   "iassist-hub": "iassist",
+  rules: "rules",
 };
 
 /**
@@ -110,6 +113,10 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "field",     color: "#14b8a6" },
   { id: "insights",  color: "#2563eb" },
   { id: "analytics", color: "#d97706" },
+  // New Salesforce-Lightning "Product Mgmt" / Action Factory demo — Salesforce
+  // blue to visually hint what it is. Visible in every workflow (no
+  // flowType-based filtering below), same as "insights".
+  { id: "rules",     color: "#0070d2" },
 ];
 
 function getPortals(flowType: string) {
@@ -138,6 +145,7 @@ function getPortals(flowType: string) {
       analytics: "Workforce",
       insights: "Analytics",
       field: "Field",
+      rules: "Rules",
     };
     return { ...p, id: p.id as PortalId, label: baseLabels[p.id] };
   });
@@ -153,6 +161,7 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "field":     return <FieldPortal />;
     case "provider":  return <ProviderPortal key={flowType} />;
     case "iassist":   return <IAssistPortal branded={false} />;
+    case "rules":     return <RulesPortal />;
   }
 }
 
