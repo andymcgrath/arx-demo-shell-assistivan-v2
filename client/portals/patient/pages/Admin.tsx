@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { hexToColorFilter } from "@/lib/brandFilter";
-import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff } from "lucide-react";
+import { usePatientStore } from "@/store/patientStore";
+import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2 } from "lucide-react";
 import ManufacturerSection from "./admin/ManufacturerSection";
 import ProgramSection from "./admin/ProgramSection";
 import BrandingPreview from "./admin/BrandingPreview";
 
 type Tab = "manufacturer" | "program";
 type SaveState = "idle" | "saving" | "success" | "error";
+interface BrandListItem {
+  slug: string;
+  presetName: string;
+}
 
 interface BrandingData {
   manufacturer: {
@@ -21,7 +26,7 @@ interface BrandingData {
     drugDisplayName: string;
     description: string;
     logo: { colors: string; white: string; requiresFilter?: boolean };
-    colors: { primary: string; primaryDark: string; primaryLight: string };
+    colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
   };
   chatbotIcon: string;
 }
@@ -39,7 +44,7 @@ const EMPTY: BrandingData = {
     drugDisplayName: "",
     description: "",
     logo: { colors: "", white: "", requiresFilter: false },
-    colors: { primary: "#007178", primaryDark: "#005a5f", primaryLight: "#338D93" },
+    colors: { primary: "#007178", primaryDark: "#005a5f", primaryLight: "#338D93", primaryWash: "#B1D5D8" },
   },
   chatbotIcon: "",
 };
@@ -50,13 +55,64 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>("manufacturer");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [showPreview, setShowPreview] = useState(true);
+  const [presetName, setPresetName] = useState("");
+  const [brands, setBrands] = useState<BrandListItem[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/branding")
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => {
+        setData(d);
+        setPresetName(d?.program?.name ?? "");
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
+    refreshBrandList();
   }, []);
+
+  function refreshBrandList() {
+    fetch("/api/admin/brands")
+      .then(r => r.json())
+      .then(setBrands)
+      .catch(() => {});
+  }
+
+  async function handleLoadBrand(slug: string) {
+    setSelectedSlug(slug);
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/admin/brands/${slug}`);
+      if (!res.ok) throw new Error("Failed to load brand");
+      const preset = await res.json();
+      setData(preset.data);
+      setPresetName(preset.presetName);
+      setSaveState("idle");
+    } catch {
+      setSaveState("error");
+    }
+  }
+
+  async function handleDeleteBrand() {
+    if (!selectedSlug) return;
+    const brand = brands.find(b => b.slug === selectedSlug);
+    const label = brand?.presetName ?? selectedSlug;
+    if (!window.confirm(`Delete the saved brand "${label}"? This can't be undone. The live site is unaffected either way.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/brands/${selectedSlug}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete brand");
+      setSelectedSlug("");
+      refreshBrandList();
+    } catch {
+      setSaveState("error");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function handleSave() {
     setSaveState("saving");
@@ -64,11 +120,21 @@ export default function Admin() {
       const res = await fetch("/api/admin/branding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, presetName }),
       });
       const result = await res.json();
       if (result.success) {
+        // The medication name is the one piece of branding shared with every
+        // other portal (CRM, Provider, iAssist) via usePatientStore — but
+        // that store is persisted to sessionStorage, so without this the
+        // cached "Assistivan" would keep shadowing the new brand everywhere
+        // outside the Patient Portal until someone hit "Reset Everything."
+        const newDrugName = data.program.drugDisplayName || data.program.name;
+        if (newDrugName) {
+          usePatientStore.setState({ drugName: newDrugName });
+        }
         setSaveState("success");
+        refreshBrandList();
         setTimeout(() => setSaveState("idle"), 3000);
       } else {
         setSaveState("error");
@@ -109,6 +175,43 @@ export default function Admin() {
       <div className="max-w-7xl mx-auto px-6 py-8 flex gap-6">
         {/* Left: form */}
         <div className="flex-1 min-w-0">
+          {/* Brand presets */}
+          <div className="bg-white rounded-xl border border-[--arx-borders] p-4 shadow-sm mb-6 flex items-center gap-4">
+            <FolderOpen size={16} className="text-[--arx-inactive] flex-shrink-0" />
+            <div className="flex-1 flex items-center gap-3">
+              <label className="text-sm text-[--arx-body-copy] whitespace-nowrap">Load brand</label>
+              <select
+                value={selectedSlug}
+                onChange={e => handleLoadBrand(e.target.value)}
+                className="text-sm border border-[--arx-borders] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+              >
+                <option value="">Select a saved brand…</option>
+                {brands.map(b => (
+                  <option key={b.slug} value={b.slug}>{b.presetName}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleDeleteBrand}
+                disabled={!selectedSlug || deleting}
+                title="Delete saved brand"
+                aria-label="Delete saved brand"
+                className="flex items-center justify-center w-8 h-8 flex-shrink-0 border border-[--arx-borders] rounded-lg text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+              >
+                {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+              </button>
+            </div>
+            <div className="flex-1 flex items-center gap-2">
+              <label className="text-sm text-[--arx-body-copy] whitespace-nowrap">Preset name</label>
+              <input
+                type="text"
+                value={presetName}
+                onChange={e => setPresetName(e.target.value)}
+                placeholder="e.g. Boehringer"
+                className="flex-1 text-sm border border-[--arx-borders] rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+              />
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="flex gap-1 p-1 bg-white rounded-xl border border-[--arx-borders] mb-6 w-fit">
             <TabBtn active={tab === "manufacturer"} onClick={() => setTab("manufacturer")}>

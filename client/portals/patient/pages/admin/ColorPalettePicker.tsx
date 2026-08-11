@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { Upload, X, Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ColorTarget = "primary" | "primaryDark" | "primaryLight";
+type ColorTarget = "primary" | "primaryDark" | "primaryLight" | "primaryWash";
 
 interface Props {
   onPickColor: (target: ColorTarget, hex: string) => void;
@@ -12,6 +12,7 @@ const TARGETS: { key: ColorTarget; label: string }[] = [
   { key: "primary", label: "Primary" },
   { key: "primaryDark", label: "Primary Dark" },
   { key: "primaryLight", label: "Primary Light" },
+  { key: "primaryWash", label: "Primary Wash" },
 ];
 
 export default function ColorPalettePicker({ onPickColor }: Props) {

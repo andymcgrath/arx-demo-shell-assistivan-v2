@@ -23,6 +23,8 @@
  * only) view but still surface him by name/DOB search.
  */
 
+import { PATIENT_SEED } from "./patientStore";
+
 export type PatientDotState = "completed" | "pending" | "attention" | "disabled";
 
 export interface PatientStatus {
@@ -45,7 +47,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "keanu-dixon",
     name: "Keanu Dixon",
     dob: "09/02/1964",
-    medication: "Assistivan",
+    medication: PATIENT_SEED.drugName,
     hasActiveRx: false,
   },
   {

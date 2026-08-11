@@ -6,7 +6,7 @@ interface ProgramData {
   drugDisplayName: string;
   description: string;
   logo: { colors: string; white: string; requiresFilter?: boolean };
-  colors: { primary: string; primaryDark: string; primaryLight: string };
+  colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
 }
 
 interface Props {
@@ -63,7 +63,7 @@ export default function ProgramSection({ data, onChange }: Props) {
       {/* Color pickers */}
       <div>
         <p className="text-sm font-medium text-[--arx-slate] mb-3">Brand Colors</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ColorField
             label="Primary"
             hint="Main brand color"
@@ -81,6 +81,12 @@ export default function ProgramSection({ data, onChange }: Props) {
             hint="~50% lighter tint"
             value={data.colors.primaryLight}
             onChange={v => handleColorChange("primaryLight", v)}
+          />
+          <ColorField
+            label="Primary Wash"
+            hint="Very light tint, for subtle backgrounds"
+            value={data.colors.primaryWash}
+            onChange={v => handleColorChange("primaryWash", v)}
           />
         </div>
         <ColorPalettePicker

@@ -72,8 +72,17 @@ export function prescriberNameById(id: string) {
 // Medication directory — shared between Step 2 (Medication Details, where
 // it's picked/edited) and the Dashboard's "Commonly Prescribed" row (which
 // seeds a medication choice before Step 2 is ever visited).
+//
+// Entry [0] is the demo's active/branded product — its drug name comes from
+// PATIENT_SEED (which itself tracks the Branding Admin screen's active
+// brand), with the dosage/NDC suffix left as fixed placeholder content since
+// Admin doesn't manage those. MEDICATION_CODES is keyed off this same
+// computed string (not a duplicated literal) so the two can never drift out
+// of sync when the drug name changes. Entries [1]-[3] are stable decoys.
+const ACTIVE_MEDICATION_OPTION = `${PATIENT_SEED.drugName} 10 MG ORAL TABLET 100 EA NDC 123456789`;
+
 export const MEDICATION_OPTIONS = [
-  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789",
+  ACTIVE_MEDICATION_OPTION,
   "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML",
   "Ramoni 20MG ORAL TABLET 30 EA",
   "Voloxivan 5MG/ML INJECTION 10ML VIAL",
@@ -84,7 +93,7 @@ export const MEDICATION_OPTIONS = [
 // from the Dashboard's Commonly Prescribed row), instead of leaving them
 // blank for the user to look up manually.
 export const MEDICATION_CODES: Record<string, { jcode: string; cptCode: string }> = {
-  "Assistivan 10 MG ORAL TABLET 100 EA NDC 123456789": { jcode: "J8499", cptCode: "99070" },
+  [ACTIVE_MEDICATION_OPTION]: { jcode: "J8499", cptCode: "99070" },
   "Assistimab 40MG/ML SUBCUTANEOUS SOLN PREF SRY 1ML": { jcode: "J3590", cptCode: "96401" },
   "Ramoni 20MG ORAL TABLET 30 EA": { jcode: "J8499", cptCode: "99070" },
   "Voloxivan 5MG/ML INJECTION 10ML VIAL": { jcode: "J3490", cptCode: "96413" },

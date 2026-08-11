@@ -1,0 +1,41 @@
+{
+  "presetName": "Boehringer Ingelheim",
+  "data": {
+    "manufacturer": {
+      "name": "Boehringer Ingelheim",
+      "tagline": "Patient assistance & medication access program",
+      "logo": {
+        "colors": "/uploads/1786378955144-imgi_5_boehringer-ingelheim-logo.png",
+        "white": "",
+        "requiresFilter": false
+      },
+      "support": {
+        "label": "Technical Help",
+        "phone": "877-450-4412"
+      },
+      "legal": {
+        "privacyUrl": "#",
+        "termsUrl": "#",
+        "safetyUrl": "#",
+        "prescribingUrl": "#"
+      },
+      "copyright": "©{{YEAR}} Boehringer Ingelheim. All Rights Reserved. Intended for US residents only."
+    },
+    "program": {
+      "name": "New Boehringer Program",
+      "drugDisplayName": "New Boehringer Program",
+      "description": "Add product details here",
+      "logo": {
+        "colors": "/uploads/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
+        "white": "/uploads/1786385297021-jascayd-logo-white.svg"
+      },
+      "colors": {
+        "primary": "#08312A",
+        "primaryDark": "#051F1A",
+        "primaryLight": "#00E47C",
+        "primaryWash": "#B6D2CE"
+      }
+    },
+    "chatbotIcon": ""
+  }
+}

@@ -25,7 +25,7 @@ import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveF
 import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
-  LayoutTemplate, LayoutPanelLeft, LayoutGrid, Settings,
+  LayoutTemplate, LayoutPanelLeft, LayoutGrid, Settings, Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
@@ -1061,6 +1061,16 @@ export default function DemoShell() {
                 </div>
               )}
             </div>
+
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-1 text-[11px] bg-white/10 hover:bg-white/20 border border-white/20 text-white px-2.5 py-1.5 rounded transition-colors"
+              aria-label="Branding admin"
+              title="Rebrand the Patient Portal — colors, logos, program name"
+            >
+              <Palette size={12} />
+              <span className="hidden sm:inline">Branding</span>
+            </button>
 
             <button
               onClick={() => setShowConfigurator(!showConfigurator)}

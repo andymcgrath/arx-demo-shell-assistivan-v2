@@ -7,11 +7,12 @@
  * it can't affect WF1/WF2/WF3 isolation. Fields live in caseWizardStore so
  * Back/Next preserve answers (see that store's file header).
  *
- * Medication/NDC/ICD-10 summary values are still the spec's own placeholder
- * design content (fictional "Assistivan" product line, generic ICD-10
- * example) — not real patient data. Prescriber now reflects Step 1's actual
- * selection, and Shipping Information defaults from Step 1's patient
- * address + prescriber instead of being blank free text.
+ * NDC/ICD-10 summary values are still the spec's own placeholder design
+ * content (generic ICD-10 example) — not real patient data. The medication
+ * name tracks usePatientStore.drugName (dosage/form suffix stays fixed
+ * placeholder text). Prescriber now reflects Step 1's actual selection, and
+ * Shipping Information defaults from Step 1's patient address + prescriber
+ * instead of being blank free text.
  *
  * The spec's SIG/Directions box has a real (non-demo) toggle: by default it
  * shows an auto-generated, disabled/read-only instructions block built from
@@ -26,6 +27,7 @@ import { X, Info, Plus } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, prescriberNameById, expandStateAbbreviation, AUTO_SIG } from "@/store/caseWizardStore";
+import { usePatientStore } from "@/store/patientStore";
 
 const FORM_OPTIONS = ["Tablet", "Capsule", "Injection", "Solution", "Gel"];
 const SUBSTITUTION_OPTIONS = ["Dispense as written", "Substitutions allowed"];
@@ -66,11 +68,14 @@ export default function NewCaseRx() {
   const patient = useCaseWizardStore((s) => s.patient);
   const rx = useCaseWizardStore((s) => s.rx);
   const setRx = useCaseWizardStore((s) => s.setRx);
+  const drugName = usePatientStore((s) => s.drugName);
 
-  // Prescriber reflects Step 1's actual selection; medication/NDC/ICD-10
-  // summary values are still the spec's own placeholder content.
+  // Prescriber reflects Step 1's actual selection; the dosage/form suffix
+  // below is still the spec's own placeholder content, but the drug name
+  // itself now tracks the active brand instead of being a second hardcoded
+  // "Assistivan" independent of everywhere else it's referenced.
   const prescriber = `1234567890, ${prescriberNameById(patient.prescriber) || "Sarah Chen, MD"}`;
-  const medicationName = "ASSISTIVAN 80 UNIT/ML INJECTION GEL 5 ML";
+  const medicationName = `${drugName.toUpperCase()} 80 UNIT/ML INJECTION GEL 5 ML`;
   const ndc = "123456789";
   const icd10 = "270.0: Nephrotic Syndrome";
   const icd10Skipped = !icd10;

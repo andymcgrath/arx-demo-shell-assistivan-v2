@@ -1,0 +1,59 @@
+<svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" width="640" height="400">
+  <!-- Transparent background -->
+
+  <!-- Icon: stylized swoosh feather, all white with varying opacity per stripe -->
+  <g transform="translate(28, 55)">
+    <!-- Bottom stripe (widest, most transparent) -->
+    <path d="M8,138 Q55,88 148,108 Q95,122 52,148 Z" fill="white" opacity="0.65"/>
+    <!-- Second stripe -->
+    <path d="M12,116 Q62,60 158,80 Q108,98 48,126 Z" fill="white" opacity="0.75"/>
+    <!-- Third stripe (green/yellow in original) -->
+    <path d="M18,94 Q75,32 168,52 Q118,74 48,104 Z" fill="white" opacity="0.85"/>
+    <!-- Fourth stripe -->
+    <path d="M28,72 Q90,10 178,30 Q130,54 58,84 Z" fill="white" opacity="0.92"/>
+    <!-- Top stripe (smallest, fully opaque) -->
+    <path d="M42,50 Q110,-8 192,12 Q146,38 72,62 Z" fill="white" opacity="1.0"/>
+  </g>
+
+  <!-- JASCAYD bold italic wordmark -->
+  <text
+    x="172"
+    y="196"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="116"
+    font-weight="bold"
+    font-style="italic"
+    fill="white"
+    letter-spacing="-1"
+  >JASCAYD</text>
+
+  <!-- Registered trademark superscript -->
+  <text
+    x="612"
+    y="148"
+    font-family="Georgia, serif"
+    font-size="28"
+    fill="white"
+  >®</text>
+
+  <!-- Generic name in italic -->
+  <text
+    x="320"
+    y="256"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="44"
+    fill="white"
+    text-anchor="middle"
+    font-style="italic"
+  >(nerandomilast)</text>
+
+  <!-- Dosage -->
+  <text
+    x="320"
+    y="308"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="34"
+    fill="white"
+    text-anchor="middle"
+  >tablets 18 mg</text>
+</svg>

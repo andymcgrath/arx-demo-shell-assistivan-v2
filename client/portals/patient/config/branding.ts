@@ -9,51 +9,37 @@
  *   PROGRAM      — displayed throughout the workflow pages
  *                  (drug name, drug logo, description, brand colors)
  *
- * To rebrand say "rebrand [Program Name]" and the assistant will prompt
- * you for all the info below and update this file + global.css automatically.
+ * The values below are sourced from ./active-brand.json, which is the file
+ * the /admin screen reads from and writes to. Editing that JSON directly
+ * (or via /admin) rebrands the whole patient portal — no code changes,
+ * no restart. Saved brands live in ./brands/*.json and can be reloaded
+ * from the admin screen's "Load brand" dropdown.
+ *
+ * PROGRAM.colors also drives the --arx-primary* CSS variables used across
+ * the design system — see applyBrandCssVars() below.
  *
  * Logo variants:
  *   colors — transparent background, brand-colored (use on white/light bg)
  *   white  — transparent background, all white    (use on teal/dark bg)
  */
+import activeBrand from "./active-brand.json";
+import { applyBrandCssVars } from "@/lib/applyBrandCssVars";
 
 export const MANUFACTURER = {
-  name: "CoAssist",
-  tagline: "Patient assistance & medication access program",
-  logo: {
-    colors: "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
-    requiresFilter: true,
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
-  },
-  support: {
-    label: "Technical Help",
-    phone: "877-450-4412",
-  },
-  legal: {
-    privacyUrl: "#",
-    termsUrl: "#",
-    safetyUrl: "#",
-    prescribingUrl: "#",
-  },
-  copyright: `©${new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.`,
+  ...activeBrand.manufacturer,
+  copyright: activeBrand.manufacturer.copyright.replace(
+    "{{YEAR}}",
+    String(new Date().getFullYear()),
+  ),
 };
 
-export const PROGRAM = {
-  name: "Assistivan",
-  drugDisplayName: "Assistivan",
-  description: "0.8 mg · 30-day supply",
-  logo: {
-    // Transparent background, brand-colored — use on white/light backgrounds
-    colors: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
-    // Transparent background, all white — use on teal/dark backgrounds
-    white: "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
-  },
-  colors: {
-    // Applied to --arx-primary, --arx-primary-dark, --arx-primary-80 in global.css
-    primary: "#007178",
-    primaryDark: "#005a5f",
-    primaryLight: "#338D93",
-  },
-};
+export const PROGRAM = activeBrand.program;
 
-export const CHATBOT_ICON = "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da";
+export const CHATBOT_ICON = activeBrand.chatbotIcon;
+
+// Push PROGRAM.colors into the --arx-primary* CSS variables at runtime.
+// Re-runs on every full page load, including the reload that follows a
+// save in /admin.
+if (typeof document !== "undefined") {
+  applyBrandCssVars(PROGRAM.colors);
+}

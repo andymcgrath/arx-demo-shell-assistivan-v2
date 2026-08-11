@@ -6,6 +6,7 @@ import { usePatientCase } from "../hooks/usePatientCase";
 import { useEnrollPatient } from "../hooks/useEnrollPatient";
 import { useSendPapUpdate } from "@/hooks/useSendPapUpdate";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePatientStore } from "@/store/patientStore";
 import type { WorkflowData } from "@/engine/types";
 
 const CASE_ID = "demo";
@@ -110,11 +111,15 @@ function canAddItem(selectedId: string, consentStatus: string, workflowData: Wor
 }
 
 function buildMessageText(selectedId: string, isPapFlow: boolean): string {
+  // Not a hook call — .getState() reads the current value at call time,
+  // which is correct here since this is a plain template-building helper,
+  // not a component that needs to re-render on change.
+  const drugName = usePatientStore.getState().drugName;
   if (selectedId === "pap-application-update") {
-    return `There's an update on your Assistivan Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
+    return `There's an update on your ${drugName} Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
   }
   return isPapFlow
-    ? `Welcome! You've been referred to the Assistivan Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
+    ? `Welcome! You've been referred to the ${drugName} Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
     : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
 }
 

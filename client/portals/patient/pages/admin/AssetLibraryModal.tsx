@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readFileAsDataUrl } from "./fileUtils";
 
 interface Asset {
   url: string;
@@ -37,9 +38,12 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
     if (!file) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      const dataUrl = await readFileAsDataUrl(file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, dataUrl }),
+      });
       const data = await res.json();
       if (data.url) {
         setAssets(prev => [{ url: data.url, filename: data.filename }, ...prev]);

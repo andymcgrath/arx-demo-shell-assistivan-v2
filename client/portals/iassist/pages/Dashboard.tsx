@@ -20,6 +20,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useNavigate } from "@/lib/portalRouter";
 import type { WorkflowData } from "@/engine/types";
 import { SAMPLE_PATIENTS, type PatientStatus } from "@/store/samplePatients";
+import { PATIENT_SEED } from "@/store/patientStore";
 import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/store/caseWizardStore";
 import { StatusDots, StatusBadge } from "../components/StatusIndicators";
 import IAssistSidebar, { IASSIST_TEAL } from "../components/IAssistSidebar";
@@ -31,7 +32,7 @@ import IAssistHeader from "../components/IAssistHeader";
 // the time the wizard reaches Medication Details, instead of defaulting to
 // whatever's first in the dropdown.
 const COMMONLY_PRESCRIBED = [
-  { medication: MEDICATION_OPTIONS[0], label: "Assistivan", color: IASSIST_TEAL },
+  { medication: MEDICATION_OPTIONS[0], label: PATIENT_SEED.drugName, color: IASSIST_TEAL },
   { medication: MEDICATION_OPTIONS[1], label: "ASSISTIMAB", color: "#2563EB" },
   { medication: MEDICATION_OPTIONS[3], label: "Voloxivan", color: "#7C3AED" },
 ];

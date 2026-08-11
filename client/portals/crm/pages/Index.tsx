@@ -1928,7 +1928,7 @@ export default function Index() {
                     </div>
                     <div className="px-3 py-2 border-b border-[#dddbda]">
                       <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Product</div>
-                      <SfLink>Assistivan</SfLink>
+                      <SfLink>{drugName}</SfLink>
                     </div>
                     <div className="px-3 py-2 border-b border-[#dddbda]">
                       <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
@@ -3019,7 +3019,7 @@ export default function Index() {
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PRODUCT</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Assistivan</div>
+                    <div className="text-[13px] text-[#3e3e3c]">{drugName}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">BI PRODUCT COVERAGE NAME</div>

@@ -13,7 +13,7 @@ interface BrandingData {
     drugDisplayName: string;
     description: string;
     logo: { colors: string; white: string };
-    colors: { primary: string; primaryDark: string; primaryLight: string };
+    colors: { primary: string; primaryDark: string; primaryLight: string; primaryWash: string };
   };
   chatbotIcon: string;
 }
@@ -84,7 +84,9 @@ export default function BrandingPreview({ data }: Props) {
           ) : (
             <span className="text-white font-bold text-xs">{m.name}</span>
           )}
-          <p className="text-white/70 text-xs text-center">{m.copyright}</p>
+          <p className="text-white/70 text-xs text-center">
+            {m.copyright.replace("{{YEAR}}", String(new Date().getFullYear()))}
+          </p>
         </div>
       </div>
 
@@ -95,6 +97,7 @@ export default function BrandingPreview({ data }: Props) {
           <ColorSwatch label="Primary" color={p.colors.primary} />
           <ColorSwatch label="Dark" color={p.colors.primaryDark} />
           <ColorSwatch label="Light" color={p.colors.primaryLight} />
+          <ColorSwatch label="Wash" color={p.colors.primaryWash} />
         </div>
       </div>
     </div>

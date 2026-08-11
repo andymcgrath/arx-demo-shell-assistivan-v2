@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload, Link, Library, X } from "lucide-react";
 import AssetLibraryModal from "./AssetLibraryModal";
+import { readFileAsDataUrl } from "./fileUtils";
 
 interface Props {
   label: string;
@@ -22,9 +23,12 @@ export default function LogoPicker({ label, value, onChange, hint, bgClass = "bg
     if (!file) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      const dataUrl = await readFileAsDataUrl(file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, dataUrl }),
+      });
       const data = await res.json();
       if (data.url) onChange(data.url);
     } finally {

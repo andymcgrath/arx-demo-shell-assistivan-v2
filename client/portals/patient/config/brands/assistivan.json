@@ -1,0 +1,41 @@
+{
+  "presetName": "Assistivan",
+  "data": {
+    "manufacturer": {
+      "name": "CoAssist",
+      "tagline": "Patient assistance & medication access program",
+      "logo": {
+        "colors": "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
+        "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+        "requiresFilter": true
+      },
+      "support": {
+        "label": "Technical Help",
+        "phone": "877-450-4412"
+      },
+      "legal": {
+        "privacyUrl": "#",
+        "termsUrl": "#",
+        "safetyUrl": "#",
+        "prescribingUrl": "#"
+      },
+      "copyright": "©{{YEAR}} AssistRx. All Rights Reserved. Intended for US residents only."
+    },
+    "program": {
+      "name": "Assistivan",
+      "drugDisplayName": "Assistivan",
+      "description": "0.8 mg · 30-day supply",
+      "logo": {
+        "colors": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
+        "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
+      },
+      "colors": {
+        "primary": "#007178",
+        "primaryDark": "#005a5f",
+        "primaryLight": "#338D93",
+        "primaryWash": "#B1D5D8"
+      }
+    },
+    "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da"
+  }
+}

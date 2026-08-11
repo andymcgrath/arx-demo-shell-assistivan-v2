@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { usePatientStore } from "@/store/patientStore";
+import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
 import { useDemoStore } from "@/store/demoStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { dateFromToday } from "@/lib/relativeDate";
@@ -1156,8 +1156,10 @@ function CoaProviderExperience({
 
 // "Most common" pins the top of the list; everything else is alphabetical
 // below a divider. Names reuse the ones already established elsewhere in
-// this demo (CRM/iAssist medication cards) where they exist.
-const MEDICATION_MOST_COMMON = ["Assistivan", "Assistimab", "Ramoni", "Voloxivan"];
+// this demo (CRM/iAssist medication cards) where they exist. First entry is
+// the demo's active/branded product — tracks PATIENT_SEED.drugName (which
+// itself tracks the Branding Admin screen); the rest are stable decoys.
+const MEDICATION_MOST_COMMON = [PATIENT_SEED.drugName, "Assistimab", "Ramoni", "Voloxivan"];
 const MEDICATION_OTHERS = ["Aficamten", "Assistivox", "Kelvara", "Nolrivex", "Zylodine"];
 
 function MedicationOption({
@@ -1685,7 +1687,7 @@ const RENEWALS: RenewalItem[] = [
 ];
 
 const MEDICATIONS = [
-  { name: "Assistivan", action: "Start" },
+  { name: PATIENT_SEED.drugName, action: "Start" },
   { name: "Assistimab", action: "Start" },
   { name: "Assistivox", action: "Start" },
 ];
@@ -2079,6 +2081,7 @@ export default function ProviderPortal() {
   const providerPACompleted = workflowData.providerPACompleted;
   const paStatus = workflowData.paStatus;
   const patientName = usePatientStore((s) => s.patientName);
+  const drugName = usePatientStore((s) => s.drugName);
   const isBranded = isBrandedFlow(flowType);
   const isCoA = flowType === "CoA_DTP";
   const biStatus = workflowData.biStatus;
@@ -2112,12 +2115,28 @@ export default function ProviderPortal() {
   // biStatus/paStatus signal CRM's stage tracker uses for "Letter sent -
   // HCP letter mailed for Prior Authorization" — a real PA request email
   // now exists, so surface it instead of leaving the provider parked on the
-  // lock screen. Guarded to `step === 'login'` so this can only ever move
-  // the provider forward from the resting lock screen, never yank them back
-  // once they've clicked past it (into pa-questions/pa-submitted).
+  // lock screen.
+  //
+  // Guarded to `step === 'login'` so this can only ever move the provider
+  // forward from the resting lock screen, never yank them back once they've
+  // clicked past it — but biStatus/paStatus don't change when the provider
+  // clicks the email's "HERE" link (EmailStep -> setStep("login") to reach
+  // the NPI/PIN gate), so without emailSurfacedRef this effect couldn't
+  // tell "still resting on the lock screen" apart from "just clicked
+  // through the email" — both are step==='login' with the same
+  // biStatus/paStatus — and re-fired on every click, bouncing back to
+  // 'email' before the provider could do anything on the login screen.
+  const emailSurfacedRef = useRef(false);
   useEffect(() => {
     if (storeFlowType !== 'Fax_QS_PA_Approved') return;
-    if (biStatus === 'complete' && paStatus === 'none' && step === 'login') {
+    if (!(biStatus === 'complete' && paStatus === 'none')) {
+      // Conditions no longer hold (reset, new cycle, PA submitted) — allow
+      // the next completion to surface the email again.
+      emailSurfacedRef.current = false;
+      return;
+    }
+    if (step === 'login' && !emailSurfacedRef.current) {
+      emailSurfacedRef.current = true;
       setStep('email');
     }
   }, [storeFlowType, biStatus, paStatus, step]);
@@ -2133,6 +2152,7 @@ export default function ProviderPortal() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
+    emailSurfacedRef.current = false;
     setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : 'login');
   }, [resetNonce, storeFlowType]);
 
@@ -2211,7 +2231,7 @@ export default function ProviderPortal() {
 
   if (providerPACompleted) {
     const primaryData = {
-      rxName: "Assistivan Prior Authorization",
+      rxName: `${drugName} Prior Authorization`,
       status: paStatus === "approved" ? "Approved" : "Pending",
       statusColor: paStatus === "approved" ? "#D1E7F5" : "#FEF3C7",
       statusTextColor: paStatus === "approved" ? "#0555B0" : "#92400E",
@@ -2245,7 +2265,7 @@ export default function ProviderPortal() {
       },
       {
         name: "Maria Garcia",
-        rxName: "Assistivan Income Verification",
+        rxName: `${drugName} Income Verification`,
         timestamp: "Submitted 3 days ago",
         status: "Verified",
         statusColor: "#D1E7F5",
