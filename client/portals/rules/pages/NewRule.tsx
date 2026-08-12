@@ -31,6 +31,7 @@ import { SfButton, SfPrimaryButton, SfLink, SfSelect, Pill } from "../components
 const FIELD_OPTIONS = ["Status", "PA Result", "Service Type Name"];
 const OPERATOR_OPTIONS = ["Equals", "Not Equals"];
 const VALUE_OPTIONS = ["Complete", "Denied", "Onboarding", "Pending", "Approved"];
+const TASK_OWNER_OPTIONS = ["Select task owner", "Case Owner", "Queue"];
 
 interface ConditionRow {
   field: string;
@@ -48,6 +49,7 @@ export default function NewRule() {
   const [category, setCategory] = useState("Prior Authorization");
   const [sourceObject] = useState("Stage");
   const [recordType, setRecordType] = useState("Prior Authorization");
+  const [taskOwner, setTaskOwner] = useState(TASK_OWNER_OPTIONS[0]);
   const [conditions, setConditions] = useState<ConditionRow[]>([
     { field: "Status", operator: "Equals", value: "Complete" },
     { field: "PA Result", operator: "Equals", value: "Denied" },
@@ -169,6 +171,7 @@ export default function NewRule() {
                       <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Action Name</th>
                       <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Subject Template</th>
                       <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Description Template</th>
+                      <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Owner</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -176,6 +179,9 @@ export default function NewRule() {
                       <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">PA-01 Action — Initiate Appeal</td>
                       <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">Initiate Appeal</td>
                       <td className="px-2.5 py-2 text-[#3e3e3c]">File an appeal on the patient's behalf following prior authorization denial.</td>
+                      <td className="px-2.5 py-2 whitespace-nowrap">
+                        <SfSelect value={taskOwner} onChange={setTaskOwner} options={TASK_OWNER_OPTIONS} />
+                      </td>
                     </tr>
                   </tbody>
                 </table>
