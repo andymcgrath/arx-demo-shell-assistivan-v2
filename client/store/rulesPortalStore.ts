@@ -61,7 +61,7 @@
  */
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { RuleRecord } from "@/portals/rules/data/rulesData";
+import { RULES, type RuleRecord } from "@/portals/rules/data/rulesData";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -256,8 +256,23 @@ interface RulesPortalState {
    * activated) — merged with the static RULES catalog for display. */
   customRules: RuleRecord[];
   /** Idempotent: calling this again (e.g. a presenter clicking Save twice)
-   * does not duplicate the rule in customRules. */
-  activateAppealRule: () => void;
+   * does not duplicate the rule in customRules. `ownerStrategy`, when
+   * given, overrides APPEAL_RULE's default "Source Owner" task-owner value
+   * with whatever the presenter picked on NewRule.tsx's Create Task table
+   * (e.g. "Case Owner"/"Queue"), so RuleDetail.tsx's published view reflects
+   * the actual selection instead of always showing the hardcoded default. */
+  activateAppealRule: (ownerStrategy?: string) => void;
+  /**
+   * Generic edit path backing RuleDetail.tsx's "Edit Task Action" flow — the
+   * same Category/Record Type/Conditions/Task Owner fields NewRule.tsx lets a
+   * presenter set when building a rule live are editable again afterward.
+   * Works whether `externalId` already has a customRules entry (e.g. the
+   * live-built Appeal rule) or still only exists in the static RULES
+   * catalog — in the latter case a patched copy is added to customRules,
+   * which RuleDetail.tsx's lookup now prefers over the static original so
+   * the edit is actually visible. No-ops if externalId matches neither.
+   */
+  updateCustomRule: (externalId: string, patch: Partial<RuleRecord>) => void;
   /**
    * Un-does activateAppealRule() — clears appealRuleActive and removes just
    * APPEAL_RULE from customRules, leaving profile/cases/every other rule
@@ -399,12 +414,30 @@ export const useRulesPortalStore = create<RulesPortalState>()(
           ),
         })),
 
-      activateAppealRule: () =>
-        set((s) =>
-          s.appealRuleActive
-            ? s
-            : { appealRuleActive: true, customRules: [...s.customRules, APPEAL_RULE] }
-        ),
+      activateAppealRule: (ownerStrategy) =>
+        set((s) => {
+          if (s.appealRuleActive) return s;
+          const rule = ownerStrategy
+            ? {
+                ...APPEAL_RULE,
+                taskActions: [{ ...APPEAL_RULE.taskActions[0], ownerStrategy }],
+              }
+            : APPEAL_RULE;
+          return { appealRuleActive: true, customRules: [...s.customRules, rule] };
+        }),
+
+      updateCustomRule: (externalId, patch) =>
+        set((s) => {
+          const existingIndex = s.customRules.findIndex((r) => r.externalId === externalId);
+          if (existingIndex !== -1) {
+            const next = [...s.customRules];
+            next[existingIndex] = { ...next[existingIndex], ...patch };
+            return { customRules: next };
+          }
+          const base = RULES.find((r) => r.externalId === externalId);
+          if (!base) return s;
+          return { customRules: [...s.customRules, { ...base, ...patch }] };
+        }),
 
       deactivateAppealRule: () =>
         set((s) => ({
