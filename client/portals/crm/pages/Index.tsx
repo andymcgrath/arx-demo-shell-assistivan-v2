@@ -451,6 +451,19 @@ const FAX_DOCUMENTS = [
   },
 ];
 
+// PA Form — shown on every flow except Fax_PAP_Audit (WF2), which already
+// has its own PAP Application doc above. Points at a separate public/
+// asset (pa-form.pdf) from the PAP Application's pap-application-form.pdf
+// so the two can be swapped independently later, even though today they're
+// seeded from the same source PDF.
+const PA_FORM_DOC = {
+  fileId: "FAX-2026-00433",
+  fileName: "PA_Form_KDixon.pdf",
+  dateReceived: daysFromToday(-2),
+  type: "Prior Authorization Form",
+  pages: 5,
+};
+
 interface PharmacyOption {
   name: string;
   address: string;
@@ -731,6 +744,13 @@ export default function Index() {
   const isPapFlow = flowType === "Fax_PAP_Audit";
   const isCoaFlow = flowType === "CoA_DTP";
   const isIAssistFlow = flowType === "iAssist_PA_Approved";
+  // Related Documents contents by flow: WF1/WF2 (isFaxFlow) get the fax
+  // intake docs (Enrollment Form, and PAP Application for WF2); WF1, WF3,
+  // and WF4 additionally/instead get the PA Form — every flow except WF2.
+  const relatedDocuments = [
+    ...(isFaxFlow ? FAX_DOCUMENTS : []),
+    ...(!isPapFlow ? [PA_FORM_DOC] : []),
+  ];
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).
@@ -743,6 +763,7 @@ export default function Index() {
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [papDocModalOpen, setPapDocModalOpen] = useState(false);
+  const [paFormModalOpen, setPaFormModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
   const [preferredPharmacy, setPreferredPharmacy] = useState<PharmacyOption | null>(null);
   const [payerPharmacy, setPayerPharmacy] = useState<PharmacyOption | null>(null);
@@ -2862,7 +2883,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-          ) : activeCaseTab === "documents" && isFaxFlow ? (
+          ) : activeCaseTab === "documents" && relatedDocuments.length > 0 ? (
             <div className="p-4">
               <div className="border border-[#dddbda] rounded overflow-hidden">
                 {/* Table header */}
@@ -2871,7 +2892,7 @@ export default function Index() {
                   style={{ background: "#f3f3f3" }}
                 >
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Related Documents</span>
-                  <span className="text-[12px] text-[#706e6b]">{FAX_DOCUMENTS.length} record{FAX_DOCUMENTS.length !== 1 ? "s" : ""}</span>
+                  <span className="text-[12px] text-[#706e6b]">{relatedDocuments.length} record{relatedDocuments.length !== 1 ? "s" : ""}</span>
                 </div>
                 <table className="w-full text-[13px]">
                   <thead>
@@ -2896,7 +2917,18 @@ export default function Index() {
                     </tr>
                   </thead>
                   <tbody>
-                    {FAX_DOCUMENTS.map((doc) => (
+                    {relatedDocuments.map((doc) => {
+                      const openDoc = () => {
+                        if (doc.fileId === "FAX-2026-00431") {
+                          openEnrollmentFormTab();
+                          setActivePatientSubTab("enrollment-form");
+                        } else if (doc.fileId === "FAX-2026-00432") {
+                          setPapDocModalOpen(true);
+                        } else {
+                          setPaFormModalOpen(true);
+                        }
+                      };
+                      return (
                       <tr key={doc.fileId} className="hover:bg-[#f3f3f3] transition-colors">
                         <td className="px-3 py-2.5 border-b border-[#dddbda]">
                           <div className="flex items-center gap-1.5">
@@ -2904,14 +2936,7 @@ export default function Index() {
                             <span
                               className="cursor-pointer hover:underline font-medium"
                               style={{ color: SF_BLUE }}
-                              onClick={() => {
-                                if (doc.fileId === "FAX-2026-00431") {
-                                  openEnrollmentFormTab();
-                                  setActivePatientSubTab("enrollment-form");
-                                } else {
-                                  setPapDocModalOpen(true);
-                                }
-                              }}
+                              onClick={openDoc}
                             >
                               {doc.fileId}
                             </span>
@@ -2921,14 +2946,7 @@ export default function Index() {
                           <span
                             className="cursor-pointer hover:underline"
                             style={{ color: SF_BLUE }}
-                            onClick={() => {
-                              if (doc.fileId === "FAX-2026-00431") {
-                                openEnrollmentFormTab();
-                                setActivePatientSubTab("enrollment-form");
-                              } else {
-                                setPapDocModalOpen(true);
-                              }
-                            }}
+                            onClick={openDoc}
                           >
                             {doc.fileName}
                           </span>
@@ -2943,7 +2961,8 @@ export default function Index() {
                           {doc.dateReceived}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -3124,6 +3143,43 @@ export default function Index() {
                   <div className="text-[13px] font-medium">PDF preview not available</div>
                   <div className="text-[11px]">
                     Place <code className="bg-[#f0f0f0] px-1 rounded">pap-application-form.pdf</code> in the <code className="bg-[#f0f0f0] px-1 rounded">public/</code> folder to enable preview
+                  </div>
+                </div>
+              </object>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* PA Form Document Modal — same title bar / download link /
+          embedded-PDF treatment as the PAP Application modal above.
+          Rendered at root level to escape overflow constraints. */}
+      {paFormModalOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setPaFormModalOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-white border border-[#dddbda] rounded shadow-xl flex flex-col" style={{ width: 700, height: "85vh" }}>
+              <div className="px-4 py-3 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
+                <span className="text-[13px] font-semibold text-[#3e3e3c]">PA_Form_KDixon.pdf</span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="/pa-form.pdf"
+                    download="PA_Form_KDixon.pdf"
+                    className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[#0176d3] hover:bg-[#f0f7ff] transition-colors"
+                  >
+                    Download
+                  </a>
+                  <button onClick={() => setPaFormModalOpen(false)} className="p-1 hover:bg-[#f3f3f3] rounded">
+                    <X size={16} className="text-[#706e6b]" />
+                  </button>
+                </div>
+              </div>
+              <object data="/pa-form.pdf" type="application/pdf" className="flex-1 w-full">
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-[#706e6b]" style={{ background: "#f9f9f9" }}>
+                  <FileText size={40} className="opacity-30" />
+                  <div className="text-[13px] font-medium">PDF preview not available</div>
+                  <div className="text-[11px]">
+                    Place <code className="bg-[#f0f0f0] px-1 rounded">pa-form.pdf</code> in the <code className="bg-[#f0f0f0] px-1 rounded">public/</code> folder to enable preview
                   </div>
                 </div>
               </object>

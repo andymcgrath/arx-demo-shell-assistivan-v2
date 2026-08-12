@@ -196,6 +196,7 @@ export default function FieldPortal() {
   // The Enrollment Application fax only exists for the two fax-intake
   // flows — same gate CRM's Related Documents tab uses (isFaxFlow there).
   const isFaxFlow = state.flow_type === "Fax_QS_PA_Approved" || state.flow_type === "Fax_PAP_Audit";
+  const isPapFlow = state.flow_type === "Fax_PAP_Audit";
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -206,6 +207,7 @@ export default function FieldPortal() {
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
   const [showPapDoc, setShowPapDoc] = useState(false);
+  const [showPaFormDoc, setShowPaFormDoc] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
@@ -1816,46 +1818,107 @@ export default function FieldPortal() {
               })()}
 
               {/* Related Docs — the seeded patients have no document
-                  records (nothing to show, same as before). The live
-                  patient's Enrollment Application fax and Boehringer PAP
-                  Application both exist once enrolled on a fax-intake flow,
-                  same gate as CRM's Related Documents tab (isFaxFlow) and
-                  the same files both portals point at, so dropping a real
-                  PDF into public/ lights up the preview in both places at
-                  once. */}
+                  records (nothing to show, same as before). For the live
+                  patient once enrolled: Enrollment Application fax + PAP
+                  Application on the two fax-intake flows (isFaxFlow, same
+                  gate CRM's Related Documents tab uses), and a PA Form on
+                  every flow except Fax_PAP_Audit (WF1, WF3, WF4) — mirrors
+                  CRM's relatedDocuments logic there. Same public/ files
+                  both portals point at, so dropping a real PDF in lights
+                  up the preview in both places at once. */}
               {patientTab === "RELATED DOCS" && (() => {
-                const hasEnrollmentDoc = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled" && isFaxFlow;
-                if (!hasEnrollmentDoc) {
+                const isEnrolledLive = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled";
+                const hasEnrollmentDoc = isEnrolledLive && isFaxFlow;
+                const hasPapDoc = hasEnrollmentDoc;
+                const hasPaFormDoc = isEnrolledLive && !isPapFlow;
+                if (!hasEnrollmentDoc && !hasPapDoc && !hasPaFormDoc) {
                   return <p className="text-sm text-slate-400 text-center py-10">No documents</p>;
                 }
+                const rows = [
+                  ...(hasEnrollmentDoc ? [[
+                    <button key="f" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary font-medium hover:underline">
+                      FAX-2026-00431
+                    </button>,
+                    <button key="n" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary hover:underline">
+                      Enrollment_Form_KDixon_051526.pdf
+                    </button>,
+                    "Enrollment Form",
+                    "3",
+                    daysFromToday(-4),
+                  ]] : []),
+                  ...(hasPapDoc ? [[
+                    <button key="f" onClick={() => setShowPapDoc(true)} className="text-arx-primary font-medium hover:underline">
+                      FAX-2026-00432
+                    </button>,
+                    <button key="n" onClick={() => setShowPapDoc(true)} className="text-arx-primary hover:underline">
+                      Boehringer_PAP_Application_Keanu_Dixon_v3.pdf
+                    </button>,
+                    "PAP Application",
+                    "5",
+                    daysFromToday(-1),
+                  ]] : []),
+                  ...(hasPaFormDoc ? [[
+                    <button key="f" onClick={() => setShowPaFormDoc(true)} className="text-arx-primary font-medium hover:underline">
+                      FAX-2026-00433
+                    </button>,
+                    <button key="n" onClick={() => setShowPaFormDoc(true)} className="text-arx-primary hover:underline">
+                      PA_Form_KDixon.pdf
+                    </button>,
+                    "Prior Authorization Form",
+                    "5",
+                    daysFromToday(-2),
+                  ]] : []),
+                ];
                 return (
                   <div>
                     <RelatedTable
                       title="Documents"
-                      count={2}
+                      count={rows.length}
                       columns={["File ID", "File Name", "Type", "Pages", "Date Received"]}
-                      rows={[[
-                        <button key="f" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary font-medium hover:underline">
-                          FAX-2026-00431
-                        </button>,
-                        <button key="n" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary hover:underline">
-                          Enrollment_Form_KDixon_051526.pdf
-                        </button>,
-                        "Enrollment Form",
-                        "3",
-                        daysFromToday(-4),
-                      ], [
-                        <button key="f" onClick={() => setShowPapDoc(true)} className="text-arx-primary font-medium hover:underline">
-                          FAX-2026-00432
-                        </button>,
-                        <button key="n" onClick={() => setShowPapDoc(true)} className="text-arx-primary hover:underline">
-                          Boehringer_PAP_Application_Keanu_Dixon_v3.pdf
-                        </button>,
-                        "PAP Application",
-                        "5",
-                        daysFromToday(-1),
-                      ]]}
+                      rows={rows}
                     />
+
+                    {showPaFormDoc && createPortal(
+                      <div
+                        className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                        onClick={() => setShowPaFormDoc(false)}
+                      >
+                        <div
+                          className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col"
+                          style={{ height: "80vh" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+                            <span className="text-sm font-semibold text-slate-700">PA_Form_KDixon.pdf</span>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href="/pa-form.pdf"
+                                download="PA_Form_KDixon.pdf"
+                                className="text-xs px-2 py-1 rounded border border-slate-300 text-arx-primary hover:bg-slate-100"
+                              >
+                                Download
+                              </a>
+                              <button
+                                onClick={() => setShowPaFormDoc(false)}
+                                aria-label="Close"
+                                className="rounded p-1 text-slate-500 hover:opacity-70"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          <object data="/pa-form.pdf" type="application/pdf" className="flex-1 w-full">
+                            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 bg-slate-50">
+                              <span className="text-sm font-medium">PDF preview not available</span>
+                              <span className="text-xs">
+                                Place <code className="bg-slate-200 px-1 rounded">pa-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
+                              </span>
+                            </div>
+                          </object>
+                        </div>
+                      </div>,
+                      document.body
+                    )}
 
                     {showPapDoc && createPortal(
                       <div
