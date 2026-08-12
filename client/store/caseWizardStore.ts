@@ -227,6 +227,10 @@ export interface PAData {
   treatmentStart: string;
   treatmentPlan: string;
   reasonForPrescribing: string;
+  // Set when the user manually picks a form via "Search for another form."
+  // Empty means fall back to whatever PAYER_FORM_MAP derives from the
+  // insurance selected in Step 3 — see NewCasePA.tsx.
+  formOverride: string;
 }
 
 export interface RxData {
@@ -339,6 +343,7 @@ function buildInitialState() {
     treatmentStart: "",
     treatmentPlan: "",
     reasonForPrescribing: "",
+    formOverride: "",
   };
 
   const rx: RxData = {

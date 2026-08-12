@@ -25,7 +25,17 @@ const SAMPLE_FORMS = [
   "CVS Caremark New York Pharmacy Benefit",
   "Express Scripts National Medical Benefit",
   "OptumRx Texas Pharmacy Benefit",
+  "BlueCross BlueShield Pharmacy Benefit",
 ];
+
+// Maps the payer selected in Step 3 (Insurance) to its matching PA form, so
+// this step's form isn't a static guess. Keyed by SelectedInsurance.payer —
+// see FOUND_INSURANCES/ON_FILE_INSURANCE in NewCaseInsurance.tsx for the
+// payer strings this needs to match.
+const PAYER_FORM_MAP: Record<string, string> = {
+  "CVS Caremark New York": "CVS Caremark New York Pharmacy Benefit",
+  "BlueCross BlueShield": "BlueCross BlueShield Pharmacy Benefit",
+};
 
 const DYNAMIC_QUESTIONS = [
   "Has the patient tried and failed a preferred alternative therapy for this condition?",
@@ -104,16 +114,26 @@ export default function NewCasePA() {
   const [mode, setMode] = useState<PAState>("found");
 
   const [formSearch, setFormSearch] = useState("");
-  const selectedForm = SAMPLE_FORMS[0];
 
   // Insurance selected back in Step 3 (Insurance) — prefills Payer details
   // below instead of leaving it as a disconnected free-text section.
   const selectedInsurance = useCaseWizardStore((s) => s.selectedInsurance);
+
+  // The PA form now tracks whichever insurance was picked in Step 3, instead
+  // of always showing SAMPLE_FORMS[0]. A manual pick via "Search for another
+  // form" (pa.formOverride) wins; otherwise it's derived from the payer via
+  // PAYER_FORM_MAP, falling back to a generic "<payer> Pharmacy Benefit"
+  // guess for payers without a mapped form (e.g. manually-entered insurance).
+  const derivedForm = selectedInsurance
+    ? PAYER_FORM_MAP[selectedInsurance.payer] ?? `${selectedInsurance.payer} Pharmacy Benefit`
+    : SAMPLE_FORMS[0];
   // Diagnosis selected back in Step 4 (Clinical) — prefills Diagnosis /
   // Treatment Start Date below the same way.
   const clinical = useCaseWizardStore((s) => s.clinical);
   const pa = useCaseWizardStore((s) => s.pa);
   const setPA = useCaseWizardStore((s) => s.setPA);
+
+  const selectedForm = pa.formOverride || derivedForm;
 
   const derivedContactName = selectedInsurance ? `${selectedInsurance.payer} Prior Authorization Department` : "";
   const derivedDiagnosis = clinical.selectedIcd.includes("—")
@@ -170,7 +190,15 @@ export default function NewCasePA() {
                   <div className="border border-[#D9D9D9] rounded-lg divide-y divide-[#F0F0F0] max-w-md mx-auto text-left">
                     {filteredForms.length === 0 && <p className="p-3 text-xs text-[#999]">No matches found</p>}
                     {filteredForms.map((f) => (
-                      <button key={f} type="button" onClick={() => setMode("found")} className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]">
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => {
+                          setPA({ formOverride: f });
+                          setMode("found");
+                        }}
+                        className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
+                      >
                         {f}
                       </button>
                     ))}
