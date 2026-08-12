@@ -20,12 +20,23 @@ import { Info, X } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/store/caseWizardStore";
+import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 
 const FORM_OPTIONS = ["Tablet", "Capsule", "Oral Solution", "Injection", "Infusion"];
 
 const LDD_PHARMACIES = ["Accredo", "Amber", "Centerwell", "CVS", "Maxor", "Optum", "Walgreens"];
 
-const SITE_OF_CARE_OPTIONS = ["Hospital Outpatient Department", "Four Oaks Clinic", "Patient Home", "Prescriber Office"];
+// Keanu's real site (from KEANU_SITE_OF_CARE_FACTS — the same source of truth
+// CRM's Office Dispense dropdown and Step 1's Site of Care summary read from,
+// see WorkflowEngine.ts) leads the list; the rest are mocked decoy clinics so
+// the dropdown doesn't look suspiciously short next to the other two modes.
+const SITE_OF_CARE_OPTIONS = [
+  KEANU_SITE_OF_CARE_FACTS.facilityName,
+  "Westgate Infusion Clinic",
+  "Orlando Health Infusion Center",
+  "AdventHealth Infusion Suite",
+  "Lake Eola Ambulatory Infusion",
+];
 
 // A 2-result "search" wasn't worth the UI — this is a straight preferred-
 // pharmacy dropdown instead, same pattern as the Limited Distribution list.
