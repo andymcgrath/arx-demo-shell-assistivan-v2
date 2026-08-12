@@ -206,7 +206,6 @@ export default function FieldPortal() {
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
-  const [showPapDoc, setShowPapDoc] = useState(false);
   const [showPaFormDoc, setShowPaFormDoc] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
@@ -1819,19 +1818,18 @@ export default function FieldPortal() {
 
               {/* Related Docs — the seeded patients have no document
                   records (nothing to show, same as before). For the live
-                  patient once enrolled: Enrollment Application fax + PAP
-                  Application on the two fax-intake flows (isFaxFlow, same
-                  gate CRM's Related Documents tab uses), and a PA Form on
-                  every flow except Fax_PAP_Audit (WF1, WF3, WF4) — mirrors
-                  CRM's relatedDocuments logic there. Same public/ files
-                  both portals point at, so dropping a real PDF in lights
-                  up the preview in both places at once. */}
+                  patient once enrolled: Enrollment Application fax on the
+                  two fax-intake flows (isFaxFlow, same gate CRM's Related
+                  Documents tab uses), and a PA Form on every flow except
+                  Fax_PAP_Audit (WF1, WF3, WF4) — mirrors CRM's
+                  relatedDocuments logic there. Same public/ files both
+                  portals point at, so dropping a real PDF in lights up
+                  the preview in both places at once. */}
               {patientTab === "RELATED DOCS" && (() => {
                 const isEnrolledLive = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled";
                 const hasEnrollmentDoc = isEnrolledLive && isFaxFlow;
-                const hasPapDoc = hasEnrollmentDoc;
                 const hasPaFormDoc = isEnrolledLive && !isPapFlow;
-                if (!hasEnrollmentDoc && !hasPapDoc && !hasPaFormDoc) {
+                if (!hasEnrollmentDoc && !hasPaFormDoc) {
                   return <p className="text-sm text-slate-400 text-center py-10">No documents</p>;
                 }
                 const rows = [
@@ -1845,17 +1843,6 @@ export default function FieldPortal() {
                     "Enrollment Form",
                     "3",
                     daysFromToday(-4),
-                  ]] : []),
-                  ...(hasPapDoc ? [[
-                    <button key="f" onClick={() => setShowPapDoc(true)} className="text-arx-primary font-medium hover:underline">
-                      FAX-2026-00432
-                    </button>,
-                    <button key="n" onClick={() => setShowPapDoc(true)} className="text-arx-primary hover:underline">
-                      Boehringer_PAP_Application_Keanu_Dixon_v3.pdf
-                    </button>,
-                    "PAP Application",
-                    "5",
-                    daysFromToday(-1),
                   ]] : []),
                   ...(hasPaFormDoc ? [[
                     <button key="f" onClick={() => setShowPaFormDoc(true)} className="text-arx-primary font-medium hover:underline">
@@ -1912,50 +1899,6 @@ export default function FieldPortal() {
                               <span className="text-sm font-medium">PDF preview not available</span>
                               <span className="text-xs">
                                 Place <code className="bg-slate-200 px-1 rounded">pa-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
-                              </span>
-                            </div>
-                          </object>
-                        </div>
-                      </div>,
-                      document.body
-                    )}
-
-                    {showPapDoc && createPortal(
-                      <div
-                        // Same document.body portal / portal-field class as
-                        // the Enrollment Form preview above.
-                        className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-                        onClick={() => setShowPapDoc(false)}
-                      >
-                        <div
-                          className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col"
-                          style={{ height: "80vh" }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-                            <span className="text-sm font-semibold text-slate-700">Boehringer_PAP_Application_Keanu_Dixon_v3.pdf</span>
-                            <div className="flex items-center gap-2">
-                              <a
-                                href="/pap-application-form.pdf"
-                                download="Boehringer_PAP_Application_Keanu_Dixon_v3.pdf"
-                                className="text-xs px-2 py-1 rounded border border-slate-300 text-arx-primary hover:bg-slate-100"
-                              >
-                                Download
-                              </a>
-                              <button
-                                onClick={() => setShowPapDoc(false)}
-                                aria-label="Close"
-                                className="rounded p-1 text-slate-500 hover:opacity-70"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </div>
-                          <object data="/pap-application-form.pdf" type="application/pdf" className="flex-1 w-full">
-                            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 bg-slate-50">
-                              <span className="text-sm font-medium">PDF preview not available</span>
-                              <span className="text-xs">
-                                Place <code className="bg-slate-200 px-1 rounded">pap-application-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
                               </span>
                             </div>
                           </object>
