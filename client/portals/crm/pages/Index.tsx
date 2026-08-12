@@ -1270,8 +1270,13 @@ export default function Index() {
         </div>
       )}
       {/* ── Row 1: Patient Tab Strip ─────────────────────────────────────────── */}
+      {/* sticky top-0: keeps the tab strip pinned in view as the single
+          scroll container (DemoShell.tsx's Panel, overflow-y-auto) scrolls —
+          see the removed per-branch overflow-y-auto/calc(100vh - 130px)
+          wrappers below, which used to create a second, independently
+          scrolling region and the double-scrollbar bug this replaces. */}
       <div
-        className="border-b border-[#dddbda] flex items-end px-2 overflow-x-auto gap-1 overflow-y-hidden"
+        className="sticky top-0 z-10 border-b border-[#dddbda] flex items-end px-2 overflow-x-auto gap-1 overflow-y-hidden"
         style={{ background: "#f3f2f2", minHeight: 42 }}
       >
         {/* Active patient tab — identity sourced live from usePatientStore */}
@@ -1704,7 +1709,7 @@ export default function Index() {
           </div>
         ) : isCoaFlow && activeStage.id === "PA-14274" && paStatus === "denied" ? (
           /* ── COA PA Denial Detail View (mirrors approval structure) ──────── */
-          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+          <div>
             {/* PA Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
               <div className="text-[11px] text-[#706e6b] mb-0.5">Prior Authorization Denial</div>
@@ -1728,7 +1733,7 @@ export default function Index() {
 
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information section */}
-              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
@@ -1844,7 +1849,7 @@ export default function Index() {
              (see workflows/iAssistPap.ts) — the info box below and the right
              rail react to it live; every other flow leaves appealStatus at
              'none' forever, so they always see the "recommended" copy. */
-          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+          <div>
             {/* PA Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
               <div className="text-[11px] text-[#706e6b] mb-0.5">Prior Authorization Denial</div>
@@ -1868,7 +1873,7 @@ export default function Index() {
 
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information section */}
-              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
@@ -1997,7 +2002,7 @@ export default function Index() {
           </div>
         ) : activeStage.id === "PA-14274" && paStatus === "approved" ? (
           /* ── PA Approval Detail View (post-approval) ──────────────────────── */
-          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+          <div>
             {/* PA Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
               <div className="text-[11px] text-[#706e6b] mb-0.5">Prior Authorization Approval</div>
@@ -2021,7 +2026,7 @@ export default function Index() {
 
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information section */}
-              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
@@ -2128,7 +2133,7 @@ export default function Index() {
              Appeals stage's own resolved outcome. Only reachable for
              iAssist_PAP (WF5); see appealStage's 'approved' branch and the
              auto-resolve effect above (activeTopTab === 'A-14275'). */
-          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+          <div>
             {/* Appeal Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
               <div className="text-[11px] text-[#706e6b] mb-0.5">Appeal Approval</div>
@@ -2152,7 +2157,7 @@ export default function Index() {
 
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information section */}
-              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
@@ -2248,7 +2253,7 @@ export default function Index() {
           </div>
         ) : activeStage.id === "BI-14273" && biStatus === "complete" ? (
           /* ── BIR Detail View (post-BI completion) ──────────────────────── */
-          <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+          <div>
             {/* BIR Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
               <div className="text-[11px] text-[#706e6b] mb-0.5">Benefit Investigation Result</div>
@@ -2288,7 +2293,7 @@ export default function Index() {
 
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information + tables */}
-              <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-w-0 p-4 space-y-4">
 
                 {/* Information section */}
                 <div className="border border-[#dddbda] rounded">
@@ -2945,7 +2950,7 @@ export default function Index() {
         )
       ) : openBipcTabs.includes(activeTopTab) ? (
         /* ── BIPC Detail View ──────────────────────────────────────────────── */
-        <div className="overflow-y-auto" style={{ height: "calc(100vh - 130px)" }}>
+        <div>
           {/* BIPC Record Header */}
           <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
             <div className="text-[11px] text-[#706e6b] mb-0.5">Product Coverage</div>
@@ -2968,7 +2973,7 @@ export default function Index() {
 
           <div className="flex gap-0 overflow-hidden">
             {/* Left: Information */}
-            <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 min-w-0 p-4 space-y-4">
               {/* Information section */}
               <div className="border border-[#dddbda] rounded">
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
