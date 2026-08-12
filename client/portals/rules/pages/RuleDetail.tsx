@@ -10,10 +10,10 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import RulesAppShell from "../components/RulesAppShell";
 import { useToast } from "../components/Toast";
-import { RULES } from "../data/rulesData";
+import { RULES, type RuleCondition } from "../data/rulesData";
 import { usePatientStore } from "@/store/patientStore";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
-import { SfButton, SfLink, Pill, SectionHeader } from "../components/SfPrimitives";
+import { SfButton, SfPrimaryButton, SfLink, SfSelect, Pill, SectionHeader } from "../components/SfPrimitives";
 
 const ACTION_SUBTABS = [
   { id: "create-task", label: "Create Task" },
@@ -22,19 +22,81 @@ const ACTION_SUBTABS = [
   { id: "create-record", label: "Create Record" },
 ] as const;
 
+// Same option sets NewRule.tsx offers when a presenter builds a rule live —
+// "Edit Task Action" below reuses them so editing exposes the identical
+// fields. Every getter unions the base list with the row's CURRENT value so
+// opening edit mode on a rule seeded outside NewRule.tsx's vocabulary (e.g.
+// a static rulesData.ts catalog entry with a Profile-object condition, or
+// APPEAL_RULE's default "Source Owner" task owner) never loses data just
+// because that value isn't one of the demo's preset choices.
+const CATEGORY_OPTIONS = ["Prior Authorization", "Enrollment"];
+const RECORD_TYPE_OPTIONS = ["Prior Authorization", "Enrollment Assistance"];
+const FIELD_OPTIONS = ["Status", "PA Result", "Service Type Name"];
+const OPERATOR_OPTIONS = ["Equals", "Not Equals"];
+const VALUE_OPTIONS = ["Complete", "Denied", "Onboarding", "Pending", "Approved"];
+const TASK_OWNER_OPTIONS = ["Select task owner", "Case Owner", "Queue"];
+
+function withCurrent(options: string[], current: string): string[] {
+  return options.includes(current) ? options : [...options, current];
+}
+
 export default function RuleDetail({ externalId }: { externalId: string }) {
   const navigate = useNavigate();
   const showToast = useToast();
   const drugName = usePatientStore((s) => s.drugName);
   // Rules created live in this portal (e.g. the Appeal-on-Denial rule) live
   // in rulesPortalStore's customRules, not the static RULES catalog — merge
-  // both so this page renders instead of 404ing once one exists.
+  // both so this page renders instead of 404ing once one exists. customRules
+  // is checked FIRST: updateCustomRule() (the "Edit Task Action" flow below)
+  // saves edits to a static catalog rule as a patched copy in customRules
+  // under the same externalId, so that copy has to win the lookup or a save
+  // would appear to silently do nothing.
   const customRules = useRulesPortalStore((s) => s.customRules);
-  const rule = [...RULES, ...customRules].find((r) => r.externalId === externalId);
+  const updateCustomRule = useRulesPortalStore((s) => s.updateCustomRule);
+  const rule = customRules.find((r) => r.externalId === externalId) ?? RULES.find((r) => r.externalId === externalId);
 
   const [activeSubTab, setActiveSubTab] = useState<(typeof ACTION_SUBTABS)[number]["id"]>("create-task");
   const [moreOpen, setMoreOpen] = useState(false);
   const [simCollapsed, setSimCollapsed] = useState(true);
+
+  // "Edit Task Action" mode — mirrors NewRule.tsx's own local component
+  // state pattern (edits live here until Save, nothing is written to the
+  // store mid-edit). Seeded from `rule` only when editing starts (see
+  // startEditing below), not at mount, since `rule` can be undefined on
+  // first render before the not-found guard runs.
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCategory, setEditCategory] = useState("");
+  const [editRecordType, setEditRecordType] = useState("");
+  const [editConditions, setEditConditions] = useState<RuleCondition[]>([]);
+  const [editTaskOwner, setEditTaskOwner] = useState("");
+
+  const startEditing = () => {
+    if (!rule) return;
+    setEditCategory(rule.category);
+    setEditRecordType(rule.recordType);
+    setEditConditions(rule.conditions);
+    setEditTaskOwner(rule.taskActions[0]?.ownerStrategy ?? TASK_OWNER_OPTIONS[0]);
+    setIsEditing(true);
+  };
+
+  const updateEditCondition = (index: number, patch: Partial<RuleCondition>) => {
+    setEditConditions((rows) => rows.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+  };
+
+  const cancelEditing = () => setIsEditing(false);
+
+  const saveEditing = () => {
+    if (!rule) return;
+    updateCustomRule(rule.externalId, {
+      category: editCategory,
+      recordType: editRecordType,
+      conditions: editConditions,
+      conditionChips: editConditions.map((c) => `${c.fieldApiName} ${c.operator === "Equals" ? "=" : "≠"} ${c.comparisonValue}`),
+      taskActions: rule.taskActions.map((a, i) => (i === 0 ? { ...a, ownerStrategy: editTaskOwner } : a)),
+    });
+    setIsEditing(false);
+    showToast("Rule updated");
+  };
 
   if (!rule) {
     return (
@@ -55,32 +117,68 @@ export default function RuleDetail({ externalId }: { externalId: string }) {
             <div className="text-[20px] font-bold text-[#3e3e3c]">{rule.ruleName}</div>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            {["Create Task Action", "Create Comment Action", "Update Record Action", "Create Record Action", "Publish Event"].map((label) => (
-              <SfButton key={label} onClick={() => showToast(`${label} isn't available in this demo`)}>
-                {label}
-              </SfButton>
-            ))}
+            {isEditing ? (
+              <>
+                <SfButton onClick={cancelEditing}>Cancel</SfButton>
+                <SfPrimaryButton onClick={saveEditing}>Save Changes</SfPrimaryButton>
+              </>
+            ) : (
+              <>
+                <SfButton onClick={() => showToast("Create Task Action isn't available in this demo")}>Create Task Action</SfButton>
+                <SfButton onClick={startEditing}>Edit Task Action</SfButton>
+                {["Create Comment Action", "Update Record Action", "Create Record Action", "Publish Event"].map((label) => (
+                  <SfButton key={label} onClick={() => showToast(`${label} isn't available in this demo`)}>
+                    {label}
+                  </SfButton>
+                ))}
+              </>
+            )}
           </div>
         </div>
 
         <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left info column */}
           <div className="lg:col-span-1 border border-[#dddbda] rounded overflow-hidden h-fit">
-            {[
-              ["Rule Name", rule.ruleName],
-              ["Category", rule.category],
-              ["Issue", rule.issue],
-              ["Source Object", rule.sourceObject],
-              ["Record Type", rule.recordType],
-              ["External ID", rule.externalId],
-              ["Active Actions", String(rule.taskActions.filter((a) => a.active).length)],
-              ["Inactive Actions", String(rule.taskActions.filter((a) => !a.active).length)],
-            ].map(([label, value]) => (
-              <div key={label} className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
-                <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">{label}</span>
-                <span className="text-[13px] text-[#3e3e3c]">{value}</span>
-              </div>
-            ))}
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Rule Name</span>
+              <span className="text-[13px] text-[#3e3e3c]">{rule.ruleName}</span>
+            </div>
+            <div className="flex flex-col gap-1.5 px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Category</span>
+              {isEditing ? (
+                <SfSelect value={editCategory} onChange={setEditCategory} options={withCurrent(CATEGORY_OPTIONS, rule.category)} />
+              ) : (
+                <span className="text-[13px] text-[#3e3e3c]">{rule.category}</span>
+              )}
+            </div>
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Issue</span>
+              <span className="text-[13px] text-[#3e3e3c]">{rule.issue}</span>
+            </div>
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Source Object</span>
+              <span className="text-[13px] text-[#3e3e3c]">{rule.sourceObject}</span>
+            </div>
+            <div className="flex flex-col gap-1.5 px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Record Type</span>
+              {isEditing ? (
+                <SfSelect value={editRecordType} onChange={setEditRecordType} options={withCurrent(RECORD_TYPE_OPTIONS, rule.recordType)} />
+              ) : (
+                <span className="text-[13px] text-[#3e3e3c]">{rule.recordType}</span>
+              )}
+            </div>
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">External ID</span>
+              <span className="text-[13px] text-[#3e3e3c]">{rule.externalId}</span>
+            </div>
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Active Actions</span>
+              <span className="text-[13px] text-[#3e3e3c]">{String(rule.taskActions.filter((a) => a.active).length)}</span>
+            </div>
+            <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
+              <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Inactive Actions</span>
+              <span className="text-[13px] text-[#3e3e3c]">{String(rule.taskActions.filter((a) => !a.active).length)}</span>
+            </div>
             <div className="flex flex-col px-3 py-2 border-b border-[#dddbda]">
               <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Description</span>
               <span className="text-[13px] text-[#3e3e3c]">{rule.description}</span>
@@ -93,15 +191,28 @@ export default function RuleDetail({ externalId }: { externalId: string }) {
 
           {/* Right column: conditions + actions */}
           <div className="lg:col-span-2 min-w-0">
-            {rule.conditionChips && (
+            {isEditing ? (
               <div className="mb-4">
                 <div className="flex flex-wrap gap-1.5 mb-1">
-                  {rule.conditionChips.map((c) => (
-                    <Pill key={c}>{c}</Pill>
+                  {editConditions.map((c, i) => (
+                    <Pill key={i}>
+                      {c.fieldApiName} {c.operator === "Equals" ? "=" : "≠"} {c.comparisonValue}
+                    </Pill>
                   ))}
                 </div>
-                <div className="text-[11px] text-[#706e6b]">✨ Generated from current config</div>
+                <div className="text-[11px] text-[#706e6b]">✨ Generated from conditions below</div>
               </div>
+            ) : (
+              rule.conditionChips && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-1.5 mb-1">
+                    {rule.conditionChips.map((c) => (
+                      <Pill key={c}>{c}</Pill>
+                    ))}
+                  </div>
+                  <div className="text-[11px] text-[#706e6b]">✨ Generated from current config</div>
+                </div>
+              )
             )}
 
             <div className="border border-[#dddbda] rounded overflow-hidden mb-5 overflow-x-auto">
@@ -119,14 +230,42 @@ export default function RuleDetail({ externalId }: { externalId: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {rule.conditions.map((c, i) => (
+                  {(isEditing ? editConditions : rule.conditions).map((c, i) => (
                     <tr key={c.conditionNumber} className="border-b border-[#dddbda] last:border-b-0">
                       <td className="px-2.5 py-2 text-[#3e3e3c]">{i + 1}</td>
                       <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.conditionNumber}</td>
                       <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.fieldObject}</td>
-                      <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.fieldApiName}</td>
-                      <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.operator}</td>
-                      <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.comparisonValue}</td>
+                      {isEditing ? (
+                        <>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            <SfSelect
+                              value={c.fieldApiName}
+                              onChange={(v) => updateEditCondition(i, { fieldApiName: v })}
+                              options={withCurrent(FIELD_OPTIONS, c.fieldApiName)}
+                            />
+                          </td>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            <SfSelect
+                              value={c.operator}
+                              onChange={(v) => updateEditCondition(i, { operator: v })}
+                              options={withCurrent(OPERATOR_OPTIONS, c.operator)}
+                            />
+                          </td>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            <SfSelect
+                              value={c.comparisonValue}
+                              onChange={(v) => updateEditCondition(i, { comparisonValue: v })}
+                              options={withCurrent(VALUE_OPTIONS, c.comparisonValue)}
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.fieldApiName}</td>
+                          <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.operator}</td>
+                          <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.comparisonValue}</td>
+                        </>
+                      )}
                       <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{c.valueType}</td>
                     </tr>
                   ))}
@@ -184,16 +323,24 @@ export default function RuleDetail({ externalId }: { externalId: string }) {
                             <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Action Name</th>
                             <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Subject Template</th>
                             <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Description Template</th>
+                            <th className="text-left px-2.5 py-2 text-[11px] text-[#706e6b] font-medium">Task Owner</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {rule.taskActions.map((a) => (
+                          {rule.taskActions.map((a, i) => (
                             <tr key={a.actionName} className="border-b border-[#dddbda] last:border-b-0">
                               <td className="px-2.5 py-2 whitespace-nowrap">
                                 <SfLink onClick={() => navigate(`/action/${rule.externalId}`)}>{a.actionName}</SfLink>
                               </td>
                               <td className="px-2.5 py-2 text-[#3e3e3c] whitespace-nowrap">{a.taskSubjectTemplate}</td>
                               <td className="px-2.5 py-2 text-[#3e3e3c]">{a.taskDescriptionTemplate}</td>
+                              <td className="px-2.5 py-2 whitespace-nowrap">
+                                {isEditing && i === 0 ? (
+                                  <SfSelect value={editTaskOwner} onChange={setEditTaskOwner} options={withCurrent(TASK_OWNER_OPTIONS, editTaskOwner)} />
+                                ) : (
+                                  <span className="text-[#3e3e3c]">{a.ownerStrategy}</span>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>

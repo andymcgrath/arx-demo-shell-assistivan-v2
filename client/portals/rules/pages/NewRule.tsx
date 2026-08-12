@@ -61,7 +61,7 @@ export default function NewRule() {
   };
 
   const handleSave = () => {
-    activateAppealRule();
+    activateAppealRule(taskOwner);
     showToast("Rule created and activated — Action Factory will initiate appeals on PA denial automatically");
     navigate("/rule/WEG-PA-01");
   };
