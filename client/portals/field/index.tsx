@@ -205,6 +205,7 @@ export default function FieldPortal() {
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
+  const [showPapDoc, setShowPapDoc] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
@@ -1816,11 +1817,12 @@ export default function FieldPortal() {
 
               {/* Related Docs — the seeded patients have no document
                   records (nothing to show, same as before). The live
-                  patient's Enrollment Application fax exists once enrolled
-                  on a fax-intake flow, same gate as CRM's Related
-                  Documents tab (isFaxFlow) and the same file both portals
-                  point at, so dropping a real PDF into public/ lights up
-                  the preview in both places at once. */}
+                  patient's Enrollment Application fax and Boehringer PAP
+                  Application both exist once enrolled on a fax-intake flow,
+                  same gate as CRM's Related Documents tab (isFaxFlow) and
+                  the same files both portals point at, so dropping a real
+                  PDF into public/ lights up the preview in both places at
+                  once. */}
               {patientTab === "RELATED DOCS" && (() => {
                 const hasEnrollmentDoc = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled" && isFaxFlow;
                 if (!hasEnrollmentDoc) {
@@ -1830,7 +1832,7 @@ export default function FieldPortal() {
                   <div>
                     <RelatedTable
                       title="Documents"
-                      count={1}
+                      count={2}
                       columns={["File ID", "File Name", "Type", "Pages", "Date Received"]}
                       rows={[[
                         <button key="f" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary font-medium hover:underline">
@@ -1842,8 +1844,62 @@ export default function FieldPortal() {
                         "Enrollment Form",
                         "3",
                         daysFromToday(-4),
+                      ], [
+                        <button key="f" onClick={() => setShowPapDoc(true)} className="text-arx-primary font-medium hover:underline">
+                          FAX-2026-00432
+                        </button>,
+                        <button key="n" onClick={() => setShowPapDoc(true)} className="text-arx-primary hover:underline">
+                          Boehringer_PAP_Application_Keanu_Dixon_v3.pdf
+                        </button>,
+                        "PAP Application",
+                        "5",
+                        daysFromToday(-1),
                       ]]}
                     />
+
+                    {showPapDoc && createPortal(
+                      <div
+                        // Same document.body portal / portal-field class as
+                        // the Enrollment Form preview above.
+                        className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                        onClick={() => setShowPapDoc(false)}
+                      >
+                        <div
+                          className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col"
+                          style={{ height: "80vh" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+                            <span className="text-sm font-semibold text-slate-700">Boehringer_PAP_Application_Keanu_Dixon_v3.pdf</span>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href="/pap-application-form.pdf"
+                                download="Boehringer_PAP_Application_Keanu_Dixon_v3.pdf"
+                                className="text-xs px-2 py-1 rounded border border-slate-300 text-arx-primary hover:bg-slate-100"
+                              >
+                                Download
+                              </a>
+                              <button
+                                onClick={() => setShowPapDoc(false)}
+                                aria-label="Close"
+                                className="rounded p-1 text-slate-500 hover:opacity-70"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          <object data="/pap-application-form.pdf" type="application/pdf" className="flex-1 w-full">
+                            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 bg-slate-50">
+                              <span className="text-sm font-medium">PDF preview not available</span>
+                              <span className="text-xs">
+                                Place <code className="bg-slate-200 px-1 rounded">pap-application-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
+                              </span>
+                            </div>
+                          </object>
+                        </div>
+                      </div>,
+                      document.body
+                    )}
 
                     {showEnrollmentDoc && createPortal(
                       <div

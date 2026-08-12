@@ -442,6 +442,13 @@ const FAX_DOCUMENTS = [
     type: "Enrollment Form",
     pages: 3,
   },
+  {
+    fileId: "FAX-2026-00432",
+    fileName: "Boehringer_PAP_Application_Keanu_Dixon_v3.pdf",
+    dateReceived: daysFromToday(-1),
+    type: "PAP Application",
+    pages: 5,
+  },
 ];
 
 interface PharmacyOption {
@@ -735,6 +742,7 @@ export default function Index() {
     (isCoaFlow || dispatchStatus === "selected");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
+  const [papDocModalOpen, setPapDocModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
   const [preferredPharmacy, setPreferredPharmacy] = useState<PharmacyOption | null>(null);
   const [payerPharmacy, setPayerPharmacy] = useState<PharmacyOption | null>(null);
@@ -2896,7 +2904,14 @@ export default function Index() {
                             <span
                               className="cursor-pointer hover:underline font-medium"
                               style={{ color: SF_BLUE }}
-                              onClick={() => { openEnrollmentFormTab(); setActivePatientSubTab("enrollment-form"); }}
+                              onClick={() => {
+                                if (doc.fileId === "FAX-2026-00431") {
+                                  openEnrollmentFormTab();
+                                  setActivePatientSubTab("enrollment-form");
+                                } else {
+                                  setPapDocModalOpen(true);
+                                }
+                              }}
                             >
                               {doc.fileId}
                             </span>
@@ -2906,7 +2921,14 @@ export default function Index() {
                           <span
                             className="cursor-pointer hover:underline"
                             style={{ color: SF_BLUE }}
-                            onClick={() => { openEnrollmentFormTab(); setActivePatientSubTab("enrollment-form"); }}
+                            onClick={() => {
+                              if (doc.fileId === "FAX-2026-00431") {
+                                openEnrollmentFormTab();
+                                setActivePatientSubTab("enrollment-form");
+                              } else {
+                                setPapDocModalOpen(true);
+                              }
+                            }}
                           >
                             {doc.fileName}
                           </span>
@@ -3067,6 +3089,44 @@ export default function Index() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* PAP Application Document Modal — same title bar / download link /
+          embedded-PDF treatment as the Enrollment Form's "Original Fax"
+          panel, just in a modal since there's no OCR extraction to pair it
+          with. Rendered at root level to escape overflow constraints. */}
+      {papDocModalOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setPapDocModalOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-white border border-[#dddbda] rounded shadow-xl flex flex-col" style={{ width: 700, height: "85vh" }}>
+              <div className="px-4 py-3 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
+                <span className="text-[13px] font-semibold text-[#3e3e3c]">Boehringer_PAP_Application_Keanu_Dixon_v3.pdf</span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="/pap-application-form.pdf"
+                    download="Boehringer_PAP_Application_Keanu_Dixon_v3.pdf"
+                    className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[#0176d3] hover:bg-[#f0f7ff] transition-colors"
+                  >
+                    Download
+                  </a>
+                  <button onClick={() => setPapDocModalOpen(false)} className="p-1 hover:bg-[#f3f3f3] rounded">
+                    <X size={16} className="text-[#706e6b]" />
+                  </button>
+                </div>
+              </div>
+              <object data="/pap-application-form.pdf" type="application/pdf" className="flex-1 w-full">
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-[#706e6b]" style={{ background: "#f9f9f9" }}>
+                  <FileText size={40} className="opacity-30" />
+                  <div className="text-[13px] font-medium">PDF preview not available</div>
+                  <div className="text-[11px]">
+                    Place <code className="bg-[#f0f0f0] px-1 rounded">pap-application-form.pdf</code> in the <code className="bg-[#f0f0f0] px-1 rounded">public/</code> folder to enable preview
+                  </div>
+                </div>
+              </object>
             </div>
           </div>
         </>
