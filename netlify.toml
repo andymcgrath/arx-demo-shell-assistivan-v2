@@ -1,0 +1,76 @@
+# Netlify config for the Branding admin feature.
+#
+# This intentionally does NOT declare [build] command/publish — those stay
+# whatever is already configured in the Netlify site dashboard. The only
+# build-related setting here is `functions`, which just tells Netlify where
+# to find the serverless functions added for branding storage.
+[build]
+  functions = "netlify/functions"
+
+# Lets `netlify dev` proxy the existing Vite dev server (port 8080) while
+# also spinning up Functions + a sandboxed local Blobs store. Run
+# `pnpm run dev:netlify` (not `pnpm run dev`) when working on anything under
+# /admin — that's the only local command that has working /api/* routes,
+# because Functions only exist inside Netlify's dev proxy, not in bare Vite.
+[dev]
+  command = "vite --port 8080"
+  targetPort = 8080
+
+# Route the branding admin API + public brand endpoint to functions.
+[[redirects]]
+  from = "/api/brand/active"
+  to = "/.netlify/functions/brand-active"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/branding"
+  to = "/.netlify/functions/admin-branding"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/brands/:slug"
+  to = "/.netlify/functions/admin-brand-detail?slug=:slug"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/brands"
+  to = "/.netlify/functions/admin-brands"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/assets/:filename"
+  to = "/.netlify/functions/admin-assets?filename=:filename"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/assets"
+  to = "/.netlify/functions/admin-assets"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/upload"
+  to = "/.netlify/functions/admin-upload"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/promote"
+  to = "/.netlify/functions/admin-promote"
+  status = 200
+
+# Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk, so
+# requests for them get served through a function instead of as static
+# files. `force = true` so this wins even if something under public/uploads
+# still exists on disk from before this change.
+[[redirects]]
+  from = "/uploads/*"
+  to = "/.netlify/functions/serve-upload?file=:splat"
+  status = 200
+  force = true
+
+# Receives promoted brand data from another environment (e.g. your local
+# dev, promoting to prod). Guarded by the PROMOTE_SECRET env var inside the
+# function itself, not by anything here.
+[[redirects]]
+  from = "/api/admin/promote-receive"
+  to = "/.netlify/functions/admin-promote-receive"
+  status = 200

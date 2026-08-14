@@ -9,11 +9,15 @@
  *   PROGRAM      — displayed throughout the workflow pages
  *                  (drug name, drug logo, description, brand colors)
  *
- * The values below are sourced from ./active-brand.json, which is the file
- * the /admin screen reads from and writes to. Editing that JSON directly
- * (or via /admin) rebrands the whole patient portal — no code changes,
- * no restart. Saved brands live in ./brands/*.json and can be reloaded
- * from the admin screen's "Load brand" dropdown.
+ * The values below come from getCachedActiveBrand(), which holds whatever
+ * /api/brand/active returned at app boot (see client/bootstrap.tsx and
+ * client/lib/activeBrandCache.ts) — backed by Netlify Blobs, not this
+ * file's own bundled ./active-brand.json. That JSON file is only the
+ * offline/fallback default now: saving or promoting a brand takes effect
+ * immediately without a rebuild, because it's fetched at runtime rather
+ * than baked into the JS bundle at build time. Saved brands live in the
+ * Blobs store and can be reloaded from the /admin screen's "Load brand"
+ * dropdown.
  *
  * PROGRAM.colors also drives the --arx-primary* CSS variables used across
  * the design system — see applyBrandCssVars() below.
@@ -22,8 +26,10 @@
  *   colors — transparent background, brand-colored (use on white/light bg)
  *   white  — transparent background, all white    (use on teal/dark bg)
  */
-import activeBrand from "./active-brand.json";
+import { getCachedActiveBrand } from "@/lib/activeBrandCache";
 import { applyBrandCssVars } from "@/lib/applyBrandCssVars";
+
+const activeBrand = getCachedActiveBrand();
 
 export const MANUFACTURER = {
   ...activeBrand.manufacturer,

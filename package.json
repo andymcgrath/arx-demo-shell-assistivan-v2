@@ -9,6 +9,7 @@
   "main": "public/electron.js",
   "scripts": {
     "dev": "vite --port 8080",
+    "dev:netlify": "netlify dev",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
     "build:react": "pnpm run build:client && pnpm run build:server",
@@ -16,6 +17,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
+    "typecheck:functions": "tsc -p netlify/functions/tsconfig.json",
     "electron:dev": "concurrently \"pnpm run dev\" \"wait-on http://localhost:8080 && electron .\"",
     "electron:build": "pnpm run build:client && electron-builder"
   },
@@ -39,6 +41,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+    "@netlify/blobs": "^8.2.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -92,6 +95,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@netlify/functions": "^3.0.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^24.2.1",
     "@types/react": "^18.3.23",
@@ -101,6 +105,7 @@
     "concurrently": "^9.2.1",
     "electron": "^42.1.0",
     "electron-builder": "^26.8.1",
+    "netlify-cli": "^18.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",

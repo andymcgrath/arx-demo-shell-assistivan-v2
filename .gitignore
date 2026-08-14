@@ -10,6 +10,9 @@ dist-ssr/
 .env.local
 .env.*.local
 
+# Netlify CLI local state (site link, cached dev config)
+.netlify/
+
 # Logs
 *.log
 npm-debug.log*
