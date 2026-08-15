@@ -11,9 +11,15 @@ import EducationVideoSection, { EducationVideoData } from "./admin/EducationVide
 
 type Tab = "manufacturer" | "program";
 type SaveState = "idle" | "saving" | "success" | "error";
+type PromoteState = "idle" | "promoting" | "success" | "error";
 interface BrandListItem {
   slug: string;
   presetName: string;
+}
+
+interface PromoteTargetItem {
+  name: string;
+  url: string;
 }
 
 interface BrandingData {
@@ -88,17 +94,32 @@ export default function Admin() {
   const [brands, setBrands] = useState<BrandListItem[]>([]);
   const [selectedSlug, setSelectedSlug] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [promoteState, setPromoteState] = useState<PromoteState>("idle");
+  const [promoteError, setPromoteError] = useState("");
+  const [promoteTargets, setPromoteTargets] = useState<PromoteTargetItem[]>([]);
+  const [selectedTarget, setSelectedTarget] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
       try {
-        const [brandingData, brandList] = await Promise.all([
+        const [brandingData, brandListRaw] = await Promise.all([
           fetch("/api/admin/branding").then(r => r.json()),
           fetch("/api/admin/brands").then(r => r.json()),
         ]);
         if (cancelled) return;
+
+        // A failed request (500, wrong route, etc.) resolves to an error
+        // object like { error: "..." } rather than an array — guard so
+        // that doesn't crash the whole page, and surface it in the
+        // console since the UI has no other way to show a list-load
+        // failure right now.
+        const brandList: BrandListItem[] = Array.isArray(brandListRaw) ? brandListRaw : [];
+        if (!Array.isArray(brandListRaw)) {
+          console.error("[Admin] /api/admin/brands did not return an array:", brandListRaw);
+        }
+
         const normalized = normalize(brandingData);
         setData(normalized);
         setBrands(brandList);
@@ -132,10 +153,39 @@ export default function Admin() {
     return () => { cancelled = true; };
   }, []);
 
+  // Separate from the main init() load — a failure here shouldn't block
+  // the rest of the admin screen from working, promoting is optional.
+  useEffect(() => {
+    fetch("/api/admin/promote-targets")
+      .then(r => r.json())
+      .then((list: PromoteTargetItem[]) => {
+        if (!Array.isArray(list)) return;
+        setPromoteTargets(list);
+        // Remember the last-picked target per browser so switching back
+        // to this screen doesn't reset your choice; otherwise default to
+        // the only option when there's just one.
+        const remembered = window.localStorage.getItem("promoteTarget");
+        if (remembered && list.some(t => t.name === remembered)) {
+          setSelectedTarget(remembered);
+        } else if (list.length === 1) {
+          setSelectedTarget(list[0].name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleSelectTarget(name: string) {
+    setSelectedTarget(name);
+    window.localStorage.setItem("promoteTarget", name);
+  }
+
   function refreshBrandList() {
     fetch("/api/admin/brands")
       .then(r => r.json())
-      .then(setBrands)
+      .then(list => {
+        if (Array.isArray(list)) setBrands(list);
+        else console.error("[Admin] /api/admin/brands did not return an array:", list);
+      })
       .catch(() => {});
   }
 
@@ -218,6 +268,79 @@ export default function Admin() {
     }
   }
 
+  /** Uploaded files live in Blobs now, addressed by /uploads/<filename> —
+   * promoting a brand has to carry those bytes along too, or the brand
+   * JSON would land on prod pointing at images prod has never seen. Only
+   * /uploads/* references need this; external URLs (CDN-hosted logos,
+   * like the bundled Assistivan default) are already reachable from
+   * anywhere and don't need copying. */
+  async function collectUploadAssets(d: BrandingData) {
+    const urls = new Set<string>();
+    const maybeAdd = (u?: string) => {
+      if (u && u.startsWith("/uploads/")) urls.add(u);
+    };
+    maybeAdd(d.manufacturer.logo.colors);
+    maybeAdd(d.manufacturer.logo.white);
+    maybeAdd(d.program.logo.colors);
+    maybeAdd(d.program.logo.white);
+    maybeAdd(d.chatbotIcon);
+    maybeAdd(d.favicon);
+
+    return Promise.all(
+      Array.from(urls).map(async url => {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const dataUrl: string = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+        return { filename: url.replace("/uploads/", ""), dataUrl, contentType: blob.type };
+      }),
+    );
+  }
+
+  /** Pushes the currently-saved brand to whichever site is selected (or
+   * the only configured one). Doesn't touch this environment's data at
+   * all — it's a one-way copy, dev/local stays exactly as it was.
+   * Requires PROMOTE_TARGETS to be set here (see /api/admin/promote); if
+   * it's missing, the button just reports that clearly instead of
+   * pretending to succeed. */
+  async function handlePromote() {
+    if (promoteTargets.length > 1 && !selectedTarget) {
+      setPromoteError("Choose a destination before promoting.");
+      setPromoteState("error");
+      return;
+    }
+    setPromoteState("promoting");
+    setPromoteError("");
+    try {
+      const assets = await collectUploadAssets(data);
+      const res = await fetch("/api/admin/promote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: data,
+          presetName: presetName || undefined,
+          assets,
+          target: selectedTarget || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setPromoteState("success");
+        setTimeout(() => setPromoteState("idle"), 3000);
+      } else {
+        setPromoteError(result.error ?? "Failed to promote");
+        setPromoteState("error");
+      }
+    } catch {
+      setPromoteError("Failed to promote");
+      setPromoteState("error");
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[--arx-background] flex items-center justify-center">
@@ -262,6 +385,20 @@ export default function Admin() {
             {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
             {showPreview ? "Hide Preview" : "Show Preview"}
           </button>
+          {promoteTargets.length > 1 && (
+            <select
+              value={selectedTarget}
+              onChange={e => handleSelectTarget(e.target.value)}
+              title="Where Promote to Prod sends this brand"
+              className="text-sm border border-[--arx-borders] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+            >
+              <option value="">Choose destination…</option>
+              {promoteTargets.map(t => (
+                <option key={t.name} value={t.name}>{t.name}</option>
+              ))}
+            </select>
+          )}
+          <PromoteButton state={promoteState} onClick={handlePromote} />
           <SaveButton state={saveState} onClick={handleSave} />
         </div>
       </div>
@@ -409,6 +546,13 @@ export default function Admin() {
               Failed to save. Check server logs.
             </div>
           )}
+
+          {promoteState === "error" && (
+            <div className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              <AlertCircle size={16} />
+              {promoteError || "Failed to promote to production."}
+            </div>
+          )}
         </div>
 
         {/* Right: preview */}
@@ -437,6 +581,34 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+function PromoteButton({ state, onClick }: { state: PromoteState; onClick: () => void }) {
+  if (state === "promoting") {
+    return (
+      <button disabled className="flex items-center gap-2 px-4 py-2 border border-[--arx-borders] text-[--arx-body-copy] text-sm rounded-lg opacity-75">
+        <Loader2 size={15} className="animate-spin" />
+        Promoting…
+      </button>
+    );
+  }
+  if (state === "success") {
+    return (
+      <button disabled className="flex items-center gap-2 px-4 py-2 border border-green-600 text-green-600 text-sm rounded-lg">
+        <CheckCircle size={15} />
+        Promoted!
+      </button>
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      title="Push this brand to production — doesn't change what's live here in dev"
+      className="flex items-center gap-2 px-4 py-2 border border-[--arx-borders] text-sm rounded-lg hover:bg-gray-50 transition-colors text-[--arx-body-copy]"
+    >
+      Promote to Prod
     </button>
   );
 }
