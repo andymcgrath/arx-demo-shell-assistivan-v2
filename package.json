@@ -39,6 +39,10 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+<<<<<<< HEAD
+=======
+    "@netlify/blobs": "^10.7.13",
+>>>>>>> d7baa85 (Update admin to store brands in Netlify Blob storage. Needed to upgrade to V2 to eliminate errors.)
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -101,6 +105,10 @@
     "concurrently": "^9.2.1",
     "electron": "^42.1.0",
     "electron-builder": "^26.8.1",
+<<<<<<< HEAD
+=======
+    "netlify-cli": "^27.1.1",
+>>>>>>> d7baa85 (Update admin to store brands in Netlify Blob storage. Needed to upgrade to V2 to eliminate errors.)
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
