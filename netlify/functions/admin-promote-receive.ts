@@ -7,8 +7,9 @@
  *
  * Writes any referenced upload files first, then the brand JSON, so the
  * brand never points at a briefly-missing image.
+ *
+ * v2 function — see brand-active.ts for why.
  */
-import type { Handler } from "@netlify/functions";
 import { setActiveBrand, savePreset, slugify, json, errorDetail } from "./_lib/brandStore";
 import { uploadsStore } from "./_lib/uploadStore";
 
@@ -18,17 +19,17 @@ interface PromotePayload {
   assets?: { filename: string; dataUrl: string; contentType?: string }[];
 }
 
-export const handler: Handler = async event => {
-  if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
+export default async (req: Request) => {
+  if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
-  const provided = event.headers["x-promote-secret"] ?? event.headers["X-Promote-Secret"];
+  const provided = req.headers.get("x-promote-secret");
   const expected = process.env.PROMOTE_SECRET;
   if (!expected || provided !== expected) {
     return json(401, { error: "Invalid or missing promote secret" });
   }
 
   try {
-    const body = (event.body ? JSON.parse(event.body) : {}) as PromotePayload;
+    const body = (await req.json().catch(() => ({}))) as PromotePayload;
     if (!body.brand) return json(400, { error: "Missing brand data" });
 
     if (Array.isArray(body.assets)) {

@@ -5,11 +5,15 @@
  * time instead of baked into the JS bundle at build time — this is what
  * lets a Save/Promote take effect immediately, no rebuild required.
  * See client/lib/activeBrandCache.ts for the client-side caller.
+ *
+ * v2 function (default export, Web Request/Response) rather than the
+ * classic v1 `handler` export — Blobs' automatic environment injection is
+ * unreliable on v1's Lambda-emulation shim in local dev, even on a
+ * correctly linked site.
  */
-import type { Handler } from "@netlify/functions";
 import { getActiveBrand, json, errorDetail } from "./_lib/brandStore";
 
-export const handler: Handler = async () => {
+export default async () => {
   try {
     const brand = await getActiveBrand();
     return json(200, brand);

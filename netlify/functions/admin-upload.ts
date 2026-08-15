@@ -1,24 +1,25 @@
 /**
  * POST /api/admin/upload — logo/favicon/chatbot-icon uploads.
- * Same { filename, dataUrl } contract as before; now writes into the
+ * Same { filename, dataUrl } contract as before; writes into the
  * "uploads" Blobs store instead of public/uploads/ on disk, since a
  * deployed function's local disk doesn't persist between invocations.
+ *
+ * v2 function — see brand-active.ts for why.
  */
-import type { Handler } from "@netlify/functions";
 import { uploadsStore, safeFilename, mimeFromDataUrl } from "./_lib/uploadStore";
 import { json, errorDetail } from "./_lib/brandStore";
 
-export const handler: Handler = async event => {
-  if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
+export default async (req: Request) => {
+  if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   try {
-    const body = event.body ? JSON.parse(event.body) : {};
+    const body = (await req.json().catch(() => ({}))) as { dataUrl?: string; filename?: string };
     if (!body.dataUrl || !body.filename) {
       return json(400, { error: "Missing filename or dataUrl" });
     }
 
     const contentType = mimeFromDataUrl(body.dataUrl);
-    const base64 = String(body.dataUrl).split(",")[1] ?? String(body.dataUrl);
+    const base64 = body.dataUrl.split(",")[1] ?? body.dataUrl;
     const buffer = Buffer.from(base64, "base64");
     const filename = safeFilename(body.filename);
 

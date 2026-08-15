@@ -122,10 +122,16 @@ export function errorDetail(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-export function json(statusCode: number, body: unknown) {
-  return {
-    statusCode,
+/** Returns a real Web API Response, not a v1-style { statusCode, body }
+ * object — all functions here use the v2 (default export) handler format.
+ * v1's classic `handler` export runs through a Lambda-emulation shim
+ * locally, which was the actual cause of the MissingBlobsEnvironmentError
+ * seen in local dev even on a correctly-linked site: Blobs' automatic
+ * environment injection isn't reliably applied to that shim, only to v2
+ * functions and real deployed Lambdas. */
+export function json(statusCode: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
+  });
 }

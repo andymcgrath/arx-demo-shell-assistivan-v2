@@ -9,12 +9,13 @@
  * environment. Prod itself should not have PROD_SITE_URL set — it has
  * nowhere further to promote to — so calling this endpoint on prod
  * correctly reports "not configured" instead of silently doing nothing.
+ *
+ * v2 function — see brand-active.ts for why.
  */
-import type { Handler } from "@netlify/functions";
 import { json, errorDetail } from "./_lib/brandStore";
 
-export const handler: Handler = async event => {
-  if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
+export default async (req: Request) => {
+  if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   const prodUrl = process.env.PROD_SITE_URL;
   const secret = process.env.PROMOTE_SECRET;
@@ -27,13 +28,14 @@ export const handler: Handler = async event => {
   }
 
   try {
+    const body = await req.text();
     const res = await fetch(`${prodUrl.replace(/\/$/, "")}/api/admin/promote-receive`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-promote-secret": secret,
       },
-      body: event.body ?? "{}",
+      body: body || "{}",
     });
 
     const result = await res.json().catch(() => ({ error: "Unexpected response from production" }));

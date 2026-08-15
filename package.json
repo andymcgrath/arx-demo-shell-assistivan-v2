@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
-    "@netlify/blobs": "^8.2.0",
+    "@netlify/blobs": "^10.7.13",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -105,7 +105,7 @@
     "concurrently": "^9.2.1",
     "electron": "^42.1.0",
     "electron-builder": "^26.8.1",
-    "netlify-cli": "^18.0.0",
+    "netlify-cli": "^27.1.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",

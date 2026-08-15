@@ -2,12 +2,13 @@
  * GET /api/admin/brands — list of saved presets for the "Load brand"
  * dropdown. Always includes the three bundled defaults plus anything
  * saved in this environment's store (see listPresets in brandStore.ts).
+ *
+ * v2 function — see brand-active.ts for why.
  */
-import type { Handler } from "@netlify/functions";
 import { listPresets, json, errorDetail } from "./_lib/brandStore";
 
-export const handler: Handler = async event => {
-  if (event.httpMethod !== "GET") return json(405, { error: "Method not allowed" });
+export default async (req: Request) => {
+  if (req.method !== "GET") return json(405, { error: "Method not allowed" });
 
   try {
     const list = await listPresets();

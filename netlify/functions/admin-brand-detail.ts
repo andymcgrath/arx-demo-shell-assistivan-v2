@@ -3,23 +3,24 @@
  *
  * netlify.toml rewrites the :slug path segment into a `slug` query param
  * (Netlify Functions don't do path params on their own), so this reads
- * from queryStringParameters rather than the URL path.
+ * it off the request URL's search params.
+ *
+ * v2 function — see brand-active.ts for why.
  */
-import type { Handler } from "@netlify/functions";
 import { getPreset, deletePreset, json, errorDetail } from "./_lib/brandStore";
 
-export const handler: Handler = async event => {
-  const slug = event.queryStringParameters?.slug;
+export default async (req: Request) => {
+  const slug = new URL(req.url).searchParams.get("slug");
   if (!slug) return json(400, { error: "Missing slug" });
 
   try {
-    if (event.httpMethod === "GET") {
+    if (req.method === "GET") {
       const preset = await getPreset(slug);
       if (!preset) return json(404, { error: "Brand not found" });
       return json(200, preset);
     }
 
-    if (event.httpMethod === "DELETE") {
+    if (req.method === "DELETE") {
       // Deletes only the saved preset — active-brand is a separate entry,
       // so this never affects what's currently live, even if you delete
       // the preset it originally came from.
