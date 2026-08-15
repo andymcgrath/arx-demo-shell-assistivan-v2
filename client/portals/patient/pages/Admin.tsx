@@ -17,6 +17,11 @@ interface BrandListItem {
   presetName: string;
 }
 
+interface PromoteTargetItem {
+  name: string;
+  url: string;
+}
+
 interface BrandingData {
   manufacturer: {
     name: string;
@@ -91,6 +96,11 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
   const [promoteState, setPromoteState] = useState<PromoteState>("idle");
   const [promoteError, setPromoteError] = useState("");
+<<<<<<< HEAD
+=======
+  const [promoteTargets, setPromoteTargets] = useState<PromoteTargetItem[]>([]);
+  const [selectedTarget, setSelectedTarget] = useState("");
+>>>>>>> TG-Therapeutics
 
   useEffect(() => {
     let cancelled = false;
@@ -145,6 +155,32 @@ export default function Admin() {
     init();
     return () => { cancelled = true; };
   }, []);
+
+  // Separate from the main init() load — a failure here shouldn't block
+  // the rest of the admin screen from working, promoting is optional.
+  useEffect(() => {
+    fetch("/api/admin/promote-targets")
+      .then(r => r.json())
+      .then((list: PromoteTargetItem[]) => {
+        if (!Array.isArray(list)) return;
+        setPromoteTargets(list);
+        // Remember the last-picked target per browser so switching back
+        // to this screen doesn't reset your choice; otherwise default to
+        // the only option when there's just one.
+        const remembered = window.localStorage.getItem("promoteTarget");
+        if (remembered && list.some(t => t.name === remembered)) {
+          setSelectedTarget(remembered);
+        } else if (list.length === 1) {
+          setSelectedTarget(list[0].name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleSelectTarget(name: string) {
+    setSelectedTarget(name);
+    window.localStorage.setItem("promoteTarget", name);
+  }
 
   function refreshBrandList() {
     fetch("/api/admin/brands")
@@ -268,12 +304,27 @@ export default function Admin() {
     );
   }
 
+<<<<<<< HEAD
   /** Pushes the currently-saved brand to production. Doesn't touch this
    * environment's data at all — it's a one-way copy, dev/local stays
    * exactly as it was. Requires PROD_SITE_URL + PROMOTE_SECRET to be set
    * here (see /api/admin/promote); if they're missing, the button just
    * reports that clearly instead of pretending to succeed. */
   async function handlePromote() {
+=======
+  /** Pushes the currently-saved brand to whichever site is selected (or
+   * the only configured one). Doesn't touch this environment's data at
+   * all — it's a one-way copy, dev/local stays exactly as it was.
+   * Requires PROMOTE_TARGETS to be set here (see /api/admin/promote); if
+   * it's missing, the button just reports that clearly instead of
+   * pretending to succeed. */
+  async function handlePromote() {
+    if (promoteTargets.length > 1 && !selectedTarget) {
+      setPromoteError("Choose a destination before promoting.");
+      setPromoteState("error");
+      return;
+    }
+>>>>>>> TG-Therapeutics
     setPromoteState("promoting");
     setPromoteError("");
     try {
@@ -281,7 +332,16 @@ export default function Admin() {
       const res = await fetch("/api/admin/promote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+<<<<<<< HEAD
         body: JSON.stringify({ brand: data, presetName: presetName || undefined, assets }),
+=======
+        body: JSON.stringify({
+          brand: data,
+          presetName: presetName || undefined,
+          assets,
+          target: selectedTarget || undefined,
+        }),
+>>>>>>> TG-Therapeutics
       });
       const result = await res.json();
       if (res.ok && result.success) {
@@ -341,6 +401,22 @@ export default function Admin() {
             {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
             {showPreview ? "Hide Preview" : "Show Preview"}
           </button>
+<<<<<<< HEAD
+=======
+          {promoteTargets.length > 1 && (
+            <select
+              value={selectedTarget}
+              onChange={e => handleSelectTarget(e.target.value)}
+              title="Where Promote to Prod sends this brand"
+              className="text-sm border border-[--arx-borders] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+            >
+              <option value="">Choose destination…</option>
+              {promoteTargets.map(t => (
+                <option key={t.name} value={t.name}>{t.name}</option>
+              ))}
+            </select>
+          )}
+>>>>>>> TG-Therapeutics
           <PromoteButton state={promoteState} onClick={handlePromote} />
           <SaveButton state={saveState} onClick={handleSave} />
         </div>
