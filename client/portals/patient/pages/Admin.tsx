@@ -96,11 +96,8 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
   const [promoteState, setPromoteState] = useState<PromoteState>("idle");
   const [promoteError, setPromoteError] = useState("");
-<<<<<<< HEAD
-=======
   const [promoteTargets, setPromoteTargets] = useState<PromoteTargetItem[]>([]);
   const [selectedTarget, setSelectedTarget] = useState("");
->>>>>>> TG-Therapeutics
 
   useEffect(() => {
     let cancelled = false;
@@ -304,14 +301,6 @@ export default function Admin() {
     );
   }
 
-<<<<<<< HEAD
-  /** Pushes the currently-saved brand to production. Doesn't touch this
-   * environment's data at all — it's a one-way copy, dev/local stays
-   * exactly as it was. Requires PROD_SITE_URL + PROMOTE_SECRET to be set
-   * here (see /api/admin/promote); if they're missing, the button just
-   * reports that clearly instead of pretending to succeed. */
-  async function handlePromote() {
-=======
   /** Pushes the currently-saved brand to whichever site is selected (or
    * the only configured one). Doesn't touch this environment's data at
    * all — it's a one-way copy, dev/local stays exactly as it was.
@@ -324,7 +313,6 @@ export default function Admin() {
       setPromoteState("error");
       return;
     }
->>>>>>> TG-Therapeutics
     setPromoteState("promoting");
     setPromoteError("");
     try {
@@ -332,16 +320,12 @@ export default function Admin() {
       const res = await fetch("/api/admin/promote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-<<<<<<< HEAD
-        body: JSON.stringify({ brand: data, presetName: presetName || undefined, assets }),
-=======
         body: JSON.stringify({
           brand: data,
           presetName: presetName || undefined,
           assets,
           target: selectedTarget || undefined,
         }),
->>>>>>> TG-Therapeutics
       });
       const result = await res.json();
       if (res.ok && result.success) {
@@ -401,8 +385,6 @@ export default function Admin() {
             {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
             {showPreview ? "Hide Preview" : "Show Preview"}
           </button>
-<<<<<<< HEAD
-=======
           {promoteTargets.length > 1 && (
             <select
               value={selectedTarget}
@@ -416,7 +398,6 @@ export default function Admin() {
               ))}
             </select>
           )}
->>>>>>> TG-Therapeutics
           <PromoteButton state={promoteState} onClick={handlePromote} />
           <SaveButton state={saveState} onClick={handleSave} />
         </div>

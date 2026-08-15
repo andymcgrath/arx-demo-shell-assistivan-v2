@@ -1,13 +1,6 @@
 allowBuilds:
   electron-winstaller: true
-<<<<<<< HEAD
   esbuild: true
   netlify-cli: true
   sharp: true
   unix-dgram: true
-=======
-  esbuild: set this to true or false
-  netlify-cli: set this to true or false
-  sharp: set this to true or false
-  unix-dgram: set this to true or false
->>>>>>> TG-Therapeutics

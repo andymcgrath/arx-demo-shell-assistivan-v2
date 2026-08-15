@@ -57,14 +57,11 @@
   to = "/.netlify/functions/admin-promote"
   status = 200
 
-<<<<<<< HEAD
-=======
 [[redirects]]
   from = "/api/admin/promote-targets"
   to = "/.netlify/functions/admin-promote-targets"
   status = 200
 
->>>>>>> TG-Therapeutics
 # Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk, so
 # requests for them get served through a function instead of as static
 # files. `force = true` so this wins even if something under public/uploads
