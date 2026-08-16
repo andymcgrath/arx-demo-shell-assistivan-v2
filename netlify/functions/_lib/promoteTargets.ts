@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * Multi-target promote configuration.
  *
  * Replaces a single PROD_SITE_URL/PROMOTE_SECRET pair with a list, so one
@@ -15,6 +16,17 @@
  *
  * Each entry's `secret` must match the `PROMOTE_SECRET` env var configured
  * on that specific target site.
+=======
+ * Shared parsing for PROMOTE_TARGETS — the multi-destination replacement
+ * for the older single PROD_SITE_URL + PROMOTE_SECRET pair. Set as a JSON
+ * array in .env:
+ *
+ *   PROMOTE_TARGETS=[{"name":"Assistivan","url":"https://...","secret":"..."}, ...]
+ *
+ * Used by both admin-promote-targets.ts (lists name+url for the dropdown,
+ * never the secret) and admin-promote.ts (looks up the chosen target's
+ * url+secret to forward the promote request to).
+>>>>>>> PharmaEssentia
  */
 export interface PromoteTarget {
   name: string;
@@ -25,7 +37,10 @@ export interface PromoteTarget {
 export function getPromoteTargets(): PromoteTarget[] {
   const raw = process.env.PROMOTE_TARGETS;
   if (!raw) return [];
+<<<<<<< HEAD
 
+=======
+>>>>>>> PharmaEssentia
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];

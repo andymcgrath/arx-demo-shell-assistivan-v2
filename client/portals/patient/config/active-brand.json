@@ -1,15 +1,15 @@
 {
   "manufacturer": {
-    "name": "TG Therapuetics",
-    "tagline": "",
+    "name": "CoAssist",
+    "tagline": "Patient assistance & medication access program",
     "logo": {
-      "colors": "/uploads/1786444819116-TGT_Logo_RGB-1.svg-1.svg",
-      "white": "/uploads/1786447172989-TG_Therapeutics_Logo-revised_colors-white.png",
-      "requiresFilter": false
+      "colors": "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
+      "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
+      "requiresFilter": true
     },
     "support": {
-      "label": "Customer Support",
-      "phone": "800-555-2323"
+      "label": "Technical Help",
+      "phone": "877-450-4412"
     },
     "legal": {
       "privacyUrl": "#",
@@ -17,31 +17,23 @@
       "safetyUrl": "#",
       "prescribingUrl": "#"
     },
-    "copyright": "©{{YEAR}} TG Therapuetics. All Rights Reserved. Intended for US residents only."
+    "copyright": "©{{YEAR}} AssistRx. All Rights Reserved. Intended for US residents only."
   },
   "program": {
-    "name": "BRIUMVI Patient Support Program",
-    "drugDisplayName": "BRIUMVI®",
-    "description": "BRIUMVI is a prescription medication used to treat adults with relapsing forms of multiple sclerosis (MS).",
+    "name": "Assistivan",
+    "drugDisplayName": "Assistivan",
+    "description": "0.8 mg · 30-day supply",
+    "dosageForm": "0.8 mg/0.5 mL Prefilled Pen for Subcutaneous Injection",
     "logo": {
-      "colors": "/uploads/1786445499203-imgi_1_briumvi-logo2-sm.png",
-      "white": "/uploads/1786447170235-imgi_1_briumvi-logo2-sm-white.png",
-      "requiresFilter": false
+      "colors": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
+      "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
     },
     "colors": {
-      "primary": "#009CA6",
-      "primaryDark": "#24525C",
-      "primaryLight": "#f7be69",
-      "primaryWash": "#fffdfb"
-    },
-    "dosageForm": "150 mg/6 mL Injection for IV",
-    "educationVideo": {
-      "title": "",
-      "description": "",
-      "thumbnail": "",
-      "embedUrl": "https://www.youtube.com/embed/DQmclRmqjz0"
+      "primary": "#007178",
+      "primaryDark": "#005a5f",
+      "primaryLight": "#338D93",
+      "primaryWash": "#B1D5D8"
     }
   },
-  "chatbotIcon": "/uploads/1786424090136-482GS01.svg",
-  "favicon": "/uploads/1786446283623-icon-32x32.png"
+  "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da"
 }

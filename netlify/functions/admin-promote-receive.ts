@@ -25,7 +25,21 @@ export default async (req: Request) => {
   const provided = req.headers.get("x-promote-secret");
   const expected = process.env.PROMOTE_SECRET;
   if (!expected || provided !== expected) {
-    return json(401, { error: "Invalid or missing promote secret" });
+    // Temporary diagnostic detail — lengths/edges only, never the full
+    // value, so this is safe to leave in a response body. Remove once
+    // the mismatch is found; this narrows "not set on this site" vs
+    // "set but doesn't match" vs "header never arrived" instantly,
+    // instead of guessing blind.
+    return json(401, {
+      error: "Invalid or missing promote secret",
+      debug: {
+        expectedSet: Boolean(expected),
+        expectedLength: expected?.length ?? 0,
+        expectedEdges: expected ? `${expected.slice(0, 4)}...${expected.slice(-4)}` : null,
+        providedLength: provided?.length ?? 0,
+        providedEdges: provided ? `${provided.slice(0, 4)}...${provided.slice(-4)}` : null,
+      },
+    });
   }
 
   try {

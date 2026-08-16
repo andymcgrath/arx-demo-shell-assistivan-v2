@@ -17,11 +17,6 @@ interface BrandListItem {
   presetName: string;
 }
 
-interface PromoteTargetItem {
-  name: string;
-  url: string;
-}
-
 interface BrandingData {
   manufacturer: {
     name: string;
@@ -96,8 +91,20 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
   const [promoteState, setPromoteState] = useState<PromoteState>("idle");
   const [promoteError, setPromoteError] = useState("");
-  const [promoteTargets, setPromoteTargets] = useState<PromoteTargetItem[]>([]);
+  const [promoteTargets, setPromoteTargets] = useState<{ name: string; url: string }[]>([]);
   const [selectedTarget, setSelectedTarget] = useState("");
+
+  // Independent of the main init() below — an empty/failed result just
+  // means PROMOTE_TARGETS isn't set here, which falls back to the legacy
+  // single-destination flow (no dropdown, handlePromote omits `target`).
+  useEffect(() => {
+    fetch("/api/admin/promote-targets")
+      .then(r => r.json())
+      .then(list => {
+        if (Array.isArray(list)) setPromoteTargets(list);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -152,32 +159,6 @@ export default function Admin() {
     init();
     return () => { cancelled = true; };
   }, []);
-
-  // Separate from the main init() load — a failure here shouldn't block
-  // the rest of the admin screen from working, promoting is optional.
-  useEffect(() => {
-    fetch("/api/admin/promote-targets")
-      .then(r => r.json())
-      .then((list: PromoteTargetItem[]) => {
-        if (!Array.isArray(list)) return;
-        setPromoteTargets(list);
-        // Remember the last-picked target per browser so switching back
-        // to this screen doesn't reset your choice; otherwise default to
-        // the only option when there's just one.
-        const remembered = window.localStorage.getItem("promoteTarget");
-        if (remembered && list.some(t => t.name === remembered)) {
-          setSelectedTarget(remembered);
-        } else if (list.length === 1) {
-          setSelectedTarget(list[0].name);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  function handleSelectTarget(name: string) {
-    setSelectedTarget(name);
-    window.localStorage.setItem("promoteTarget", name);
-  }
 
   function refreshBrandList() {
     fetch("/api/admin/brands")
@@ -285,6 +266,7 @@ export default function Admin() {
     maybeAdd(d.program.logo.white);
     maybeAdd(d.chatbotIcon);
     maybeAdd(d.favicon);
+    maybeAdd(d.program.educationVideo.thumbnail);
 
     return Promise.all(
       Array.from(urls).map(async url => {
@@ -301,15 +283,16 @@ export default function Admin() {
     );
   }
 
-  /** Pushes the currently-saved brand to whichever site is selected (or
-   * the only configured one). Doesn't touch this environment's data at
-   * all — it's a one-way copy, dev/local stays exactly as it was.
-   * Requires PROMOTE_TARGETS to be set here (see /api/admin/promote); if
-   * it's missing, the button just reports that clearly instead of
-   * pretending to succeed. */
+  /** Pushes the currently-saved brand to production. Doesn't touch this
+   * environment's data at all — it's a one-way copy, dev/local stays
+   * exactly as it was. Requires either PROMOTE_TARGETS or PROD_SITE_URL +
+   * PROMOTE_SECRET to be set here (see /api/admin/promote); if they're
+   * missing, the button just reports that clearly instead of pretending to
+   * succeed. When PROMOTE_TARGETS is set, a destination must be chosen
+   * from the dropdown first. */
   async function handlePromote() {
-    if (promoteTargets.length > 1 && !selectedTarget) {
-      setPromoteError("Choose a destination before promoting.");
+    if (promoteTargets.length > 0 && !selectedTarget) {
+      setPromoteError("Choose a destination first.");
       setPromoteState("error");
       return;
     }
@@ -385,20 +368,26 @@ export default function Admin() {
             {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
             {showPreview ? "Hide Preview" : "Show Preview"}
           </button>
-          {promoteTargets.length > 1 && (
+          {promoteTargets.length > 0 && (
             <select
               value={selectedTarget}
-              onChange={e => handleSelectTarget(e.target.value)}
-              title="Where Promote to Prod sends this brand"
-              className="text-sm border border-[--arx-borders] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--arx-primary))] bg-white"
+              onChange={e => setSelectedTarget(e.target.value)}
+              className="px-3 py-2 text-sm border border-[--arx-borders] rounded-lg text-[--arx-body-copy] bg-white"
+              aria-label="Promote destination"
             >
               <option value="">Choose destination…</option>
               {promoteTargets.map(t => (
-                <option key={t.name} value={t.name}>{t.name}</option>
+                <option key={t.name} value={t.name}>
+                  {t.name}
+                </option>
               ))}
             </select>
           )}
-          <PromoteButton state={promoteState} onClick={handlePromote} />
+          <PromoteButton
+            state={promoteState}
+            onClick={handlePromote}
+            disabled={promoteTargets.length > 0 && !selectedTarget}
+          />
           <SaveButton state={saveState} onClick={handleSave} />
         </div>
       </div>
@@ -585,7 +574,15 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   );
 }
 
-function PromoteButton({ state, onClick }: { state: PromoteState; onClick: () => void }) {
+function PromoteButton({
+  state,
+  onClick,
+  disabled,
+}: {
+  state: PromoteState;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   if (state === "promoting") {
     return (
       <button disabled className="flex items-center gap-2 px-4 py-2 border border-[--arx-borders] text-[--arx-body-copy] text-sm rounded-lg opacity-75">
@@ -605,8 +602,15 @@ function PromoteButton({ state, onClick }: { state: PromoteState; onClick: () =>
   return (
     <button
       onClick={onClick}
-      title="Push this brand to production — doesn't change what's live here in dev"
-      className="flex items-center gap-2 px-4 py-2 border border-[--arx-borders] text-sm rounded-lg hover:bg-gray-50 transition-colors text-[--arx-body-copy]"
+      disabled={disabled}
+      title={
+        disabled
+          ? "Choose a destination first"
+          : "Push this brand to production — doesn't change what's live here in dev"
+      }
+      className={`flex items-center gap-2 px-4 py-2 border border-[--arx-borders] text-sm rounded-lg transition-colors text-[--arx-body-copy] ${
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+      }`}
     >
       Promote to Prod
     </button>

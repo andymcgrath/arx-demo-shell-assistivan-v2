@@ -140,8 +140,12 @@ export default function ProfileDetail() {
           ))}
         </div>
 
-        {/* Body */}
-        <div className="p-5 max-w-5xl">
+        {/* Body -- no max-w cap here on purpose: TwoColumnFields' two field
+            lists should flex to fill the page instead of leaving a fixed
+            1024px-wide island with empty space beside it on wider screens
+            (long values like a full drugDisplayName also get more room
+            before break-all in FieldRow forces a mid-word wrap). */}
+        <div className="p-5">
           {activeTab !== "general" ? (
             <div className="text-[13px] text-[#706e6b] py-10 text-center">This tab isn't built out for this demo.</div>
           ) : (
