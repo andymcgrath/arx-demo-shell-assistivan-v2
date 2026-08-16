@@ -1,17 +1,26 @@
 /**
- * Public. GET /uploads/:file (rewritten from netlify.toml's /uploads/*
- * redirect into ?file=... since this used to be a static file path).
- * Streams a previously uploaded logo/favicon/icon back out of the
- * "uploads" Blobs store with its original content type.
+ * Public. GET /uploads/:file — streams a previously uploaded
+ * logo/favicon/icon back out of the "uploads" Blobs store with its
+ * original content type.
+ *
+ * Routed via this function's own `config.path` (a real path param, not a
+ * netlify.toml `*` -> `?file=:splat` rewrite) — see admin-brand-detail.ts
+ * for why: the query-string version worked under `netlify dev` but
+ * silently dropped the value on Netlify's real production edge.
  *
  * v2 function — see brand-active.ts for why. Bonus of v2 here: a real
  * Response can take the raw ArrayBuffer directly as its body, no more
  * base64/isBase64Encoded dance that v1's Lambda-shaped responses needed.
  */
+import type { Config, Context } from "@netlify/functions";
 import { uploadsStore } from "./_lib/uploadStore";
 
-export default async (req: Request) => {
-  const file = new URL(req.url).searchParams.get("file");
+export const config: Config = {
+  path: "/uploads/:file",
+};
+
+export default async (req: Request, context: Context) => {
+  const file = context.params.file;
   if (!file) return new Response("Missing file", { status: 400 });
 
   try {

@@ -2,18 +2,27 @@
  * GET /api/admin/assets — list uploaded files.
  * DELETE /api/admin/assets/:filename — remove one.
  *
- * As with brand details, netlify.toml rewrites :filename into a query
- * param. Deleting only removes the file itself — any brand still
- * pointing at that /uploads/<filename> URL will show a broken image;
- * this never scans/rewrites branding JSON, same as the old behavior.
+ * Both paths are handled by this one function via `config.path` below
+ * (matches with no :filename segment leave context.params.filename
+ * undefined) — see admin-brand-detail.ts for why this uses Netlify's
+ * native path params instead of a netlify.toml query-string rewrite.
+ *
+ * Deleting only removes the file itself — any brand still pointing at
+ * that /uploads/<filename> URL will show a broken image; this never
+ * scans/rewrites branding JSON, same as the old behavior.
  *
  * v2 function — see brand-active.ts for why.
  */
+import type { Config, Context } from "@netlify/functions";
 import { uploadsStore, isSafeFilename } from "./_lib/uploadStore";
 import { json, errorDetail } from "./_lib/brandStore";
 
-export default async (req: Request) => {
-  const filename = new URL(req.url).searchParams.get("filename");
+export const config: Config = {
+  path: ["/api/admin/assets", "/api/admin/assets/:filename"],
+};
+
+export default async (req: Request, context: Context) => {
+  const filename = context.params.filename;
 
   try {
     if (req.method === "GET" && !filename) {
