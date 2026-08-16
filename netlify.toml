@@ -69,16 +69,7 @@
   to = "/.netlify/functions/admin-promote-receive"
   status = 200
 
-# SPA fallback — must be LAST so it never shadows the /api/*, /uploads/*,
-# or function config.path routes above (Netlify still matches those more
-# specific rules first regardless of order, but keeping this last avoids
-# relying on that). This is a single-page app: one dist/index.html, with
-# React Router handling routes like /admin or /hub client-side. That only
-# works when you *navigate* there from inside the app; a hard refresh or
-# typed URL sends Netlify a real request for e.g. /admin, which isn't a
-# real file and 404s without this rule to fall back to index.html and let
-# the router take over.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# SPA fallback (hard refresh / typed URL on a client-side route like
+# /admin or /hub) lives in public/_redirects instead of here on purpose —
+# see that file's comment for why putting it in this toml broke local
+# `netlify dev`.
