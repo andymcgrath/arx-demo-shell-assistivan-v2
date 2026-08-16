@@ -95,6 +95,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@netlify/functions": "^3.0.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^24.2.1",
     "@types/react": "^18.3.23",

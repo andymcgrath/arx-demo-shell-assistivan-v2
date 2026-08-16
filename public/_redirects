@@ -1,0 +1,21 @@
+# SPA fallback for the production build only.
+#
+# This app is one dist/index.html with React Router handling routes like
+# /admin or /hub client-side. That works fine when you *navigate* there
+# from inside the app, but a hard refresh or typed URL sends a real
+# request for e.g. /admin, which isn't a real file on the deployed static
+# site and 404s without this rule.
+#
+# Deliberately NOT in netlify.toml's [[redirects]]: that file is read by
+# both the real production deploy AND local `netlify dev`. Locally there's
+# no built dist/ yet — Vite's own dev server already serves index.html for
+# unmatched client routes on its own — so a toml-level catch-all had
+# nothing useful to do locally, but it still intercepted Vite's internal
+# dev requests (things like /@vite/client, which have no file extension
+# and aren't real files either), breaking local dev entirely (Vite's
+# import-analysis choked trying to parse index.html's HTML as JS).
+#
+# A public/_redirects file only gets copied into dist/ during
+# `pnpm run build:client`, so it ships with the production deploy and is
+# never present during local dev at all — no conflict possible.
+/*    /index.html   200
