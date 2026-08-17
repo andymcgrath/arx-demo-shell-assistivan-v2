@@ -26,7 +26,7 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
 
   async function fetchAssets() {
     try {
-      const res = await fetch("/api/admin/assets");
+      const res = await fetch("/.netlify/functions/admin-assets");
       const data = await res.json();
       setAssets(data);
     } catch {
@@ -40,7 +40,7 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
     setUploading(true);
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      const res = await fetch("/api/admin/upload", {
+      const res = await fetch("/.netlify/functions/admin-upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, dataUrl }),
@@ -75,7 +75,7 @@ export default function AssetLibraryModal({ onSelect, onClose }: Props) {
     }
     setDeletingFilename(asset.filename);
     try {
-      const res = await fetch(`/api/admin/assets/${encodeURIComponent(asset.filename)}`, { method: "DELETE" });
+      const res = await fetch(`/.netlify/functions/admin-assets/${encodeURIComponent(asset.filename)}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete asset");
       setAssets(prev => prev.filter(a => a.filename !== asset.filename));
       if (selected === asset.url) setSelected(null);

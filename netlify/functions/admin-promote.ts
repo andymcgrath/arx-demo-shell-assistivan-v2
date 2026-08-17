@@ -73,7 +73,13 @@ export default async (req: Request) => {
   const { target: _omit, ...forwardBody } = payload;
 
   try {
-    const res = await fetch(`${prodUrl.replace(/\/$/, "")}/api/admin/promote-receive`, {
+    // Raw function path, not /api/admin/promote-receive — Netlify's edge
+    // on at least one production site in this project has been observed
+    // to 404 POST requests routed through a netlify.toml redirect (even
+    // with force = true) while GET through the same kind of rule works
+    // fine, and while POST to the function's own raw path works fine too.
+    // Going straight to the function sidesteps that redirect layer.
+    const res = await fetch(`${prodUrl.replace(/\/$/, "")}/.netlify/functions/admin-promote-receive`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
