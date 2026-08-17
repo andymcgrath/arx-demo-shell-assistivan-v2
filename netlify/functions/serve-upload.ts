@@ -7,7 +7,11 @@
  * `?file=:splat` query string, and not this function's own `config.path`
  * — see admin-brand-detail.ts for why both of those proved unreliable in
  * production despite working under `netlify dev`), so this reads the
- * filename off the tail of the request URL itself.
+ * filename off the tail of the request URL itself. Matches either the
+ * original request path (/uploads/:file) or the redirect's destination
+ * path (/.netlify/functions/serve-upload/:file) — see admin-brand-detail.ts
+ * for why req.url's shape isn't consistent between netlify dev and
+ * production.
  *
  * v2 function — see brand-active.ts for why. Bonus of v2 here: a real
  * Response can take the raw ArrayBuffer directly as its body, no more
@@ -15,11 +19,12 @@
  */
 import { uploadsStore } from "./_lib/uploadStore";
 
-const PREFIX = "/.netlify/functions/serve-upload/";
+const FILE_PATTERN = /\/(?:uploads|\.netlify\/functions\/serve-upload)\/([^/]+)\/?$/;
 
 export default async (req: Request) => {
   const { pathname } = new URL(req.url);
-  const file = pathname.startsWith(PREFIX) ? decodeURIComponent(pathname.slice(PREFIX.length)) : "";
+  const match = pathname.match(FILE_PATTERN);
+  const file = match ? decodeURIComponent(match[1]) : "";
   if (!file) return new Response("Missing file", { status: 400 });
 
   try {

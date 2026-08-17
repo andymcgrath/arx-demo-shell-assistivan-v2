@@ -3,10 +3,13 @@
  * DELETE /api/admin/assets/:filename — remove one.
  *
  * netlify.toml has two rules for this function: the bare path (no
- * segment, used for the GET list) and one forwarding :filename in the
+ * segment, used for the GET list) and one forwarding the filename in the
  * destination PATH for the DELETE case — see admin-brand-detail.ts for
  * why this reads the path directly instead of a query string or this
- * function's own `config.path` (both proved unreliable in production).
+ * function's own `config.path` (both proved unreliable in production),
+ * and for why it matches either the original request path or the
+ * redirect's destination path rather than assuming one (req.url's shape
+ * differs between netlify dev and production).
  *
  * Deleting only removes the file itself — any brand still pointing at
  * that /uploads/<filename> URL will show a broken image; this never
@@ -17,11 +20,12 @@
 import { uploadsStore, isSafeFilename } from "./_lib/uploadStore";
 import { json, errorDetail } from "./_lib/brandStore";
 
-const PREFIX = "/.netlify/functions/admin-assets/";
+const FILENAME_PATTERN = /\/(?:api\/admin\/assets|\.netlify\/functions\/admin-assets)\/([^/]+)\/?$/;
 
 export default async (req: Request) => {
   const { pathname } = new URL(req.url);
-  const filename = pathname.startsWith(PREFIX) ? decodeURIComponent(pathname.slice(PREFIX.length)) : undefined;
+  const match = pathname.match(FILENAME_PATTERN);
+  const filename = match ? decodeURIComponent(match[1]) : undefined;
 
   try {
     if (req.method === "GET" && !filename) {

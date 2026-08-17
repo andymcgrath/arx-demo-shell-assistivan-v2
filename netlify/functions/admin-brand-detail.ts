@@ -1,11 +1,11 @@
 /**
  * GET/DELETE /api/admin/brands/:slug — one saved preset.
  *
- * netlify.toml forwards :slug as part of the destination PATH (not a
- * query string, and not this function's own `config.path` — see below),
- * so this reads it off the tail of the request URL itself. Two other
- * approaches were tried first and both proved unreliable specifically in
- * production despite working fine under `netlify dev`:
+ * netlify.toml forwards the slug as part of the destination PATH (not a
+ * query string, and not this function's own `config.path`), so this reads
+ * it off the tail of the request URL itself. Two other approaches were
+ * tried first and both proved unreliable specifically in production
+ * despite working fine under `netlify dev`:
  *   - a netlify.toml redirect rewriting :slug into a `slug` query string
  *     param — the query string arrived empty on Netlify's real edge.
  *   - this function's own `config.path` export (Netlify Functions v2's
@@ -13,17 +13,25 @@
  *     but never took effect on the deployed site (a known, reported gap
  *     in Netlify's tooling, not something fixable in this codebase).
  * Forwarding the segment in the path itself, the way a splat redirect
- * always has, is the one approach that's actually reliable in production.
+ * always has, is the approach that's actually reliable in production.
+ *
+ * req.url's shape isn't consistent across environments, though: locally,
+ * netlify dev's function invocation reflects the ORIGINAL request path
+ * (/api/admin/brands/:slug) even though its own log claims to rewrite it,
+ * while production reflects the redirect's destination path
+ * (/.netlify/functions/admin-brand-detail/:slug). So this matches either
+ * shape instead of assuming one.
  *
  * v2 function — see brand-active.ts for why.
  */
 import { getPreset, deletePreset, json, errorDetail } from "./_lib/brandStore";
 
-const PREFIX = "/.netlify/functions/admin-brand-detail/";
+const SLUG_PATTERN = /\/(?:api\/admin\/brands|\.netlify\/functions\/admin-brand-detail)\/([^/]+)\/?$/;
 
 export default async (req: Request) => {
   const { pathname } = new URL(req.url);
-  const slug = pathname.startsWith(PREFIX) ? decodeURIComponent(pathname.slice(PREFIX.length)) : "";
+  const match = pathname.match(SLUG_PATTERN);
+  const slug = match ? decodeURIComponent(match[1]) : "";
   if (!slug) return json(400, { error: "Missing slug" });
 
   try {
