@@ -2,10 +2,11 @@
  * GET /api/admin/assets — list uploaded files.
  * DELETE /api/admin/assets/:filename — remove one.
  *
- * Both paths are handled by this one function via `config.path` below
- * (matches with no :filename segment leave context.params.filename
- * undefined) — see admin-brand-detail.ts for why this uses Netlify's
- * native path params instead of a netlify.toml query-string rewrite.
+ * netlify.toml has two rules for this function: the bare path (no
+ * segment, used for the GET list) and one forwarding :filename in the
+ * destination PATH for the DELETE case — see admin-brand-detail.ts for
+ * why this reads the path directly instead of a query string or this
+ * function's own `config.path` (both proved unreliable in production).
  *
  * Deleting only removes the file itself — any brand still pointing at
  * that /uploads/<filename> URL will show a broken image; this never
@@ -13,16 +14,14 @@
  *
  * v2 function — see brand-active.ts for why.
  */
-import type { Config, Context } from "@netlify/functions";
 import { uploadsStore, isSafeFilename } from "./_lib/uploadStore";
 import { json, errorDetail } from "./_lib/brandStore";
 
-export const config: Config = {
-  path: ["/api/admin/assets", "/api/admin/assets/:filename"],
-};
+const PREFIX = "/.netlify/functions/admin-assets/";
 
-export default async (req: Request, context: Context) => {
-  const filename = context.params.filename;
+export default async (req: Request) => {
+  const { pathname } = new URL(req.url);
+  const filename = pathname.startsWith(PREFIX) ? decodeURIComponent(pathname.slice(PREFIX.length)) : undefined;
 
   try {
     if (req.method === "GET" && !filename) {
@@ -31,11 +30,11 @@ export default async (req: Request, context: Context) => {
     }
 
     if (req.method === "DELETE" && filename) {
-      const decoded = decodeURIComponent(filename);
-      if (!isSafeFilename(decoded)) {
+      // filename is already decoded once above, off the request path.
+      if (!isSafeFilename(filename)) {
         return json(400, { error: "Invalid filename" });
       }
-      await uploadsStore().delete(decoded);
+      await uploadsStore().delete(filename);
       return json(200, { success: true });
     }
 

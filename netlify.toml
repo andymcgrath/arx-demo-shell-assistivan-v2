@@ -32,14 +32,25 @@
   to = "/.netlify/functions/admin-brands"
   status = 200
 
-# /api/admin/brands/:slug is NOT redirected here — admin-brand-detail.ts
-# declares that path itself via its own `config.path` export instead of a
-# query-string rewrite. See that file's header comment for why.
+# :slug is forwarded in the destination PATH, not a query string param
+# and not the function's own `config.path` — both of those were tried
+# and proved unreliable specifically in production. See
+# admin-brand-detail.ts's header comment for the full story.
+[[redirects]]
+  from = "/api/admin/brands/:slug"
+  to = "/.netlify/functions/admin-brand-detail/:slug"
+  status = 200
 
-# /api/admin/assets/:filename is likewise handled by admin-assets.ts's own
-# `config.path` — no redirect needed for either that or the plain
-# /api/admin/assets list route, since the same function's config covers
-# both.
+[[redirects]]
+  from = "/api/admin/assets"
+  to = "/.netlify/functions/admin-assets"
+  status = 200
+
+# Same path-forwarding approach as brands/:slug above — see admin-assets.ts.
+[[redirects]]
+  from = "/api/admin/assets/:filename"
+  to = "/.netlify/functions/admin-assets/:filename"
+  status = 200
 
 [[redirects]]
   from = "/api/admin/upload"
@@ -56,10 +67,16 @@
   to = "/.netlify/functions/admin-promote-targets"
   status = 200
 
-# Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk.
-# serve-upload.ts declares /uploads/:file itself via its own `config.path`
-# (see that file's header comment) rather than a redirect here — no entry
-# needed in this list.
+# Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk, so
+# requests for them get served through a function instead of as static
+# files. Splat forwarded in the destination PATH (see admin-brand-detail.ts
+# for why, same reasoning) — `force = true` so this wins even if something
+# under public/uploads still exists on disk from before this change.
+[[redirects]]
+  from = "/uploads/*"
+  to = "/.netlify/functions/serve-upload/:splat"
+  status = 200
+  force = true
 
 # Receives promoted brand data from another environment (e.g. your local
 # dev, promoting to prod). Guarded by the PROMOTE_SECRET env var inside the
