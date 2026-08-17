@@ -32,13 +32,20 @@
   to = "/.netlify/functions/admin-brands"
   status = 200
 
-# :slug is forwarded in the destination PATH, not a query string param
-# and not the function's own `config.path` — both of those were tried
-# and proved unreliable specifically in production. See
+# The segment is forwarded in the destination PATH, not a query string
+# param and not the function's own `config.path` — both of those were
+# tried and proved unreliable specifically in production. See
 # admin-brand-detail.ts's header comment for the full story.
+#
+# Uses a splat (`*`/`:splat`), not a named placeholder (`:slug`), on
+# purpose — a local test showed named from/to placeholders get matched
+# and logged by netlify dev's redirect matcher, but the interpolated
+# path never actually reaches the function (it saw an empty segment and
+# 400'd). Splats are Netlify's oldest redirect mechanic and are what
+# /uploads/* below already relies on successfully.
 [[redirects]]
-  from = "/api/admin/brands/:slug"
-  to = "/.netlify/functions/admin-brand-detail/:slug"
+  from = "/api/admin/brands/*"
+  to = "/.netlify/functions/admin-brand-detail/:splat"
   status = 200
 
 [[redirects]]
@@ -46,10 +53,10 @@
   to = "/.netlify/functions/admin-assets"
   status = 200
 
-# Same path-forwarding approach as brands/:slug above — see admin-assets.ts.
+# Same splat approach as brands/* above — see admin-assets.ts.
 [[redirects]]
-  from = "/api/admin/assets/:filename"
-  to = "/.netlify/functions/admin-assets/:filename"
+  from = "/api/admin/assets/*"
+  to = "/.netlify/functions/admin-assets/:splat"
   status = 200
 
 [[redirects]]
