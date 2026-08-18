@@ -1,13 +1,24 @@
 /**
- * Shared parsing for PROMOTE_TARGETS — the multi-destination replacement
- * for the older single PROD_SITE_URL + PROMOTE_SECRET pair. Set as a JSON
- * array in .env:
+ * Multi-target promote configuration.
  *
- *   PROMOTE_TARGETS=[{"name":"Assistivan","url":"https://...","secret":"..."}, ...]
+ * Replaces a single PROD_SITE_URL/PROMOTE_SECRET pair with a list, so one
+ * dev environment can promote to several Netlify sites (e.g. one per
+ * branch/brand) without hand-editing .env between each promote.
+ *
+ * Set only in the *sending* environment's .env (normally local dev),
+ * never on any receiving site — a receiving site only ever needs its own
+ * PROMOTE_SECRET (checked in admin-promote-receive.ts), it never needs to
+ * know about other sites.
  *
  * Used by both admin-promote-targets.ts (lists name+url for the dropdown,
  * never the secret) and admin-promote.ts (looks up the chosen target's
  * url+secret to forward the promote request to).
+ *
+ * Format — a JSON array in a single env var:
+ *   PROMOTE_TARGETS=[{"name":"Assistivan","url":"https://...","secret":"..."}, ...]
+ *
+ * Each entry's `secret` must match the `PROMOTE_SECRET` env var configured
+ * on that specific target site.
  */
 export interface PromoteTarget {
   name: string;

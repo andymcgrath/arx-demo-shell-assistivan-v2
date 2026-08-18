@@ -17,57 +17,100 @@
   targetPort = 8080
 
 # Route the branding admin API + public brand endpoint to functions.
+#
+# `force = true` on every rule here, not just /uploads/* below — a
+# production test showed a rewrite (status = 200) without force = true
+# only reliably applies to GET: POST to /api/admin/branding 404'd in
+# ~30ms (too fast to have ever reached the function) while GET on the
+# same rule worked. Confirmed via Netlify's own support forum: a
+# status = 200 rule needs force = true to act as a true internal
+# rewrite that preserves the method for POST/PUT/DELETE, not just GET.
 [[redirects]]
   from = "/api/brand/active"
   to = "/.netlify/functions/brand-active"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/admin/branding"
   to = "/.netlify/functions/admin-branding"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/admin/brands"
   to = "/.netlify/functions/admin-brands"
   status = 200
+  force = true
 
-# /api/admin/brands/:slug is NOT redirected here — admin-brand-detail.ts
-# declares that path itself via its own `config.path` export instead of a
-# query-string rewrite. See that file's header comment for why.
+# The segment is forwarded in the destination PATH, not a query string
+# param and not the function's own `config.path` — both of those were
+# tried and proved unreliable specifically in production. See
+# admin-brand-detail.ts's header comment for the full story.
+#
+# Uses a splat (`*`/`:splat`), not a named placeholder (`:slug`), on
+# purpose — a local test showed named from/to placeholders get matched
+# and logged by netlify dev's redirect matcher, but the interpolated
+# path never actually reaches the function (it saw an empty segment and
+# 400'd). Splats are Netlify's oldest redirect mechanic and are what
+# /uploads/* below already relies on successfully.
+[[redirects]]
+  from = "/api/admin/brands/*"
+  to = "/.netlify/functions/admin-brand-detail/:splat"
+  status = 200
+  force = true
 
-# /api/admin/assets/:filename is likewise handled by admin-assets.ts's own
-# `config.path` — no redirect needed for either that or the plain
-# /api/admin/assets list route, since the same function's config covers
-# both.
+[[redirects]]
+  from = "/api/admin/assets"
+  to = "/.netlify/functions/admin-assets"
+  status = 200
+  force = true
+
+# Same splat approach as brands/* above — see admin-assets.ts.
+[[redirects]]
+  from = "/api/admin/assets/*"
+  to = "/.netlify/functions/admin-assets/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/api/admin/upload"
   to = "/.netlify/functions/admin-upload"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/admin/promote"
   to = "/.netlify/functions/admin-promote"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/admin/promote-targets"
   to = "/.netlify/functions/admin-promote-targets"
   status = 200
+  force = true
 
-# Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk.
-# serve-upload.ts declares /uploads/:file itself via its own `config.path`
-# (see that file's header comment) rather than a redirect here — no entry
-# needed in this list.
+# Uploaded logos/favicons/etc. now live in Netlify Blobs, not on disk, so
+# requests for them get served through a function instead of as static
+# files. Splat forwarded in the destination PATH (see admin-brand-detail.ts
+# for why, same reasoning) — `force = true` so this wins even if something
+# under public/uploads still exists on disk from before this change.
+[[redirects]]
+  from = "/uploads/*"
+  to = "/.netlify/functions/serve-upload/:splat"
+  status = 200
+  force = true
 
 # Receives promoted brand data from another environment (e.g. your local
 # dev, promoting to prod). Guarded by the PROMOTE_SECRET env var inside the
-# function itself, not by anything here.
+# function itself, not by anything here. force = true for the same
+# POST-preservation reason as the rules above — this one is POST-only.
 [[redirects]]
   from = "/api/admin/promote-receive"
   to = "/.netlify/functions/admin-promote-receive"
   status = 200
+  force = true
 
 # SPA fallback (hard refresh / typed URL on a client-side route like
 # /admin or /hub) lives in public/_redirects instead of here on purpose —

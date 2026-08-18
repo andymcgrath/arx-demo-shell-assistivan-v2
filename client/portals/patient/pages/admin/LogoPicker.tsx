@@ -25,7 +25,7 @@ export default function LogoPicker({ label, value, onChange, hint, bgClass = "bg
     setUploading(true);
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      const res = await fetch("/api/admin/upload", {
+      const res = await fetch("/.netlify/functions/admin-upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, dataUrl }),

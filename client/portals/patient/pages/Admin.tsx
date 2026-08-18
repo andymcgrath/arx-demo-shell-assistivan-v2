@@ -98,7 +98,7 @@ export default function Admin() {
   // means PROMOTE_TARGETS isn't set here, which falls back to the legacy
   // single-destination flow (no dropdown, handlePromote omits `target`).
   useEffect(() => {
-    fetch("/api/admin/promote-targets")
+    fetch("/.netlify/functions/admin-promote-targets")
       .then(r => r.json())
       .then(list => {
         if (Array.isArray(list)) setPromoteTargets(list);
@@ -112,8 +112,8 @@ export default function Admin() {
     async function init() {
       try {
         const [brandingData, brandListRaw] = await Promise.all([
-          fetch("/api/admin/branding").then(r => r.json()),
-          fetch("/api/admin/brands").then(r => r.json()),
+          fetch("/.netlify/functions/admin-branding").then(r => r.json()),
+          fetch("/.netlify/functions/admin-brands").then(r => r.json()),
         ]);
         if (cancelled) return;
 
@@ -124,7 +124,7 @@ export default function Admin() {
         // failure right now.
         const brandList: BrandListItem[] = Array.isArray(brandListRaw) ? brandListRaw : [];
         if (!Array.isArray(brandListRaw)) {
-          console.error("[Admin] /api/admin/brands did not return an array:", brandListRaw);
+          console.error("[Admin] admin-brands did not return an array:", brandListRaw);
         }
 
         const normalized = normalize(brandingData);
@@ -140,7 +140,7 @@ export default function Admin() {
         // both blank — there genuinely is no "currently selected brand".
         for (const b of brandList as BrandListItem[]) {
           try {
-            const preset = await fetch(`/api/admin/brands/${b.slug}`).then(r => r.json());
+            const preset = await fetch(`/.netlify/functions/admin-brand-detail/${b.slug}`).then(r => r.json());
             if (cancelled) return;
             if (JSON.stringify(normalize(preset.data)) === JSON.stringify(normalized)) {
               setSelectedSlug(b.slug);
@@ -161,11 +161,11 @@ export default function Admin() {
   }, []);
 
   function refreshBrandList() {
-    fetch("/api/admin/brands")
+    fetch("/.netlify/functions/admin-brands")
       .then(r => r.json())
       .then(list => {
         if (Array.isArray(list)) setBrands(list);
-        else console.error("[Admin] /api/admin/brands did not return an array:", list);
+        else console.error("[Admin] admin-brands did not return an array:", list);
       })
       .catch(() => {});
   }
@@ -174,7 +174,7 @@ export default function Admin() {
     setSelectedSlug(slug);
     if (!slug) return;
     try {
-      const res = await fetch(`/api/admin/brands/${slug}`);
+      const res = await fetch(`/.netlify/functions/admin-brand-detail/${slug}`);
       if (!res.ok) throw new Error("Failed to load brand");
       const preset = await res.json();
       setData(normalize(preset.data));
@@ -206,7 +206,7 @@ export default function Admin() {
     }
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/brands/${selectedSlug}`, { method: "DELETE" });
+      const res = await fetch(`/.netlify/functions/admin-brand-detail/${selectedSlug}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete brand");
       setSelectedSlug("");
       refreshBrandList();
@@ -220,7 +220,7 @@ export default function Admin() {
   async function handleSave() {
     setSaveState("saving");
     try {
-      const res = await fetch("/api/admin/branding", {
+      const res = await fetch("/.netlify/functions/admin-branding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, presetName }),
@@ -300,7 +300,7 @@ export default function Admin() {
     setPromoteError("");
     try {
       const assets = await collectUploadAssets(data);
-      const res = await fetch("/api/admin/promote", {
+      const res = await fetch("/.netlify/functions/admin-promote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

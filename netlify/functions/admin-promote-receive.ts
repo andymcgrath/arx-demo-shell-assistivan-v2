@@ -25,9 +25,6 @@ export default async (req: Request) => {
   const provided = req.headers.get("x-promote-secret");
   const expected = process.env.PROMOTE_SECRET;
   if (!expected || provided !== expected) {
-<<<<<<< HEAD
-    return json(401, { error: "Invalid or missing promote secret" });
-=======
     // Temporary diagnostic detail — lengths/edges only, never the full
     // value, so this is safe to leave in a response body. Remove once
     // the mismatch is found; this narrows "not set on this site" vs
@@ -43,7 +40,6 @@ export default async (req: Request) => {
         providedEdges: provided ? `${provided.slice(0, 4)}...${provided.slice(-4)}` : null,
       },
     });
->>>>>>> PharmaEssentia
   }
 
   try {

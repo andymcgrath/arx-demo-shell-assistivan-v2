@@ -1,39 +1,37 @@
 /**
  * GET/DELETE /api/admin/brands/:slug — one saved preset.
  *
-<<<<<<< HEAD
- * netlify.toml rewrites the :slug path segment into a `slug` query param
- * (Netlify Functions don't do path params on their own), so this reads
- * it off the request URL's search params.
+ * netlify.toml forwards the slug as part of the destination PATH (not a
+ * query string, and not this function's own `config.path`), so this reads
+ * it off the tail of the request URL itself. Two other approaches were
+ * tried first and both proved unreliable specifically in production
+ * despite working fine under `netlify dev`:
+ *   - a netlify.toml redirect rewriting :slug into a `slug` query string
+ *     param — the query string arrived empty on Netlify's real edge.
+ *   - this function's own `config.path` export (Netlify Functions v2's
+ *     documented declarative routing) — registered and worked locally,
+ *     but never took effect on the deployed site (a known, reported gap
+ *     in Netlify's tooling, not something fixable in this codebase).
+ * Forwarding the segment in the path itself, the way a splat redirect
+ * always has, is the approach that's actually reliable in production.
+ *
+ * req.url's shape isn't consistent across environments, though: locally,
+ * netlify dev's function invocation reflects the ORIGINAL request path
+ * (/api/admin/brands/:slug) even though its own log claims to rewrite it,
+ * while production reflects the redirect's destination path
+ * (/.netlify/functions/admin-brand-detail/:slug). So this matches either
+ * shape instead of assuming one.
  *
  * v2 function — see brand-active.ts for why.
  */
 import { getPreset, deletePreset, json, errorDetail } from "./_lib/brandStore";
+
+const SLUG_PATTERN = /\/(?:api\/admin\/brands|\.netlify\/functions\/admin-brand-detail)\/([^/]+)\/?$/;
 
 export default async (req: Request) => {
-  const slug = new URL(req.url).searchParams.get("slug");
-=======
- * Routed via this function's own `config.path` below rather than a
- * netlify.toml redirect that rewrites :slug into a `slug` query param —
- * that query-string-substitution approach worked fine under `netlify dev`
- * but silently dropped the value on Netlify's real production edge
- * (confirmed via the deployed site's function logs: request reached this
- * function, but the query param arrived empty). Path params via `config`
- * are handled natively by Netlify Functions, not the legacy redirects
- * engine, so they don't hit that gap.
- *
- * v2 function — see brand-active.ts for why.
- */
-import type { Config, Context } from "@netlify/functions";
-import { getPreset, deletePreset, json, errorDetail } from "./_lib/brandStore";
-
-export const config: Config = {
-  path: "/api/admin/brands/:slug",
-};
-
-export default async (req: Request, context: Context) => {
-  const slug = context.params.slug;
->>>>>>> PharmaEssentia
+  const { pathname } = new URL(req.url);
+  const match = pathname.match(SLUG_PATTERN);
+  const slug = match ? decodeURIComponent(match[1]) : "";
   if (!slug) return json(400, { error: "Missing slug" });
 
   try {

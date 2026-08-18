@@ -218,7 +218,7 @@ importers:
         version: 8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
-        version: 4.1.6(@opentelemetry/api@1.8.0)(@types/node@24.12.4)(vite@8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0))
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@24.12.4)(vite@8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0))
       wait-on:
         specifier: ^9.0.10
         version: 9.0.10
@@ -1195,10 +1195,6 @@ packages:
 
   '@netlify/serverless-functions-api@2.18.0':
     resolution: {integrity: sha512-Uo5XyMFZOinq6AonHu6dUOkLvVydn+SaldoVkB4yQSpDrtqYWi56CoA26IIOur1EMJqRdt6JIzjzIe4jpzYdhQ==}
-    engines: {node: '>=18.0.0'}
-
-  '@netlify/serverless-functions-api@2.19.0':
-    resolution: {integrity: sha512-TdZY8Cul1FGqUEogZv07wX59vjibJy3BsIPyNwIXSjhWUFDol8G3zvtnk+rhcwmHHoadibaFDgzO40Qq38OnGQ==}
     engines: {node: '>=18.0.0'}
 
   '@netlify/static@3.1.12':
@@ -8122,10 +8118,6 @@ snapshots:
     dependencies:
       '@netlify/types': 2.8.0
 
-  '@netlify/serverless-functions-api@2.19.0':
-    dependencies:
-      '@netlify/types': 2.8.0
-
   '@netlify/static@3.1.12':
     dependencies:
       mime-types: 3.0.2
@@ -8137,7 +8129,7 @@ snapshots:
       '@babel/parser': 7.29.8
       '@babel/types': 7.28.0
       '@netlify/binary-info': 1.0.0
-      '@netlify/serverless-functions-api': 2.19.0
+      '@netlify/serverless-functions-api': 2.18.0
       '@vercel/nft': 0.29.4(supports-color@10.2.2)
       archiver: 7.0.1
       common-path-prefix: 3.0.0
@@ -14194,7 +14186,7 @@ snapshots:
       jiti: 1.21.7
       yaml: 2.9.0
 
-  vitest@4.1.6(@opentelemetry/api@1.8.0)(@types/node@24.12.4)(vite@8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0)):
+  vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@24.12.4)(vite@8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.6
       '@vitest/mocker': 4.1.6(vite@8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0))
@@ -14217,7 +14209,7 @@ snapshots:
       vite: 8.0.13(@types/node@24.12.4)(esbuild@0.28.1)(jiti@1.21.7)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@opentelemetry/api': 1.8.0
+      '@opentelemetry/api': 1.9.1
       '@types/node': 24.12.4
     transitivePeerDependencies:
       - msw
