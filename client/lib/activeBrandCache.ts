@@ -24,12 +24,20 @@
  * directly. See admin-brand-detail.ts's header comment for the fuller
  * story on this site's redirect quirks; going straight to the function
  * sidesteps it the same way the admin calls now do.
+ *
+ * Also runs the fetched brand through resolveAssetUrlsDeep — the
+ * /uploads/* redirect that's supposed to serve logo/thumbnail/favicon
+ * images has the same production unreliability, confirmed on a second
+ * site (falls through to the SPA catch-all instead of reaching
+ * serve-upload.ts). Rewriting here means every already-saved brand
+ * (bundled defaults included) renders correctly without needing new data.
  */
 import fallbackBrand from "@patient/config/active-brand.json";
+import { resolveAssetUrlsDeep } from "./assetUrl";
 
 type ActiveBrand = typeof fallbackBrand;
 
-let cached: ActiveBrand = fallbackBrand;
+let cached: ActiveBrand = resolveAssetUrlsDeep(fallbackBrand);
 
 export function getCachedActiveBrand(): ActiveBrand {
   return cached;
@@ -42,7 +50,7 @@ export async function hydrateActiveBrand(timeoutMs = 3000): Promise<ActiveBrand>
     const res = await fetch("/.netlify/functions/brand-active", { signal: controller.signal });
     clearTimeout(timer);
     if (res.ok) {
-      cached = await res.json();
+      cached = resolveAssetUrlsDeep(await res.json());
     }
   } catch {
     // Network hiccup, timeout, or /api not available in this environment —

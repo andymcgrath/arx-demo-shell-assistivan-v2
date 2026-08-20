@@ -17,7 +17,7 @@
  *
  * v2 function — see brand-active.ts for why.
  */
-import { uploadsStore, isSafeFilename } from "./_lib/uploadStore";
+import { uploadsStore, isSafeFilename, servedUploadUrl } from "./_lib/uploadStore";
 import { json, errorDetail } from "./_lib/brandStore";
 
 const FILENAME_PATTERN = /\/(?:api\/admin\/assets|\.netlify\/functions\/admin-assets)\/([^/]+)\/?$/;
@@ -30,7 +30,7 @@ export default async (req: Request) => {
   try {
     if (req.method === "GET" && !filename) {
       const { blobs } = await uploadsStore().list();
-      return json(200, blobs.map(b => ({ url: `/uploads/${b.key}`, filename: b.key })));
+      return json(200, blobs.map(b => ({ url: servedUploadUrl(b.key), filename: b.key })));
     }
 
     if (req.method === "DELETE" && filename) {

@@ -8,6 +8,7 @@ import ProgramSection from "./admin/ProgramSection";
 import BrandingPreview from "./admin/BrandingPreview";
 import LogoPicker from "./admin/LogoPicker";
 import EducationVideoSection, { EducationVideoData } from "./admin/EducationVideoSection";
+import { resolveAssetUrlsDeep, isLocalUploadUrl, filenameFromUploadUrl } from "@/lib/assetUrl";
 
 type Tab = "manufacturer" | "program";
 type SaveState = "idle" | "saving" | "success" | "error";
@@ -61,8 +62,13 @@ const EMPTY: BrandingData = {
 
 /** Backfills fields that older saved presets / active-brand.json snapshots
  * may not have (e.g. `favicon` didn't exist before this admin update), so
- * the rest of this page can always assume a complete BrandingData shape. */
+ * the rest of this page can always assume a complete BrandingData shape.
+ * Also rewrites legacy /uploads/... image URLs to the reliable raw path —
+ * see resolveAssetUrlsDeep's comment — so the preview panel and
+ * LogoPicker thumbnails render correctly for brands saved before that
+ * fix existed, not just newly-uploaded ones. */
 function normalize(raw: any): BrandingData {
+  raw = resolveAssetUrlsDeep(raw);
   return {
     ...EMPTY,
     ...raw,
@@ -249,16 +255,25 @@ export default function Admin() {
     }
   }
 
-  /** Uploaded files live in Blobs now, addressed by /uploads/<filename> —
-   * promoting a brand has to carry those bytes along too, or the brand
-   * JSON would land on prod pointing at images prod has never seen. Only
-   * /uploads/* references need this; external URLs (CDN-hosted logos,
-   * like the bundled Assistivan default) are already reachable from
-   * anywhere and don't need copying. */
+  /** Uploaded files live in Blobs now, addressed by filename — promoting
+   * a brand has to carry those bytes along too, or the brand JSON would
+   * land on prod pointing at images prod has never seen. Only this app's
+   * own Blobs-backed uploads need this (isLocalUploadUrl covers both the
+   * legacy /uploads/ form and the raw serve-upload form — see
+   * resolveAssetUrlsDeep's comment on why both can show up); external
+   * URLs (CDN-hosted logos, like the bundled Assistivan default) are
+   * already reachable from anywhere and don't need copying.
+   *
+   * Fetches through the raw path (guaranteed by normalize() having
+   * already rewritten `d`'s URLs) rather than /uploads/ — fetching a
+   * broken /uploads/ redirect here would silently succeed with the SPA's
+   * index.html as the "image" bytes (force = true's status = 200 means
+   * no error, just wrong content), corrupting the asset instead of
+   * failing loudly. */
   async function collectUploadAssets(d: BrandingData) {
     const urls = new Set<string>();
     const maybeAdd = (u?: string) => {
-      if (u && u.startsWith("/uploads/")) urls.add(u);
+      if (isLocalUploadUrl(u)) urls.add(u!);
     };
     maybeAdd(d.manufacturer.logo.colors);
     maybeAdd(d.manufacturer.logo.white);
@@ -278,7 +293,7 @@ export default function Admin() {
           reader.onerror = () => reject(reader.error);
           reader.readAsDataURL(blob);
         });
-        return { filename: url.replace("/uploads/", ""), dataUrl, contentType: blob.type };
+        return { filename: filenameFromUploadUrl(url), dataUrl, contentType: blob.type };
       }),
     );
   }

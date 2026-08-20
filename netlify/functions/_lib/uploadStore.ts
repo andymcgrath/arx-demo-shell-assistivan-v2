@@ -4,12 +4,20 @@
  * Same Netlify Blobs mechanism as brandStore.ts, kept in a separate store
  * ("uploads") since these are binary files rather than JSON, and are
  * addressed by filename rather than by slug. Served back out through the
- * serve-upload function (see netlify.toml's /uploads/* redirect) — Blobs
- * entries aren't directly web-addressable the way static files were.
+ * serve-upload function — via netlify.toml's /uploads/* redirect in
+ * theory, but that's been confirmed unreliable in production (see
+ * servedUploadUrl below), so callers should prefer the raw path.
  */
 import { getStore } from "@netlify/blobs";
 
 const STORE_NAME = "uploads";
+
+/** The URL callers should hand back to the client for a just-uploaded
+ * (or listed) file. Raw /.netlify/functions/serve-upload/ path, not
+ * /uploads/ — see admin-upload.ts's header comment for why. */
+export function servedUploadUrl(filename: string): string {
+  return `/.netlify/functions/serve-upload/${filename}`;
+}
 
 export function uploadsStore() {
   return getStore(STORE_NAME);
