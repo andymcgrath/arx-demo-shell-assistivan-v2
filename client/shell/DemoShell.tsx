@@ -92,6 +92,9 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   Fax_QS_PA_Approved: "crm",
   Fax_PAP_Audit: "crm",
   CoA_DTP: "provider",
+  // CoA_Copay (WF4) is currently a direct copy of CoA_DTP (WF3) — same
+  // starting portal, see coaCopay.ts.
+  CoA_Copay: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist
@@ -361,7 +364,7 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
-  const isCoaFlow = flowType === "CoA_DTP";
+  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4). WF5 uses
   // its own computeIAssistPapStepDone (extra "Appeal" step) below instead
   // of WF4's — see isIAssistPapFlow.

@@ -34,7 +34,7 @@ export default function DeliveryPayment() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isCoA = flowType === "CoA_DTP";
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
   // iAssist replicates CoA's exact pricing display (Total due today card)
   // instead of WF1's List Price/Discount breakdown, since iAssist now also

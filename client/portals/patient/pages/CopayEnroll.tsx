@@ -8,7 +8,7 @@ export default function CopayEnroll() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isCoA = flowType === "CoA_DTP";
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
 
   useEffect(() => {

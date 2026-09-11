@@ -10,6 +10,7 @@ import {
   Search, Plus, Bell, ChevronDown, Settings, Users, Calendar,
   ClipboardList, Pill, FlaskConical, Image as ImageIcon, FolderOpen,
   Syringe, Share2, Mail, CheckSquare, MoreHorizontal, Menu, X,
+  Camera, Check,
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
 import type { WorkflowData } from "@/engine/types";
@@ -801,10 +802,14 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean }) {
+function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
   const [q3, setQ3] = useState<string | null>(null);
+  const [lonRequired, setLonRequired] = useState<string | null>(null);
+  const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
+  const [lonSubmitted, setLonSubmitted] = useState(false);
+  const lonFileRef = useRef<HTMLInputElement>(null);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
   const payer = usePatientStore((s) => s.payer);
@@ -812,6 +817,13 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
   function handleNext() {
     dispatch('SUBMIT_PA', { source: 'provider_portal', portal: 'provider' });
     onNext();
+  }
+
+  function handleLonFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLonFile({ url: URL.createObjectURL(file), name: file.name });
+    setLonSubmitted(false);
   }
 
   const questions = (
@@ -834,6 +846,61 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false }: { onBack: 
         onChange={setQ3}
         accentColor={isCoA ? HEROIC_BLUE : undefined}
       />
+      {showLetterOfNecessity && (
+        <>
+          <RadioQuestion
+            question="Is a Letter of Necessity required?"
+            value={lonRequired}
+            onChange={setLonRequired}
+            accentColor={isCoA ? HEROIC_BLUE : undefined}
+          />
+          {lonRequired === "yes" && (
+            <div className="border border-neutral-200 rounded-xl overflow-hidden max-w-sm -mt-4 mb-8">
+              <button
+                type="button"
+                onClick={() => lonFileRef.current?.click()}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {lonFile && (
+                    <img src={lonFile.url} alt="preview" className="w-10 h-8 object-cover rounded border border-neutral-200 flex-shrink-0" />
+                  )}
+                  <span className="text-sm text-neutral-700 truncate">
+                    {lonFile ? lonFile.name : "Upload document"}
+                  </span>
+                </div>
+                {lonFile ? (
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: isCoA ? HEROIC_BLUE : "#007178" }}
+                  >
+                    <Check size={12} className="text-white" />
+                  </span>
+                ) : (
+                  <Camera size={18} className="text-neutral-500 flex-shrink-0" />
+                )}
+              </button>
+              <input
+                ref={lonFileRef}
+                type="file"
+                accept="image/*,.pdf"
+                className="hidden"
+                onChange={handleLonFile}
+              />
+              <div className="border-t border-neutral-200 p-2">
+                <button
+                  type="button"
+                  onClick={() => setLonSubmitted(true)}
+                  disabled={!lonFile || lonSubmitted}
+                  className={`pa-btn-primary w-full ${isCoA ? "pa-btn-primary--heroic" : ""}`}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 
@@ -1804,6 +1871,10 @@ function CoaProviderExperience({
   // chrome at all, and the provider only lands back in the EHR once PA
   // Submitted's Done fires. This only reuses the shared step components —
   // it doesn't change what WF1 itself renders with them.
+  //
+  // showLetterOfNecessity is the one deliberate exception — it's CoAssist
+  // (CoA_DTP + CoA_Copay) only. WF1's own call site below doesn't pass it,
+  // so its PA questionnaire is unaffected.
   if (step === "email" || step === "login" || step === "pa-questions" || step === "pa-submitted") {
     return (
       <div className="provider-portal">
@@ -1813,6 +1884,7 @@ function CoaProviderExperience({
         {step === "pa-questions" && (
           <PaQuestionsStep
             isCoA={false}
+            showLetterOfNecessity
             onBack={() => setStep("login")}
             onCancel={() => setStep("login")}
             onNext={() => setStep("pa-submitted")}
@@ -2774,7 +2846,7 @@ export default function ProviderPortal() {
   // same way once the provider is past this starting screen).
   const [step, setStep] = useState<Step>(() => {
     const initialFlowType = useDemoStore.getState().flowType;
-    if (initialFlowType === 'CoA_DTP') return 'coa-dashboard';
+    if (initialFlowType === 'CoA_DTP' || initialFlowType === 'CoA_Copay') return 'coa-dashboard';
     if (initialFlowType === 'PrES_PAP') return computeInitialPresProviderStep(workflowData);
     return 'login';
   });
@@ -2785,7 +2857,7 @@ export default function ProviderPortal() {
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
   const isBranded = isBrandedFlow(flowType);
-  const isCoA = flowType === "CoA_DTP";
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed
   // multi-step enrollment flow — instead of falling into the generic
   // WF1/WF2 "Recent Submissions" chain below. See PresPapProviderExperience.
@@ -2795,7 +2867,7 @@ export default function ProviderPortal() {
   const storeFlowType = useDemoStore((s) => s.flowType);
 
   useEffect(() => {
-    if (storeFlowType !== 'CoA_DTP') {
+    if (storeFlowType !== 'CoA_DTP' && storeFlowType !== 'CoA_Copay') {
       return;
     }
     // BI completing means "PA Required" just appeared — skip the idle EHR
@@ -2859,7 +2931,7 @@ export default function ProviderPortal() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     emailSurfacedRef.current = false;
-    setStep(storeFlowType === 'CoA_DTP' ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
+    setStep((storeFlowType === 'CoA_DTP' || storeFlowType === 'CoA_Copay') ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {

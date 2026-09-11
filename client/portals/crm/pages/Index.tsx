@@ -691,7 +691,8 @@ export default function Index() {
   useEffect(() => {
     if (enrollmentStatus === 'none') {
       navigate('/');
-      if (useDemoStore.getState().flowType === "CoA_DTP") {
+      const currentFlowType = useDemoStore.getState().flowType;
+      if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay") {
         setHubView("detail");
       }
     }
@@ -704,7 +705,7 @@ export default function Index() {
   // (otherwise clicking "Back to Cases" afterward would just get overridden).
   const autoOpenedOnConsentRef = useRef(false);
   useEffect(() => {
-    if (workflowData.flowType !== "CoA_DTP") return;
+    if (workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay") return;
     if (workflowData.consentStatus === "confirmed") {
       if (!autoOpenedOnConsentRef.current) {
         autoOpenedOnConsentRef.current = true;
@@ -773,7 +774,7 @@ export default function Index() {
   // hypothetical outside pharmacy the case COULD have used.
   const isIAssistPapFlow = flowType === "iAssist_PAP";
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
-  const isCoaFlow = flowType === "CoA_DTP";
+  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
   // resolves to Denied instead of Approved — see engine/types.ts's FlowType
   // comment). Only affects the eaStage "Welcome message sent" copy below;

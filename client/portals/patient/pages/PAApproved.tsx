@@ -11,7 +11,7 @@ export default function PAApproved() {
   const pharmacyStatus = workflowData.pharmacyStatus;
   const paStatus = workflowData.paStatus;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
-  const isCoA = flowType === "CoA_DTP";
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // iAssist_PAP (WF5) reaches this screen via an approved APPEAL, not a
   // straight-through PA approval (see WorkflowEngine.ts's derivePatientRoute
   // and workflows/iAssistPap.ts's appealStatus) — the generic "covered by

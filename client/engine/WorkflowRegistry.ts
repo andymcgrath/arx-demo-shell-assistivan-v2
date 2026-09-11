@@ -7,6 +7,7 @@
 
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coaDtpMachine } from "@/workflows/coaDtp";
+import { coaCopayMachine } from "@/workflows/coaCopay";
 import { iAssistMachine } from "@/workflows/iAssist";
 import { iAssistPapMachine } from "@/workflows/iAssistPap";
 import { presPapMachine } from "@/workflows/presPap";
@@ -51,6 +52,11 @@ workflowRegistry.registerWorkflow("enrollment", workflowMachine, {
 workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
   label: "COA Direct to Patient",
   description: "Cash-pay direct-to-patient workflow via CoAssist",
+});
+
+workflowRegistry.registerWorkflow("CoA_Copay", coaCopayMachine, {
+  label: "CoAssist Copay",
+  description: "CoAssist Copay Program variation — currently a direct copy of CoA_DTP (WF3), pending its own divergent behavior",
 });
 
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {

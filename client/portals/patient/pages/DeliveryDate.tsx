@@ -33,7 +33,7 @@ export default function DeliveryDate() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
-  const isCoA = flowType === "CoA_DTP";
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it

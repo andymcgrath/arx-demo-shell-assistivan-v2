@@ -88,7 +88,7 @@ export function derivePatientRoute(state: MachineContext): string {
   const { workflowData } = state;
 
   const flowType = workflowData.flowType;
-  const isCoA = flowType === 'CoA_DTP';
+  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
 
   if (isCoA) {
     // Pre-enrollment: patient hasn't received SMS yet

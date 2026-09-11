@@ -11,7 +11,7 @@ export default function PADenied() {
   const { openChat } = useChatContext();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isCoA = flowType === 'CoA_DTP';
+  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
   // workflows/iAssistPap.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other

@@ -19,7 +19,7 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 // Assistance Program" PAP used by Fax_PAP_Audit/PrES_PAP — don't assume it
 // shares any of that logic (papSmsSent/papStatus/incomeStatus etc. don't
 // apply here).
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP";
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP";
 
 export interface Pharmacy {
   name: string;

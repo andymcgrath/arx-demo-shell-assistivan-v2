@@ -42,7 +42,7 @@ export default function DeliveryAddress() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isCoA = workflowData.flowType === "CoA_DTP";
+  const isCoA = workflowData.flowType === "CoA_DTP" || workflowData.flowType === "CoA_Copay";
   const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
   const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });

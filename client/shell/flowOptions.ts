@@ -1,5 +1,5 @@
 /**
- * FLOW_OPTIONS — the single source of truth for the 6 demo workflows
+ * FLOW_OPTIONS — the single source of truth for the 7 demo workflows
  *
  * Every FlowType (client/engine/types.ts) needs exactly one entry here.
  * DemoShell's flow dropdown and DemoConfigurator's workflow selector both
@@ -36,22 +36,27 @@ export const FLOW_OPTIONS: FlowOption[] = [
   },
   {
     value: "CoA_DTP",
-    label: "3. CoAssist",
+    label: "3. CoAssist DTP",
     description: "Cash-pay direct-to-patient workflow via CoAssist",
   },
   {
+    value: "CoA_Copay",
+    label: "4. CoAssist Copay",
+    description: "CoAssist Copay Program variation — currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior",
+  },
+  {
     value: "iAssist_PA_Approved",
-    label: "4. iAssist",
+    label: "5. iAssist",
     description: "Internal iAssist platform workflow with prior authorization approval",
   },
   {
     value: "iAssist_PAP",
-    label: "5. iAssist Appeal",
+    label: "6. iAssist Appeal",
     description: "Structural clone of iAssist (WF4), but the PA is denied instead of approved — sets up the Action Factory appeal-rule demo",
   },
   {
     value: "PrES_PAP",
-    label: "6. PrES PAP",
+    label: "7. PrES PAP",
     description: "Provider e-signature intake with PAP income-qualification (foundation placeholder — capture screens pending)",
   },
 ];

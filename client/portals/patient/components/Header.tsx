@@ -86,7 +86,7 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     ];
   }
 
-  if (flowType === "CoA_DTP") {
+  if (flowType === "CoA_DTP" || flowType === "CoA_Copay") {
     // Mirrors coaDtp.ts's actual state chain (see WorkflowEngine's isCoA
     // routing) rather than the generic enrollment steps other flows use —
     // this flow's onboarding is SMS + OTP + Consent only, no Signature or

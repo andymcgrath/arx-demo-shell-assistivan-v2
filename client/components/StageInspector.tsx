@@ -44,7 +44,7 @@ export function StageInspector() {
   const stateValue = useSelector(actor, (s) => s.value);
   const workflowData = useSelector(actor, (s) => s.context.workflowData, workflowDataEqual);
 
-  const isCoA = flowType === 'CoA_DTP';
+  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
 
   let stageLabel: string;
   let relevantFields: (keyof WorkflowData)[];

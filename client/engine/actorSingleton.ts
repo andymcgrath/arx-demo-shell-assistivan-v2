@@ -133,9 +133,10 @@ export function getWorkflowActor() {
   return actorInstance;
 }
 
-/** Maps a FlowType to the machine registry ID. CoA, iAssist, iAssist PAP, and PrES/PAP each have their own dedicated machine; the two Fax flows share "enrollment". */
+/** Maps a FlowType to the machine registry ID. CoA (DTP and Copay), iAssist, iAssist PAP, and PrES/PAP each have their own dedicated machine; the two Fax flows share "enrollment". */
 function machineIdForFlow(flowType: FlowType): string {
   if (flowType === "CoA_DTP") return "CoA_DTP";
+  if (flowType === "CoA_Copay") return "CoA_Copay";
   if (flowType === "iAssist_PA_Approved") return "iAssist_PA_Approved";
   if (flowType === "iAssist_PAP") return "iAssist_PAP";
   if (flowType === "PrES_PAP") return "PrES_PAP";
