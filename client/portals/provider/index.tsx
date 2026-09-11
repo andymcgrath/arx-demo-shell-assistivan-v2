@@ -802,8 +802,6 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-type PaUploadView = "dropzone" | "compact" | "review";
-
 function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
@@ -811,7 +809,6 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
   const [lonRequired, setLonRequired] = useState<string | null>(null);
   const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
   const [lonSubmitted, setLonSubmitted] = useState(false);
-  const [uploadView, setUploadView] = useState<PaUploadView>("dropzone");
   const lonFileRef = useRef<HTMLInputElement>(null);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
@@ -858,24 +855,12 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
             accentColor={isCoA ? HEROIC_BLUE : undefined}
           />
           {lonRequired === "yes" && (
-            <div className={`pa-upload pa-upload--${uploadView}`}>
+            <div className="pa-upload">
               <div className="pa-upload__header">
                 <div>
                   <p className="pa-upload__title">Letter of Necessity</p>
                   <p className="pa-upload__hint">Add an image or PDF to support this request.</p>
                 </div>
-                <label className="pa-upload__view-picker">
-                  <span>View</span>
-                  <select
-                    value={uploadView}
-                    onChange={(e) => setUploadView(e.target.value as PaUploadView)}
-                    aria-label="Choose document upload view"
-                  >
-                    <option value="dropzone">Guided upload</option>
-                    <option value="compact">Compact row</option>
-                    <option value="review">Review card</option>
-                  </select>
-                </label>
               </div>
               <button
                 type="button"
