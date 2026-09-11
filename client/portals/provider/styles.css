@@ -751,34 +751,6 @@
   font-size: 13px;
 }
 
-.pa-variant-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  color: #6b7280;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.pa-variant-picker select {
-  min-height: 36px;
-  padding: 0 32px 0 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #fff;
-  color: #374151;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pa-variant-picker select:focus {
-  outline: 2px solid rgba(0, 113, 120, 0.22);
-  outline-offset: 1px;
-  border-color: #007178;
-}
-
 /* Focused form workflow: questions lead, with a quiet summary rail. */
 .pa-layout--focused {
   display: grid;
@@ -808,178 +780,28 @@
   background: #eef7f7;
 }
 
-.pa-layout--focused .pa-summary-row,
-.pa-layout--split .pa-summary-row {
+.pa-layout--focused .pa-summary-row {
   flex-direction: column;
   gap: 6px;
 }
 
-.pa-layout--focused .pa-summary-row__value,
-.pa-layout--split .pa-summary-row__value {
+.pa-layout--focused .pa-summary-row__value {
   text-align: left;
 }
 
-.pa-layout--focused .pa-nav-row,
-.pa-layout--split .pa-nav-row {
+.pa-layout--focused .pa-nav-row {
   grid-column: 1 / -1;
 }
 
-/* Split-panel review: the summary remains visible beside bounded questions. */
-.pa-layout--split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 304px;
-  column-gap: 32px;
-  align-content: start;
-  background: #f8fafc;
-}
-
-.pa-layout--split .pa-questions-section {
-  grid-column: 1;
-  margin-bottom: 0;
-}
-
-.pa-layout--split .pa-question {
-  margin-bottom: 14px;
-  padding: 20px 22px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #fff;
-}
-
-.pa-layout--split .pa-summary-table {
-  grid-column: 2;
-  align-self: start;
-  position: sticky;
-  top: 16px;
-  margin-bottom: 0;
-  padding: 20px;
-  border: 1px solid #dbe2ea;
-  border-top: 3px solid #007178;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-}
-
-.pa-layout--split .pa-summary-label-text {
-  color: #64748b;
-}
-
-/* Compact clinical checklist: summary strip first, then dense numbered rows. */
-.pa-layout--checklist {
-  display: flex;
-  background: #f8fafc;
-}
-
-.pa-layout--checklist .pa-layout__header {
-  margin-bottom: 16px;
-}
-
-.pa-layout--checklist .pa-summary-table {
-  order: 2;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  margin-bottom: 18px;
-  padding: 1px;
-  border: 1px solid #dbe2ea;
-  border-radius: 10px;
-  background: #dbe2ea;
-}
-
-.pa-layout--checklist .pa-summary-row {
-  display: block;
-  min-height: 68px;
-  margin: 0;
-  padding: 12px 14px;
-  border: 0;
-  background: #fff;
-}
-
-.pa-layout--checklist .pa-summary-row__label {
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.pa-layout--checklist .pa-summary-label-text {
-  font-size: 10px;
-  color: #64748b;
-}
-
-.pa-layout--checklist .pa-summary-row__value {
-  padding-left: 22px;
-  text-align: left;
-  font-size: 12px;
-}
-
-.pa-layout--checklist .pa-questions-section {
-  order: 3;
-  margin-bottom: 0;
-  padding: 0 4px;
-  counter-reset: pa-question;
-}
-
-.pa-layout--checklist .pa-question {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  column-gap: 12px;
-  align-items: center;
-  margin: 0;
-  padding: 16px 12px;
-  border-bottom: 1px solid #dbe2ea;
-}
-
-.pa-layout--checklist .pa-question::before {
-  counter-increment: pa-question;
-  content: counter(pa-question, decimal-leading-zero);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #e0f1f2;
-  color: #007178;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.pa-layout--checklist .pa-question__text {
-  margin: 0;
-  font-size: 13px;
-}
-
-.pa-layout--checklist .pa-question__options {
-  flex-direction: row;
-  gap: 16px;
-}
-
-.pa-layout--checklist .pa-comments-field {
-  margin: 16px 0 0 44px;
-}
-
-.pa-layout--checklist .pa-nav-row {
-  order: 4;
-  margin-top: 18px;
-  padding: 14px 0 0;
-  border-top: 1px solid #cbd5e1;
-}
-
 @media (max-width: 900px) {
-  .pa-layout--focused,
-  .pa-layout--split {
+  .pa-layout--focused {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 20px;
   }
 
   .pa-layout--focused .pa-questions-section,
-  .pa-layout--split .pa-questions-section,
-  .pa-layout--focused .pa-summary-table,
-  .pa-layout--split .pa-summary-table {
+  .pa-layout--focused .pa-summary-table {
     grid-column: 1;
-  }
-
-  .pa-layout--split .pa-summary-table {
-    position: static;
   }
 }
 
@@ -989,50 +811,17 @@
     gap: 16px;
   }
 
-  .pa-variant-picker {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .pa-variant-picker select {
-    flex: 1;
-    max-width: 240px;
-  }
-
-  .pa-layout--focused,
-  .pa-layout--split,
-  .pa-layout--checklist {
+  .pa-layout--focused {
     display: flex;
     gap: 0;
   }
 
-  .pa-layout--focused .pa-questions-section,
-  .pa-layout--split .pa-questions-section {
+  .pa-layout--focused .pa-questions-section {
     padding: 20px 18px 2px;
   }
 
-  .pa-layout--focused .pa-summary-table,
-  .pa-layout--split .pa-summary-table {
+  .pa-layout--focused .pa-summary-table {
     margin-top: 20px;
-  }
-
-  .pa-layout--checklist .pa-summary-table {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .pa-layout--checklist .pa-question {
-    grid-template-columns: 28px minmax(0, 1fr);
-    align-items: start;
-    padding: 14px 4px;
-  }
-
-  .pa-layout--checklist .pa-question__options {
-    grid-column: 2;
-    margin-top: 10px;
-  }
-
-  .pa-layout--checklist .pa-comments-field {
-    margin-left: 0;
   }
 
   .pa-layout .pa-nav-row {
@@ -1041,10 +830,6 @@
 }
 
 @media (max-width: 480px) {
-  .pa-layout--checklist .pa-summary-table {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .pa-layout .pa-nav-row {
     align-items: stretch;
     flex-direction: column-reverse;
