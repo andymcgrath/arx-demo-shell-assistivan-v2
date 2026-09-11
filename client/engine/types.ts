@@ -74,6 +74,15 @@ export interface WorkflowData {
   /** CoA_DTP only: which delivery/pricing path the patient picked on the
    *  Benefit Pricing screen after PA approval. Unused by other flows. */
   pricingOption: 'retail' | 'mail_order' | 'self_pay' | null;
+  /** CoA_Copay only: true once the patient has enrolled in the Copay Program
+   *  (/copay-enroll). Unlike CoA_DTP's self_pay option — which is its own
+   *  mutually-exclusive pricing path — CoA_Copay's enrollment is a separate
+   *  step that then requires picking Retail or Mail Order as the actual
+   *  fulfillment channel (see coaCopay.ts's copayEnrolled state), so this
+   *  flag persists alongside pricingOption 'retail'/'mail_order' rather than
+   *  pricingOption ever being 'self_pay' for this flow. Stays false for
+   *  every other flow, including CoA_DTP. */
+  copayEnrolled: boolean;
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

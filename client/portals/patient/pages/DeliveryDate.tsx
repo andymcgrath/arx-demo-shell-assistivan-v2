@@ -45,7 +45,13 @@ export default function DeliveryDate() {
   // and PrES_PAP have no pricing/payment concept at all (Free Goods
   // program, see Index.tsx's papStage) — always skip straight to the
   // confirmation screen, same as WF1.
-  const skipPayment = isWorkflow1 || isPapFlow || ((isCoA || isIAssist) && workflowData.pricingOption === "self_pay");
+  //
+  // copayEnrolled covers CoA_Copay's own version of the same gate — its
+  // Copay pick never sets pricingOption to "self_pay" (see coaCopay.ts),
+  // it's "retail"/"mail_order" with copayEnrolled: true instead, but the
+  // "Copay doesn't collect payment through this flow" behavior above still
+  // applies to it.
+  const skipPayment = isWorkflow1 || isPapFlow || ((isCoA || isIAssist) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled));
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);

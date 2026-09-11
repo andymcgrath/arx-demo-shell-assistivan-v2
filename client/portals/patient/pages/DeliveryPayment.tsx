@@ -64,7 +64,13 @@ export default function DeliveryPayment() {
   // (e.g. WF1's Fax_QS_PA_Approved, which redirects away from this screen
   // above before a patient could ever click Pay).
   function completePayment() {
-    if ((!isCoA && !isIAssist) || workflowData.pricingOption === "self_pay") {
+    // copayEnrolled defensively covers CoA_Copay's version of self_pay
+    // (pricingOption is "retail"/"mail_order" there, never "self_pay" — see
+    // coaCopay.ts) — in practice this screen is unreachable for those
+    // patients at all now (DeliveryDate.tsx's skipPayment routes them
+    // straight to /delivery-confirmation instead), but keeping the check
+    // here too means this stays correct even if that routing ever changes.
+    if ((!isCoA && !isIAssist) || workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled) {
       dispatch("PATIENT_PAYS", { portal: "patient" });
       dispatch("VERIFY_PAYMENT", { portal: "patient" });
     }

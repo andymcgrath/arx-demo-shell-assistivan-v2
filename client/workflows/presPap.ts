@@ -50,6 +50,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paSubmittedAt: null,
   paApprovedAt: null,
   pricingOption: null,
+  copayEnrolled: false,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   cashOfferStatus: "none",

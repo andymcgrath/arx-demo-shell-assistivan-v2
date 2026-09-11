@@ -755,6 +755,7 @@ export default function Index() {
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
   const pricingOption = workflowData.pricingOption;
+  const copayEnrolled = workflowData.copayEnrolled;
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
@@ -1158,7 +1159,13 @@ export default function Index() {
           statusLabel: paStatus === 'approved' && pricingOption !== null && !!patientShipDate ? "Complete"
             : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
           statusDetail: paStatus === 'approved' && pricingOption !== null && !!patientShipDate
-            ? (pricingOption === "self_pay" ? "Copay Selected" : "Retail or Mail Order Selected")
+            ? (pricingOption === "self_pay" ? "Copay Selected"
+                // CoA_Copay's Copay pick never sets pricingOption to
+                // "self_pay" (see coaCopay.ts) — copayEnrolled is what
+                // still tells "enrolled in Copay, filling via Retail/Mail"
+                // apart from a direct Retail/Mail pick, for this label.
+                : copayEnrolled ? `Copay Selected (${pricingOption === "retail" ? "Retail" : "Mail Order"})`
+                : "Retail or Mail Order Selected")
             : paStatus === 'approved' ? "Awaiting price selection and scheduling"
             : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
           isComplete: (paStatus === 'approved' && pricingOption !== null && !!patientShipDate) || paymentVerified,

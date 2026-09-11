@@ -64,6 +64,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   // instead of approving it, so these stay at their neutral defaults in the
   // normal walkthrough.
   pricingOption: null,
+  copayEnrolled: false,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   cashOfferStatus: "none",

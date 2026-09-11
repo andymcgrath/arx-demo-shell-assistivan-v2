@@ -56,6 +56,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   // handlers below, which mirror CoA's pricingSelected/addressSet/
   // shipDateSelected states exactly.
   pricingOption: null,
+  copayEnrolled: false,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   cashOfferStatus: "none",

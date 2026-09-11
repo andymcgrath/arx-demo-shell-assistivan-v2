@@ -17,14 +17,20 @@ export default function CopayEnroll() {
     }
   }, [flowType, navigate]);
 
-  // Enrolling only unlocks the reduced $25 price — it isn't payment. That
+  // Enrolling only unlocks the reduced price — it isn't payment. That
   // happens later at the actual payment step (after address + date, see
   // DeliveryDate.tsx / DeliveryPayment.tsx), same point Retail/Mail reach
-  // it. This just records the choice and continues into the same
-  // address/date flow those options use.
+  // it. This just records the choice.
+  //
+  // CoA_Copay (WF4) is the one exception: enrolling there doesn't pick a
+  // pharmacy at all (see coaCopay.ts's new copayEnrolled state) — the
+  // patient still has to choose Retail or Mail Order as the fulfillment
+  // channel, so it routes back to /benefit-pricing instead of straight to
+  // /delivery-address. CoA_DTP/iAssist are unaffected — they still go
+  // straight into the same address/date flow Retail/Mail use.
   function enrollInCopay() {
     dispatch("SELECT_SELF_PAY", { portal: "patient" });
-    navigate("/delivery-address");
+    navigate(flowType === "CoA_Copay" ? "/benefit-pricing" : "/delivery-address");
   }
 
   if (isCoA || isIAssist) {

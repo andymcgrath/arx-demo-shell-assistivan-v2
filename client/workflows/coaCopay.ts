@@ -3,13 +3,16 @@ import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine
 
 // coaCopay.ts — CoAssist Copay Program (WF4)
 //
-// Direct copy of client/workflows/coaDtp.ts (WF3/CoA_DTP), created as the
-// starting point for the CoAssist Copay Program variation. Every state,
-// event, and comment below is currently identical to coaDtp.ts on purpose —
-// this flow is meant to diverge from CoA_DTP over time, not today. When you
-// start differentiating the two, this file (plus every "isCoaFlow"/"isCoA"
-// check across the CRM/Provider/Patient portals that was updated to include
-// CoA_Copay alongside CoA_DTP) is where that divergence begins.
+// Started as a direct copy of client/workflows/coaDtp.ts (WF3/CoA_DTP) — see
+// git history — and has now diverged at the pricing step. CoA_DTP's Copay
+// option is a third mutually-exclusive pricing tier (enroll → straight to
+// pricingSelected with a dedicated "CoAssist Pharmacy"). Here, Copay is no
+// longer mutually exclusive with Retail/Mail: enrolling (SELECT_SELF_PAY)
+// only sets copayEnrolled and parks in the new `copayEnrolled` state below —
+// the patient still has to pick Retail or Mail Order as the real fulfillment
+// channel afterward (SELECT_PRICING_OPTION), same as picking one directly
+// from paApprovedOtpVerified. Every other state below this point is
+// unchanged from coaDtp.ts.
 
 // Full contact details (not just a name) so the CRM's shared "Triage
 // Pharmacy Details" card — reused from WF1's Dispatch to Triage stage, see
@@ -17,7 +20,6 @@ import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine
 // CoA_Copay cases.
 const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
 const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
-const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
   flowType: "CoA_Copay",
@@ -43,6 +45,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paymentVerified: false,
   patientShipDate: null,
   pricingOption: null,
+  copayEnrolled: false,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   appealStatus: "none",
@@ -257,21 +260,45 @@ export const coaCopayMachine = setup({
           }),
         },
         // Third option on Benefit Pricing — patient applies to the CoAssist
-        // Copay Program instead of picking Retail/Mail. Enrollment just
-        // records the choice (unlocks the reduced price) — it is NOT
-        // payment. It joins the same pricingSelected state Retail/Mail use,
-        // so it goes through the identical address/date flow; the actual
-        // charge happens later at the payment step (PATIENT_PAYS/
-        // VERIFY_PAYMENT, handled below in pricingSelected).
+        // Copay Program instead of picking Retail/Mail directly. Unlike
+        // coaDtp.ts, this does NOT assign a pharmacy or leave
+        // paApprovedOtpVerified for pricingSelected — enrolling only unlocks
+        // the reduced price and parks in `copayEnrolled` below, still
+        // waiting on the patient to pick Retail or Mail Order as the actual
+        // fulfillment channel. pricingOption/selectedPharmacy stay null
+        // until that pick happens.
         SELECT_SELF_PAY: {
+          target: "copayEnrolled",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, copayEnrolled: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
+          }),
+        },
+      },
+    },
+    // Reached only via SELECT_SELF_PAY above (Copay enrollment) — the
+    // patient is enrolled (copayEnrolled: true, see WorkflowEngine's
+    // derivePatientRoute: pricingOption is still null here, so it correctly
+    // routes back to /benefit-pricing, now showing only Retail/Mail Order at
+    // the discounted Copay rates — see BenefitPricing.tsx's isCopayWorkflow
+    // branch). SELECT_PRICING_OPTION here reuses the exact same event
+    // Retail/Mail dispatch directly from paApprovedOtpVerified, just from a
+    // different state, and lands in the same pricingSelected state they'd
+    // reach either way — copayEnrolled carries forward via the ...context
+    // spread below, so DeliveryDate.tsx's skipPayment and CRM Index.tsx's
+    // Cash Offer label can still tell a direct Retail/Mail pick apart from
+    // an enrolled-then-picked one.
+    copayEnrolled: {
+      on: {
+        SELECT_PRICING_OPTION: {
           target: "pricingSelected",
           actions: assign({
-            workflowData: ({ context }) => ({
+            workflowData: ({ context, event }) => ({
               ...context.workflowData,
-              pricingOption: "self_pay",
-              selectedPharmacy: SELF_PAY_PHARMACY,
+              pricingOption: event.option,
+              selectedPharmacy: event.option === "retail" ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
             }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PRICING_OPTION', 'patient', 9)],
           }),
         },
       },

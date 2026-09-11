@@ -33,6 +33,7 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   paymentVerified: false,
   patientShipDate: null,
   pricingOption: null,
+  copayEnrolled: false,
   paApprovedSmsVerified: false,
   paApprovedOtpVerified: false,
   appealStatus: "none",
