@@ -802,6 +802,8 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
+type PaLayoutVariant = "focused" | "split" | "checklist";
+
 function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
@@ -809,6 +811,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
   const [lonRequired, setLonRequired] = useState<string | null>(null);
   const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
   const [lonSubmitted, setLonSubmitted] = useState(false);
+  const [layoutVariant, setLayoutVariant] = useState<PaLayoutVariant>("focused");
   const lonFileRef = useRef<HTMLInputElement>(null);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
@@ -928,8 +931,25 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
   }
 
   return (
-    <main className="provider-content provider-content--pa">
-      <p className="pa-section-title">Electronic Prior Authorization</p>
+    <main className={`provider-content provider-content--pa pa-layout pa-layout--${layoutVariant}`}>
+      <div className="pa-layout__header">
+        <div>
+          <p className="pa-section-title">Electronic Prior Authorization</p>
+          <p className="pa-layout__subtitle">Complete the clinical questions to submit this request.</p>
+        </div>
+        <label className="pa-variant-picker">
+          <span className="pa-variant-picker__label">View</span>
+          <select
+            value={layoutVariant}
+            onChange={(e) => setLayoutVariant(e.target.value as PaLayoutVariant)}
+            aria-label="Choose authorization question layout"
+          >
+            <option value="focused">Focused form</option>
+            <option value="split">Split-panel review</option>
+            <option value="checklist">Clinical checklist</option>
+          </select>
+        </label>
+      </div>
       {questions}
       <PaSummaryTable />
       <div className="pa-nav-row">
