@@ -802,6 +802,8 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
+type PaUploadView = "dropzone" | "compact" | "review";
+
 function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
@@ -809,6 +811,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
   const [lonRequired, setLonRequired] = useState<string | null>(null);
   const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
   const [lonSubmitted, setLonSubmitted] = useState(false);
+  const [uploadView, setUploadView] = useState<PaUploadView>("dropzone");
   const lonFileRef = useRef<HTMLInputElement>(null);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
@@ -855,29 +858,50 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
             accentColor={isCoA ? HEROIC_BLUE : undefined}
           />
           {lonRequired === "yes" && (
-            <div className="border border-neutral-200 rounded-xl overflow-hidden max-w-sm -mt-4 mb-8">
+            <div className={`pa-upload pa-upload--${uploadView}`}>
+              <div className="pa-upload__header">
+                <div>
+                  <p className="pa-upload__title">Letter of Necessity</p>
+                  <p className="pa-upload__hint">Add an image or PDF to support this request.</p>
+                </div>
+                <label className="pa-upload__view-picker">
+                  <span>View</span>
+                  <select
+                    value={uploadView}
+                    onChange={(e) => setUploadView(e.target.value as PaUploadView)}
+                    aria-label="Choose document upload view"
+                  >
+                    <option value="dropzone">Guided upload</option>
+                    <option value="compact">Compact row</option>
+                    <option value="review">Review card</option>
+                  </select>
+                </label>
+              </div>
               <button
                 type="button"
                 onClick={() => lonFileRef.current?.click()}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+                className="pa-upload__trigger"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  {lonFile && (
-                    <img src={lonFile.url} alt="preview" className="w-10 h-8 object-cover rounded border border-neutral-200 flex-shrink-0" />
+                <div className="pa-upload__visual">
+                  {lonFile ? (
+                    <img src={lonFile.url} alt="preview" className="pa-upload__preview" />
+                  ) : (
+                    <span className="pa-upload__icon"><Camera size={18} /></span>
                   )}
-                  <span className="text-sm text-neutral-700 truncate">
-                    {lonFile ? lonFile.name : "Upload document"}
-                  </span>
                 </div>
+                <span className="pa-upload__copy">
+                  <strong>{lonFile ? lonFile.name : "Upload document"}</strong>
+                  <small>{lonFile ? "Document attached" : "Choose a file from your device"}</small>
+                </span>
                 {lonFile ? (
                   <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="pa-upload__status"
                     style={{ background: isCoA ? HEROIC_BLUE : "#007178" }}
                   >
                     <Check size={12} className="text-white" />
                   </span>
                 ) : (
-                  <Camera size={18} className="text-neutral-500 flex-shrink-0" />
+                  <span className="pa-upload__action">Browse</span>
                 )}
               </button>
               <input
@@ -887,14 +911,15 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
                 className="hidden"
                 onChange={handleLonFile}
               />
-              <div className="border-t border-neutral-200 p-2">
+              <div className="pa-upload__footer">
+                <span className="pa-upload__file-note">Accepted formats: image or PDF</span>
                 <button
                   type="button"
                   onClick={() => setLonSubmitted(true)}
                   disabled={!lonFile || lonSubmitted}
-                  className={`pa-btn-primary w-full ${isCoA ? "pa-btn-primary--heroic" : ""}`}
+                  className={`pa-btn-primary ${isCoA ? "pa-btn-primary--heroic" : ""}`}
                 >
-                  Submit
+                  {lonSubmitted ? "Submitted" : "Submit document"}
                 </button>
               </div>
             </div>

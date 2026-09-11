@@ -844,3 +844,279 @@
     flex: 1;
   }
 }
+
+/* ── Document upload views ─────────────────────────────────────────────────── */
+
+.pa-upload {
+  max-width: 560px;
+  margin: -4px 0 28px;
+  padding: 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.pa-upload__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.pa-upload__title,
+.pa-upload__hint {
+  margin: 0;
+}
+
+.pa-upload__title {
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pa-upload__hint {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.pa-upload__view-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pa-upload__view-picker select {
+  min-height: 30px;
+  padding: 0 24px 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pa-upload__view-picker select:focus {
+  outline: 2px solid rgba(0, 113, 120, 0.2);
+  outline-offset: 1px;
+  border-color: #007178;
+}
+
+.pa-upload__trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 76px;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.pa-upload__trigger:hover {
+  border-color: #007178;
+  background: #fbffff;
+}
+
+.pa-upload__trigger:focus-visible {
+  outline: 2px solid rgba(0, 113, 120, 0.25);
+  outline-offset: 2px;
+}
+
+.pa-upload__visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #e5f3f4;
+  color: #007178;
+}
+
+.pa-upload__preview {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.pa-upload__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pa-upload__copy strong {
+  overflow: hidden;
+  color: #374151;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pa-upload__copy small {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.pa-upload__action {
+  flex-shrink: 0;
+  color: #007178;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pa-upload__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.pa-upload__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pa-upload__file-note {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.pa-upload__footer .pa-btn-primary {
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+
+/* Guided upload: make the action feel like a clear dropzone entry point. */
+.pa-upload--dropzone {
+  border-color: #b9dfe1;
+  background: #f1fbfb;
+}
+
+.pa-upload--dropzone .pa-upload__trigger {
+  min-height: 104px;
+  justify-content: center;
+  border: 1px dashed #70b8bc;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.pa-upload--dropzone .pa-upload__copy {
+  flex: 0 1 auto;
+}
+
+.pa-upload--dropzone .pa-upload__visual {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+/* Compact row: reduce chrome for repeat users processing many requests. */
+.pa-upload--compact {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.pa-upload--compact .pa-upload__header {
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pa-upload--compact .pa-upload__hint,
+.pa-upload--compact .pa-upload__file-note {
+  display: none;
+}
+
+.pa-upload--compact .pa-upload__trigger {
+  min-height: 56px;
+  padding: 6px 8px;
+  border-color: #e2e8f0;
+  border-radius: 7px;
+}
+
+.pa-upload--compact .pa-upload__visual,
+.pa-upload--compact .pa-upload__preview {
+  width: 32px;
+  height: 32px;
+}
+
+.pa-upload--compact .pa-upload__footer {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.pa-upload--compact .pa-upload__footer .pa-btn-primary {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* Review card: keep the selected document visibly tied to its submission action. */
+.pa-upload--review {
+  padding: 18px;
+  border-color: #d5dbe5;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.pa-upload--review .pa-upload__trigger {
+  min-height: 92px;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.pa-upload--review .pa-upload__visual {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: #e7f4f5;
+}
+
+.pa-upload--review .pa-upload__preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .pa-upload__header,
+  .pa-upload__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pa-upload__view-picker {
+    justify-content: space-between;
+  }
+
+  .pa-upload__view-picker select {
+    flex: 1;
+    max-width: 220px;
+  }
+
+  .pa-upload__footer .pa-btn-primary {
+    width: 100%;
+  }
+}
