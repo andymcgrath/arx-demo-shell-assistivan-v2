@@ -18,7 +18,17 @@ import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine
 // Pharmacy Details" card — reused from WF1's Dispatch to Triage stage, see
 // Index.tsx's STAGES_LIVE — doesn't render blank address/phone fields for
 // CoA_Copay cases.
-const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
+//
+// RETAIL_PHARMACY is only a placeholder here — the instant the patient picks
+// Retail, PharmacySelection.tsx dispatches SELECT_PHARMACY with their actual
+// choice, overwriting this. It's kept in sync with that screen's CVS entry
+// (same Orlando, FL address as Keanu Dixon's home — see PATIENT_SEED in
+// patientStore.ts — matching coaDtp.ts's SELF_PAY_PHARMACY convention) so
+// nothing looks inconsistent in the sliver of time before that dispatch
+// fires. MAIL_ORDER_PHARMACY is untouched — Mail Order never routes through
+// PharmacySelection.tsx (ships from a distribution center, not somewhere
+// Keanu drives to), so there's no local-address expectation for it.
+const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" };
 const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {

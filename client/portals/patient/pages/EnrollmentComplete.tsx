@@ -1,8 +1,24 @@
 import { useNavigate } from "@/lib/portalRouter";
-import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 export default function EnrollmentComplete() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const { workflowData } = usePersonaState('patient');
+
+  // CoA_Copay (WF4) Mail Order path only — this screen is a one-time
+  // "Thanks! Your details were received" stop right after the delivery
+  // address is confirmed (see DeliveryAddress.tsx and patient/index.tsx's
+  // DELIVERY_FLOW_PATHS). Every other flow that shares this screen is a
+  // genuine wait-state where derivePatientRoute keeps recomputing
+  // /enrollment-complete itself, so navigate("/") there is harmless — the
+  // patient just gets bounced right back by StateDrivenNav. Mail Order is
+  // different: WorkflowEngine.ts's derivePatientRoute already targets
+  // /order-tracker the moment this screen shows, so "Got it" needs to go
+  // there directly, mirroring Retail's tracker experience
+  // (OrderTracker.tsx's RetailPharmacyTracker, broadened to also cover
+  // pricingOption === 'mail_order').
+  const isCopayMailOrder =
+    workflowData.flowType === "CoA_Copay" && workflowData.pricingOption === "mail_order";
 
   return (
     <main className="flex-grow flex items-center justify-center px-6 py-12 bg-arx-primary">
@@ -49,7 +65,10 @@ export default function EnrollmentComplete() {
           </p>
 
           <button
-            onClick={() => { dispatch('ENROLL', { portal: 'patient' }); navigate("/"); }}
+            onClick={() => {
+              dispatch('ENROLL', { portal: 'patient' });
+              navigate(isCopayMailOrder ? "/order-tracker" : "/");
+            }}
             className="w-full bg-white text-arx-primary font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"
           >
             Got it

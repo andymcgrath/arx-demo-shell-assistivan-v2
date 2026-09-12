@@ -776,6 +776,26 @@ export default function Index() {
   const isIAssistPapFlow = flowType === "iAssist_PAP";
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
+  // different, fixed-pharmacy path this doesn't touch) — both are filled
+  // outside AssistRx's own dispensing pipeline (a real-world pharmacy
+  // counter for Retail, a mail-order pharmacy's own facility for Mail
+  // Order — see coaCopay.ts, PharmacySelection.tsx, and
+  // WorkflowEngine.ts's derivePatientRoute), so there's no Processing/
+  // Ready/Shipped/Delivered chain for HUB staff to track for either.
+  // Dispatch to Triage (TP-14277) is this path's last stage — Pharmacy
+  // Status (PS-14278) is dropped from STAGES_LIVE below, the same way
+  // isIAssistPapFlow drops it for its own out-of-pipeline site-of-care
+  // dispense. Named for its original Retail-only scope; kept short rather
+  // than renamed everywhere now that Mail Order shares it.
+  const isCopayRetailFlow = flowType === "CoA_Copay" && (pricingOption === "retail" || pricingOption === "mail_order");
+  // CO-14281's completion gate normally requires patientShipDate — for
+  // CoA_Copay Retail/Mail Order, that field stays null forever (ship-date
+  // collection is skipped entirely for both paths, see PharmacySelection.tsx,
+  // DeliveryAddress.tsx, and WorkflowEngine.ts's derivePatientRoute), so
+  // pricingOption alone is enough to call scheduling "done" once
+  // isCopayRetailFlow.
+  const schedulingDone = isCopayRetailFlow || patientShipDate !== null;
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
   // resolves to Denied instead of Approved — see engine/types.ts's FlowType
   // comment). Only affects the eaStage "Welcome message sent" copy below;
@@ -1052,6 +1072,24 @@ export default function Index() {
     ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
       ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
+    // CoA_Copay Retail/Mail Order — see isCopayRetailFlow above. Keyed off
+    // selectedPharmacy/dispatchStatus === "dispatched" rather than
+    // dispatchStatus === "selected" like the generic branch below does.
+    // Retail jumps straight from "none" to "dispatched" (address collection
+    // is skipped entirely — see PharmacySelection.tsx); Mail Order still
+    // passes through "selected" via PATIENT_SETS_ADDRESS on
+    // /delivery-address (see DeliveryAddress.tsx — that step stays for Mail
+    // Order, only /delivery-date is skipped). Either way this completes the
+    // moment dispatchStatus hits "dispatched," rather than waiting on
+    // pharmacyStatus to reach "shipped" like the generic branch does —
+    // there's no Pharmacy Status stage left to advance it that far, since
+    // fulfillment happens outside AssistRx's own pipeline either way.
+    : isCopayRetailFlow
+    ? (!selectedPharmacy
+      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+      : dispatchStatus !== "dispatched"
+      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: pricingOption === "retail" ? "Dispatched to retail pharmacy — filled outside AssistRx" : "Dispatched via Mail Order — filled outside AssistRx", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Dispatched" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     : dispatchStatus === "pending_selection" || dispatchStatus === "none"
     ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : dispatchStatus === "selected"
@@ -1154,11 +1192,20 @@ export default function Index() {
           // paymentVerified never fire for Copay and can't be the completion
           // signal here). Before scheduling finishes, it's just not started.
           //
+          // CoA_Copay Retail/Mail Order are the exception to the
+          // patientShipDate requirement (schedulingDone below) — both skip
+          // ship-date collection entirely now (Retail skips address too; Mail
+          // Order still confirms an address, just no date — see
+          // WorkflowEngine.ts's derivePatientRoute, PharmacySelection.tsx,
+          // and DeliveryAddress.tsx), so patientShipDate stays null forever
+          // for either. pricingOption alone is enough to call scheduling
+          // "done" once isCopayRetailFlow.
+          //
           // PA-denied path is unchanged — cashOfferStatus/paymentVerified
           // still drive Offer Sent/Paid there, same as before.
-          statusLabel: paStatus === 'approved' && pricingOption !== null && !!patientShipDate ? "Complete"
+          statusLabel: paStatus === 'approved' && pricingOption !== null && schedulingDone ? "Complete"
             : cashOfferStatus === "none" ? "Stage not started" : cashOfferStatus === "sent" ? "Offer Sent" : "Paid",
-          statusDetail: paStatus === 'approved' && pricingOption !== null && !!patientShipDate
+          statusDetail: paStatus === 'approved' && pricingOption !== null && schedulingDone
             ? (pricingOption === "self_pay" ? "Copay Selected"
                 // CoA_Copay's Copay pick never sets pricingOption to
                 // "self_pay" (see coaCopay.ts) — copayEnrolled is what
@@ -1168,8 +1215,8 @@ export default function Index() {
                 : "Retail or Mail Order Selected")
             : paStatus === 'approved' ? "Awaiting price selection and scheduling"
             : cashOfferStatus === "none" ? "Awaiting PA denial" : cashOfferStatus === "sent" ? "Payment link sent to patient" : paymentVerified ? "Payment verified — Complete" : "Payment received — pending verification",
-          isComplete: (paStatus === 'approved' && pricingOption !== null && !!patientShipDate) || paymentVerified,
-          isNotStarted: paStatus === 'approved' ? (pricingOption === null || !patientShipDate) : cashOfferStatus === "none",
+          isComplete: (paStatus === 'approved' && pricingOption !== null && schedulingDone) || paymentVerified,
+          isNotStarted: paStatus === 'approved' ? (pricingOption === null || !schedulingDone) : cashOfferStatus === "none",
           fields: [
             { label: "Offer Status", value: cashOfferStatus === "none" ? null : cashOfferStatus === "sent" ? "Sent" : "Paid" },
             { label: "Payment Verified", value: paymentVerified ? "Yes" : "No" },
@@ -1183,7 +1230,13 @@ export default function Index() {
         // "Dispense" stage, so HUB staff see the exact same dispensing UI
         // regardless of flow.
         tpStage,
-        psStage,
+        // CoA_Copay Retail and Mail Order (isCopayRetailFlow) — Pharmacy
+        // Status doesn't apply once fulfillment happens outside AssistRx's
+        // own pipeline (a retail counter or the mail-order pharmacy's own
+        // facility), so it's dropped here the same way isIAssistPapFlow
+        // drops it below for its own out-of-pipeline dispense. CoA_DTP keeps
+        // the full pipeline, unchanged.
+        ...(isCopayRetailFlow ? [] : [psStage]),
       ]
     : isPapFlow
     ? STAGES_PAP_AUDIT.map((s) =>
@@ -2915,7 +2968,19 @@ export default function Index() {
                   Dispatched
                 </span>
               )}
-              {activeStage.id === "TP-14277" && !isIAssistPapFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
+              {/* CoA_Copay Retail/Mail Order (isCopayRetailFlow) —
+                  dispatchStatus "dispatched" is this path's completion
+                  signal (see tpStage above); pharmacyStatus stays
+                  "processing" forever after that since there's no Pharmacy
+                  Status tab left to advance it, so the generic
+                  "Processing…"/"Shipping…" pills below never fire for either
+                  and this needs its own chip. */}
+              {activeStage.id === "TP-14277" && isCopayRetailFlow && dispatchStatus === "dispatched" && (
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                  Dispatched
+                </span>
+              )}
+              {activeStage.id === "TP-14277" && !isIAssistPapFlow && !isCopayRetailFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "#e8f0fa", color: FC_BLUE }}>
                   Processing…
                 </span>

@@ -137,6 +137,21 @@ export function derivePatientRoute(state: MachineContext): string {
         workflowData.pricingOption === null)
       return '/benefit-pricing';
 
+    // CoA_Copay's Retail path only — filled at a real-world pharmacy
+    // counter, outside AssistRx's own dispensing pipeline (see coaCopay.ts,
+    // crm/pages/Index.tsx's isCopayRetailFlow, and OrderTracker.tsx's
+    // RetailPharmacyTracker). Delivery address/ship date don't apply here —
+    // that's the filling pharmacy's business, not something AssistRx
+    // collects — so this skips straight to the pharmacy tracker the instant
+    // a pharmacy is picked. PharmacySelection.tsx always dispatches
+    // SELECT_PRICING_OPTION + SELECT_PHARMACY together, so pricingOption
+    // being "retail" already implies a pharmacy is selected. Checked before
+    // the generic "needs address" rule right below, which CoA_Copay's Mail
+    // Order pick and CoA_DTP's Retail (a different, fixed-pharmacy path)
+    // still fall through to, unchanged.
+    if (flowType === 'CoA_Copay' && workflowData.pricingOption === 'retail')
+      return '/order-tracker';
+
     // Pricing chosen (Retail, Mail, or Copay enrollment) — needs address.
     // Copay enrollment only unlocks the reduced price; the actual charge
     // happens later at the payment step (after address + date, see
@@ -161,6 +176,29 @@ export function derivePatientRoute(state: MachineContext): string {
     if (workflowData.cashOfferStatus === 'paid' &&
         workflowData.dispatchStatus === 'none')
       return '/delivery-address';
+
+    // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
+    // workflow once dispatched" treatment (see the Retail bypass above and
+    // isCopayRetailFlow in crm/pages/Index.tsx), but keeps the
+    // delivery-address step (Mail Order still needs somewhere to ship to,
+    // unlike Retail's in-person pickup) and drops only the ship-date step
+    // and everything past it — the filling pharmacy handles scheduling, not
+    // AssistRx. Once the address is confirmed (dispatchStatus leaves
+    // 'none'), the real derived target becomes /order-tracker — same
+    // OrderTracker.tsx RetailPharmacyTracker component Retail uses,
+    // broadened to also cover pricingOption === 'mail_order' — so
+    // pharmacyStatus advancing (CRM's "Dispatch to Pharmacy") flips the
+    // tracker's 2 steps exactly like Retail's. DeliveryAddress.tsx still
+    // navigates straight to /enrollment-complete ("Thanks! Your details
+    // were received") instead of /delivery-date for this path first — that
+    // screen is a one-time manual-nav stop tolerated by
+    // DELIVERY_FLOW_PATHS in patient/index.tsx, the same pattern
+    // AppointmentConfirmation/PesIncomeConsent use elsewhere — before its
+    // "Got it" button (see EnrollmentComplete.tsx) sends the patient on to
+    // the tracker this rule now computes.
+    if (flowType === 'CoA_Copay' && workflowData.pricingOption === 'mail_order' &&
+        workflowData.dispatchStatus !== 'none')
+      return '/order-tracker';
 
     // Address set — needs ship date
     if (workflowData.dispatchStatus === 'selected' &&

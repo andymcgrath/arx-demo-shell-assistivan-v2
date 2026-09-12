@@ -33,6 +33,14 @@ import { PROGRAM } from "@/config/branding";
  * Retail or Mail Order as the actual fulfillment channel, at a discounted
  * Copay rate. This file stays the single source of truth for both — the
  * CoA_DTP/iAssist rendering below (DefaultBenefitPricing) is untouched.
+ *
+ * CoA_Copay's Retail card is a second, narrower exception, layered on top of
+ * the first: instead of dispatching SELECT_PRICING_OPTION immediately like
+ * every other Retail/Mail card on this page, it navigates to the new
+ * /pharmacy-selection screen (PharmacySelection.tsx) so the patient can pick
+ * a real pharmacy chain instead of always landing on the same fixed "CVS
+ * Pharmacy #3795". Mail Order keeps dispatching immediately, same as
+ * CoA_DTP/iAssist. See CopayBenefitPricing's handleSelect below.
  */
 
 type PricingKey = "retail" | "mail_order" | "self_pay";
@@ -251,16 +259,20 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
 
-  function choosePricing(option: "retail" | "mail_order") {
-    dispatch("SELECT_PRICING_OPTION", { portal: "patient", option });
-    navigate("/delivery-address");
-  }
-
   function handleSelect(key: PricingKey) {
     if (key === "self_pay") {
       navigate("/copay-enroll");
+    } else if (key === "retail") {
+      // CoA_Copay only — Retail gets an extra pharmacy-selection step instead
+      // of dispatching straight away (see PharmacySelection.tsx's header
+      // comment for why and how). Nothing is dispatched here yet; that page
+      // fires SELECT_PRICING_OPTION + SELECT_PHARMACY once a specific store
+      // is picked.
+      navigate("/pharmacy-selection");
     } else {
-      choosePricing(key);
+      // Mail Order — unchanged, still dispatches immediately.
+      dispatch("SELECT_PRICING_OPTION", { portal: "patient", option: key });
+      navigate("/delivery-address");
     }
   }
 

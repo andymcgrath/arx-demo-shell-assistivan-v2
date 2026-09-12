@@ -29,10 +29,12 @@ import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
   LayoutTemplate, LayoutPanelLeft, LayoutGrid, Settings, Palette,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
 import { FLOW_OPTIONS } from "./flowOptions";
+import { usePatientToastStore } from "@/store/patientToastStore";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -270,6 +272,25 @@ const STEP_LABELS_COA = [
   "Medication Delivered",
 ];
 
+// CoA_Copay's Retail and Mail Order paths (pricingOption === "retail" or
+// "mail_order", see isCopayRetailFlow in StepBar below and
+// crm/pages/Index.tsx's own isCopayRetailFlow) — STEP_LABELS_COA's exact
+// same first six labels, but without the Rx Processing/Rx Shipped/
+// Medication Delivered tail. Same reasoning as STEP_LABELS_IASSIST_PAP
+// dropping that tail for its own out-of-pipeline dispense: both are filled
+// outside AssistRx's own dispensing pipeline (a retail counter, or the
+// mail-order pharmacy's own facility), so "Dispatch to Triage" is this
+// path's final, terminal step either way. CoA_DTP keeps the full 9-step
+// STEP_LABELS_COA bar.
+const STEP_LABELS_COA_COPAY_RETAIL = [
+  "eRx Received",
+  "Consent",
+  "Benefits Investigation",
+  "Prior Authorization",
+  "Payment",
+  "Dispatch to Triage",
+];
+
 // CoA_DTP-specific step calculation — the generic one below was tuned for
 // WF1's fields (dispatchStatus/paStatus meaning "pharmacy dispatch") and,
 // applied to CoA's different fields, jumped straight to a late step number
@@ -365,6 +386,15 @@ function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  // See STEP_LABELS_COA_COPAY_RETAIL above and crm/pages/Index.tsx's own
+  // isCopayRetailFlow — this is the one case where the label set itself
+  // (not just the workflowStep number) needs to change mid-flow, since
+  // which pricing option resolves only once the patient reaches Benefit
+  // Pricing (pricingOption starts null for all three). Covers both Retail
+  // and Mail Order now — both end at Dispatch to Triage (see
+  // WorkflowEngine.ts's derivePatientRoute) — Copay-enrolled-then-picked
+  // included, since pricingOption is what this checks either way.
+  const isCopayRetailFlow = flowType === "CoA_Copay" && (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order");
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4). WF5 uses
   // its own computeIAssistPapStepDone (extra "Appeal" step) below instead
   // of WF4's — see isIAssistPapFlow.
@@ -402,6 +432,7 @@ function StepBar() {
   const appealStatus    = workflowData.appealStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
   const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
+    : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL
     : isCoaFlow ? STEP_LABELS_COA
     : isIAssistPapFlow ? STEP_LABELS_IASSIST_PAP
     : STEP_LABELS_DEFAULT;
@@ -541,6 +572,48 @@ function StepBar() {
   );
 }
 
+// ── PatientPhoneToast — confirmation banner confined to the iPhone mockup ────
+//
+// Reads patientToastStore (see that file's docblock) rather than sonner's
+// toast() so the message can't leak out and float over the rest of the demo
+// shell — the whole point of this component. Lives here in Panel/DemoShell
+// (not in the routed page that requests it, e.g. CopayEnroll.tsx) because
+// this tree stays mounted across in-portal navigation, so the banner
+// survives the redirect back to Benefit Pricing instead of unmounting with
+// the page that triggered it.
+
+function PatientPhoneToast() {
+  const message = usePatientToastStore((s) => s.message);
+  const clear = usePatientToastStore((s) => s.clear);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!message) return;
+    setVisible(true);
+    const hideTimer = setTimeout(() => setVisible(false), 2200);
+    const clearTimer = setTimeout(() => clear(), 2500);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(clearTimer);
+    };
+  }, [message, clear]);
+
+  if (!message) return null;
+
+  return (
+    <div
+      className={cn(
+        "absolute left-3 right-3 top-16 z-[60] flex items-center gap-2 rounded-lg border px-3.5 py-2.5 shadow-lg transition-all duration-300",
+        "border-green-200 bg-green-50 text-green-800",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+      )}
+    >
+      <CheckCircle className="h-4 w-4 flex-shrink-0" />
+      <span className="text-[13px] font-medium leading-snug">{message}</span>
+    </div>
+  );
+}
+
 // ── Panel — isolated scroll container ────────────────────────────────────────
 
 interface PanelProps {
@@ -663,6 +736,13 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
                   </svg>
                 </div>
               </div>
+
+              {/* Confirmation banner for the patient phone mockup — see
+                  patientToastStore.ts for why this isn't sonner's toast().
+                  Sits between the status bar and the content so it never
+                  covers the Dynamic Island, and is clipped to the screen's
+                  rounded corners by .i17pro__screen's own overflow:hidden. */}
+              <PatientPhoneToast />
 
               {/* Portal content */}
               <div className="i17pro__content">

@@ -34,6 +34,22 @@ const DELIVERY_FLOW_PATHS = [
   '/pa-approved-otp',
   '/benefit-pricing',
   '/copay-enroll',
+  // CoA_Copay (WF4) only, Retail path — see PharmacySelection.tsx's header
+  // comment. pricingOption is still null while this screen shows (the
+  // SELECT_PRICING_OPTION dispatch only fires once a specific pharmacy is
+  // picked), so without this entry derivePatientRoute would bounce the
+  // patient straight back to /benefit-pricing.
+  '/pharmacy-selection',
+  // CoA_Copay (WF4) Mail Order path only — DeliveryAddress.tsx navigates
+  // here ("Thanks! Your details were received") right after the address is
+  // confirmed, but WorkflowEngine.ts's derivePatientRoute already computes
+  // /order-tracker as the real target at that same moment (dispatchStatus
+  // leaves 'none'), same as the Retail bypass right above it. Without this
+  // entry the patient would never see this one-time "Thanks!" screen at
+  // all — StateDrivenNav would bounce them straight to /order-tracker
+  // before they could read it. EnrollmentComplete.tsx's "Got it" button
+  // then sends CoA_Copay + mail_order patients on to /order-tracker itself.
+  '/enrollment-complete',
   '/delivery-address',
   '/delivery-date',
   '/delivery-payment',
@@ -97,6 +113,7 @@ import PapUpdateSms from "./pages/PapUpdateSms";
 import PapUpdateOtp from "./pages/PapUpdateOtp";
 import BenefitPricing from "./pages/BenefitPricing";
 import CopayEnroll from "./pages/CopayEnroll";
+import PharmacySelection from "./pages/PharmacySelection";
 import DeliveryAddress from "./pages/DeliveryAddress";
 import DeliveryDate from "./pages/DeliveryDate";
 import DeliveryPayment from "./pages/DeliveryPayment";
@@ -218,6 +235,7 @@ function PatientRoutes() {
           <Route path="/pap-update-otp"        element={<PapUpdateOtp />} />
           <Route path="/benefit-pricing"       element={<BenefitPricing />} />
           <Route path="/copay-enroll"          element={<CopayEnroll />} />
+          <Route path="/pharmacy-selection"     element={<PharmacySelection />} />
           <Route path="/delivery-address"      element={<DeliveryAddress />} />
           <Route path="/delivery-date"         element={<DeliveryDate />} />
           <Route path="/delivery-payment"      element={<DeliveryPayment />} />

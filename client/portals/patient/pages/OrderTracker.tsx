@@ -93,11 +93,99 @@ function buildSteps(workflowStep: number, pharmacyStatus: string): StepDef[] {
   return steps;
 }
 
+// CoA_Copay's Retail AND Mail Order paths (pricingOption === "retail" or
+// "mail_order" — see isCopayRetailFlow in crm/pages/Index.tsx /
+// DemoShell.tsx, broadened to cover both despite the name). Both are filled
+// outside AssistRx's own dispensing pipeline (see coaCopay.ts and this
+// flow's CRM stage list, which drops Pharmacy Status/PS-14278 entirely) —
+// pharmacyStatus never advances past "processing" here, since there's no
+// Pharmacy Status tab left to move it further. The default 5-step shipping
+// tracker below (buildSteps) would get stuck forever on "Routing to
+// pharmacy," and its "In transit"/"Delivered" steps don't describe either
+// path anyway (in-person pickup for Retail, "the pharmacy still handles it
+// from here" for Mail Order). This is a 2-step version instead: "Routing to
+// pharmacy" while HUB staff haven't dispatched yet, "Received by pharmacy"
+// the moment they click "Dispatch to Pharmacy" (FILL_RX) — both flip to
+// done together, since that one click is this path's entire fulfillment
+// step (matching TP-14277's own "Complete" the instant dispatchStatus is
+// "dispatched," see crm/pages/Index.tsx's tpStage).
+function buildRetailPharmacySteps(pharmacyStatus: string): StepDef[] {
+  const dispatched = pharmacyStatus !== "none";
+  return [
+    { n: 1, label: "Routing to pharmacy", sub: null, status: dispatched ? "done" : "active" },
+    { n: 2, label: "Received by pharmacy", sub: dispatched ? ORDER_DATE : null, status: dispatched ? "done" : "pending" },
+  ];
+}
+
+function RetailPharmacyTracker({ selectedPharmacyName, isMailOrder }: { selectedPharmacyName: string | null; isMailOrder: boolean }) {
+  const navigate = useNavigate();
+  const { workflowData } = usePersonaState('patient');
+  const pharmacyStatus = workflowData.pharmacyStatus;
+  const steps = buildRetailPharmacySteps(pharmacyStatus);
+  const received = pharmacyStatus !== "none";
+  return (
+    <main className="flex-grow pt-5 pb-8">
+      <div className="max-w-lg mx-auto px-4 space-y-5">
+        <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h2 className="text-xl font-bold leading-snug text-arx-slate">
+              {received
+                ? (isMailOrder ? "Your prescription has been received at the pharmacy" : "Your prescription is ready at the pharmacy")
+                : "Your prescription is being routed to your pharmacy"}
+            </h2>
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-sky">
+              <span className="text-lg font-bold text-arx-primary">Rx</span>
+            </div>
+          </div>
+          <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{ORDER_NUMBER}</span></p>
+          <p className="text-sm mb-4 text-arx-slate">Placed on <span className="font-bold">{ORDER_DATE}</span></p>
+          <p className="text-sm leading-relaxed text-arx-body-copy">
+            {received
+              ? (isMailOrder
+                ? `Your prescription has been received at ${selectedPharmacyName ?? "your mail-order pharmacy"}. It will ship directly to your delivery address.`
+                : `Your prescription has been received at ${selectedPharmacyName ?? "your selected pharmacy"}. Visit anytime during business hours to pick it up.`)
+              : (isMailOrder
+                ? `We're routing your prescription to ${selectedPharmacyName ?? "your mail-order pharmacy"}, which will fill and ship your medication. We'll update this tracker once it's received.`
+                : `We're routing your prescription to ${selectedPharmacyName ?? "your selected pharmacy"}. We'll update this tracker once it's ready for pickup.`)}
+          </p>
+        </div>
+
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
+            <h3 className="font-semibold text-sm text-arx-primary">Assistivan pharmacy status</h3>
+          </div>
+          <div className="space-y-2">
+            {steps.map(step => (
+              <StepRow
+                key={step.n}
+                step={step}
+                onClick={step.n === 2 && step.status === "done" ? () => navigate("/medication-delivered") : undefined}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function OrderTracker() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('patient');
   const pharmacyStatus = workflowData.pharmacyStatus;
   const paStatus = workflowData.paStatus;
+
+  if (workflowData.flowType === "CoA_Copay" &&
+      (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order")) {
+    return (
+      <RetailPharmacyTracker
+        selectedPharmacyName={workflowData.selectedPharmacy?.name ?? null}
+        isMailOrder={workflowData.pricingOption === "mail_order"}
+      />
+    );
+  }
+
   const steps = buildSteps(0, pharmacyStatus);
   return (
     <main className="flex-grow pt-5 pb-8">

@@ -66,6 +66,16 @@ export default function DeliveryAddress() {
   function handleContinue() {
     if (!valid) return;
     if (isCoA || isIAssist || isPapFlow) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
+    // workflow once dispatched" treatment (Retail skips this screen
+    // entirely; Mail Order still confirms an address, just no ship date —
+    // see WorkflowEngine.ts's derivePatientRoute). Straight to
+    // /enrollment-complete ("Thanks! Your details were received") instead
+    // of /delivery-date, which every other pricing pick/flow still uses.
+    if (workflowData.flowType === "CoA_Copay" && workflowData.pricingOption === "mail_order") {
+      navigate("/enrollment-complete");
+      return;
+    }
     navigate("/delivery-date");
   }
 
