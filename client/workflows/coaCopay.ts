@@ -142,6 +142,23 @@ export const coaCopayMachine = setup({
         },
       },
     },
+    // Benefits Investigation no longer waits on patient consent — it can run
+    // off the referral/eRx alone (business rule change from the original
+    // "consentConfirmed -> RUN_BI" design below). CRM's own auto-trigger
+    // effect (see crm/pages/Index.tsx) now fires RUN_BI the instant ENROLL
+    // lands, well before the patient has necessarily opened their SMS link,
+    // and its "auto-complete BI when the agent opens the BI stage tab"
+    // effect can fire COMPLETE_BI at any point after that. Since the
+    // patient's own SMS/OTP/consent progress and BI's progress are now two
+    // independent timelines, RUN_BI/COMPLETE_BI need to be reachable from
+    // whichever of enrolled/smsVerified/otpVerified/consentConfirmed the
+    // machine happens to be sitting in when each fires — not just
+    // consentConfirmed, which was the only place they were reachable before.
+    // Each is a self-transition (no target) so the patient's own state-node
+    // progress isn't disturbed; biStatus/events are carried forward via the
+    // usual spread. Guarded so a stray re-dispatch (e.g. a demo operator
+    // manually firing one again) can't stomp an already-running/complete
+    // result. Mirrors coaDtp.ts exactly.
     enrolled: {
       on: {
         VERIFY_SMS: {
@@ -149,6 +166,20 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
             events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
           }),
         },
       },
@@ -162,6 +193,22 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
           }),
         },
+        // See enrolled's RUN_BI/COMPLETE_BI above — same reasoning, one state
+        // later in the patient's own SMS/OTP/consent progress.
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
       },
     },
     otpVerified: {
@@ -173,8 +220,32 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
           }),
         },
+        // See enrolled's RUN_BI/COMPLETE_BI above.
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
       },
     },
+    // The original RUN_BI (still targeting "biRunning", a real named state —
+    // unlike the self-transitions above) is now the fallback path: reachable
+    // if BI somehow hasn't started by the time consent confirms. Its
+    // COMPLETE_BI is new — added for the much more common case now, where BI
+    // is still "running" once the patient reaches this state (it usually
+    // starts well before the patient's even through SMS/OTP), so the CRM's
+    // tab-open auto-complete effect has somewhere to land it without also
+    // moving the node to "biRunning" (which would misrepresent the patient's
+    // own progress as reset).
     consentConfirmed: {
       on: {
         RUN_BI: {
@@ -182,6 +253,35 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
             events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        // PA submission still requires BOTH consent and BI — that hasn't
+        // changed, only BI's own start no longer requires consent (see the
+        // comment above enrolled). Before this, SUBMIT_PA was reachable only
+        // via the dedicated "biComplete" named state below, which assumed
+        // BI always finished after consent — the only order the old
+        // strictly-sequential chain allowed. Now BI can finish first (a
+        // self-transition, so the node stays "consentConfirmed" rather than
+        // moving to "biComplete" — see enrolled's comment), so without this,
+        // a provider clicking "Start Prior Auth" once biStatus is already
+        // "complete" at the moment consent confirms would silently do
+        // nothing — SUBMIT_PA had no handler here. Real transition (not a
+        // self-transition) — once consent is confirmed there's nothing left
+        // for the patient to do in this state, so moving on to paSubmitted
+        // is safe. Mirrors coaDtp.ts exactly.
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
           }),
         },
       },

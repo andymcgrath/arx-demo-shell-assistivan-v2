@@ -910,12 +910,42 @@ export default function Index() {
     // the SMS-to-patient action below it were unreachable. PAP's BI runs
     // automatically on consent exactly like WF1's; the CRM-specific step for
     // this flow is completing it and sending the SMS, not starting it.
+    // CoA_DTP/CoA_Copay (WF3/WF4) are excluded here now — see the
+    // isCoaFlow-scoped effect right below, which fires RUN_BI off the eRx
+    // itself instead of waiting on consent. Every other flow keeps this
+    // original consent-gated trigger unchanged.
+    if (isCoaFlow) return;
     if (consentStatus !== "confirmed") return;
     if (biStatus !== "none") return;
     dispatch('RUN_BI', { portal: 'crm' });
-  }, [consentStatus, biStatus, dispatch]);
+  }, [isCoaFlow, consentStatus, biStatus, dispatch]);
 
-  // Auto-complete BI when agent opens the BI stage tab
+  // CoA_DTP/CoA_Copay (WF3/WF4) only — business rule change: Benefits
+  // Investigation no longer waits on patient consent, it can run off the
+  // referral/eRx alone. Fires the instant ENROLL lands (enrollmentStatus
+  // leaves "none"), which can be well before the patient has opened their
+  // SMS link, let alone confirmed consent. coaDtp.ts/coaCopay.ts's RUN_BI
+  // handler is now reachable from enrolled/smsVerified/otpVerified/
+  // consentConfirmed — whichever the patient's own progress happens to be
+  // sitting in at this moment — so this doesn't need to track which of
+  // those states is active, just that BI hasn't started yet.
+  useEffect(() => {
+    if (!isCoaFlow) return;
+    if (enrollmentStatus === "none") return;
+    if (biStatus !== "none") return;
+    dispatch('RUN_BI', { portal: 'crm' });
+  }, [isCoaFlow, enrollmentStatus, biStatus, dispatch]);
+
+  // Auto-complete BI when agent opens the BI stage tab. This is what makes
+  // CoA_DTP/CoA_Copay "remain in this state" (BI running, quietly, in the
+  // background) until the operator actually opens Benefits Investigation —
+  // at which point this reveals the result 3s later, same as every other
+  // flow. Already generic (not gated on isCoaFlow) before this change, so no
+  // CoA-specific version of this effect is needed — the old dedicated one
+  // (RUN_BI-on-tab-open + its own COMPLETE_BI) was removed as dead weight:
+  // RUN_BI now already fires automatically above the moment the eRx is
+  // sent, well before any tab could be opened, and this effect already
+  // covered COMPLETE_BI-on-tab-open for every flow, CoA included.
   useEffect(() => {
     if (activeTopTab !== 'BI-14273') return;
     if (biStatus !== 'running') return;
@@ -926,30 +956,6 @@ export default function Index() {
 
     return () => clearTimeout(timer);
   }, [activeTopTab, biStatus, dispatch, isPapFlow]);
-
-  // COA BI auto-complete: RUN_BI → COMPLETE_BI. PA submission is no longer
-  // automatic here — BI completing surfaces "PA Required" on the provider's
-  // CoaDashboard, and the provider manually starts PA from there (mirrors
-  // WF1's questions flow, minus the email/login hop).
-  useEffect(() => {
-    if (!isCoaFlow) return;
-    if (activeTopTab !== 'BI-14273') return;
-
-    if (biStatus === 'none' || biStatus === 'running') {
-      const runTimer = biStatus === 'none' ? setTimeout(() => {
-        dispatch('RUN_BI', { portal: 'crm' });
-      }, 1000) : null;
-
-      const completeTimer = biStatus === 'running' ? setTimeout(() => {
-        dispatch('COMPLETE_BI', { portal: 'crm' });
-      }, 3000) : null;
-
-      return () => {
-        if (runTimer) clearTimeout(runTimer);
-        if (completeTimer) clearTimeout(completeTimer);
-      };
-    }
-  }, [activeTopTab, biStatus, isCoaFlow, dispatch]);
 
   // Auto-approve PA when agent opens the PA stage tab. iAssist_PAP (WF5) is
   // the one flow whose demo path resolves to Denied instead — without this
@@ -1030,8 +1036,16 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [dispatchStatus]);
 
+  // consentStatus === "confirmed" is new here — CoA_DTP/CoA_Copay's Benefits
+  // Investigation no longer waits on consent (see coaDtp.ts/coaCopay.ts's
+  // RUN_BI handlers and the isCoaFlow-scoped auto-trigger effect above), but
+  // Prior Authorization submission still does (SUBMIT_PA's guard in
+  // consentConfirmed) — so "Letter sent" shouldn't claim a PA letter went
+  // out before the provider could actually submit anything. Always true
+  // already for WF1 by this point (its consent/BI stay sequential), so this
+  // is a no-op there.
   const paStage: Stage =
-    paStatus === "none" && biStatus === "complete" && !isPapFlow
+    paStatus === "none" && biStatus === "complete" && consentStatus === "confirmed" && !isPapFlow
       ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Letter sent", statusDetail: "HCP letter mailed for Prior Authorization", isComplete: false, isNotStarted: false, fields: [], lastUpdated: new Date().toLocaleDateString(), lastUpdatedAgo: "just now" }
       : paStatus === "none"
       ? { id: "PA-14274", name: "Prior Authorization", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
@@ -1049,8 +1063,13 @@ export default function Index() {
     ? "No Insurance Found; Free Goods Assessment Initiated"
     : "Patient Has Coverage; Prior Authorization Required";
 
+  // CoA_DTP/CoA_Copay no longer wait on consent to start BI (see the
+  // isCoaFlow-scoped RUN_BI effect above) — biStatus === "none" now only
+  // describes the sliver of time before the eRx itself has been sent, not
+  // before consent, so the copy needs to say so. Every other flow keeps the
+  // original consent-gated wording.
   const biStage: Stage = biStatus === "none"
-    ? { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Not Started", statusDetail: "Waiting for patient consent", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+    ? { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Not Started", statusDetail: isCoaFlow ? "Awaiting eRx" : "Waiting for patient consent", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : biStatus === "running"
     ? { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Running", statusDetail: "Investigating patient benefits...", isComplete: false, isNotStarted: false, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : { id: "BI-14273", name: "Benefits Investigation", statusLabel: "Complete", statusDetail: biCompleteDetail, isComplete: true, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
@@ -3398,7 +3417,12 @@ export default function Index() {
                           <td className="px-3 py-2.5 border-b border-[#dddbda]">
                             <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: "#fff3cd", color: "#856404" }}>Pending</span>
                           </td>
-                          <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">Benefits Investigation has not yet run</td>
+                          {/* CoA_DTP/CoA_Copay no longer gate Benefits Investigation on
+                              consent (see the isCoaFlow-scoped RUN_BI effect above) — BI
+                              may already be running or complete while this row still shows
+                              consent as Pending, so the old copy would be a false claim for
+                              those two flows specifically. Every other flow keeps it. */}
+                          <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">{isCoaFlow ? "Delays Prior Authorization submission" : "Benefits Investigation has not yet run"}</td>
                           <td className="px-3 py-2.5 border-b border-[#dddbda]">
                             <button
                               onClick={() => dispatch('ENROLL', { portal: 'crm' })}
