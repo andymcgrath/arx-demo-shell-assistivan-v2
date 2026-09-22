@@ -1079,33 +1079,50 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   if (workflowData.enrollmentStatus === "none") return null;
 
+  // Second dot represents patient consent. It used to be safe to hardcode
+  // "completed" in every branch past "Enrolled", because consent was the
+  // only thing that could unlock BI — reaching any later branch (PA
+  // Required, PA Submitted, etc.) implied consent had already happened.
+  // That's no longer true: Benefits Investigation now runs off the eRx
+  // alone (see coaDtp.ts/coaCopay.ts's RUN_BI handlers and
+  // crm/pages/Index.tsx's isCoaFlow-scoped auto-trigger effect), so BI —
+  // and everything gated on BI completing, up through PA submission/
+  // approval and dispensing — can now race ahead of consent entirely. This
+  // dot has to check consentStatus directly instead of assuming it.
+  const consentDot: PatientStatus["dots"][number] =
+    workflowData.consentStatus === "confirmed" ? "completed" : "pending";
+
   if (workflowData.pharmacyStatus === "delivered") {
-    return { label: "Delivered", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
+    return { label: "Delivered", color: "success", dots: ["completed", consentDot, "completed", "completed", "completed", "completed"] };
   }
   if (workflowData.pharmacyStatus === "shipped" ||
       workflowData.pharmacyStatus === "processing" ||
       workflowData.pharmacyStatus === "ready") {
-    return { label: "Dispensing", color: "warning", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+    return { label: "Dispensing", color: "warning", dots: ["completed", consentDot, "completed", "completed", "pending", "disabled"] };
   }
   if (workflowData.paStatus === "approved") {
-    return { label: "PA Approved", color: "success", dots: ["completed", "completed", "completed", "completed", "pending", "disabled"] };
+    return { label: "PA Approved", color: "success", dots: ["completed", consentDot, "completed", "completed", "pending", "disabled"] };
   }
   // Denial → cash-pay is kept in the state machine for demo flexibility, but
   // CoA_DTP's live flow always approves (see coaDtp.ts / CRM Index.tsx), so
   // this is unreachable today.
   if (workflowData.paStatus === "denied") {
-    return { label: "PA Denied", color: "error", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] };
+    return { label: "PA Denied", color: "error", dots: ["completed", consentDot, "completed", "attention", "disabled", "disabled"] };
   }
   if (workflowData.paStatus === "submitted") {
-    return { label: "PA Submitted", color: "warning", dots: ["completed", "completed", "completed", "pending", "disabled", "disabled"] };
+    return { label: "PA Submitted", color: "warning", dots: ["completed", consentDot, "completed", "pending", "disabled", "disabled"] };
   }
   // BI came back needing a PA, but the provider hasn't started it yet — the
   // "Start Prior Auth" button in PrescriptionsIdlePanel takes the HCP
-  // straight into PA questions (no email/login hop, unlike WF1).
+  // straight into PA questions (no email/login hop, unlike WF1). Neither
+  // this nor PA submission itself waits on consent (see
+  // coaDtp.ts/coaCopay.ts's SUBMIT_PA handlers, and the isCoaFlow-scoped
+  // auto-trigger in crm/pages/Index.tsx, which now auto-submits the instant
+  // BI completes) — reachable while consentDot above is still "pending".
   if (workflowData.biStatus === "complete") {
-    return { label: "PA Required", color: "warning", dots: ["completed", "completed", "pending", "disabled", "disabled", "disabled"] };
+    return { label: "PA Required", color: "warning", dots: ["completed", consentDot, "pending", "disabled", "disabled", "disabled"] };
   }
-  return { label: "Enrolled", color: "warning", dots: ["completed", "pending", "disabled", "disabled", "disabled", "disabled"] };
+  return { label: "Enrolled", color: "warning", dots: ["completed", consentDot, "disabled", "disabled", "disabled", "disabled"] };
 }
 
 function StatusDots({ dots }: { dots: PatientStatus["dots"] }) {
@@ -2896,7 +2913,11 @@ export default function ProviderPortal() {
     // clicked back to the idle chart before BI finished ("coa-dashboard").
     // paStatus === 'none' keeps this from refiring once a PA exists —
     // biStatus stays "complete" indefinitely, so that guard is load-bearing,
-    // not just an optimization.
+    // not just an optimization. Neither BI nor PA submission wait on patient
+    // consent anymore (see coaDtp.ts/coaCopay.ts's RUN_BI/SUBMIT_PA
+    // handlers) — PA is now auto-submitted the instant BI completes (see
+    // crm/pages/Index.tsx's isCoaFlow-scoped SUBMIT_PA effect), so this can
+    // (and normally will) fire well before the patient has done anything.
     if (biStatus === 'complete' && paStatus === 'none' && (step === 'coa-sent' || step === 'coa-dashboard')) {
       setStep('email');
     }

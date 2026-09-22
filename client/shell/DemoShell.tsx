@@ -327,6 +327,48 @@ function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>
   return 1;
 }
 
+// CoA_DTP/CoA_Copay (WF3/WF4) per-step completion — Benefits Investigation no
+// longer waits on patient consent (business rule change: BI can run off the
+// referral/eRx alone — see coaDtp.ts/coaCopay.ts's RUN_BI handlers and
+// crm/pages/Index.tsx's isCoaFlow-scoped auto-trigger effect), so BI can now
+// finish well before the patient has even verified their SMS, let alone
+// confirmed consent. computeCoaWorkflowStep's single scalar above can't
+// represent that gap without lying — returning 4 for "BI complete" also
+// silently marks "Consent" (step 2) as checked off, even when the patient
+// hasn't actually done it yet. This is the same problem
+// computeIAssistStepDone below already solved for iAssist's own BI/PA race
+// ahead of consent — same per-step boolean pattern, applied here to CoA's
+// 9-step (or, for CoA_Copay Retail/Mail Order, 6-step truncated — see
+// STEP_LABELS_COA_COPAY_RETAIL) bar instead. computeCoaWorkflowStep itself is
+// left in place rather than removed — same as how it coexists unused
+// alongside iAssistStepDone for iAssist flows below — StepBar prefers this
+// array whenever isCoaFlow is true.
+function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, paStatus, cashOfferStatus, patientShipDate, pharmacyStatus } = workflowData;
+  // Matches computeCoaWorkflowStep's own thresholds exactly — see that
+  // function's comments for why each one is defined the way it is.
+  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
+  const paymentDone = patientShipDate !== null;
+  // CoA_Copay's Retail/Mail Order paths flip pharmacyStatus to "processing"
+  // via the exact same FILL_RX handler every other pricing option uses (see
+  // coaCopay.ts) — the CRM just doesn't show a separate Pharmacy Status tab
+  // for them (see isCopayRetailFlow in crm/pages/Index.tsx). So a single
+  // pharmacyStatus check works uniformly for every pricing option here, with
+  // no special-casing needed for Retail/Mail Order.
+  const dispatched = pharmacyStatus !== 'none';
+  return [
+    enrollmentStatus !== 'none',                                     // 1 eRx Received
+    consentStatus === 'confirmed',                                   // 2 Consent
+    biStatus === 'complete',                                         // 3 Benefits Investigation
+    paResolved,                                                      // 4 Prior Authorization
+    paymentDone,                                                     // 5 Payment
+    dispatched,                                                      // 6 Dispatch to Triage
+    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 7 Rx Processing
+    pharmacyStatus === 'delivered',                                  // 8 Rx Shipped
+    pharmacyStatus === 'delivered',                                  // 9 Medication Delivered
+  ];
+}
+
 // iAssist-specific step completion — unlike WF1/WF2/CoA (where consent,
 // BI, and PA naturally happen in that order, so a single "how far along"
 // number works), iAssist's Rx submission auto-completes BI and auto-submits
@@ -405,6 +447,10 @@ function StepBar() {
     : isIAssistFlow
     ? computeIAssistStepDone(workflowData)
     : null;
+  // See computeCoaStepDone's header comment — same "BI can race ahead of
+  // consent" problem iAssistStepDone above solves, now also true for CoA.
+  const coaStepDone = isCoaFlow ? computeCoaStepDone(workflowData) : null;
+  const stepDone = iAssistStepDone ?? coaStepDone;
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
@@ -478,13 +524,14 @@ function StepBar() {
     <div className="flex items-center gap-0 px-6 py-2">
       {STEP_LABELS.map((label, i) => {
         const n      = i + 1;
-        const done   = iAssistStepDone ? iAssistStepDone[i] : workflowStep > n;
+        const done   = stepDone ? stepDone[i] : workflowStep > n;
         // With independent per-step completion, "active" (the single
         // highlighted step) is the earliest one not yet done — later steps
-        // that raced ahead (e.g. PA already submitted) get their own
-        // pulsing-ring treatment below instead of the bold "active" ring.
-        const active = iAssistStepDone
-          ? !iAssistStepDone[i] && iAssistStepDone.slice(0, i).every(Boolean)
+        // that raced ahead (e.g. PA already submitted, or now CoA's BI
+        // completing before consent) get their own pulsing-ring treatment
+        // below instead of the bold "active" ring.
+        const active = stepDone
+          ? !stepDone[i] && stepDone.slice(0, i).every(Boolean)
           : workflowStep === n;
         // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; step 4→5 (WF5 only) while the appeal is pending a payer response; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
         const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || (appealPending && n === appealStepN - 1) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);

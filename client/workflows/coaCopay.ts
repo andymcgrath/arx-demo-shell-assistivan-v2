@@ -142,6 +142,41 @@ export const coaCopayMachine = setup({
         },
       },
     },
+    // Benefits Investigation, and now Prior Authorization submission too, no
+    // longer wait on patient consent — both can run off the referral/eRx
+    // alone (business rule change from the original strictly-sequential
+    // "consentConfirmed -> RUN_BI -> ... -> biComplete -> SUBMIT_PA" design).
+    // CRM's own auto-trigger effects (see crm/pages/Index.tsx) fire RUN_BI
+    // the instant ENROLL lands and SUBMIT_PA the instant biStatus reaches
+    // "complete" — both well before the patient has necessarily opened
+    // their SMS link, let alone consented. Since the patient's own
+    // SMS/OTP/consent progress and BI/PA's progress are now three
+    // independent timelines, RUN_BI/COMPLETE_BI/SUBMIT_PA need to be
+    // reachable from whichever of enrolled/smsVerified/otpVerified/
+    // consentConfirmed the machine happens to be sitting in when each
+    // fires — not just consentConfirmed, which was the only place any of
+    // them were reachable before.
+    //
+    // RUN_BI/COMPLETE_BI are self-transitions (no target) — BI doesn't need
+    // its own named state to represent "in progress," it just needs
+    // biStatus to carry forward, so the patient's own state-node progress
+    // isn't disturbed. SUBMIT_PA is different: it moves the node for real,
+    // to "paSubmitted" — that state has its own further transitions
+    // (APPROVE_PA/DENY_PA) that need a home, the same way biRunning/
+    // biComplete do below. That means paSubmitted (and paApproved/paDenied
+    // beyond it) can now be reached before the patient has done ANY of
+    // VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT — so each of those three states
+    // carries its own copies of those handlers too (see paSubmitted below),
+    // so the patient's own onboarding is never stranded by PA racing ahead
+    // of it. Downstream screens don't care which named state the machine is
+    // actually in either way — derivePatientRoute (WorkflowEngine.ts) reads
+    // workflowData fields only, never the raw state value — so this is safe
+    // even though the node name stops describing the patient's position
+    // once PA moves it.
+    //
+    // All three events are guarded so a stray re-dispatch (e.g. a demo
+    // operator manually firing one again) can't stomp an already-running/
+    // complete/submitted result. Mirrors coaDtp.ts exactly.
     enrolled: {
       on: {
         VERIFY_SMS: {
@@ -149,6 +184,28 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
             events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
           }),
         },
       },
@@ -162,6 +219,31 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
           }),
         },
+        // See enrolled's RUN_BI/COMPLETE_BI/SUBMIT_PA above — same
+        // reasoning, one state later in the patient's own SMS/OTP/consent
+        // progress.
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
       },
     },
     otpVerified: {
@@ -173,8 +255,42 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
           }),
         },
+        // See enrolled's RUN_BI/COMPLETE_BI/SUBMIT_PA above.
+        RUN_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "none",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
       },
     },
+    // The original RUN_BI (still targeting "biRunning", a real named state —
+    // unlike the self-transitions above) is now the fallback path: reachable
+    // if BI somehow hasn't started by the time consent confirms. Its
+    // COMPLETE_BI is new — added for the much more common case now, where BI
+    // is still "running" once the patient reaches this state (it usually
+    // starts well before the patient's even through SMS/OTP), so the CRM's
+    // tab-open auto-complete effect has somewhere to land it without also
+    // moving the node to "biRunning" (which would misrepresent the patient's
+    // own progress as reset). SUBMIT_PA mirrors the three states above —
+    // once consent is confirmed there's nothing left for the patient to do
+    // in this state, so moving on to paSubmitted for real is safe.
     consentConfirmed: {
       on: {
         RUN_BI: {
@@ -182,6 +298,21 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "running" }),
             events: ({ context }) => [...context.events, createEvent(context, 'RUN_BI', 'analytics', 6)],
+          }),
+        },
+        COMPLETE_BI: {
+          guard: ({ context }) => context.workflowData.biStatus === "running",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, biStatus: "complete" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
           }),
         },
       },
@@ -208,6 +339,19 @@ export const coaCopayMachine = setup({
         },
       },
     },
+    // PA can now be submitted (see enrolled/smsVerified/otpVerified/
+    // consentConfirmed above) before the patient has done ANY of their own
+    // SMS/OTP/consent — and the CRM's auto-approve-on-tab-open effect can
+    // then approve it just as fast. So paSubmitted/paApproved/paDenied need
+    // their own copies of VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT too — guarded
+    // self-transitions, same pattern as RUN_BI/COMPLETE_BI above — so the
+    // patient's own onboarding isn't stranded once PA races ahead of it.
+    // paApprovedSmsVerified/paApprovedOtpVerified below don't need this: by
+    // the time the patient portal shows a PA-approved-sms screen at all,
+    // derivePatientRoute (WorkflowEngine.ts) has already forced them through
+    // consent first (it checks consentStatus before ever looking at
+    // paStatus), so consentStatus is always confirmed by then regardless of
+    // how far ahead PA raced. Mirrors coaDtp.ts exactly.
     paSubmitted: {
       on: {
         APPROVE_PA: {
@@ -227,6 +371,27 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'DENY_PA', 'provider', 9)],
           }),
         },
+        VERIFY_SMS: {
+          guard: ({ context }) => !context.workflowData.smsVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        VERIFY_OTP: {
+          guard: ({ context }) => context.workflowData.smsVerified && !context.workflowData.otpVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
+        },
+        CONFIRM_CONSENT: {
+          guard: ({ context }) => context.workflowData.otpVerified && context.workflowData.consentStatus === "pending",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
+          }),
+        },
       },
     },
     // ── Approved path: mirrors the initial enrollment SMS/OTP beats — patient
@@ -241,6 +406,30 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, paApprovedSmsVerified: true }),
             events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_SMS', 'patient', 9)],
+          }),
+        },
+        // See paSubmitted's comment above — same reasoning, one PA step
+        // later. PA can reach "approved" before the patient's even started
+        // their own SMS/OTP/consent now.
+        VERIFY_SMS: {
+          guard: ({ context }) => !context.workflowData.smsVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        VERIFY_OTP: {
+          guard: ({ context }) => context.workflowData.smsVerified && !context.workflowData.otpVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
+        },
+        CONFIRM_CONSENT: {
+          guard: ({ context }) => context.workflowData.otpVerified && context.workflowData.consentStatus === "pending",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
           }),
         },
       },
@@ -370,6 +559,31 @@ export const coaCopayMachine = setup({
           actions: assign({
             workflowData: ({ context }) => ({ ...context.workflowData, cashOfferStatus: "sent" }),
             events: ({ context }) => [...context.events, createEvent(context, 'SEND_CASH_OFFER', 'crm', 9)],
+          }),
+        },
+        // Unreachable in the live flow today (CoA_Copay always approves —
+        // see CRM Index.tsx), but kept in step with paSubmitted/paApproved's
+        // same additions above for demo-flexibility consistency, in case a
+        // denial scenario is ever exercised while consent is still pending.
+        VERIFY_SMS: {
+          guard: ({ context }) => !context.workflowData.smsVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        VERIFY_OTP: {
+          guard: ({ context }) => context.workflowData.smsVerified && !context.workflowData.otpVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
+        },
+        CONFIRM_CONSENT: {
+          guard: ({ context }) => context.workflowData.otpVerified && context.workflowData.consentStatus === "pending",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
           }),
         },
       },
