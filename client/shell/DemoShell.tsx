@@ -39,6 +39,7 @@ import { usePatientToastStore } from "@/store/patientToastStore";
 // ── Portal registry ───────────────────────────────────────────────────────────
 
 import CrmPortal      from "@/portals/crm/index";
+import ClientPortal   from "@/portals/client/index";
 import PatientPortal  from "@/portals/patient/index";
 import AnalyticsPortal from "@/portals/analytics/index";
 import InsightsPortal from "@/portals/insights/index";
@@ -47,7 +48,7 @@ import ProviderPortal from "@/portals/provider/index";
 import IAssistPortal from "@/portals/iassist/index";
 import RulesPortal from "@/portals/rules/index";
 
-export type PortalId = "crm" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist" | "rules";
+export type PortalId = "crm" | "client" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist" | "rules";
 
 // NOTE: the iAssist portal tab's URL slug is "iassist-hub", NOT "iassist".
 // "/iassist" is a separate, pre-existing top-level deep-link route (see
@@ -60,6 +61,7 @@ export type PortalId = "crm" | "patient" | "analytics" | "insights" | "field" | 
 // "reload to HUB" when clicked).
 export const PORTAL_SLUG: Record<PortalId, string> = {
   crm: "hub",
+  client: "client",
   patient: "patient",
   analytics: "analytics",
   insights: "insights",
@@ -71,6 +73,7 @@ export const PORTAL_SLUG: Record<PortalId, string> = {
 
 const SLUG_TO_PORTAL: Record<string, PortalId> = {
   hub: "crm",
+  client: "client",
   patient: "patient",
   analytics: "analytics",
   insights: "insights",
@@ -121,6 +124,12 @@ function getProviderPortalLabel(flowType: string): string {
 // the left of Workforce, visible in every workflow.
 const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "crm",       color: "#0176d3" },
+  // "Client" — a straight duplicate of the HUB/CRM tab (same portal
+  // component, same shared workflow state), placed directly to its right.
+  // Kept as its own PortalId/component (see client/portals/client/) rather
+  // than reusing CrmPortal directly, so it can diverge later without
+  // touching the original HUB/CRM tab.
+  { id: "client",    color: "#0ea5e9" },
   { id: "patient",   color: "#16a34a" },
   { id: "provider",  color: "#7c3aed" },
   { id: "iassist",   color: "#d97706" },
@@ -152,6 +161,11 @@ function getPortals(flowType: string) {
     if (p.id === "provider" && (isIAssistFlow || isPapFlow)) return false;
     // Show iAssist only for workflow 4
     if (p.id === "iassist" && !isIAssistFlow) return false;
+    // "Client" tab — scoped to the iAssist workflows only (5. iAssist and
+    // 6. iAssist Appeal, see FLOW_OPTIONS in flowOptions.ts), per request.
+    // Hidden everywhere else, same isIAssistFlow flag the "iassist" tab
+    // above already uses.
+    if (p.id === "client" && !isIAssistFlow) return false;
     return true;
   }).map(p => {
     if (p.id === "provider") {
@@ -159,6 +173,7 @@ function getPortals(flowType: string) {
     }
     const baseLabels: Record<PortalId, string> = {
       crm: "HUB / CRM",
+      client: "Client",
       patient: "Patient",
       provider: getProviderPortalLabel(flowType),
       iassist: "iAssist",
@@ -175,6 +190,7 @@ function getPortals(flowType: string) {
 function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) {
   switch (id) {
     case "crm":       return <CrmPortal />;
+    case "client":    return <ClientPortal />;
     case "patient":   return <PatientPortal />;
     case "analytics": return <AnalyticsPortal />;
     case "insights":  return <InsightsPortal />;
