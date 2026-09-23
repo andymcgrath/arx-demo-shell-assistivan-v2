@@ -1056,16 +1056,16 @@ export default function DemoShell() {
     }
 
     if (isIAssistFlow) {
-      // iAssist's own ladder — a single ENROLL now auto-completes BI and
+      // iAssist's own ladder — a single ENROLL auto-starts BI and
       // auto-submits PA in parallel (see iAssist.ts's benefitsInquiry/
       // priorAuth ENROLL handlers), so this can't reuse WF1/WF2's ladder,
       // which treats "ENROLL", "BI complete", and "PA submitted" as three
-      // separate, sequential stages. Stage 2 collapses all three of
-      // iAssist's automated side effects (BI complete, PA submitted,
-      // welcome text sent) into one jump — that's the whole point of
-      // iAssist automation. Patient Enrolled moves to stage 3 and is
-      // dispatched independently, since consent doesn't ride along with
-      // ENROLL — the patient still has to actually do SMS/OTP/consent.
+      // separate, sequential stages. Stage 2 collapses both of iAssist's
+      // automated side effects (BI + PA both landing in their own "waiting
+      // for response" state, welcome text sent) into one jump — that's the
+      // whole point of iAssist automation. Patient Enrolled moves to stage 3
+      // and is dispatched independently, since consent doesn't ride along
+      // with ENROLL — the patient still has to actually do SMS/OTP/consent.
       if (stage >= 2) {
         actor.send({ type: 'ENROLL', portal: 'provider' });
       }

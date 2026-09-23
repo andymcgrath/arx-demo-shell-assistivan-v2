@@ -264,11 +264,16 @@ export const iAssistPapMachine = createMachine(
                 guard: 'canRunBI',
                 actions: 'updateBISubmitted',
               },
-              // Matches iAssist.ts: BI auto-completes the moment the eRx is
-              // submitted, same ENROLL dispatch that auto-submits PA below.
+              // Matches iAssist.ts: BI starts (not completes) the moment
+              // the eRx is submitted, same ENROLL dispatch that auto-submits
+              // PA below — targets 'submitted' (biStatus: 'running') so BI
+              // still requires opening the BI-14273 tab and waiting 3s (see
+              // crm/pages/Index.tsx's COMPLETE_BI-on-tab-open effect) before
+              // it resolves, same pulsing "waiting" pause every other flow's
+              // BI has.
               ENROLL: {
-                target: 'complete',
-                actions: 'updateBIComplete',
+                target: 'submitted',
+                actions: 'updateBISubmitted',
               },
             },
           },
@@ -295,7 +300,13 @@ export const iAssistPapMachine = createMachine(
                 actions: 'updatePASubmitted',
               },
               // Matches iAssist.ts: PA auto-submits the moment the eRx is
-              // submitted, independent of the normal biStatus-gated guard.
+              // submitted, in parallel with benefitsInquiry's own ENROLL
+              // handler above — deliberately unguarded, since a sibling
+              // parallel region's guard would only see biStatus's
+              // pre-ENROLL value. PA still doesn't resolve
+              // (approved/denied) until the agent opens the PA-14274 tab
+              // and waits 3s — see crm/pages/Index.tsx's PA-14274-tab-open
+              // effect, unchanged.
               ENROLL: {
                 target: 'submitted',
                 actions: 'updatePASubmitted',

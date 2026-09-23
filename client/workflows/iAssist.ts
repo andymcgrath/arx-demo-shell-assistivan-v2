@@ -244,15 +244,23 @@ export const iAssistMachine = createMachine(
                 guard: 'canRunBI',
                 actions: 'updateBISubmitted',
               },
-              // iAssist completes BI the moment the eRx is submitted, same
+              // iAssist starts BI the moment the eRx is submitted, same
               // ENROLL dispatch that auto-submits PA below — iAssist runs
               // its own benefits investigation instantly rather than
               // waiting on the patient consent RUN_BI normally requires.
-              // Jumping straight to 'complete' (not 'submitted') skips the
-              // "Running..." visual, since there's no real wait to show.
+              // Targets 'submitted' (biStatus: 'running'), same as RUN_BI
+              // above — NOT 'complete' — so BI still sits in the same
+              // pulsing "waiting for response" state every other flow's BI
+              // does, and still requires the agent to open the BI-14273 tab
+              // (see crm/pages/Index.tsx's COMPLETE_BI-on-tab-open effect,
+              // unchanged) before it actually resolves 3s later. Per
+              // request: BI and PA both start "waiting" in parallel off this
+              // one ENROLL, and each only resolves once its own tab is
+              // opened — this used to jump straight to 'complete' here,
+              // skipping that pause entirely.
               ENROLL: {
-                target: 'complete',
-                actions: 'updateBIComplete',
+                target: 'submitted',
+                actions: 'updateBISubmitted',
               },
             },
           },
@@ -279,12 +287,17 @@ export const iAssistMachine = createMachine(
                 actions: 'updatePASubmitted',
               },
               // iAssist auto-submits PA the moment the eRx is submitted
-              // (finishCase's ENROLL dispatch) — iAssist runs BI and PA
-              // submission itself, so this doesn't wait on the normal
-              // biStatus==='complete' guard SUBMIT_PA uses. The parallel
-              // 'enrollment' region handles the same ENROLL event for its
-              // own transition; this is a second, independent handler for
-              // that event in a different region, not a replacement.
+              // (finishCase's ENROLL dispatch), in parallel with
+              // benefitsInquiry's own ENROLL handler above — both start
+              // "waiting for response" off this one event, independently of
+              // each other. Deliberately unguarded (not canSubmitPA, which
+              // reads biStatus==='complete'): guards in a sibling parallel
+              // region see context as it was *before* this same event's
+              // actions run, so gating on biStatus here would only ever see
+              // its pre-ENROLL value ('none') and never fire. PA still
+              // doesn't resolve (approved/denied) until the agent opens the
+              // PA-14274 tab and waits 3s — see crm/pages/Index.tsx's
+              // PA-14274-tab-open effect, unchanged.
               ENROLL: {
                 target: 'submitted',
                 actions: 'updatePASubmitted',
