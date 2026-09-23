@@ -113,6 +113,24 @@
   }
 }
 
+/* ── Client tab design system (TG Therapeutics brand) ────────────────────── */
+/* Duplicate of the CRM tab, retinted from Salesforce blue to TG
+ * Therapeutics' defined colors (client/portals/patient/config/brands/
+ * tg-therapuetics.json) — see client/portals/client/branding.ts. These four
+ * are the same hex->HSL conversion applyBrandCssVars() computes at runtime;
+ * they're repeated here as static defaults (same pattern .portal-patient
+ * uses above) so the tab is never unstyled for a frame before that script
+ * runs. Fixed to TG Therapeutics specifically — unlike .portal-patient,
+ * this does NOT follow the demo's live "active brand" setting. */
+@layer base {
+  .portal-client {
+    --arx-primary: 184 100% 33%;      /* #009CA6 */
+    --arx-primary-dark: 191 44% 25%;  /* #24525C */
+    --arx-primary-80: 36 90% 69%;     /* #f7be69 */
+    --arx-primary-30: 30 100% 99%;    /* #fffdfb */
+  }
+}
+
 /* ── iPhone 17 Pro mockup ─────────────────────────────────────────────────── */
 /*  Screen viewport: 393 × 852 pt  (standard iPhone Pro logical resolution)   */
 

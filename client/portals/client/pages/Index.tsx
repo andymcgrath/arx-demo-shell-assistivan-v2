@@ -29,8 +29,8 @@ import {
   Send,
 } from "lucide-react";
 
-const SF_BLUE = "#0070d2";
-const FC_BLUE = "#0176d3";
+const SF_BLUE = "hsl(var(--arx-primary))";
+const FC_BLUE = "hsl(var(--arx-primary))";
 const SF_BORDER = "#dddbda";
 const SF_SECTION_BG = "#f3f3f3";
 
@@ -75,7 +75,7 @@ function Signature({ name, width = 160 }: { name: string; width?: number }) {
         style={{
           fontFamily: "Brush Script MT, Segoe Script, cursive",
           fontSize: 22,
-          color: "#1a3560",
+          color: "hsl(var(--arx-primary-dark))",
           letterSpacing: "-0.5px",
           lineHeight: 1.1,
           display: "block",
@@ -88,7 +88,7 @@ function Signature({ name, width = 160 }: { name: string; width?: number }) {
           display: "block",
           width,
           height: 1,
-          background: "linear-gradient(to right, #1a3560aa, transparent)",
+          background: "linear-gradient(to right, hsl(var(--arx-primary-dark) / 0.67), transparent)",
           marginTop: 2,
         }}
       />
@@ -375,13 +375,13 @@ function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClick?: (st
     : stage.isNotStarted
     ? "#706e6b"
     : (isRunning || isInProgress || isSubmitted)
-    ? "#0176d3"
+    ? "hsl(var(--arx-primary))"
     : "#3e3e3c";
 
   return (
     <div
       className="py-3 border-b border-[#dddbda] last:border-b-0"
-      style={isActiveWaiting ? { background: "linear-gradient(90deg, #f0f7ff 0%, #fff 100%)" } : undefined}
+      style={isActiveWaiting ? { background: "linear-gradient(90deg, hsl(var(--arx-primary-30)) 0%, #fff 100%)" } : undefined}
     >
       <div className="flex items-start gap-2.5">
         <div
@@ -542,7 +542,7 @@ function CaseListView({
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}>
       {/* App bar */}
-      <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "#032d60" }}>
+      <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "hsl(var(--arx-primary-dark))" }}>
         <div className="flex-1 flex justify-center">
           <div className="flex items-center gap-2 bg-white/10 rounded px-3 py-1 w-full max-w-sm">
             <Search size={13} className="text-white/70" />
@@ -626,7 +626,7 @@ function CaseListView({
                 <tr
                   onClick={onOpenKeanuCase}
                   className="cursor-pointer hover:bg-teal-50 transition-colors"
-                  style={{ background: "#e8f6f6" }}
+                  style={{ background: "hsl(var(--arx-primary-30))" }}
                 >
                   <td className="px-3 py-2 border-b border-[#dddbda]">
                     <input type="checkbox" onClick={(e) => e.stopPropagation()} />
@@ -1388,7 +1388,7 @@ export default function Index() {
         >
           <div
             className="flex items-center justify-center rounded-full text-white text-[10px] font-bold shrink-0"
-            style={{ width: 20, height: 20, background: "linear-gradient(135deg, #2dbcbb 0%, #16818a 100%)" }}
+            style={{ width: 20, height: 20, background: "linear-gradient(135deg, hsl(var(--arx-primary)) 0%, hsl(var(--arx-primary-dark)) 100%)" }}
           >
             {patientInitials}
           </div>
@@ -1491,7 +1491,7 @@ export default function Index() {
               >
                 <div
                   className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
-                  style={{ width: 16, height: 16, background: "linear-gradient(135deg, #0176d3 0%, #014486 100%)", borderRadius: 3 }}
+                  style={{ width: 16, height: 16, background: "linear-gradient(135deg, hsl(var(--arx-primary)) 0%, hsl(var(--arx-primary-dark)) 100%)", borderRadius: 3 }}
                 >C</div>
                 Onboarding
                 <span
@@ -1520,7 +1520,7 @@ export default function Index() {
               >
                 <div
                   className="flex items-center justify-center rounded shrink-0"
-                  style={{ width: 16, height: 16, background: "#6b5ecd", borderRadius: 3 }}
+                  style={{ width: 16, height: 16, background: "hsl(var(--arx-primary-80))", borderRadius: 3 }}
                 >
                   <FileText size={9} className="text-white" />
                 </div>
@@ -1554,7 +1554,7 @@ export default function Index() {
           {/* Doc header */}
           <div className="border-b border-[#dddbda] px-6 py-3 flex items-center justify-between" style={{ background: "#f9f9f9" }}>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center rounded" style={{ width: 36, height: 36, background: "#6b5ecd" }}>
+              <div className="flex items-center justify-center rounded" style={{ width: 36, height: 36, background: "hsl(var(--arx-primary-80))" }}>
                 <FileText size={18} className="text-white" />
               </div>
               <div>
@@ -1582,9 +1582,9 @@ export default function Index() {
               {/* Section 1 — Patient Authorization */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>1</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>1</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Patient Authorization</span>
-                  <span className="ml-auto text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: "#e8f4ef", color: "#2e844a" }}>Signed</span>
+                  <span className="ml-auto text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>Signed</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
                   <FieldRow label="Patient Signature" value={patientName} />
@@ -1596,7 +1596,7 @@ export default function Index() {
               {/* Section 2 — Patient Information */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>2</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>2</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Patient Information</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
@@ -1628,7 +1628,7 @@ export default function Index() {
               {/* Section 3 — Insurance Information */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>3</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>3</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Insurance Information</span>
                 </div>
                 <div className="px-4 pb-2">
@@ -1652,7 +1652,7 @@ export default function Index() {
               {/* Section 4 — Prescription */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>4</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>4</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Prescription for {drugName}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
@@ -1668,7 +1668,7 @@ export default function Index() {
               {/* Section 5 — Clinical Information */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>5</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>5</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Clinical Information</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
@@ -1683,7 +1683,7 @@ export default function Index() {
               {/* Section 6 — Prescriber Information */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>6</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>6</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Prescriber Information</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
@@ -1702,9 +1702,9 @@ export default function Index() {
               {/* Section 7 — Prescriber Certification */}
               <div className="border border-[#dddbda] rounded overflow-hidden bg-white">
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "#6b5ecd" }}>7</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-[10px] font-bold" style={{ background: "hsl(var(--arx-primary-80))" }}>7</span>
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Prescriber Certification</span>
-                  <span className="ml-auto text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: "#e8f4ef", color: "#2e844a" }}>Signed</span>
+                  <span className="ml-auto text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>Signed</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
                   <FieldRow label="Prescriber Signature" value="Sarah Chen, MD" />
@@ -1722,7 +1722,7 @@ export default function Index() {
                 <a
                   href="/enrollment-form.pdf"
                   download="Enrollment_Form_KDixon_051526.pdf"
-                  className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[#0176d3] hover:bg-[#f0f7ff] transition-colors"
+                  className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[hsl(var(--arx-primary))] hover:bg-[hsl(var(--arx-primary-30))] transition-colors"
                 >
                   Download
                 </a>
@@ -2036,16 +2036,16 @@ export default function Index() {
                     leaves appealStatus at 'none' so it always shows the
                     "recommended" copy below. */}
                 {appealStatus === "approved" ? (
-                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
+                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "hsl(var(--arx-primary-30))" }}>
                     <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved</p>
                     <p className="text-[12px]" style={{ color: "#1a4d2a" }}>
                       The payer overturned this denial on appeal. See the Appeals stage for the full outcome.
                     </p>
                   </div>
                 ) : appealStatus === "initiated" ? (
-                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "#0176d3", background: "#eef4ff" }}>
-                    <p className="text-[13px] font-semibold mb-2" style={{ color: "#014486" }}>Appeal Filed</p>
-                    <p className="text-[12px]" style={{ color: "#014486" }}>
+                  <div className="border-l-4 p-4 rounded" style={{ borderColor: "hsl(var(--arx-primary))", background: "hsl(var(--arx-primary-30))" }}>
+                    <p className="text-[13px] font-semibold mb-2" style={{ color: "hsl(var(--arx-primary-dark))" }}>Appeal Filed</p>
+                    <p className="text-[12px]" style={{ color: "hsl(var(--arx-primary-dark))" }}>
                       An appeal has been submitted on this denial. See the Appeals stage for status — fulfillment has moved forward while the payer reviews it.
                     </p>
                   </div>
@@ -2109,7 +2109,7 @@ export default function Index() {
                   <h1 className="text-[20px] font-bold text-[#3e3e3c]">PA-14274</h1>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                     ✓ Approved
                   </span>
                 </div>
@@ -2240,7 +2240,7 @@ export default function Index() {
                   <h1 className="text-[20px] font-bold text-[#3e3e3c]">A-14275</h1>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                  <span className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                     ✓ Approved
                   </span>
                 </div>
@@ -2302,7 +2302,7 @@ export default function Index() {
                   </div>
                 </div>
 
-                <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
+                <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "hsl(var(--arx-primary-30))" }}>
                   <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved — Fulfillment Continuing</p>
                   <p className="text-[12px]" style={{ color: "#1a4d2a" }}>
                     The payer reversed the original Prior Authorization denial on appeal. The prescriber has been notified by email, and dispatch to the patient's site of care already moved forward when the appeal was filed — no further action is needed on this stage.
@@ -2353,7 +2353,7 @@ export default function Index() {
                 <div className="flex items-center gap-3">
                   <div
                     className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
-                    style={{ width: 36, height: 36, background: "linear-gradient(135deg, #0176d3 0%, #014486 100%)" }}
+                    style={{ width: 36, height: 36, background: "linear-gradient(135deg, hsl(var(--arx-primary)) 0%, hsl(var(--arx-primary-dark)) 100%)" }}
                   >
                     BIR
                   </div>
@@ -2366,7 +2366,7 @@ export default function Index() {
                     in the demo, instead of a bespoke button here. */}
                 {isPapFlow && biResult === "no_insurance" && (
                   papSmsSent ? (
-                    <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                    <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                       SMS Sent to Patient
                     </span>
                   ) : (
@@ -2571,7 +2571,7 @@ export default function Index() {
                       // to the Rx Processing/Shipped/Delivered chain this
                       // flow doesn't have — see tpStage above).
                       selectedPharmacy ? (
-                        <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#e8f4ef" }}>
+                        <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "hsl(var(--arx-primary-30))" }}>
                           <span className="text-[12px] font-semibold" style={{ color: "#2e844a" }}>
                             Dispatched — Keanu to Facility
                           </span>
@@ -2586,25 +2586,25 @@ export default function Index() {
                         </button>
                       )
                     ) : (pharmacyStatus === "shipped" || pharmacyStatus === "delivered" || triageDispatched) ? (
-                      <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#e8f4ef" }}>
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "hsl(var(--arx-primary-30))" }}>
                         <span className="text-[12px] font-semibold" style={{ color: "#2e844a" }}>
                           Dispatched
                         </span>
                       </div>
                     ) : dispatchStatus === "dispatched" ? (
-                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "#e8f0fa" }}>
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "hsl(var(--arx-primary-30))" }}>
                         <span className="text-[12px] font-semibold" style={{ color: FC_BLUE }}>
                           Transferring to pharmacy…
                         </span>
                       </div>
                     ) : pharmacyStatus === "processing" ? (
-                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "#e8f0fa" }}>
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "hsl(var(--arx-primary-30))" }}>
                         <span className="text-[12px] font-semibold" style={{ color: FC_BLUE }}>
                           Processing…
                         </span>
                       </div>
                     ) : pharmacyStatus === "ready" ? (
-                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "#e8f0fa" }}>
+                      <div className="w-full flex items-center justify-center py-3 px-4 rounded animate-pulse" style={{ background: "hsl(var(--arx-primary-30))" }}>
                         <span className="text-[12px] font-semibold" style={{ color: FC_BLUE }}>
                           Shipping…
                         </span>
@@ -2940,7 +2940,7 @@ export default function Index() {
                 <div className="flex items-center gap-2 py-2">
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: "#e8f4ef" }}
+                    style={{ background: "hsl(var(--arx-primary-30))" }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2e844a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </div>
@@ -2980,7 +2980,7 @@ export default function Index() {
                 </button>
               )}
               {activeStage.id === "PA-14274" && paStatus === "approved" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                   Approved
                 </span>
               )}
@@ -2995,7 +2995,7 @@ export default function Index() {
                 </button>
               )}
               {activeStage.id === "TP-14277" && isIAssistPapFlow && selectedPharmacy && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                   Dispatched
                 </span>
               )}
@@ -3007,22 +3007,22 @@ export default function Index() {
                   "Processing…"/"Shipping…" pills below never fire for either
                   and this needs its own chip. */}
               {activeStage.id === "TP-14277" && isCopayRetailFlow && dispatchStatus === "dispatched" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                   Dispatched
                 </span>
               )}
               {activeStage.id === "TP-14277" && !isIAssistPapFlow && !isCopayRetailFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "#e8f0fa", color: FC_BLUE }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "hsl(var(--arx-primary-30))", color: FC_BLUE }}>
                   Processing…
                 </span>
               )}
               {activeStage.id === "TP-14277" && pharmacyStatus === "ready" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "#e8f0fa", color: FC_BLUE }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "hsl(var(--arx-primary-30))", color: FC_BLUE }}>
                   Shipping…
                 </span>
               )}
               {activeStage.id === "TP-14277" && (pharmacyStatus === "shipped" || pharmacyStatus === "delivered") && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}>
                   Dispatched
                 </span>
               )}
@@ -3062,7 +3062,7 @@ export default function Index() {
               <div className="flex items-center gap-3">
                 <div
                   className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
-                  style={{ width: 36, height: 36, background: "linear-gradient(135deg, #0176d3 0%, #014486 100%)" }}
+                  style={{ width: 36, height: 36, background: "linear-gradient(135deg, hsl(var(--arx-primary)) 0%, hsl(var(--arx-primary-dark)) 100%)" }}
                 >
                   PC
                 </div>
@@ -3142,7 +3142,7 @@ export default function Index() {
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
-                  style={{ width: 36, height: 36, background: "linear-gradient(135deg, #0176d3 0%, #014486 100%)" }}
+                  style={{ width: 36, height: 36, background: "linear-gradient(135deg, hsl(var(--arx-primary)) 0%, hsl(var(--arx-primary-dark)) 100%)" }}
                 >
                   Case
                 </div>
@@ -3576,7 +3576,7 @@ export default function Index() {
                           {item.priority}
                         </td>
                         <td className="px-3 py-2.5 border-b border-[#dddbda]">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: item.status === "Closed" ? "#e8f4ef" : "#fff3cd", color: item.status === "Closed" ? "#2e844a" : "#856404" }}>
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: item.status === "Closed" ? "hsl(var(--arx-primary-30))" : "#fff3cd", color: item.status === "Closed" ? "#2e844a" : "#856404" }}>
                             {item.status}
                           </span>
                         </td>
@@ -3608,7 +3608,7 @@ export default function Index() {
             <div className="bg-white border border-[#dddbda] rounded shadow-xl" style={{ width: 600, maxHeight: "90vh" }}>
               <div className="px-6 py-4 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center rounded" style={{ width: 32, height: 32, background: "#0070d2" }}>
+                  <div className="flex items-center justify-center rounded" style={{ width: 32, height: 32, background: "hsl(var(--arx-primary))" }}>
                     <span className="text-white text-[12px] font-bold">PC</span>
                   </div>
                   <h2 className="text-[16px] font-semibold text-[#3e3e3c]">BIPC-0455</h2>

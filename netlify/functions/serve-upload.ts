@@ -16,8 +16,22 @@
  * v2 function — see brand-active.ts for why. Bonus of v2 here: a real
  * Response can take the raw ArrayBuffer directly as its body, no more
  * base64/isBase64Encoded dance that v1's Lambda-shaped responses needed.
+ *
+ * On a Blobs miss, falls back to BUILTIN_UPLOADS (see that file's header
+ * comment) for the specific handful of asset filenames the Boehringer
+ * Ingelheim and TG Therapeutics built-in presets reference — those files
+ * live in git but were never actually uploaded into any environment's own
+ * Blobs store, which a plain deploy doesn't populate on its own (Blobs is
+ * separate per environment). Anything not in that manifest still 404s
+ * exactly as before; this never masks a genuinely missing/broken upload.
+ * On a fallback hit, also writes the bytes into this environment's Blobs
+ * store so every later request takes the normal fast Blobs path instead of
+ * repeating this fallback — i.e. each environment self-seeds itself the
+ * first time any of these built-in assets is actually requested, with no
+ * separate manual step.
  */
 import { uploadsStore } from "./_lib/uploadStore";
+import { BUILTIN_UPLOADS } from "./_lib/builtinUploads";
 
 const FILE_PATTERN = /\/(?:uploads|\.netlify\/functions\/serve-upload)\/([^/]+)\/?$/;
 
@@ -29,16 +43,40 @@ export default async (req: Request) => {
 
   try {
     const result = await uploadsStore().getWithMetadata(file, { type: "arrayBuffer" });
-    if (!result) return new Response("Not found", { status: 404 });
+    if (result) {
+      const contentType =
+        (result.metadata as { contentType?: string } | undefined)?.contentType ??
+        "application/octet-stream";
 
-    const contentType =
-      (result.metadata as { contentType?: string } | undefined)?.contentType ??
-      "application/octet-stream";
+      return new Response(result.data as ArrayBuffer, {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
 
-    return new Response(result.data as ArrayBuffer, {
+    const builtin = BUILTIN_UPLOADS[file];
+    if (!builtin) return new Response("Not found", { status: 404 });
+
+    const buffer = Buffer.from(builtin.base64, "base64");
+
+    // Best-effort seed — a failed write here shouldn't fail the response,
+    // it just means this same fallback runs again on the next request
+    // instead of the normal fast Blobs path. Logged so a persistent Blobs
+    // write problem (as opposed to a one-time cold-store miss) doesn't go
+    // unnoticed.
+    try {
+      await uploadsStore().set(file, buffer, { metadata: { contentType: builtin.contentType } });
+    } catch (seedErr) {
+      console.error("[serve-upload] failed to seed built-in upload into Blobs:", file, seedErr);
+    }
+
+    return new Response(buffer, {
       status: 200,
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": builtin.contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });

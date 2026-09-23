@@ -10,7 +10,7 @@ import { usePatientStore } from "@/store/patientStore";
 import type { WorkflowData } from "@/engine/types";
 
 const CASE_ID = "demo";
-const FC_BLUE = "#0176d3";
+const FC_BLUE = "hsl(var(--arx-primary))";
 
 // ─── Tree Node Types ────────────────────────────────────────────────────────
 
@@ -215,20 +215,20 @@ function MaterialCatalog({
                         key={child.id}
                         className="flex flex-col py-1 px-2 cursor-pointer truncate rounded-sm"
                         style={{
-                          borderLeft: isSelected ? "3px solid #0176d3" : "3px solid transparent",
-                          background: isSelected ? "#eaf4ff" : undefined,
+                          borderLeft: isSelected ? "3px solid hsl(var(--arx-primary))" : "3px solid transparent",
+                          background: isSelected ? "hsl(var(--arx-primary-30))" : undefined,
                         }}
                         onClick={() => onSelect(child.id)}
                         title={`${child.label} (${child.sublabel})`}
                       >
                         <span
                           className="text-[12px] truncate"
-                          style={{ color: isSelected ? "#0176d3" : "#3e3e3c" }}
+                          style={{ color: isSelected ? "hsl(var(--arx-primary))" : "#3e3e3c" }}
                         >
                           {child.label}{" "}
                           <span
                             className="text-[11px]"
-                            style={{ color: isSelected ? "#0176d3" : "#706e6b" }}
+                            style={{ color: isSelected ? "hsl(var(--arx-primary))" : "#706e6b" }}
                           >
                             ({child.sublabel})
                           </span>
@@ -348,7 +348,7 @@ function OrderDetails({
           <span className="text-[13px] font-semibold text-[#3e3e3c]">{meta.title}</span>
           <span
             className="text-[11px] px-2 py-0.5 rounded font-medium"
-            style={{ background: "#e8f4ef", color: "#2e844a" }}
+            style={{ background: "hsl(var(--arx-primary-30))", color: "#2e844a" }}
           >
             Ready
           </span>
@@ -367,9 +367,9 @@ function OrderDetails({
       <div
         className="rounded-lg p-3 text-[13px] leading-relaxed whitespace-pre-wrap relative"
         style={{
-          background: "#e8f4ff",
-          color: "#1a1a2e",
-          border: "1px solid #c7dffa",
+          background: "hsl(var(--arx-primary-30))",
+          color: "hsl(var(--arx-primary-dark))",
+          border: "1px solid hsl(var(--arx-primary-30))",
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
@@ -380,7 +380,7 @@ function OrderDetails({
           style={{
             borderLeft: "8px solid transparent",
             borderRight: "8px solid transparent",
-            borderTop: "8px solid #e8f4ff",
+            borderTop: "8px solid hsl(var(--arx-primary-30))",
           }}
         />
       </div>
@@ -433,13 +433,13 @@ function AccountInformation({
           value="phone"
           checked={contactMethod === "phone"}
           onChange={() => onContactMethodChange("phone")}
-          className="accent-[#0176d3] w-3.5 h-3.5 cursor-pointer"
+          className="accent-[hsl(var(--arx-primary))] w-3.5 h-3.5 cursor-pointer"
           disabled={orderAdded}
         />
         <span className="text-[13px] text-[#3e3e3c]">{phone}</span>
         <span
           className="text-[11px] px-1.5 py-0.5 rounded"
-          style={{ background: "#e8f0fe", color: FC_BLUE, fontWeight: 500 }}
+          style={{ background: "hsl(var(--arx-primary-30))", color: FC_BLUE, fontWeight: 500 }}
         >
           MOBILE
         </span>
@@ -453,13 +453,13 @@ function AccountInformation({
           value="email"
           checked={contactMethod === "email"}
           onChange={() => onContactMethodChange("email")}
-          className="accent-[#0176d3] w-3.5 h-3.5 cursor-pointer"
+          className="accent-[hsl(var(--arx-primary))] w-3.5 h-3.5 cursor-pointer"
           disabled={orderAdded}
         />
         <span className="text-[13px] text-[#3e3e3c] truncate">{email}</span>
         <span
           className="text-[11px] px-1.5 py-0.5 rounded shrink-0"
-          style={{ background: "#e8f0fe", color: FC_BLUE, fontWeight: 500 }}
+          style={{ background: "hsl(var(--arx-primary-30))", color: FC_BLUE, fontWeight: 500 }}
         >
           EMAIL
         </span>
@@ -486,7 +486,7 @@ function AccountInformation({
             disabled={isPlacing || orderPlaced}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-semibold rounded text-white transition-colors"
             style={{
-              background: orderPlaced ? "#2e844a" : isPlacing ? "#0056a3" : FC_BLUE,
+              background: orderPlaced ? "#2e844a" : isPlacing ? "hsl(var(--arx-primary))" : FC_BLUE,
               cursor: isPlacing || orderPlaced ? "not-allowed" : "pointer",
               border: "none",
             }}
@@ -616,8 +616,8 @@ export default function FulfilmentCenter() {
       {/* Sub-header: Material Catalog tab */}
       <div className="border-b border-[#dddbda] px-4 flex items-end" style={{ minHeight: 36 }}>
         <div
-          className="text-[13px] font-semibold text-[#0176d3] pb-2 mr-4"
-          style={{ borderBottom: "2px solid #0176d3" }}
+          className="text-[13px] font-semibold text-[hsl(var(--arx-primary))] pb-2 mr-4"
+          style={{ borderBottom: "2px solid hsl(var(--arx-primary))" }}
         >
           Material Catalog
         </div>

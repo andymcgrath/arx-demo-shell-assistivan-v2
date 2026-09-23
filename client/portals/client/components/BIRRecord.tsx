@@ -13,8 +13,8 @@ const CASE_ID = "demo";
 const SF_BORDER = "#dddbda";
 const SF_MUTED = "#706e6b";
 const SF_TEXT = "#3e3e3c";
-const SF_BLUE = "#0176d3";
-const BIR_PURPLE = "#5867e8";
+const SF_BLUE = "hsl(var(--arx-primary))";
+const BIR_PURPLE = "hsl(var(--arx-primary-80))";
 
 // ─── Field Row ───────────────────────────────────────────────────────────────
 
@@ -224,7 +224,7 @@ export default function BIRRecord() {
                 disabled={runEBI.isPending || biComplete}
                 className="flex items-center gap-2 px-4 py-1.5 text-[13px] font-medium rounded text-white"
                 style={{
-                  background: biComplete ? "#aaabac" : runEBI.isPending ? "#0056a3" : SF_BLUE,
+                  background: biComplete ? "#aaabac" : runEBI.isPending ? "hsl(var(--arx-primary))" : SF_BLUE,
                   cursor: biComplete || runEBI.isPending ? "not-allowed" : "pointer",
                   border: "none",
                   whiteSpace: "nowrap",
