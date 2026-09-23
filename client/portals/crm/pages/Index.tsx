@@ -4,7 +4,7 @@ import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { getLiveWorkItems, KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
-import { dateFromToday, daysFromToday } from "@/lib/relativeDate";
+import { dateFromToday, daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
@@ -435,7 +435,17 @@ const RIGHT_TABS = [
   { id: "missing-info", label: "Missing Information" },
 ];
 
-const FAX_DOCUMENTS = [
+interface RelatedDocument {
+  fileId: string;
+  fileName: string;
+  dateReceived: string;
+  type: string;
+  pages: number;
+  /** When set, clicking the row opens this URL directly instead of the enrollment-form subtab viewer. */
+  href?: string;
+}
+
+const FAX_DOCUMENTS: RelatedDocument[] = [
   {
     fileId: "FAX-2026-00431",
     fileName: "Enrollment_Form_KDixon_051526.pdf",
@@ -758,6 +768,21 @@ export default function Index() {
   const copayEnrolled = workflowData.copayEnrolled;
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
+  // Summary of Benefits — only appears in Related Documents once the PA is
+  // actually approved (not just submitted). Dated to the live PA approval
+  // timestamp so it tracks whenever the demo operator actually clicks
+  // through, per the relativeDate.ts "sliding window" convention.
+  const sobDateLabel = formatShortDate(paApprovedAt ? new Date(paApprovedAt) : dateFromToday(0));
+  const sobDocuments: RelatedDocument[] = paStatus === "approved"
+    ? [{
+        fileId: "SOB-2026-00512",
+        fileName: `${patientName}-SOB-${sobDateLabel}.pdf`,
+        dateReceived: sobDateLabel,
+        type: "Summary of Benefits",
+        pages: 2,
+        href: "/tg-briumvi-sob.pdf",
+      }]
+    : [];
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
   const closeEnrollmentFormTab = useDemoStore((s) => s.closeEnrollmentFormTab);
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
@@ -2387,7 +2412,77 @@ export default function Index() {
               {/* Left: Information + tables */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
 
-                {/* Information section */}
+                {/* Information section — iAssist flows get the Patient
+                    Details / Insurance Information / Member Information
+                    layout populated from the same BlueCross BlueShield of
+                    Florida facts used in the TG Therapeutics SOB PDF; every
+                    other flow keeps the original single "Information" box. */}
+                {isIAssistFlow ? (
+                  <>
+                    <div className="border border-[#dddbda] rounded">
+                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                        <ChevronDown size={14} className="text-[#706e6b]" />
+                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Patient Details</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
+                        <div>
+                          <FieldRow label="Patient" value={patientName} isLink />
+                          <FieldRow label="Benefit Type" value="Medical" />
+                          <FieldRow label="Selected Product Coverage Pharmacy" value="" />
+                          <FieldRow label="Benefit Source" value="eBV" />
+                        </div>
+                        <div>
+                          <FieldRow label="Case" value={caseNumber} isLink />
+                          <FieldRow label="Stage" value="BI-14273" isLink />
+                          <FieldRow label="Rank" value="Primary" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-[#dddbda] rounded">
+                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                        <ChevronDown size={14} className="text-[#706e6b]" />
+                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Insurance Information</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
+                        <div>
+                          <FieldRow label="Insurance Plan Type" value="Commercial PPO" />
+                          <FieldRow label="Insurance Payer Type" value="Commercial" />
+                          <FieldRow label="Medical Group Number" value="GRP-88420" />
+                          <FieldRow label="Employer" value="" />
+                          <FieldRow label="Copay Accumulator" value="" />
+                          <FieldRow label="Non Emergency Transportation Coverage" value="" />
+                        </div>
+                        <div>
+                          <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
+                          <FieldRow label="Payer Summary" value="" />
+                          <FieldRow label="Medical Plan Name" value="" />
+                          <FieldRow label="Plan Funding" value="" />
+                          <FieldRow label="OOP Included in Deductible" value="" />
+                          <FieldRow label="Insurance Phone #" value="(800) 477-3736" />
+                          <FieldRow label="Medical Member ID" value="BCB-KR-298341" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-[#dddbda] rounded">
+                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
+                        <ChevronDown size={14} className="text-[#706e6b]" />
+                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Member Information</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
+                        <div>
+                          <FieldRow label="Medical Insurance Effective Date" value="1/1/2026" />
+                          <FieldRow label="Medical Insurance Termination Date" value="" />
+                        </div>
+                        <div>
+                          <FieldRow label="Subscriber Name" value={patientName} />
+                          <FieldRow label="Relationship to Subscriber" value="Self" />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
                 <div className="border border-[#dddbda] rounded">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
                     <ChevronDown size={14} className="text-[#706e6b]" />
@@ -2426,6 +2521,7 @@ export default function Index() {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* BI Referral Pharmacies table — shown only after Triage stage starts */}
                 {pharmacyStatus !== "none" && (
@@ -3455,7 +3551,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-          ) : activeCaseTab === "documents" && isFaxFlow ? (
+          ) : activeCaseTab === "documents" && (isFaxFlow || sobDocuments.length > 0) ? (
             <div className="p-4">
               <div className="border border-[#dddbda] rounded overflow-hidden">
                 {/* Table header */}
@@ -3464,7 +3560,7 @@ export default function Index() {
                   style={{ background: "#f3f3f3" }}
                 >
                   <span className="text-[13px] font-semibold text-[#3e3e3c]">Related Documents</span>
-                  <span className="text-[12px] text-[#706e6b]">{FAX_DOCUMENTS.length} record{FAX_DOCUMENTS.length !== 1 ? "s" : ""}</span>
+                  <span className="text-[12px] text-[#706e6b]">{(isFaxFlow ? FAX_DOCUMENTS.length : 0) + sobDocuments.length} record{(isFaxFlow ? FAX_DOCUMENTS.length : 0) + sobDocuments.length !== 1 ? "s" : ""}</span>
                 </div>
                 <table className="w-full text-[13px]">
                   <thead>
@@ -3489,7 +3585,11 @@ export default function Index() {
                     </tr>
                   </thead>
                   <tbody>
-                    {FAX_DOCUMENTS.map((doc) => (
+                    {[...(isFaxFlow ? FAX_DOCUMENTS : []), ...sobDocuments].map((doc) => {
+                      const openDoc = doc.href
+                        ? () => window.open(doc.href, "_blank", "noopener,noreferrer")
+                        : () => { openEnrollmentFormTab(); setActivePatientSubTab("enrollment-form"); };
+                      return (
                       <tr key={doc.fileId} className="hover:bg-[#f3f3f3] transition-colors">
                         <td className="px-3 py-2.5 border-b border-[#dddbda]">
                           <div className="flex items-center gap-1.5">
@@ -3497,7 +3597,7 @@ export default function Index() {
                             <span
                               className="cursor-pointer hover:underline font-medium"
                               style={{ color: SF_BLUE }}
-                              onClick={() => { openEnrollmentFormTab(); setActivePatientSubTab("enrollment-form"); }}
+                              onClick={openDoc}
                             >
                               {doc.fileId}
                             </span>
@@ -3507,7 +3607,7 @@ export default function Index() {
                           <span
                             className="cursor-pointer hover:underline"
                             style={{ color: SF_BLUE }}
-                            onClick={() => { openEnrollmentFormTab(); setActivePatientSubTab("enrollment-form"); }}
+                            onClick={openDoc}
                           >
                             {doc.fileName}
                           </span>
@@ -3522,7 +3622,8 @@ export default function Index() {
                           {doc.dateReceived}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
