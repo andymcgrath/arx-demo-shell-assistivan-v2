@@ -13,11 +13,21 @@ const TOTAL = LIST_PRICE - DISCOUNT;
 // (see BenefitPricing.tsx's PRICING_OPTIONS). Retail/Mail keep their listed
 // price; self_pay reflects the reduced Copay Program price unlocked at
 // enrollment (/copay-enroll), not the "list" self-pay rate.
+//
+// CoA_DME's own Scenario 3 (neither benefit covered — see coaDme.ts) also
+// sets pricingOption to "self_pay", but it's a flat cash-pay price for the
+// CGM sensor, not the Copay Program's discounted monthly rate — this table
+// alone can't tell the two apart since they share the same key, so
+// DME_SELF_PAY_PRICE below overrides it specifically for isDmeFlow.
 const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
   retail: { price: 50, cadence: "" },
   mail_order: { price: 100, cadence: "" },
   self_pay: { price: 25, cadence: "/month" },
 };
+
+// CoA_DME Scenario 3 only — confirmed cash price for the DME (CGM sensor),
+// flat, no monthly cadence (unlike Copay's self_pay above).
+const DME_SELF_PAY_PRICE = { price: 149.99, cadence: "" };
 
 // Supply duration also depends on the pricing option picked on Benefit
 // Pricing (see BenefitPricing.tsx's PRICING_OPTIONS: Retail is a 30-day
@@ -88,7 +98,9 @@ export default function DeliveryPayment() {
   const [breakdown, setBreakdown] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
 
-  const coaPricing = COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
+  const coaPricing = isDmeFlow && workflowData.pricingOption === "self_pay"
+    ? DME_SELF_PAY_PRICE
+    : COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
   const cardTotalLabel = usesCoaPricingDisplay ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
 
   return (
