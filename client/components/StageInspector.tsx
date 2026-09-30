@@ -44,7 +44,11 @@ export function StageInspector() {
   const stateValue = useSelector(actor, (s) => s.value);
   const workflowData = useSelector(actor, (s) => s.context.workflowData, workflowDataEqual);
 
-  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
+  // CoA_DME shares CoA_DTP's linear-machine shape (see coaDme.ts/COA_STAGES)
+  // through 'biComplete', so it reuses this same lookup rather than the
+  // parallel-region fallback below, which assumes a Record<ParallelRegion,
+  // string> state value CoA_DME's flat machine never produces.
+  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay' || flowType === 'CoA_DME';
 
   let stageLabel: string;
   let relevantFields: (keyof WorkflowData)[];

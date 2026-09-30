@@ -186,6 +186,24 @@ export default function OrderTracker() {
     );
   }
 
+  // CoA_DME Scenario 1 (pharmacy covered, medical not) — mirrors CoA_Copay's
+  // Retail path exactly (confirmed design decision), including this same
+  // 2-step tracker: fulfillment happens outside AssistRx's own pipeline (see
+  // crm/pages/Index.tsx's isDmeRetailFlow, which drops the Pharmacy Status
+  // stage the same way isCopayRetailFlow does), so the default 5-step
+  // shipping tracker below would get stuck forever on "Routing to pharmacy."
+  if (workflowData.flowType === "CoA_DME" &&
+      workflowData.pharmacyBenefitStatus === "covered" &&
+      workflowData.medicalBenefitStatus !== "covered" &&
+      workflowData.pricingOption === "retail") {
+    return (
+      <RetailPharmacyTracker
+        selectedPharmacyName={workflowData.selectedPharmacy?.name ?? null}
+        isMailOrder={false}
+      />
+    );
+  }
+
   const steps = buildSteps(0, pharmacyStatus);
   return (
     <main className="flex-grow pt-5 pb-8">

@@ -1,32 +1,8 @@
-/**
- * PrES/PAP workflow machine — dedicated machine for WF5 (PrES_PAP)
- *
- * Foundation/placeholder note: this is a deliberate structural clone of
- * client/engine/workflowMachine.ts (the parallel machine WF1/WF2 share,
- * registry id "enrollment"), the same way client/workflows/iAssist.ts cloned
- * it for WF4. Cloning into its own file/registry id gives WF5 a dedicated
- * machine instance, fully isolated from WF1-4 — future changes here can
- * never affect the other flows, and vice versa — while still sharing the
- * same central WorkflowData shape (client/engine/types.ts) and the same
- * patient identity store (client/store/patientStore.ts) every other flow
- * reads from.
- *
- * States/events/guards mirror WF2's (Fax_PAP_Audit) PAP-audit shape today —
- * per the WF5 kickoff request, WF5 "follows a similar flow to WF2" but
- * differs in how information is captured (a provider e-signature intake
- * instead of WF2's fax referral). That real capture mechanism/screens
- * haven't been designed yet, so for now this machine reuses WF2's exact
- * event names/fields so the flow works end-to-end out of the box; expect
- * the enrollment-side events here to be replaced once the actual PrES
- * capture design lands. Only `id` and the initial `flowType` differ from
- * workflowMachine.ts otherwise.
- */
-
 import { createMachine, assign } from 'xstate';
-import type { MachineContext, DemoEvent, WorkflowData } from '@/engine/types';
+import type { MachineContext, DemoEvent, WorkflowData } from './types';
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
-  flowType: 'PrES_PAP',
+  flowType: 'Fax_QS_PA_Approved',
   enrollmentStatus: "none",
   smsVerified: false,
   otpVerified: false,
@@ -65,8 +41,6 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   pharmacyCoverageSmsVerified: false,
   cashOfferSmsSent: false,
   cashOfferSmsVerified: false,
-  dmeTransferSmsSent: false,
-  dmeTransferSmsVerified: false,
 };
 
 const initialContext: MachineContext = {
@@ -100,29 +74,44 @@ const pushSnapshot = (snapshots: MachineContext[], context: MachineContext) => {
   return updated.length > 20 ? updated.slice(-20) : updated;
 };
 
-export const presPapMachine = createMachine(
+
+export const workflowMachine = createMachine(
   {
-    id: 'presPapWorkflow',
+    id: 'arxWorkflow',
     type: 'parallel',
     context: initialContext,
     on: {
       UNDO: {
         actions: 'restoreLastSnapshot',
       },
-      // Dedicated machine — INITIAL_WORKFLOW_DATA.flowType is always
-      // 'PrES_PAP' for this machine, so (unlike workflowMachine.ts, which is
-      // shared by WF1/WF2 and has to preserve the actor's corrected
-      // flowType across reset) a full reset to INITIAL_WORKFLOW_DATA is
-      // always correct here. No SET_FLOW_TYPE correction event is needed
-      // either, for the same reason (see actorSingleton.ts's
-      // machineIdForFlow/createActorForFlow — SET_FLOW_TYPE is only ever
-      // sent to the shared "enrollment" machine).
       RESET: {
-        target: '#presPapWorkflow',
-        actions: assign(() => ({
-          workflowData: { ...INITIAL_WORKFLOW_DATA },
+        target: '#arxWorkflow',
+        // Keep the actor's own current flowType — INITIAL_WORKFLOW_DATA's
+        // flowType is just a static fallback for the (shared, flow-agnostic)
+        // "enrollment" machine, not a real default. Spreading it wholesale
+        // here would silently flip a PAP session back to WF1 on Reset.
+        actions: assign(({ context }) => ({
+          workflowData: { ...INITIAL_WORKFLOW_DATA, flowType: context.workflowData.flowType },
           events: [],
           _snapshots: [],
+        })),
+      },
+      // Corrective, internal-only action — see actorSingleton.ts's
+      // createActorForFlow. The "enrollment" machine (shared by WF1/WF2) has
+      // no way to know which of the two it's actually running as, since its
+      // static INITIAL_WORKFLOW_DATA.flowType is hardcoded to
+      // 'Fax_QS_PA_Approved'. actorSingleton sends this right after creating
+      // (or restoring) the actor so workflowData.flowType actually matches
+      // the flow the user selected, instead of every isPapFlow-style check
+      // silently reading WF1 defaults. Deliberately doesn't touch
+      // events/_snapshots — this isn't a demo action, just a correction.
+      SET_FLOW_TYPE: {
+        actions: assign(({ context, event }: any) => ({
+          ...context,
+          workflowData: {
+            ...context.workflowData,
+            flowType: event.flowType,
+          },
         })),
       },
       COMPLETE_PROVIDER_PA: {
@@ -153,9 +142,10 @@ export const presPapMachine = createMachine(
       DELIVER_RX: {
         actions: 'updatePharmacyDelivered',
       },
-      // Placeholder PAP-audit beat, reused from WF2 as-is (see file header) —
-      // BI comes back no_insurance, an "application update" is staged, then
-      // the patient's eIncome check result flips PAP to "active" and opens
+      // Fax_PAP_Audit (WF2/PAP) only — BI comes back no_insurance, the
+      // Fulfillment Center stages an "application update" SMS (mirrors the
+      // initial enrollment SMS→OTP beat: tap link -> enter code), then the
+      // patient's eIncome check result flips PAP to "active" and opens
       // dispatch the same way PA approval does for other flows.
       SEND_PAP_SMS: {
         actions: 'updatePapSmsSent',
@@ -169,15 +159,33 @@ export const presPapMachine = createMachine(
       VERIFY_INCOME: {
         actions: 'updateIncomeVerified',
       },
-      // Mirrors CoA_DTP/iAssist/WF2's own PATIENT_SETS_ADDRESS/
-      // PATIENT_SELECTS_SHIP_DATE beat — same patient screens
-      // (DeliveryAddress.tsx/DeliveryDate.tsx), same event names.
+      // Fax_PAP_Audit (WF2/PAP) only — mirrors CoA_DTP/iAssist's own
+      // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE beat (see
+      // coaDtp.ts's addressSet/shipDateSelected states), reusing the same
+      // patient screens (DeliveryAddress.tsx/DeliveryDate.tsx) and the same
+      // event names. Unlike CoA/iAssist — where the pharmacy is already
+      // auto-assigned by the time address is set — WF2's CRM still picks
+      // the pharmacy afterward via the Triage tab's "Choose Pharmacy"
+      // (SELECT_PHARMACY); this only adds the patient-facing address/date
+      // confirmation ahead of that, gating WorkflowEngine.ts's
+      // Fax_PAP_Audit branch before it falls through to Dispatch to
+      // Triage. No dedicated states needed here (unlike coaDtp.ts) since
+      // WF2's FILL_RX guard (canFillRX) only checks papStatus, not a named
+      // state — flat context fields are enough.
       PATIENT_SETS_ADDRESS: {
         actions: 'updatePapPatientSetsAddress',
       },
       PATIENT_SELECTS_SHIP_DATE: {
         actions: 'updatePapPatientSelectsShipDate',
       },
+      // Fax_PAP_Audit (WF2/PAP) only — fired from the new PapNoInsuranceCard
+      // on the patient's home screen ("Enroll" CTA). incomeStatus's 'pending'
+      // value was declared in types.ts but never produced by anything until
+      // now: WorkflowEngine.ts's Fax_PAP_Audit branch shows the home card
+      // while incomeStatus is 'none' (right after papOtpVerified) and only
+      // routes to /income-qualification once it's 'pending', so the patient
+      // has to actually tap "Enroll" instead of landing on the eIncome form
+      // immediately after verifying the code.
       START_INCOME_QUALIFICATION: {
         actions: 'updateIncomeQualificationStarted',
       },
@@ -487,6 +495,8 @@ export const presPapMachine = createMachine(
           ...context.workflowData,
           incomeStatus: 'verified',
           papStatus: 'active',
+          // Mirrors updatePAApproved: opens up Triage/pharmacy dispatch the
+          // instant PAP is approved, before anyone's picked a pharmacy.
           dispatchStatus:
             context.workflowData.dispatchStatus === 'none'
               ? 'pending_selection'
@@ -498,6 +508,11 @@ export const presPapMachine = createMachine(
       updatePapPatientSetsAddress: assign(({ context }) => ({
         workflowData: {
           ...context.workflowData,
+          // Matches coaDtp.ts's PATIENT_SETS_ADDRESS exactly (dispatchStatus
+          // -> 'selected'). CRM still separately assigns the actual pharmacy
+          // via SELECT_PHARMACY on the Triage tab — this only signals "the
+          // patient's done their part," which is what canDispatchToPharmacy
+          // (Index.tsx) and canFillRX (this file's guards) key off.
           dispatchStatus: 'selected',
         },
         events: [...context.events, createEvent(context, 'PATIENT_SETS_ADDRESS', 'patient', 9)],
@@ -533,7 +548,14 @@ export const presPapMachine = createMachine(
     guards: {
       canRunBI: ({ context }) => context.workflowData.consentStatus === 'confirmed',
       canSubmitPA: ({ context }) => context.workflowData.biStatus === 'complete',
-      // WF5 never sets paStatus, same as WF2 — see updateIncomeVerified.
+      // Fax_PAP_Audit (WF2/PAP) never sets paStatus — it stays 'none' for
+      // that flow forever by design (see the SEND_PAP_SMS/VERIFY_INCOME
+      // comment above). Its equivalent "cleared to dispatch" signal is
+      // papStatus flipping to 'active' (set by updateIncomeVerified once
+      // the eIncome check passes). Without this, WF2 could never actually
+      // reach FILL_RX in a real click-through — the guard would silently
+      // block it forever since paStatus === 'approved' is unreachable for
+      // this flow.
       canFillRX: ({ context }) =>
         context.workflowData.paStatus === 'approved' ||
         context.workflowData.papStatus === 'active',

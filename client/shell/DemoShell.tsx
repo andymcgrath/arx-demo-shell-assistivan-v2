@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
 import { FLOW_OPTIONS } from "./flowOptions";
 import { usePatientToastStore } from "@/store/patientToastStore";
+import { replayDmeToBiComplete } from "./resetToStage";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -97,6 +98,9 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // CoA_Copay (WF4) is currently a direct copy of CoA_DTP (WF3) — same
   // starting portal, see coaCopay.ts.
   CoA_Copay: "provider",
+  // CoA_DME (medical-benefit DME, no PA/pricing/fulfillment) — same starting
+  // portal as CoA_DTP/CoA_Copay, see coaDme.ts.
+  CoA_DME: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist
@@ -291,6 +295,61 @@ const STEP_LABELS_COA_COPAY_RETAIL = [
   "Dispatch to Triage",
 ];
 
+// CoA_DME (one Benefits Investigation, three coverage outcomes — see
+// workflows/coaDme.ts's header comment) — mirrors CoA_DTP's own
+// STEP_LABELS_COA bar (same "eRx Received"/"Consent" naming, same
+// eRx-to-fulfillment shape), just without a Prior Authorization step at all
+// — this flow never submits one, in any of its 3 outcomes. Used for
+// Scenario 3 only now (neither covered, cash pay) — Scenario 1 (pharmacy
+// covered) has its own, shorter STEP_LABELS_DME_PHARMACY bar below (no
+// pricing/address/date/payment at all in that outcome anymore — see
+// coaDme.ts). Scenario 2 (medical covered) is a completely different, much
+// shorter path — see STEP_LABELS_DME_MEDICAL below — swapped in once
+// medicalBenefitStatus resolves to "covered" (see isDmeMedicalFlow in
+// StepBar below), the same way isCopayRetailFlow swaps in
+// STEP_LABELS_COA_COPAY_RETAIL once CoA_Copay's own pricingOption resolves.
+const STEP_LABELS_DME = [
+  "eRx Received",
+  "Consent",
+  "Benefits Investigation",
+  "Payment",
+  "Dispatch to Triage",
+  "Rx Processing",
+  "Rx Shipped",
+  "Medication Delivered",
+];
+
+// CoA_DME Scenario 1 only (pharmacyBenefitStatus === "covered",
+// medicalBenefitStatus !== "covered") — this outcome no longer has a
+// pricing/address/date/payment step at all (see coaDme.ts's header comment):
+// CRM sends a second, later SMS milestone ("Patient Notification"), the
+// patient picks a network pharmacy, and fulfillment happens outside
+// AssistRx's own pipeline from there — same shape as
+// STEP_LABELS_COA_COPAY_RETAIL's own 6-step, Dispatch-to-Triage-terminal bar,
+// just with this flow's own step names.
+const STEP_LABELS_DME_PHARMACY = [
+  "eRx Received",
+  "Consent",
+  "Benefits Investigation",
+  "Patient Notification",
+  "Pharmacy Selection",
+  "Dispatch to Triage",
+];
+
+// CoA_DME Scenario 2 only (medicalBenefitStatus === "covered", medical
+// benefit always wins — see workflows/coaDme.ts) — this outcome ends the
+// moment CoAssist notifies the outside DME provider (Advanced Diabetes
+// Supply) of the transfer, so it never reaches Payment/Dispatch/fulfillment
+// at all. Same first 3 steps as STEP_LABELS_DME above (eRx Received/
+// Consent/Benefits Investigation sit at the same positions in both bars),
+// just a different, terminal 4th step instead of continuing on.
+const STEP_LABELS_DME_MEDICAL = [
+  "eRx Received",
+  "Consent",
+  "Benefits Investigation",
+  "DME Provider Transfer",
+];
+
 // CoA_DTP-specific step calculation — the generic one below was tuned for
 // WF1's fields (dispatchStatus/paStatus meaning "pharmacy dispatch") and,
 // applied to CoA's different fields, jumped straight to a late step number
@@ -369,6 +428,62 @@ function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
   ];
 }
 
+// CoA_DME (medical-benefit DME) per-step completion — same "BI can race
+// ahead of consent" reasoning as computeCoaStepDone above (CoA_DME's own
+// RUN_BI fires off enrollment alone, see crm/pages/Index.tsx's isDmeFlow-
+// scoped effect), applied to this flow's own 3-step bar (STEP_LABELS_DME)
+// instead of CoA_DTP's 9-step one. Step 1 (Enrollment) is judged on real
+// consent, not just an invite sent — matches computeIAssistStepDone's own
+// "Patient Enrolled" step for the same reason.
+function computeDmeStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, medicalBenefitStatus, pharmacyBenefitStatus, dmeProviderTransferStatus, pricingOption, paymentVerified, pharmacyStatus, pharmacyCoverageSmsSent } = workflowData;
+
+  // Scenario 2 — medical benefit covered (always wins). Same first-3-step
+  // shape as the branches below, but its own short, terminal bar (see
+  // STEP_LABELS_DME_MEDICAL).
+  if (medicalBenefitStatus === 'covered') {
+    return [
+      enrollmentStatus !== 'none',               // 1 eRx Received
+      consentStatus === 'confirmed',              // 2 Consent
+      biStatus === 'complete',                    // 3 Benefits Investigation
+      dmeProviderTransferStatus === 'notified',   // 4 DME Provider Transfer
+    ];
+  }
+
+  // Scenario 1 — pharmacy covered, medical not. No pricing/address/date/
+  // payment step at all anymore (see coaDme.ts's header comment) — CRM
+  // sends the second SMS milestone, the patient picks a network pharmacy,
+  // then this mirrors CoA_Copay Retail's own short, Dispatch-to-Triage-
+  // terminal bar (see STEP_LABELS_DME_PHARMACY/computeCoaStepDone's own
+  // isCopayRetailFlow shape for the analogous "dispatched" signal).
+  if (pharmacyBenefitStatus === 'covered') {
+    return [
+      enrollmentStatus !== 'none',    // 1 eRx Received
+      consentStatus === 'confirmed',  // 2 Consent
+      biStatus === 'complete',        // 3 Benefits Investigation
+      pharmacyCoverageSmsSent,        // 4 Patient Notification
+      pricingOption !== null,         // 5 Pharmacy Selection
+      pharmacyStatus !== 'none',      // 6 Dispatch to Triage
+    ];
+  }
+
+  // Scenario 3 — neither covered, cash pay. Same 8-step shape as CoA_DTP's
+  // own computeCoaStepDone, minus the Prior Authorization slot this flow
+  // never has. This outcome's pricingOption is always "self_pay," so
+  // Payment is judged on real payment verification, not a ship date.
+  const dispatched = pharmacyStatus !== 'none';
+  return [
+    enrollmentStatus !== 'none',                                     // 1 eRx Received
+    consentStatus === 'confirmed',                                   // 2 Consent
+    biStatus === 'complete',                                         // 3 Benefits Investigation
+    paymentVerified,                                                 // 4 Payment
+    dispatched,                                                      // 5 Dispatch to Triage
+    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 6 Rx Processing
+    pharmacyStatus === 'delivered',                                  // 7 Rx Shipped
+    pharmacyStatus === 'delivered',                                  // 8 Medication Delivered
+  ];
+}
+
 // iAssist-specific step completion — unlike WF1/WF2/CoA (where consent,
 // BI, and PA naturally happen in that order, so a single "how far along"
 // number works), iAssist's Rx submission auto-completes BI and auto-submits
@@ -442,6 +557,22 @@ function StepBar() {
   // of WF4's — see isIAssistPapFlow.
   const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
   const isIAssistPapFlow = flowType === "iAssist_PAP";
+  // CoA_DME (one Benefits Investigation, three coverage outcomes) — see
+  // STEP_LABELS_DME/STEP_LABELS_DME_MEDICAL/computeDmeStepDone above.
+  const isDmeFlow = flowType === "CoA_DME";
+  // Scenario 2 only — swaps in the short, terminal STEP_LABELS_DME_MEDICAL
+  // bar once medicalBenefitStatus resolves to "covered" (medical always
+  // wins — see workflows/coaDme.ts). Before BI resolves, and for the other
+  // two outcomes, this stays false and the full STEP_LABELS_DME bar shows
+  // instead — same "swap the label array once the outcome is known" pattern
+  // isCopayRetailFlow already uses for CoA_Copay's own pricingOption.
+  const isDmeMedicalFlow = isDmeFlow && workflowData.medicalBenefitStatus === "covered";
+  // Scenario 1 only — swaps in the short, Dispatch-to-Triage-terminal
+  // STEP_LABELS_DME_PHARMACY bar (no pricing/address/date/payment step at
+  // all in this outcome anymore — see coaDme.ts's header comment). Checked
+  // before the fallback STEP_LABELS_DME bar below, which now only applies
+  // to Scenario 3 (neither covered, cash pay).
+  const isDmePharmacyFlow = isDmeFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered";
   const iAssistStepDone = isIAssistPapFlow
     ? computeIAssistPapStepDone(workflowData)
     : isIAssistFlow
@@ -450,7 +581,8 @@ function StepBar() {
   // See computeCoaStepDone's header comment — same "BI can race ahead of
   // consent" problem iAssistStepDone above solves, now also true for CoA.
   const coaStepDone = isCoaFlow ? computeCoaStepDone(workflowData) : null;
-  const stepDone = iAssistStepDone ?? coaStepDone;
+  const dmeStepDone = isDmeFlow ? computeDmeStepDone(workflowData) : null;
+  const stepDone = iAssistStepDone ?? coaStepDone ?? dmeStepDone;
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
@@ -480,6 +612,9 @@ function StepBar() {
   const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL
     : isCoaFlow ? STEP_LABELS_COA
+    : isDmeMedicalFlow ? STEP_LABELS_DME_MEDICAL
+    : isDmePharmacyFlow ? STEP_LABELS_DME_PHARMACY
+    : isDmeFlow ? STEP_LABELS_DME
     : isIAssistPapFlow ? STEP_LABELS_IASSIST_PAP
     : STEP_LABELS_DEFAULT;
   // These pulsing-ring decorations hardcode step positions. CoA_DTP's
@@ -506,9 +641,16 @@ function StepBar() {
   // same "sent, awaiting response" moment paProcessing captures for PA.
   const appealPending   = appealStatus === "initiated";
   const appealStepN     = 5;
-  const rxInTransit     = pharmacyStatus === "processing";
-  const rxProcessing    = pharmacyStatus === "ready";
-  const rxShipping      = pharmacyStatus === "shipped";
+  // isDmePharmacyFlow's own 6-step bar ends at Dispatch to Triage (n=6, same
+  // terminal position as STEP_LABELS_COA_COPAY_RETAIL) with no Rx
+  // Processing/Rx Shipped steps at all — FILL_RX (CRM's "Dispatch to
+  // Pharmacy") can still flip pharmacyStatus to "processing" for this flow
+  // (same as isCopayRetailFlow), but there's no further stage left to
+  // advance it, so this ring would otherwise land on the terminal Dispatch
+  // dot itself and imply a "still in transit" state that doesn't apply.
+  const rxInTransit     = pharmacyStatus === "processing" && !isDmePharmacyFlow;
+  const rxProcessing    = pharmacyStatus === "ready" && !isDmePharmacyFlow;
+  const rxShipping      = pharmacyStatus === "shipped" && !isDmePharmacyFlow;
   // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
   // pushes everything after it back by one). WF5 (iAssist_PAP) has no Rx
   // Processing/Rx Shipped steps at all anymore (dispatch to a site of care
@@ -518,6 +660,11 @@ function StepBar() {
   // constants are simply unreachable for WF5's own bar.
   const rxProcessingStepN = isCoaFlow ? 7 : 6;
   const rxShippedStepN    = isCoaFlow ? 8 : 7;
+  // Benefits Investigation sits at n=3 for every flow's bar now, including
+  // both of CoA_DME's own bars (STEP_LABELS_DME/STEP_LABELS_DME_MEDICAL both
+  // put "eRx Received"/"Consent" ahead of it, same as CoA_DTP's bar) — no
+  // per-flow adjustment needed.
+  const biRunningStepN    = 3;
 
 
   return (
@@ -534,12 +681,12 @@ function StepBar() {
           ? !stepDone[i] && stepDone.slice(0, i).every(Boolean)
           : workflowStep === n;
         // Connector between step 2→3 pulses while BI is running; step 3→4 while PA is processing; step 4→5 (WF5 only) while the appeal is pending a payer response; the connector leading into Rx Processing pulses while rx is processing; the one leading into Rx Shipped pulses while shipping.
-        const connectorRunning = (biRunning && n === 2) || (paProcessing && n === 3) || (appealPending && n === appealStepN - 1) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
+        const connectorRunning = (biRunning && n === biRunningStepN - 1) || (paProcessing && n === 3) || (appealPending && n === appealStepN - 1) || ((rxInTransit || rxProcessing) && n === rxProcessingStepN - 1) || (rxShipping && n === rxShippedStepN - 1);
         return (
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-0.5 relative">
-              {/* Pulsing ring behind the step-3 dot while BI runs */}
-              {biRunning && n === 3 && (
+              {/* Pulsing ring behind the BI dot while BI runs */}
+              {biRunning && n === biRunningStepN && (
                 <span className="absolute inset-0 rounded-full animate-ping bg-white/25" />
               )}
               {/* Pulsing ring behind the step-4 dot while PA is processing */}
@@ -567,12 +714,12 @@ function StepBar() {
                   "relative w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center border transition-all",
                   done   && "bg-white text-[#0f172a] border-white",
                   active && "bg-white/30 text-white border-white scale-110",
-                  biRunning && n === 3 && "border-white/60 text-white/60",
+                  biRunning && n === biRunningStepN && "border-white/60 text-white/60",
                   paProcessing && n === 4 && "border-white/60 text-white/60",
                   appealPending && n === appealStepN && "border-white/60 text-white/60",
                   (rxInTransit || rxProcessing) && n === rxProcessingStepN && "border-white/60 text-white/60",
                   rxShipping && n === rxShippedStepN && "border-white/60 text-white/60",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "bg-transparent text-white/40 border-white/25"
+                  !done && !active && !(biRunning && n === biRunningStepN) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "bg-transparent text-white/40 border-white/25"
                 )}
               >
                 {done ? "✓" : n}
@@ -582,15 +729,15 @@ function StepBar() {
                   "text-[9px] whitespace-nowrap hidden md:block",
                   active && "text-white font-semibold",
                   done   && "text-white/70",
-                  biRunning && n === 3 && "text-white/60 animate-pulse",
+                  biRunning && n === biRunningStepN && "text-white/60 animate-pulse",
                   paProcessing && n === 4 && "text-white/60 animate-pulse",
                   appealPending && n === appealStepN && "text-white/60 animate-pulse",
                   (rxInTransit || rxProcessing) && n === rxProcessingStepN && "text-white/60 animate-pulse",
                   rxShipping && n === rxShippedStepN && "text-white/60 animate-pulse",
-                  !done && !active && !(biRunning && n === 3) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "text-white/30"
+                  !done && !active && !(biRunning && n === biRunningStepN) && !(paProcessing && n === 4) && !(appealPending && n === appealStepN) && !((rxInTransit || rxProcessing) && n === rxProcessingStepN) && !(rxShipping && n === rxShippedStepN) && "text-white/30"
                 )}
               >
-                {biRunning && n === 3 ? "Running…" : paProcessing && n === 4 ? "Pending…" : appealPending && n === appealStepN ? "Awaiting Response…" : rxInTransit && n === rxProcessingStepN ? "In Transit…" : rxProcessing && n === rxProcessingStepN ? "Processing…" : rxShipping && n === rxShippedStepN ? "Shipping…" : label}
+                {biRunning && n === biRunningStepN ? "Running…" : paProcessing && n === 4 ? "Pending…" : appealPending && n === appealStepN ? "Awaiting Response…" : rxInTransit && n === rxProcessingStepN ? "In Transit…" : rxProcessing && n === rxProcessingStepN ? "Processing…" : rxShipping && n === rxShippedStepN ? "Shipping…" : label}
               </span>
             </div>
             {i < STEP_LABELS.length - 1 && (
@@ -833,6 +980,14 @@ export default function DemoShell() {
   // where WF5 intentionally does NOT follow WF2 (its provider tab stays
   // visible).
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  // CoA_DME — its own resetActorToStage branch below (this file's StepBar()
+  // component above has its own separate isDmeFlow local, unrelated scope).
+  const isDmeFlow = flowType === "CoA_DME";
+  // CoA_DTP/CoA_Copay — own resetActorToStage branch below too (see the
+  // generic block's header comment for why this used to silently break past
+  // Prior Authorization for both flows). Same isCoaFlow local StepBar()
+  // above already has, unrelated scope.
+  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const resetPatient = usePatientStore((s) => s.reset);
   // WF5's own captured-application-data store — reset alongside patientStore
   // wherever patientStore itself gets a full reset() call below (stale
@@ -1163,7 +1318,117 @@ export default function DemoShell() {
       return;
     }
 
-    // Walk the actor forward to the target stage
+    // CoA_DME's own ladder — shares WF1's generic stage-number/label shape
+    // below (this flow has no dedicated dropdown list, see the "Reset to
+    // Stage" menu further down), but this flow's own machine (coaDme.ts) has
+    // no SUBMIT_PA/APPROVE_PA events at all, and COMPLETE_BI now takes
+    // pharmacyBenefitStatus/medicalBenefitStatus instead of a bare result —
+    // sending the generic block's shapes below would silently do nothing (no
+    // matching transition) and leave the BI outcome fields unset. The
+    // "Benefits Investigation" rung (stage >= 4, where COMPLETE_BI actually
+    // resolves — see the generic block below) defaults to Scenario 1
+    // (Pharmacy Coverage) via the same replayDmeToBiComplete() helper
+    // Index.tsx's BIR-0431 toggle buttons use, so the two can't drift apart.
+    // Stage 5 now sends Scenario 1's real pharmacy-pick sequence
+    // (VERIFY_PHARMACY_SMS -> SELECT_PHARMACY) instead of the old
+    // SELECT_PRICING_OPTION/PATIENT_SETS_ADDRESS pair. SEND_PHARMACY_SMS
+    // itself no longer needs to be sent here — coaDme.ts's biComplete state
+    // fires it automatically (an eventless `always` transition) the instant
+    // replayDmeToBiComplete()'s COMPLETE_BI lands above, so by the time
+    // stage 5 runs the actor is already past that beat. This outcome no
+    // longer has an address/date step at all (see coaDme.ts's header
+    // comment), so stage 6 goes straight to FILL_RX. Index.tsx's
+    // toggle buttons are the real mechanism for switching scenarios, not
+    // this ladder.
+    if (isDmeFlow) {
+      if (stage >= 2) {
+        actor.send({ type: 'ENROLL', portal: 'crm' });
+        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
+        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
+      }
+      if (stage >= 3) {
+        actor.send({ type: 'RUN_BI', portal: 'crm' });
+      }
+      if (stage >= 4) {
+        replayDmeToBiComplete(actor);
+      }
+      if (stage >= 5) {
+        actor.send({ type: 'VERIFY_PHARMACY_SMS', portal: 'patient' });
+        actor.send({
+          type: 'SELECT_PHARMACY',
+          portal: 'patient',
+          pharmacy: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
+        });
+      }
+      if (stage >= 6) {
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 8) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+      }
+      return;
+    }
+
+    // CoA_DTP/CoA_Copay — own ladder, not the generic WF1 block below.
+    // That generic block only ever sent APPROVE_PA at "stage 5" and never
+    // sent VERIFY_PA_APPROVED_SMS/VERIFY_PA_APPROVED_OTP at all — fine for
+    // WF1 (paStatus === 'approved' alone unlocks its own /pa-approved
+    // screen), but CoA's own paApproved/paApprovedSmsVerified/
+    // paApprovedOtpVerified states (coaDtp.ts/coaCopay.ts) require both
+    // re-verify events before /benefit-pricing is even reachable — without
+    // them the patient portal was stranded on /enrollment-complete forever
+    // (StateDrivenNav bouncing right back every time), which is what "stuck
+    // at PA results" for CoA_Copay actually was. The generic block's later
+    // stage>=6/7/8 SELECT_PHARMACY/FILL_RX/SHIP_RX/DELIVER_RX sends were
+    // ALSO all no-ops for CoA (paApproved has no handler for any of them —
+    // only pricingSelected/addressSet/shipDateSelected/rxProcessing/rxReady
+    // do), on top of never having sent SELECT_PRICING_OPTION/
+    // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE/READY_RX at all — this
+    // rebuilds the whole tail to match coaDtp.ts's/coaCopay.ts's real state
+    // shape instead. Defaults pricing to Retail (a plausible "just get me
+    // to Dispatch to Triage" choice); this ladder is a quick jump, not a
+    // scenario picker.
+    if (isCoaFlow) {
+      if (stage >= 2) {
+        actor.send({ type: 'ENROLL', portal: 'crm' });
+        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
+        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
+      }
+      if (stage >= 3) {
+        actor.send({ type: 'RUN_BI', portal: 'crm' });
+      }
+      if (stage >= 4) {
+        actor.send({ type: 'COMPLETE_BI', portal: 'crm', result: 'coverage_found' });
+        actor.send({ type: 'SUBMIT_PA', portal: 'provider' });
+        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
+        actor.send({ type: 'VERIFY_PA_APPROVED_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_PA_APPROVED_OTP', portal: 'patient' });
+      }
+      if (stage >= 5) {
+        actor.send({ type: 'SELECT_PRICING_OPTION', portal: 'patient', option: 'retail' });
+        actor.send({ type: 'PATIENT_SETS_ADDRESS', portal: 'patient' });
+        actor.send({ type: 'PATIENT_SELECTS_SHIP_DATE', portal: 'patient' });
+      }
+      if (stage >= 6) {
+        actor.send({ type: 'FILL_RX', portal: 'crm' });
+      }
+      if (stage >= 7) {
+        actor.send({ type: 'READY_RX', portal: 'field' });
+        actor.send({ type: 'SHIP_RX', portal: 'crm' });
+      }
+      if (stage >= 8) {
+        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+      }
+      return;
+    }
+
+    // Walk the actor forward to the target stage (WF1/Fax_QS_PA_Approved
+    // only from here on — every other flow returns early above).
     // Each stage builds on the previous
     if (stage >= 2) {
       actor.send({ type: 'ENROLL', portal: 'crm' });
@@ -1208,7 +1473,7 @@ export default function DemoShell() {
     if (stage >= 8) {
       actor.send({ type: 'DELIVER_RX', portal: 'crm' });
     }
-  }, [resetDemo, isIAssistFlow, isIAssistPapFlow, isPapFlow]);
+  }, [resetDemo, isIAssistFlow, isIAssistPapFlow, isPapFlow, isDmeFlow, isCoaFlow]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -1401,6 +1666,55 @@ export default function DemoShell() {
                       { stage: 5, label: "Dispatch to Triage" },
                       { stage: 6, label: "Rx Shipped" },
                       { stage: 7, label: "Medication Delivered" },
+                    ]
+                    // CoA_DME has no Prior Authorization step at all, in any
+                    // of its 3 outcomes (see workflows/coaDme.ts) — its own
+                    // list, not the generic one below, so this dropdown
+                    // never mislabels stage 4 as "Prior Authorization".
+                    // Stage 4 defaults to Scenario 1 (Pharmacy Coverage) via
+                    // resetActorToStage's own isDmeFlow branch above; the
+                    // BIR-0431 toggle buttons in crm/pages/Index.tsx are the
+                    // real way to reach Scenario 2/3 instead.
+                    : isDmeFlow
+                    ? [
+                      { stage: 1, label: "Referral Received" },
+                      { stage: 2, label: "Patient Enrolled" },
+                      { stage: 3, label: "Benefits Investigation" },
+                      // Matches resetActorToStage's own isDmeFlow branch
+                      // above exactly — stage 4 defaults to Scenario 1
+                      // (Pharmacy Coverage) via replayDmeToBiComplete(). No
+                      // pricing/address/date step at all anymore (see
+                      // coaDme.ts's header comment) — stage 5 sends the
+                      // second SMS milestone and the patient's network
+                      // pharmacy pick together.
+                      { stage: 4, label: "Pharmacy Coverage Confirmed" },
+                      { stage: 5, label: "Pharmacy Selected" },
+                      { stage: 6, label: "Rx Processing" },
+                      { stage: 7, label: "Rx Shipped" },
+                      { stage: 8, label: "Medication Delivered" },
+                    ]
+                    // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
+                    // below. That shared list used to call stage 4 "Prior
+                    // Authorization" while resetActorToStage's old generic
+                    // block only submitted PA there (never approved it, and
+                    // never sent the paApproved-sms/otp re-verify events
+                    // either) — this is what left the patient stranded on
+                    // /enrollment-complete past "PA results." Also adds the
+                    // "Cash Offer" rung the CRM's own STAGES_LIVE has
+                    // between Prior Authorization and Dispatch to Triage
+                    // (see resetActorToStage's own isCoaFlow branch above),
+                    // which the old shared list never had at all.
+                    : isCoaFlow
+                    ? [
+                      { stage: 1, label: "Referral Received" },
+                      { stage: 2, label: "Patient Enrolled" },
+                      { stage: 3, label: "Benefits Investigation" },
+                      { stage: 4, label: "Prior Authorization" },
+                      { stage: 5, label: "Cash Offer" },
+                      { stage: 6, label: "Dispatch to Triage" },
+                      { stage: 7, label: "Rx Processing" },
+                      { stage: 8, label: "Rx Shipped" },
+                      { stage: 9, label: "Medication Delivered" },
                     ]
                     : [
                       { stage: 1, label: "Referral Received" },

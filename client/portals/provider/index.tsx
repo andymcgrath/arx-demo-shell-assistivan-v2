@@ -1092,6 +1092,25 @@ function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   const consentDot: PatientStatus["dots"][number] =
     workflowData.consentStatus === "confirmed" ? "completed" : "pending";
 
+  // CoA_DME (medical-benefit DME, no PA/pricing/fulfillment — see
+  // workflows/coaDme.ts) — checked before the generic biStatus/paStatus
+  // branches below, which would otherwise mislabel this flow "PA Required"
+  // once BI completes (paStatus stays 'none' forever for CoA_DME, same as
+  // pharmacyStatus) and surface a "Start Prior Auth" button
+  // (PrescriptionsIdlePanel) this flow's machine has no handler for at all.
+  if (workflowData.flowType === "CoA_DME") {
+    if (workflowData.dmeProviderTransferStatus === "notified") {
+      return { label: "Transferred to DME Provider", color: "success", dots: ["completed", consentDot, "completed", "completed", "disabled", "disabled"] };
+    }
+    if (workflowData.biStatus === "complete") {
+      return { label: "Covered — Medical Benefit", color: "success", dots: ["completed", consentDot, "completed", "pending", "disabled", "disabled"] };
+    }
+    if (workflowData.biStatus === "running") {
+      return { label: "Benefits Investigation", color: "warning", dots: ["completed", consentDot, "pending", "disabled", "disabled", "disabled"] };
+    }
+    return { label: "Enrolled", color: "warning", dots: ["completed", consentDot, "disabled", "disabled", "disabled", "disabled"] };
+  }
+
   if (workflowData.pharmacyStatus === "delivered") {
     return { label: "Delivered", color: "success", dots: ["completed", consentDot, "completed", "completed", "completed", "completed"] };
   }
@@ -2878,7 +2897,7 @@ export default function ProviderPortal() {
   // same way once the provider is past this starting screen).
   const [step, setStep] = useState<Step>(() => {
     const initialFlowType = useDemoStore.getState().flowType;
-    if (initialFlowType === 'CoA_DTP' || initialFlowType === 'CoA_Copay') return 'coa-dashboard';
+    if (initialFlowType === 'CoA_DTP' || initialFlowType === 'CoA_Copay' || initialFlowType === 'CoA_DME') return 'coa-dashboard';
     if (initialFlowType === 'PrES_PAP') return computeInitialPresProviderStep(workflowData);
     return 'login';
   });
@@ -2889,7 +2908,13 @@ export default function ProviderPortal() {
   const patientName = usePatientStore((s) => s.patientName);
   const drugName = usePatientStore((s) => s.drugName);
   const isBranded = isBrandedFlow(flowType);
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  // CoA_DME reuses this same Heroic EHR chart shell (CoaProviderExperience)
+  // below — there's no dedicated alternative — but never leaves it for
+  // IAssistDashboardPage the way CoA_DTP/CoA_Copay do once a PA exists
+  // (paStatus stays 'none' forever for CoA_DME, see workflows/coaDme.ts),
+  // and deriveKeanuStatus below has its own DME-specific branch so this
+  // flow's Prescriptions panel never mislabels itself "PA Required".
+  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_DME";
   // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed
   // multi-step enrollment flow — instead of falling into the generic
   // WF1/WF2 "Recent Submissions" chain below. See PresPapProviderExperience.
@@ -2967,7 +2992,7 @@ export default function ProviderPortal() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     emailSurfacedRef.current = false;
-    setStep((storeFlowType === 'CoA_DTP' || storeFlowType === 'CoA_Copay') ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
+    setStep((storeFlowType === 'CoA_DTP' || storeFlowType === 'CoA_Copay' || storeFlowType === 'CoA_DME') ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {

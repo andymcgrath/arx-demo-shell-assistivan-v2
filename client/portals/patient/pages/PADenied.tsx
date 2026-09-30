@@ -4,14 +4,26 @@ import { useChatContext } from "@/components/ChatContext";
 import ProgramLogo from "@/components/brand/ProgramLogo";
 import { PROGRAM, CHATBOT_ICON } from "@/config/branding";
 import { hexToColorFilter } from "@/lib/brandFilter";
-import { usePersonaState } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 export default function PADenied() {
   const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   const { openChat } = useChatContext();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
+  // CoA_DME Scenario 3 only (neither pharmacy nor medical benefit covered —
+  // see workflows/coaDme.ts and WorkflowEngine.ts's derivePatientRoute).
+  // This flow never submits a Prior Authorization at all, so it gets its own
+  // copy below instead of isCoA's "insurance denied coverage" messaging,
+  // which would incorrectly reference a PA denial that never happened. Its
+  // CTA dispatches SELECT_SELF_PAY (added to coaDme.ts's biComplete state)
+  // instead of navigating straight to /delivery-payment — SELECT_SELF_PAY
+  // joins the same pricingSelected state Scenario 1 uses, which needs an
+  // address before payment (see derivePatientRoute's CoA_DME branch), so
+  // this navigates to /delivery-address, not /delivery-payment.
+  const isDmeFlow = flowType === 'CoA_DME';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
   // workflows/iAssistPap.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other
@@ -35,7 +47,40 @@ export default function PADenied() {
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Denied card */}
-          {isCoA ? (
+          {isDmeFlow ? (
+            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+              <div className="flex items-center justify-between mb-4">
+                <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+                <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
+              </div>
+
+              <h2 className="text-xl font-bold leading-snug text-arx-slate mb-3">
+                No coverage found — but you have options
+              </h2>
+
+              <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
+                We weren't able to find coverage for your {PROGRAM.name} sensor under either your pharmacy or medical benefit. The good news: you may be eligible for our cash pay program at a significantly reduced cost.
+              </p>
+
+              <button
+                onClick={() => {
+                  dispatch("SELECT_SELF_PAY", { portal: "patient" });
+                  navigate("/delivery-address");
+                }}
+                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors"
+              >
+                <span>View cash pay offer</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={openChat}
+                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+              >
+                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.primary) }} />
+                <span>Have questions? Start a chat</span>
+              </button>
+            </div>
+          ) : isCoA ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
@@ -133,8 +178,8 @@ export default function PADenied() {
             <p className="text-xs text-center text-arx-body-copy">Standard call or carrier rates may apply.</p>
           </div>
 
-          {/* Prescriptions section - hidden for CoA */}
-          {!isCoA && (
+          {/* Prescriptions section - hidden for CoA and CoA_DME */}
+          {!isCoA && !isDmeFlow && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -157,8 +202,8 @@ export default function PADenied() {
             </section>
           )}
 
-          {/* Suggested section - hidden for CoA */}
-          {!isCoA && (
+          {/* Suggested section - hidden for CoA and CoA_DME */}
+          {!isCoA && !isDmeFlow && (
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />

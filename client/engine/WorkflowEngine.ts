@@ -235,6 +235,139 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/lock-screen';
   }
 
+  // ── CoA_DME: one Benefits Investigation, three coverage outcomes ──────
+  // Shares CoA_DTP/CoA_Copay's enrollment -> SMS/OTP -> consent -> Benefits
+  // Investigation gating one-for-one (see the isCoA branch's opening
+  // conditions above — copied verbatim below), but this flow's own dedicated
+  // branch since none of that block's later PA-driven logic applies here at
+  // all (see workflows/coaDme.ts's header comment). Once BI completes, the
+  // three sub-branches below key off pharmacyBenefitStatus/
+  // medicalBenefitStatus — medical coverage always wins when present
+  // (Scenario 2), otherwise pharmacy coverage decides between Scenario 1
+  // (Retail/Mail, insurance-billed) and Scenario 3 (cash-pay). Scenarios 1
+  // and 3 mirror the iAssist_PA_Approved post-approval branch's own
+  // address/date/payment/dispatch chain further below, minus the SMS/OTP
+  // re-verify and PA gate (this flow never submits a PA at all).
+  if (flowType === 'CoA_DME') {
+    // Pre-enrollment: patient hasn't received SMS yet
+    if (workflowData.enrollmentStatus === 'none')
+      return '/lock-screen';
+
+    // SMS received — patient needs to tap link
+    if (workflowData.enrollmentInviteSent && !workflowData.smsVerified)
+      return '/sms-message';
+
+    // SMS verified — patient needs OTP
+    if (workflowData.smsVerified && !workflowData.otpVerified)
+      return '/otp-verification';
+
+    // OTP verified — patient needs to complete consent
+    if (workflowData.otpVerified && workflowData.consentStatus === 'pending')
+      return '/confirm-details';
+
+    // Consent confirmed — waiting for BI to finish. Lands on the patient
+    // home screen (WelcomeCard/Prescriptions, same as every other flow's
+    // idle "nothing to do yet" resting state) rather than
+    // /enrollment-complete's "Thanks! Your details were received" copy —
+    // that copy is a one-time confirmation for the details-submission step
+    // this reset-driven wait never actually goes through, so it read as a
+    // stale leftover from an earlier step instead of a real waiting screen.
+    if (workflowData.biStatus !== 'complete')
+      return '/';
+
+    // Scenario 2 — medical benefit covered (always wins, regardless of
+    // pharmacy). Wait for CRM to notify the DME provider transfer (still a
+    // real, manual CRM action — see coaDme.ts's biComplete state), then a
+    // tap-through SMS (dmeTransferSmsSent/dmeTransferSmsVerified, sent as
+    // part of that same CRM action) before the terminal screen — same
+    // "don't just materialize on a new screen mid-session" reasoning as
+    // Scenario 1/3's own SMS beats above.
+    if (workflowData.medicalBenefitStatus === 'covered') {
+      if (workflowData.dmeProviderTransferStatus !== 'notified')
+        return '/';
+
+      if (!workflowData.dmeTransferSmsVerified) return '/dme-transfer-sms';
+
+      return '/dme-provider-transfer';
+    }
+
+    // Scenario 1 — pharmacy covered, medical not. No pricing/dollar framing
+    // here at all (that's Scenario 3's cash-pay-only territory) — the
+    // instant BI resolves to this combo, the machine's own eventless
+    // `always` transition (see coaDme.ts's biComplete state) sets
+    // pharmacyCoverageSmsSent automatically, fully invisible to the CRM
+    // operator (no button, no stage card). Once tapped through
+    // (pharmacyCoverageSmsVerified), the patient picks a specific network
+    // pharmacy (no Retail-vs-Mail-Order choice, no Copay upsell). From
+    // there this mirrors CoA_Copay's own Retail bypass exactly (see the
+    // isCoA branch's own flowType === 'CoA_Copay' && pricingOption ===
+    // 'retail' check further up in this file): skip straight to the
+    // tracker, no address/date/payment step at all.
+    if (workflowData.pharmacyBenefitStatus === 'covered') {
+      // pharmacyCoverageSmsSent flips true in the same tick biComplete is
+      // entered (see coaDme.ts), so this only shows for an instant — but it
+      // must be the patient home screen, not /enrollment-complete: that
+      // route is in patient/index.tsx's DELIVERY_FLOW_PATHS tolerate-list,
+      // which would freeze StateDrivenNav here and strand the patient even
+      // after the SMS auto-sends (this was a real bug, not hypothetical).
+      if (!workflowData.pharmacyCoverageSmsSent) return '/';
+      if (!workflowData.pharmacyCoverageSmsVerified) return '/pharmacy-coverage-sms';
+      if (workflowData.pricingOption === null) return '/network-pharmacy-selection';
+
+      // Pharmacy picked — mirrors CoA_Copay's Retail bypass (see the isCoA
+      // branch's own flowType === 'CoA_Copay' && pricingOption === 'retail'
+      // check further up in this file): skip straight to the tracker, no
+      // address/date/payment step at all.
+      return '/order-tracker';
+    }
+
+    // Scenario 3 — neither covered. Same automatic-SMS gap as Scenario 1
+    // above (see coaDme.ts's biComplete state) — stands in for the real
+    // time lag since the patient last opened the portal, so the "no
+    // coverage, but here's a cash option" news arrives as its own
+    // tap-through SMS instead of the patient just materializing on
+    // /pa-denied mid-session. /pa-denied is reused as this flow's cash-pay
+    // info screen (see PADenied.tsx's isDmeFlow branch — its copy for
+    // CoA_DME never mentions Prior Authorization, since this flow never
+    // submits one); its CTA dispatches SELECT_SELF_PAY, which joins the
+    // same pricingSelected state Scenario 1 uses. From there this is
+    // address/date/payment(gated on !paymentVerified)/dispatch — the same
+    // shape iAssist_PA_Approved's own self-pay tail uses.
+    if (workflowData.pharmacyBenefitStatus === 'not_covered' &&
+        workflowData.medicalBenefitStatus === 'not_covered') {
+      // cashOfferSmsSent flips true in the same tick biComplete is entered
+      // (see coaDme.ts) — patient home, not /enrollment-complete, for the
+      // same DELIVERY_FLOW_PATHS-tolerate-list reason Scenario 1's own
+      // momentary wait uses '/' instead.
+      if (!workflowData.cashOfferSmsSent) return '/';
+      if (!workflowData.cashOfferSmsVerified) return '/cash-offer-sms';
+      if (workflowData.pricingOption === null) return '/pa-denied';
+
+      if (workflowData.dispatchStatus === 'none' ||
+          workflowData.dispatchStatus === 'pending_selection')
+        return '/delivery-address';
+
+      if (workflowData.patientShipDate === null) return '/delivery-date';
+
+      if (!workflowData.paymentVerified) return '/delivery-payment';
+
+      if (workflowData.pharmacyStatus === 'none') return '/enrollment-complete';
+
+      if (workflowData.pharmacyStatus === 'processing' ||
+          workflowData.pharmacyStatus === 'ready')
+        return '/order-tracker';
+
+      if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
+
+      return '/order-tracker';
+    }
+
+    // Neither field populated yet (shouldn't happen once biStatus is
+    // 'complete' — COMPLETE_BI always sets both) — park on the same waiting
+    // screen used before BI completed.
+    return '/enrollment-complete';
+  }
+
   // ── PrES_PAP (WF5): its own capture flow, entirely separate from the
   // shared WF1/WF2/WF4 onboarding logic below ──────────────────────────
   // Self-attestation, patient info, and typed e-signature consent replace
@@ -726,6 +859,24 @@ export const KEANU_SITE_OF_CARE_FACTS = {
   zip: '32806',
 };
 
+/**
+ * Advanced Diabetes Supply's contact facts — CoA_DME only. Mirrors
+ * KEANU_SITE_OF_CARE_FACTS's shape/style above: shared raw facts (not a full
+ * Pharmacy/FieldSOC record, since this is a fulfillment hand-off to a
+ * third-party DME provider, not a pharmacy dispatch or a site-of-care visit)
+ * so DmeProviderTransfer.tsx and this file's own generated-email copy always
+ * describe the exact same provider instead of two hand-typed copies that
+ * could quietly drift.
+ */
+export const ADVANCED_DIABETES_SUPPLY_FACTS = {
+  name: 'Advanced Diabetes Supply',
+  contactPhone: '(858) 555-0148',
+  address: '9339 Genesee Ave, Suite 300',
+  city: 'San Diego',
+  state: 'California',
+  zip: '92121',
+};
+
 /** Minimal event shape this function needs — matches useDemoState()'s
  * snake_case DemoEvent so callers can pass that array through unchanged. */
 export interface GeneratedEmailSourceEvent {
@@ -753,13 +904,22 @@ export interface GeneratedEmailInputs {
   patientName: string;
   prescriberName: string;
   frmName: string;
-  biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | null;
+  // 'dme_covered' — CoA_DME only: BI confirmed the DME is covered under the
+  // patient's commercial medical benefit (see workflows/coaDme.ts's
+  // COMPLETE_BI).
+  biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | 'dme_covered' | null;
   // iAssist_PAP (WF5) only — read directly off current workflow state
   // (like biResult above) rather than event.metadata, since createEvent()
   // never populates metadata (see workflows/iAssistPap.ts) — the event log
   // alone can't say WHICH date got picked, just that the event fired. Null
   // for every other flow.
   infusionDate: string | null;
+  // CoA_DME only — biResult alone can't tell "coverage_found" (Scenario 1:
+  // pharmacy covered, no PA) and "no_coverage" (Scenario 3: cash pay, no PA)
+  // apart from the same two values used by every other flow (where they DO
+  // imply a Prior Authorization step). The COMPLETE_BI email case below
+  // checks this before falling back to the generic PA-needed copy.
+  flowType?: string;
 }
 
 // Identity-verification substeps and the welcome-banner dismissal aren't
@@ -772,6 +932,21 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   'VERIFY_OTP',
   'VERIFY_PAP_SMS',
   'VERIFY_PAP_OTP',
+  // CoA_DME Scenario 1 only — the patient's tap-through confirmation on the
+  // pharmacy-coverage SMS (PharmacyCoverageSms.tsx) mirrors VERIFY_SMS/
+  // VERIFY_OTP above: not separately email-worthy on its own. SEND_PHARMACY_SMS
+  // (the CRM-side event that actually sends the SMS) still falls through to
+  // the default case below, same as ENROLL/INVITE.
+  'VERIFY_PHARMACY_SMS',
+  // CoA_DME Scenario 3 only — same reasoning, mirrored for the cash-offer
+  // SMS's own tap-through (CashOfferSms.tsx). SEND_CASH_OFFER_SMS still
+  // falls through to the default case below.
+  'VERIFY_CASH_OFFER_SMS',
+  // CoA_DME Scenario 2 only — same reasoning, mirrored for the DME transfer
+  // SMS's own tap-through (DmeTransferSms.tsx). NOTIFY_PROVIDER_TRANSFER
+  // (the CRM action that sends it) still falls through to the default case
+  // below, where its existing email case already lives.
+  'VERIFY_DME_TRANSFER_SMS',
 ]);
 
 function formatSentAt(iso: string): string {
@@ -795,7 +970,8 @@ function friendlyEventLabel(eventType: string): string {
  * happened while nobody was looking at the email client.
  */
 export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[] {
-  const { events, patientName, prescriberName, frmName, biResult, infusionDate } = input;
+  const { events, patientName, prescriberName, frmName, biResult, infusionDate, flowType } = input;
+  const isDmeFlow = flowType === 'CoA_DME';
   const emails: GeneratedEmail[] = [];
 
   for (const event of events) {
@@ -862,7 +1038,49 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         break;
 
       case 'COMPLETE_BI':
-        if (biResult === 'no_insurance') {
+        if (biResult === 'dme_covered') {
+          emails.push({
+            ...base,
+            subject: `Medical Benefit Coverage Confirmed - ${patientName}`,
+            bodyParagraphs: [
+              `Benefits investigation confirmed ${patientName}'s DME (CGM sensor) is covered under their commercial medical benefit.`,
+              `The case is being transferred to an outside DME provider for fulfillment — no Prior Authorization is needed on this case.`,
+            ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
+          });
+        } else if (isDmeFlow && biResult === 'coverage_found') {
+          // CoA_DME Scenario 1 — pharmacy benefit covered, medical not. The
+          // generic 'coverage_found' copy in the final else branch below
+          // assumes a Prior Authorization step, which this flow never has —
+          // see workflows/coaDme.ts's header comment. No pricing/dollar
+          // framing here either — a network pharmacy pick, not a Retail-vs-
+          // Mail-Order choice (see PN-14283/SEND_PHARMACY_SMS below).
+          emails.push({
+            ...base,
+            subject: `Pharmacy Benefit Coverage Confirmed - ${patientName}`,
+            bodyParagraphs: [
+              `Benefits investigation confirmed ${patientName}'s DME (CGM sensor) is covered under their pharmacy benefit.`,
+              `A notification is ready to send so the patient can pick a network pharmacy — no Prior Authorization is needed on this case.`,
+            ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
+          });
+        } else if (isDmeFlow && biResult === 'no_coverage') {
+          // CoA_DME Scenario 3 — neither benefit covered. The generic
+          // 'no_coverage' copy below assumes a non-formulary Prior
+          // Authorization submission, which doesn't apply here either.
+          emails.push({
+            ...base,
+            subject: `No Coverage Found - ${patientName}`,
+            bodyParagraphs: [
+              `Benefits investigation found no coverage for ${patientName}'s DME (CGM sensor) under either the pharmacy or medical benefit.`,
+              `The patient has been offered a cash-pay option. No Prior Authorization task will open on this case.`,
+            ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
+          });
+        } else if (biResult === 'no_insurance') {
           emails.push({
             ...base,
             subject: `No Coverage Found - ${patientName}`,
@@ -888,6 +1106,54 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Task: Prior Authorization Requested',
           });
         }
+        break;
+
+      // CoA_DME only — CoAssist hands the case to Advanced Diabetes Supply,
+      // the outside DME provider, once medical-benefit coverage is
+      // confirmed. This flow's terminal event (see workflows/coaDme.ts).
+      case 'NOTIFY_PROVIDER_TRANSFER':
+        emails.push({
+          ...base,
+          subject: `DME Provider Transfer Notified - ${patientName}`,
+          bodyParagraphs: [
+            `${patientName}'s case has been transferred to ${ADVANCED_DIABETES_SUPPLY_FACTS.name} for fulfillment, now that medical-benefit coverage is confirmed.`,
+            `${ADVANCED_DIABETES_SUPPLY_FACTS.name} will contact the patient directly to complete the order (${ADVANCED_DIABETES_SUPPLY_FACTS.contactPhone}). No further action is needed on this case.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
+      // CoA_DME Scenario 1 only — the SECOND, later SMS milestone (see
+      // engine/types.ts's pharmacyCoverageSmsSent) sent once BI confirms
+      // pharmacy coverage, distinct from the initial enrollment invite.
+      case 'SEND_PHARMACY_SMS':
+        emails.push({
+          ...base,
+          subject: `Pharmacy Coverage Notification Sent - ${patientName}`,
+          bodyParagraphs: [
+            `AssistRx sent ${patientName} a text letting them know their DME (CGM sensor) is covered and it's time to pick a network pharmacy.`,
+            `No action is needed from you unless the patient reports an issue receiving it.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
+      // CoA_DME Scenario 3 only — mirrors SEND_PHARMACY_SMS above for the
+      // "no coverage, but here's a cash option" beat (see engine/types.ts's
+      // cashOfferSmsSent).
+      case 'SEND_CASH_OFFER_SMS':
+        emails.push({
+          ...base,
+          subject: `Cash Pay Offer Notification Sent - ${patientName}`,
+          bodyParagraphs: [
+            `AssistRx sent ${patientName} a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their DME (CGM sensor).`,
+            `No action is needed from you unless the patient reports an issue receiving it.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
         break;
 
       case 'SUBMIT_PA':

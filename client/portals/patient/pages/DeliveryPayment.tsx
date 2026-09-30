@@ -36,10 +36,16 @@ export default function DeliveryPayment() {
   const flowType = workflowData.flowType;
   const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
+  // CoA_DME only reaches this screen for its own self-pay scenario (Scenario
+  // 3 — neither benefit covered, see workflows/coaDme.ts) — display-only
+  // addition, doesn't change completePayment()'s dispatch logic below, which
+  // already fires PATIENT_PAYS/VERIFY_PAYMENT unconditionally for this flow
+  // via the generic (!isCoA && !isIAssist) branch.
+  const isDmeFlow = flowType === "CoA_DME";
   // iAssist replicates CoA's exact pricing display (Total due today card)
   // instead of WF1's List Price/Discount breakdown, since iAssist now also
   // sets pricingOption via Benefit Pricing.
-  const usesCoaPricingDisplay = isCoA || isIAssist;
+  const usesCoaPricingDisplay = isCoA || isIAssist || isDmeFlow;
   const { data: patient } = usePatientCase();
 
   useEffect(() => {

@@ -36,6 +36,11 @@ export default function DeliveryDate() {
   const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  // CoA_DME reaches this screen for both its fulfillment scenarios (Scenario
+  // 1 — Retail/Mail, pharmacy covered; Scenario 3 — self-pay, neither
+  // covered — see workflows/coaDme.ts). Not folded into isCoA above since
+  // this flow's PA-driven gates elsewhere in this file don't apply to it.
+  const isDmeFlow = flowType === "CoA_DME";
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
   // isn't payment, and testing confirmed Copay doesn't collect payment
   // through this flow at all, so it now skips /delivery-payment the same
@@ -51,7 +56,15 @@ export default function DeliveryDate() {
   // it's "retail"/"mail_order" with copayEnrolled: true instead, but the
   // "Copay doesn't collect payment through this flow" behavior above still
   // applies to it.
-  const skipPayment = isWorkflow1 || isPapFlow || ((isCoA || isIAssist) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled));
+  // CoA_DME is the inverse of isCoA/isIAssist's own self_pay-skips-payment
+  // gate above: Retail/Mail Order (Scenario 1) skip this screen's payment
+  // step (cost is handled at the pharmacy counter, same reasoning as CoA's
+  // own Retail/Mail), but self-pay (Scenario 3) does need /delivery-payment
+  // — CoA_DME's cash-pay scenario is the one path through this screen that
+  // actually collects payment here.
+  const skipPayment = isWorkflow1 || isPapFlow
+    || ((isCoA || isIAssist) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled))
+    || (isDmeFlow && workflowData.pricingOption !== "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
@@ -62,7 +75,7 @@ export default function DeliveryDate() {
   // set, so a portal remount falls back to an earlier screen).
   function handleSave() {
     if (!selected) return;
-    if (isCoA || isIAssist || isPapFlow) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    if (isCoA || isIAssist || isPapFlow || isDmeFlow) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
     // WF2/WF5 each have their own terminal "nothing more to do" screen
     // (pap-enrollment-complete / pes-confirmation) that derivePatientRoute
     // expects to show once address+date are both done. Routing them through

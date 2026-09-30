@@ -90,6 +90,20 @@ const DELIVERY_FLOW_PATHS = [
   // actually navigates here. Same tolerance as the /pes-attestation entry
   // above, one phase later.
   '/pes-income-consent',
+  // CoA_DME only: this flow's real terminal screen (see WorkflowEngine.ts's
+  // derivePatientRoute) — added here for the same reason /medication-delivered
+  // is, so StateDrivenNav doesn't keep recomputing away from it once the
+  // patient has landed on it.
+  '/dme-provider-transfer',
+  // CoA_DME Scenario 1 only (pharmacy covered, medical not) — pricingOption
+  // is still null while /network-pharmacy-selection shows (the
+  // SELECT_PHARMACY dispatch hasn't fired yet), and
+  // /pharmacy-selection-confirmation is a one-time manual-nav stop reached
+  // right after it (mirrors DeliveryConfirmation.tsx's own tolerance here) —
+  // without both entries, derivePatientRoute would bounce the patient
+  // straight to /order-tracker before they've read the confirmation screen.
+  '/network-pharmacy-selection',
+  '/pharmacy-selection-confirmation',
 ];
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -135,6 +149,12 @@ import PesPapTerms from "./pages/PesPapTerms";
 import PesConfirmation from "./pages/PesConfirmation";
 import InfusionDate from "./pages/InfusionDate";
 import AppointmentConfirmation from "./pages/AppointmentConfirmation";
+import DmeProviderTransfer from "./pages/DmeProviderTransfer";
+import PharmacyCoverageSms from "./pages/PharmacyCoverageSms";
+import CashOfferSms from "./pages/CashOfferSms";
+import DmeTransferSms from "./pages/DmeTransferSms";
+import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
+import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 
 
 /** Watches actor state and navigates the patient portal accordingly */
@@ -208,7 +228,7 @@ function PatientRoutes() {
   // list originally, which is why it rendered sandwiched between the white
   // Header/Footer instead of full-screen black like every other SMS-bubble
   // screen (AppointmentConfirmation.tsx).
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation";
+  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation" && pathname !== "/pharmacy-coverage-sms" && pathname !== "/cash-offer-sms" && pathname !== "/dme-transfer-sms";
 
   return (
     <div className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
@@ -257,6 +277,12 @@ function PatientRoutes() {
           <Route path="/pes-confirmation"       element={<PesConfirmation />} />
           <Route path="/infusion-date"          element={<InfusionDate />} />
           <Route path="/appointment-confirmation" element={<AppointmentConfirmation />} />
+          <Route path="/dme-provider-transfer"    element={<DmeProviderTransfer />} />
+          <Route path="/pharmacy-coverage-sms"    element={<PharmacyCoverageSms />} />
+          <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
+          <Route path="/dme-transfer-sms"         element={<DmeTransferSms />} />
+          <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />
+          <Route path="/pharmacy-selection-confirmation" element={<PharmacySelectionConfirmation />} />
         </Routes>
         {ctx?.chatOpen && <ChatModal onClose={ctx.closeChat} />}
       </div>

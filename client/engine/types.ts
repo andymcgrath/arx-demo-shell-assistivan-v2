@@ -19,7 +19,21 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 // Assistance Program" PAP used by Fax_PAP_Audit/PrES_PAP — don't assume it
 // shares any of that logic (papSmsSent/papStatus/incomeStatus etc. don't
 // apply here).
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP";
+// "CoA_DME" — DME (durable medical equipment, a Dexcom CGM sensor) coverage
+// modeled as ONE Benefits Investigation with THREE possible outcomes, driven
+// by two granular fields (pharmacyBenefitStatus/medicalBenefitStatus below)
+// instead of a single scalar. Shares CoA_DTP's enrollment -> SMS/OTP ->
+// consent -> Benefits Investigation shape (see workflows/coaDme.ts):
+//   1. Pharmacy covered, medical not — patient picks Retail/Mail Order and
+//      ships through AssistRx's own pipeline, same as CoA_DTP, minus PA.
+//   2. Both covered (medical always wins) — CoAssist transfers the case to
+//      an outside DME provider (Advanced Diabetes Supply) who owns
+//      fulfillment from there; the demo ends at that transfer notification.
+//   3. Neither covered — patient is offered a cash-pay option, pays, and
+//      ships through the same pipeline as outcome 1.
+// None of the three outcomes ever go through Prior Authorization — that
+// detour is CoA_DTP-only.
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_DME";
 
 export interface Pharmacy {
   name: string;
@@ -105,6 +119,62 @@ export interface WorkflowData {
    *  shipping through a pharmacy. Null until the patient picks a date;
    *  stays null for every other flow. */
   infusionDate: string | null;
+  /** CoA_DME only: has CoAssist notified the outside DME provider (Advanced
+   *  Diabetes Supply) that the case is being transferred to them for
+   *  fulfillment? 'notified' is this flow's terminal milestone — reached
+   *  specifically when medicalBenefitStatus === 'covered' (regardless of
+   *  pharmacyBenefitStatus — medical benefit always takes priority when
+   *  covered) and a CRM agent opens the DME Provider Transfer stage tab (see
+   *  coaDme.ts's NOTIFY_PROVIDER_TRANSFER and crm/pages/Index.tsx's
+   *  DME-14282 stage). Stays 'none' for every other flow. */
+  dmeProviderTransferStatus: 'none' | 'notified';
+  /** CoA_DME only: the two Benefits Investigation outcomes driving this
+   *  flow's 3 coverage scenarios (see engine/types.ts's FlowType comment and
+   *  workflows/coaDme.ts). 'none' until COMPLETE_BI fires; both become
+   *  'covered' or 'not_covered' together at that point. Stays 'none' for
+   *  every other flow. */
+  pharmacyBenefitStatus: 'none' | 'covered' | 'not_covered';
+  /** CoA_DME only — see pharmacyBenefitStatus above. When this is 'covered',
+   *  it always wins over pharmacyBenefitStatus (Scenario 2, DME provider
+   *  transfer), regardless of pharmacyBenefitStatus's value. Stays 'none'
+   *  for every other flow. */
+  medicalBenefitStatus: 'none' | 'covered' | 'not_covered';
+  /** CoA_DME only — Scenario 1's own SECOND SMS milestone, sent once BI
+   *  resolves pharmacy-covered/medical-not-covered (see coaDme.ts's
+   *  SEND_PHARMACY_SMS). Deliberately separate from smsVerified/
+   *  otpVerified (the initial enrollment SMS/OTP pair) — this is a later,
+   *  unrelated tap-through beat telling the patient their DME is covered
+   *  and it's time to pick a network pharmacy. Stays false for every other
+   *  flow. */
+  pharmacyCoverageSmsSent: boolean;
+  /** CoA_DME only — see pharmacyCoverageSmsSent above. True once the patient
+   *  taps through the SMS (VERIFY_PHARMACY_SMS), which unlocks network
+   *  pharmacy selection (/network-pharmacy-selection). Stays false for
+   *  every other flow. */
+  pharmacyCoverageSmsVerified: boolean;
+  /** CoA_DME only — Scenario 3's (no coverage) own tap-through SMS, same
+   *  shape as pharmacyCoverageSmsSent above but for the "no coverage found,
+   *  here's a cash option" beat. Represents a real time gap since the
+   *  patient last opened the portal, rather than materializing on the
+   *  cash-pay info screen (/pa-denied) mid-session. Stays false for every
+   *  other flow. */
+  cashOfferSmsSent: boolean;
+  /** CoA_DME only — see cashOfferSmsSent above. True once the patient taps
+   *  through the SMS (VERIFY_CASH_OFFER_SMS), which unlocks the cash-pay
+   *  info screen (/pa-denied). Stays false for every other flow. */
+  cashOfferSmsVerified: boolean;
+  /** CoA_DME only — Scenario 2's (covered by both) own tap-through SMS,
+   *  same shape as pharmacyCoverageSmsSent/cashOfferSmsSent above. Sent as
+   *  part of CRM's own NOTIFY_PROVIDER_TRANSFER action (not automatic, see
+   *  coaDme.ts's biComplete state) — transferring the case to an outside
+   *  DME provider stays a deliberate CRM hand-off, but the patient still
+   *  gets a tap-through SMS before landing on the terminal
+   *  /dme-provider-transfer screen. Stays false for every other flow. */
+  dmeTransferSmsSent: boolean;
+  /** CoA_DME only — see dmeTransferSmsSent above. True once the patient
+   *  taps through the SMS (VERIFY_DME_TRANSFER_SMS), which unlocks
+   *  /dme-provider-transfer. Stays false for every other flow. */
+  dmeTransferSmsVerified: boolean;
 }
 
 export interface DemoEvent {

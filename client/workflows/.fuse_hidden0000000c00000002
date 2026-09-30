@@ -65,8 +65,6 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   pharmacyCoverageSmsVerified: false,
   cashOfferSmsSent: false,
   cashOfferSmsVerified: false,
-  dmeTransferSmsSent: false,
-  dmeTransferSmsVerified: false,
 };
 
 const initialContext: MachineContext = {
