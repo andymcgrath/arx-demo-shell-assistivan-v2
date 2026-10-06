@@ -61,8 +61,6 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   dmeProviderTransferStatus: "none",
   pharmacyBenefitStatus: "none",
   medicalBenefitStatus: "none",
-  pharmacyCoverageSmsSent: false,
-  pharmacyCoverageSmsVerified: false,
   cashOfferSmsSent: false,
   cashOfferSmsVerified: false,
   dmeTransferSmsSent: false,

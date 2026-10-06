@@ -139,22 +139,10 @@ export interface WorkflowData {
    *  transfer), regardless of pharmacyBenefitStatus's value. Stays 'none'
    *  for every other flow. */
   medicalBenefitStatus: 'none' | 'covered' | 'not_covered';
-  /** CoA_DME only — Scenario 1's own SECOND SMS milestone, sent once BI
-   *  resolves pharmacy-covered/medical-not-covered (see coaDme.ts's
-   *  SEND_PHARMACY_SMS). Deliberately separate from smsVerified/
-   *  otpVerified (the initial enrollment SMS/OTP pair) — this is a later,
-   *  unrelated tap-through beat telling the patient their DME is covered
-   *  and it's time to pick a network pharmacy. Stays false for every other
-   *  flow. */
-  pharmacyCoverageSmsSent: boolean;
-  /** CoA_DME only — see pharmacyCoverageSmsSent above. True once the patient
-   *  taps through the SMS (VERIFY_PHARMACY_SMS), which unlocks network
-   *  pharmacy selection (/network-pharmacy-selection). Stays false for
-   *  every other flow. */
-  pharmacyCoverageSmsVerified: boolean;
-  /** CoA_DME only — Scenario 3's (no coverage) own tap-through SMS, same
-   *  shape as pharmacyCoverageSmsSent above but for the "no coverage found,
-   *  here's a cash option" beat. Represents a real time gap since the
+  /** CoA_DME only — Scenario 3's (no coverage) own tap-through SMS, sent
+   *  once BI resolves neither-covered (see coaDme.ts's SEND_CASH_OFFER_SMS).
+   *  Deliberately separate from smsVerified/otpVerified (the initial
+   *  enrollment SMS/OTP pair) — represents a real time gap since the
    *  patient last opened the portal, rather than materializing on the
    *  cash-pay info screen (/pa-denied) mid-session. Stays false for every
    *  other flow. */
@@ -164,7 +152,7 @@ export interface WorkflowData {
    *  info screen (/pa-denied). Stays false for every other flow. */
   cashOfferSmsVerified: boolean;
   /** CoA_DME only — Scenario 2's (covered by both) own tap-through SMS,
-   *  same shape as pharmacyCoverageSmsSent/cashOfferSmsSent above. Sent as
+   *  same shape as cashOfferSmsSent above. Sent as
    *  part of CRM's own NOTIFY_PROVIDER_TRANSFER action (not automatic, see
    *  coaDme.ts's biComplete state) — transferring the case to an outside
    *  DME provider stays a deliberate CRM hand-off, but the patient still

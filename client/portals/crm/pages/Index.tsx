@@ -766,7 +766,6 @@ export default function Index() {
   const dmeProviderTransferStatus = workflowData.dmeProviderTransferStatus;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
-  const pharmacyCoverageSmsSent = workflowData.pharmacyCoverageSmsSent;
 
   const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
@@ -1110,13 +1109,22 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, biStatus, medicalBenefitStatus, dmeProviderTransferStatus, dispatch]);
 
-  // CoA_DME Scenario 1's pharmacy-coverage SMS (pharmacyCoverageSmsSent) is
-  // now fully automatic — coaDme.ts's biComplete state fires it itself via
-  // an eventless `always` transition the instant BI resolves to this combo,
-  // with no CRM stage card or button at all. (Previously this useEffect
-  // fired SEND_PHARMACY_SMS on Patient Notification tab-open, mirroring
-  // DME-14282's own tab-open auto-resolve effect above — removed per Andy's
-  // request to automate this milestone and take it out of the CRM.)
+  // CoA_DME Scenario 1 — auto-submit a real Prior Authorization the instant
+  // BI resolves to this combo, mirroring the isCoaFlow-scoped SUBMIT_PA
+  // effect above almost exactly (see that effect's own comment) — just
+  // rooted at this scenario's own pharmacyBenefitStatus/medicalBenefitStatus
+  // guard instead of being flow-wide. PA-14274's own tab-open auto-approve
+  // effect (further up, not flow-restricted) picks this up from here with no
+  // DME-specific change needed. Replaces this scenario's old automatic
+  // single tap-through SMS (pharmacyCoverageSmsSent), which has been removed
+  // entirely per Andy's request to introduce a real PA flow instead.
+  useEffect(() => {
+    if (!isDmeFlow) return;
+    if (biStatus !== "complete") return;
+    if (pharmacyBenefitStatus !== "covered" || medicalBenefitStatus === "covered") return;
+    if (paStatus !== "none") return;
+    dispatch('SUBMIT_PA', { portal: 'crm' });
+  }, [isDmeFlow, biStatus, pharmacyBenefitStatus, medicalBenefitStatus, paStatus, dispatch]);
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.
@@ -1311,8 +1319,9 @@ export default function Index() {
           // Outcome not known yet — show every possible downstream stage as
           // a "not started" placeholder (tpStage/psStage already render
           // correctly as not-started, since dispatchStatus/pharmacyStatus
-          // are still "none" at this point) instead of just BI alone.
-          if (biStatus !== "complete") return [dmeTransferStage, dmeCashOfferStage, tpStage, psStage];
+          // are still "none" at this point; paStage's own logic does too,
+          // since paStatus is still "none" here) instead of just BI alone.
+          if (biStatus !== "complete") return [paStage, dmeTransferStage, dmeCashOfferStage, tpStage, psStage];
 
           // Every outcome keeps the full 4-stage set visible — the ones
           // that don't apply to the resolved scenario get the same "Not
@@ -1337,6 +1346,26 @@ export default function Index() {
             statusDetail: medicalBenefitStatus === "covered"
               ? "Both benefits covered — no cash-pay offer needed"
               : "Pharmacy benefit covers this order — no cash-pay offer needed",
+            isComplete: true,
+            isNotStarted: false,
+            fields: [],
+            lastUpdated: dateFromToday(0).toLocaleDateString(),
+            lastUpdatedAgo: "today",
+          };
+          // Scenarios 2/3 only — Scenario 1 is the only DME outcome that
+          // ever submits a real PA (see paStage below and this component's
+          // own isDmeFlow-scoped SUBMIT_PA effect above); paStatus stays
+          // "none" forever for these two, so paStage's own logic would
+          // wrongly show "Letter sent" once biStatus is complete. Same "Not
+          // needed" treatment as dmeTransferNotNeeded/dmeCashOfferNotNeeded
+          // above, not just omitting the card.
+          const paNotNeeded: Stage = {
+            id: "PA-14274",
+            name: "Prior Authorization",
+            statusLabel: "Not needed",
+            statusDetail: medicalBenefitStatus === "covered"
+              ? "Both benefits covered — no Prior Authorization needed"
+              : "No coverage found under either benefit — no Prior Authorization needed",
             isComplete: true,
             isNotStarted: false,
             fields: [],
@@ -1386,22 +1415,23 @@ export default function Index() {
           // Scenario 2 — medical covered (always wins): only the DME
           // transfer really happens. No PA stage, no cash-offer stage, no
           // dispense tail — see workflows/coaDme.ts.
-          if (medicalBenefitStatus === "covered") return [dmeTransferStage, dmeCashOfferNotNeeded, tpNotNeededTransfer, psNotNeededTransfer];
+          if (medicalBenefitStatus === "covered") return [paNotNeeded, dmeTransferStage, dmeCashOfferNotNeeded, tpNotNeededTransfer, psNotNeededTransfer];
 
-          // Scenario 1 — pharmacy covered, medical not. The pharmacy-
-          // coverage SMS milestone (pharmacyCoverageSmsSent) is fully
-          // automatic now — see coaDme.ts's biComplete state — so it never
-          // gets its own CRM stage card; the Dispatch to Triage isCoaFlow
-          // reuses below is this outcome's first real stage. Pharmacy
-          // Status (psStage) gets the "Not needed" treatment once a
-          // pharmacy is picked (isDmeRetailFlow), same reasoning
-          // isCopayRetailFlow already uses: fulfillment happens outside
-          // AssistRx's own pipeline.
-          if (pharmacyBenefitStatus === "covered") return [dmeTransferNotNeeded, dmeCashOfferNotNeeded, tpStage, isDmeRetailFlow ? psNotNeededRetail : psStage];
+          // Scenario 1 — pharmacy covered, medical not. This outcome now
+          // requires a real Prior Authorization (paStage — reused as-is from
+          // isCoaFlow, since isPapFlow is false for DME), submitted
+          // automatically by this component's own isDmeFlow-scoped SUBMIT_PA
+          // effect above and auto-approved by PA-14274's existing tab-open
+          // effect — replaces this scenario's old automatic single
+          // tap-through SMS entirely. Pharmacy Status (psStage) gets the
+          // "Not needed" treatment once a pharmacy is picked
+          // (isDmeRetailFlow), same reasoning isCopayRetailFlow already
+          // uses: fulfillment happens outside AssistRx's own pipeline.
+          if (pharmacyBenefitStatus === "covered") return [paStage, dmeTransferNotNeeded, dmeCashOfferNotNeeded, tpStage, isDmeRetailFlow ? psNotNeededRetail : psStage];
 
           // Scenario 3 — neither covered. Cash Offer card plus the same
           // fulfillment-tracking stages Scenario 1 uses.
-          return [dmeTransferNotNeeded, dmeCashOfferStage, tpStage, psStage];
+          return [paNotNeeded, dmeTransferNotNeeded, dmeCashOfferStage, tpStage, psStage];
         })(),
       ]
     : isCoaFlow

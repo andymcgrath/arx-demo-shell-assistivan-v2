@@ -291,27 +291,37 @@ export function derivePatientRoute(state: MachineContext): string {
       return '/dme-provider-transfer';
     }
 
-    // Scenario 1 — pharmacy covered, medical not. No pricing/dollar framing
-    // here at all (that's Scenario 3's cash-pay-only territory) — the
-    // instant BI resolves to this combo, the machine's own eventless
-    // `always` transition (see coaDme.ts's biComplete state) sets
-    // pharmacyCoverageSmsSent automatically, fully invisible to the CRM
-    // operator (no button, no stage card). Once tapped through
-    // (pharmacyCoverageSmsVerified), the patient picks a specific network
-    // pharmacy (no Retail-vs-Mail-Order choice, no Copay upsell). From
-    // there this mirrors CoA_Copay's own Retail bypass exactly (see the
-    // isCoA branch's own flowType === 'CoA_Copay' && pricingOption ===
-    // 'retail' check further up in this file): skip straight to the
-    // tracker, no address/date/payment step at all.
+    // Scenario 1 — pharmacy covered, medical not. Now requires a real Prior
+    // Authorization, mirroring CoA_DTP's own paStatus-driven routing almost
+    // exactly (see coaDme.ts's enrolled/smsVerified/otpVerified/
+    // consentConfirmed/biComplete SUBMIT_PA handlers and the isCoA branch's
+    // own paStatus checks further up in this file) — just rooted at this
+    // scenario's own pharmacyBenefitStatus guard instead of being flow-wide,
+    // and always-approves (no denial branch). Once PA is approved and the
+    // patient re-verifies via SMS+OTP, they pick a specific network pharmacy
+    // (no Retail-vs-Mail-Order choice, no Copay upsell, no pricing/dollar
+    // framing — that's Scenario 3's cash-pay-only territory). From there
+    // this mirrors CoA_Copay's own Retail bypass exactly (see the isCoA
+    // branch's own flowType === 'CoA_Copay' && pricingOption === 'retail'
+    // check further up in this file): skip straight to the tracker, no
+    // address/date/payment step at all.
     if (workflowData.pharmacyBenefitStatus === 'covered') {
-      // pharmacyCoverageSmsSent flips true in the same tick biComplete is
-      // entered (see coaDme.ts), so this only shows for an instant — but it
-      // must be the patient home screen, not /enrollment-complete: that
-      // route is in patient/index.tsx's DELIVERY_FLOW_PATHS tolerate-list,
-      // which would freeze StateDrivenNav here and strand the patient even
-      // after the SMS auto-sends (this was a real bug, not hypothetical).
-      if (!workflowData.pharmacyCoverageSmsSent) return '/';
-      if (!workflowData.pharmacyCoverageSmsVerified) return '/pharmacy-coverage-sms';
+      // Waiting on PA (submitted automatically, approved automatically via
+      // tab-open) — home, not /enrollment-complete: that route is in
+      // patient/index.tsx's DELIVERY_FLOW_PATHS tolerate-list, which would
+      // freeze StateDrivenNav here and strand the patient once PA resolves
+      // (same real bug already fixed for this flow's other automatic SMS
+      // beats — see cashOfferSmsSent/dmeTransferSmsSent above).
+      if (workflowData.paStatus === 'none' || workflowData.paStatus === 'submitted') return '/';
+
+      if (workflowData.paStatus === 'approved' && !workflowData.paApprovedSmsVerified)
+        return '/pa-approved-sms';
+
+      if (workflowData.paStatus === 'approved' &&
+          workflowData.paApprovedSmsVerified &&
+          !workflowData.paApprovedOtpVerified)
+        return '/pa-approved-otp';
+
       if (workflowData.pricingOption === null) return '/network-pharmacy-selection';
 
       // Pharmacy picked — mirrors CoA_Copay's Retail bypass (see the isCoA
@@ -932,12 +942,6 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   'VERIFY_OTP',
   'VERIFY_PAP_SMS',
   'VERIFY_PAP_OTP',
-  // CoA_DME Scenario 1 only — the patient's tap-through confirmation on the
-  // pharmacy-coverage SMS (PharmacyCoverageSms.tsx) mirrors VERIFY_SMS/
-  // VERIFY_OTP above: not separately email-worthy on its own. SEND_PHARMACY_SMS
-  // (the CRM-side event that actually sends the SMS) still falls through to
-  // the default case below, same as ENROLL/INVITE.
-  'VERIFY_PHARMACY_SMS',
   // CoA_DME Scenario 3 only — same reasoning, mirrored for the cash-offer
   // SMS's own tap-through (CashOfferSms.tsx). SEND_CASH_OFFER_SMS still
   // falls through to the default case below.
@@ -1050,18 +1054,21 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Case',
           });
         } else if (isDmeFlow && biResult === 'coverage_found') {
-          // CoA_DME Scenario 1 — pharmacy benefit covered, medical not. The
-          // generic 'coverage_found' copy in the final else branch below
-          // assumes a Prior Authorization step, which this flow never has —
-          // see workflows/coaDme.ts's header comment. No pricing/dollar
-          // framing here either — a network pharmacy pick, not a Retail-vs-
-          // Mail-Order choice (see PN-14283/SEND_PHARMACY_SMS below).
+          // CoA_DME Scenario 1 — pharmacy benefit covered, medical not. This
+          // outcome now requires a real Prior Authorization, mirroring
+          // CoA_DTP's own PA flow exactly (see workflows/coaDme.ts's header
+          // comment and its SUBMIT_PA handlers) — it's submitted
+          // automatically by CRM, not by the prescriber, so this email
+          // doesn't open a Prior Authorization task the way the generic
+          // non-DME branch below does. No pricing/dollar framing either —
+          // once PA approves, it's a network pharmacy pick, not a
+          // Retail-vs-Mail-Order choice.
           emails.push({
             ...base,
             subject: `Pharmacy Benefit Coverage Confirmed - ${patientName}`,
             bodyParagraphs: [
               `Benefits investigation confirmed ${patientName}'s DME (CGM sensor) is covered under their pharmacy benefit.`,
-              `A notification is ready to send so the patient can pick a network pharmacy — no Prior Authorization is needed on this case.`,
+              `A Prior Authorization is being submitted automatically; once approved, the patient will be notified to pick a network pharmacy.`,
             ],
             linkedItemId: LIVE_CASE_ID,
             linkedItemLabel: 'View Case',
@@ -1124,25 +1131,11 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         });
         break;
 
-      // CoA_DME Scenario 1 only — the SECOND, later SMS milestone (see
-      // engine/types.ts's pharmacyCoverageSmsSent) sent once BI confirms
-      // pharmacy coverage, distinct from the initial enrollment invite.
-      case 'SEND_PHARMACY_SMS':
-        emails.push({
-          ...base,
-          subject: `Pharmacy Coverage Notification Sent - ${patientName}`,
-          bodyParagraphs: [
-            `AssistRx sent ${patientName} a text letting them know their DME (CGM sensor) is covered and it's time to pick a network pharmacy.`,
-            `No action is needed from you unless the patient reports an issue receiving it.`,
-          ],
-          linkedItemId: LIVE_CASE_ID,
-          linkedItemLabel: 'View Case',
-        });
-        break;
-
-      // CoA_DME Scenario 3 only — mirrors SEND_PHARMACY_SMS above for the
-      // "no coverage, but here's a cash option" beat (see engine/types.ts's
-      // cashOfferSmsSent).
+      // CoA_DME Scenario 3 only — the cash-offer SMS beat (see
+      // engine/types.ts's cashOfferSmsSent). CoA_DME Scenario 1 no longer has
+      // an equivalent automatic SMS of its own — it now submits a real PA
+      // instead (see coaDme.ts's header comment and the COMPLETE_BI case
+      // above), so there's no SEND_PHARMACY_SMS sibling here anymore.
       case 'SEND_CASH_OFFER_SMS':
         emails.push({
           ...base,

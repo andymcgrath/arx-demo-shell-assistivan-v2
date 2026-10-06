@@ -19,23 +19,25 @@ import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine
 // guards below still route it correctly into the same branch as "both
 // covered", since medical benefit always wins when it's covered):
 //
-//   1. Pharmacy covered, medical not — SEND_PHARMACY_SMS. No pricing/dollar
-//      framing at all here (that's Scenario 3's own cash-pay-only territory)
-//      — since AssistRx isn't paying anything in this outcome, CRM sends the
-//      patient a SECOND, later SMS milestone (pharmacyCoverageSmsSent/
-//      pharmacyCoverageSmsVerified — deliberately separate fields from the
-//      initial enrollment smsVerified/otpVerified pair) telling them their
-//      DME is covered. Once the patient taps through it
-//      (VERIFY_PHARMACY_SMS), they pick a specific pharmacy from AssistRx's
-//      network (SELECT_PHARMACY, reusing the existing event type) straight
-//      from a plain pharmacy-list screen — no Retail-vs-Mail-Order choice,
-//      no Copay Program upsell. That single pick both assigns the pharmacy
-//      AND sets pricingOption to "retail" in one action, joining
-//      pricingSelected — but from there this mirrors CoA_Copay's own Retail
-//      bypass exactly (see crm/pages/Index.tsx's isCopayRetailFlow and
-//      WorkflowEngine.ts's derivePatientRoute): dispatch is eligible the
-//      instant the pharmacy is picked, no address/date/payment step at all,
-//      and fulfillment happens outside AssistRx's own pipeline.
+//   1. Pharmacy covered, medical not — requires a real Prior Authorization,
+//      mirroring coaDtp.ts's own PA flow exactly: SUBMIT_PA (fired
+//      automatically by CRM the instant BI resolves to this combo, same as
+//      CoA_DTP), APPROVE_PA (always approves — no denial branch, PA here is
+//      a formality since the pharmacy benefit already covers the order),
+//      then the patient's own PA-approved SMS + OTP re-verify
+//      (VERIFY_PA_APPROVED_SMS/VERIFY_PA_APPROVED_OTP, reusing CoA_DTP's
+//      exact fields/events). Once re-verified, they pick a specific pharmacy
+//      from AssistRx's network (SELECT_PHARMACY, reusing the existing event
+//      type) straight from a plain pharmacy-list screen — no Retail-vs-Mail-
+//      Order choice, no Copay Program upsell, no pricing/dollar framing at
+//      all (that's Scenario 3's own cash-pay-only territory). That single
+//      pick both assigns the pharmacy AND sets pricingOption to "retail" in
+//      one action, joining pricingSelected — but from there this mirrors
+//      CoA_Copay's own Retail bypass exactly (see crm/pages/Index.tsx's
+//      isCopayRetailFlow and WorkflowEngine.ts's derivePatientRoute):
+//      dispatch is eligible the instant the pharmacy is picked, no
+//      address/date/payment step at all, and fulfillment happens outside
+//      AssistRx's own pipeline.
 //   2. Both covered (medical always wins) — NOTIFY_PROVIDER_TRANSFER. Same
 //      DME-provider-transfer path as the original single-scenario version of
 //      this flow: CoAssist hands the case to Advanced Diabetes Supply, an
@@ -91,8 +93,6 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   dmeProviderTransferStatus: "none",
   pharmacyBenefitStatus: "none",
   medicalBenefitStatus: "none",
-  pharmacyCoverageSmsSent: false,
-  pharmacyCoverageSmsVerified: false,
   cashOfferSmsSent: false,
   cashOfferSmsVerified: false,
   dmeTransferSmsSent: false,
@@ -146,8 +146,10 @@ export const coaDmeMachine = setup({
       | { type: "COMPLETE_BI"; pharmacyBenefitStatus: "covered" | "not_covered"; medicalBenefitStatus: "covered" | "not_covered" }
       | { type: "NOTIFY_PROVIDER_TRANSFER" }
       | { type: "VERIFY_DME_TRANSFER_SMS" }
-      | { type: "SEND_PHARMACY_SMS" }
-      | { type: "VERIFY_PHARMACY_SMS" }
+      | { type: "SUBMIT_PA" }
+      | { type: "APPROVE_PA" }
+      | { type: "VERIFY_PA_APPROVED_SMS" }
+      | { type: "VERIFY_PA_APPROVED_OTP" }
       | { type: "SEND_CASH_OFFER_SMS" }
       | { type: "VERIFY_CASH_OFFER_SMS" }
       | { type: "SELECT_SELF_PAY" }
@@ -242,6 +244,23 @@ export const coaDmeMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
           }),
         },
+        // Scenario 1 only (pharmacy covered, medical not) — mirrors
+        // coaDtp.ts's own SUBMIT_PA exactly: PA submission doesn't wait on
+        // the patient's own SMS/OTP/consent progress either, so this same
+        // guarded handler needs to live on every one of
+        // enrolled/smsVerified/otpVerified/consentConfirmed (not just the
+        // named biComplete state below), same reasoning as RUN_BI/
+        // COMPLETE_BI above. CRM's own auto-trigger effect (see
+        // crm/pages/Index.tsx) fires this the instant biStatus reaches
+        // "complete" for this outcome. Scenario 2/3 never submit PA at all.
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete" && context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
       },
     },
     smsVerified: {
@@ -275,6 +294,15 @@ export const coaDmeMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
           }),
         },
+        // See enrolled's SUBMIT_PA above.
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete" && context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
       },
     },
     otpVerified: {
@@ -305,6 +333,15 @@ export const coaDmeMachine = setup({
               biResult: deriveBiResult(event.pharmacyBenefitStatus, event.medicalBenefitStatus),
             }),
             events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
+          }),
+        },
+        // See enrolled's SUBMIT_PA above.
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete" && context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
           }),
         },
       },
@@ -340,6 +377,15 @@ export const coaDmeMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'COMPLETE_BI', 'analytics', 7)],
           }),
         },
+        // See enrolled's SUBMIT_PA above.
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.biStatus === "complete" && context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
       },
     },
     biRunning: {
@@ -364,42 +410,28 @@ export const coaDmeMachine = setup({
     // case, since their guards partition pharmacyBenefitStatus/
     // medicalBenefitStatus's real combinations.
     biComplete: {
-      // Scenario 1 — pharmacy covered, medical not. Sending the "your DME
-      // is covered" SMS is fully automatic and invisible to the CRM
-      // operator (no stage card, no button to click) — the instant BI
-      // resolves to this combo, this eventless `always` transition fires
-      // and carries the patient straight into pharmacySmsSent, setting
-      // pharmacyCoverageSmsSent before biComplete is ever rendered anywhere.
-      // There's no Retail-vs-Mail-Order pick or Copay upsell in this
-      // outcome at all, since AssistRx isn't paying anything here. See
-      // pharmacySmsSent/pharmacySmsVerified below for the rest of this beat.
-      // Scenario 3 — neither covered — gets the exact same automatic-SMS
-      // treatment as Scenario 1 above: no CRM stage card, no button. It
-      // stands for a real time gap since the patient last opened the
-      // portal (a few days waiting on BI), so the "no coverage, but here's
-      // a cash option" news arrives as its own tap-through SMS
-      // (cashOfferSmsSent/cashOfferSmsVerified) rather than the patient
-      // just materializing on the /pa-denied screen mid-session. See
-      // cashOfferSmsSent/cashOfferSmsVerified below for the rest of this
-      // beat — SELECT_SELF_PAY now lives there instead of here.
-      always: [
-        {
-          target: "pharmacySmsSent",
-          guard: ({ context }) => context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
-          actions: assign({
-            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyCoverageSmsSent: true }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SEND_PHARMACY_SMS', 'crm', 9)],
-          }),
-        },
-        {
-          target: "cashOfferSmsSent",
-          guard: ({ context }) => context.workflowData.pharmacyBenefitStatus === "not_covered" && context.workflowData.medicalBenefitStatus === "not_covered",
-          actions: assign({
-            workflowData: ({ context }) => ({ ...context.workflowData, cashOfferSmsSent: true }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SEND_CASH_OFFER_SMS', 'crm', 9)],
-          }),
-        },
-      ],
+      // Scenario 3 — neither covered — gets a fully automatic SMS: no CRM
+      // stage card, no button. It stands for a real time gap since the
+      // patient last opened the portal (a few days waiting on BI), so the
+      // "no coverage, but here's a cash option" news arrives as its own
+      // tap-through SMS (cashOfferSmsSent/cashOfferSmsVerified) rather than
+      // the patient just materializing on the /pa-denied screen mid-session.
+      // See cashOfferSmsSent/cashOfferSmsVerified below for the rest of
+      // this beat — SELECT_SELF_PAY lives there.
+      //
+      // Scenario 1 (pharmacy covered, medical not) used to get this same
+      // automatic-SMS treatment, but now requires a real Prior Authorization
+      // first — see this state's own SUBMIT_PA handler below, which mirrors
+      // coaDtp.ts's PA flow exactly (submit → auto-approve → SMS+OTP
+      // re-verify) instead of a single automatic tap-through.
+      always: {
+        target: "cashOfferSmsSent",
+        guard: ({ context }) => context.workflowData.pharmacyBenefitStatus === "not_covered" && context.workflowData.medicalBenefitStatus === "not_covered",
+        actions: assign({
+          workflowData: ({ context }) => ({ ...context.workflowData, cashOfferSmsSent: true }),
+          events: ({ context }) => [...context.events, createEvent(context, 'SEND_CASH_OFFER_SMS', 'crm', 9)],
+        }),
+      },
       on: {
         // Scenario 2 — medical benefit always wins when covered, regardless
         // of pharmacy (covers the 4th, UI-unreachable combo too: medical
@@ -422,6 +454,126 @@ export const coaDmeMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'NOTIFY_PROVIDER_TRANSFER', 'crm', 9)],
           }),
         },
+        // Scenario 1 — pharmacy covered, medical not. See enrolled's own
+        // SUBMIT_PA handler above for the full reasoning — this is the
+        // "fallback path" copy of it, reached if BI somehow completes after
+        // the patient's own SMS/OTP/consent progress (same relationship
+        // RUN_BI/biRunning has to the four self-transition copies above it).
+        SUBMIT_PA: {
+          target: "paSubmitted",
+          guard: ({ context }) => context.workflowData.pharmacyBenefitStatus === "covered" && context.workflowData.medicalBenefitStatus !== "covered",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "submitted", paSubmittedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SUBMIT_PA', 'provider', 8)],
+          }),
+        },
+      },
+    },
+    // Scenario 1's own Prior Authorization sequence — mirrors coaDtp.ts's
+    // paSubmitted/paApproved/paApprovedSmsVerified/paApprovedOtpVerified
+    // exactly, including the guarded VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT
+    // copies on paSubmitted/paApproved (so the patient's own onboarding
+    // isn't stranded if PA races ahead of it, same "two independent
+    // timelines" reasoning as RUN_BI/COMPLETE_BI above) — except there's no
+    // DENY_PA branch: confirmed this scenario always auto-approves, since
+    // the pharmacy benefit already covers the order and PA here is a
+    // formality, not a real decision point.
+    paSubmitted: {
+      on: {
+        APPROVE_PA: {
+          target: "paApproved",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paStatus: "approved", paApprovedAt: new Date().toISOString() }),
+            events: ({ context }) => [...context.events, createEvent(context, 'APPROVE_PA', 'provider', 9)],
+          }),
+        },
+        VERIFY_SMS: {
+          guard: ({ context }) => !context.workflowData.smsVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        VERIFY_OTP: {
+          guard: ({ context }) => context.workflowData.smsVerified && !context.workflowData.otpVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
+        },
+        CONFIRM_CONSENT: {
+          guard: ({ context }) => context.workflowData.otpVerified && context.workflowData.consentStatus === "pending",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
+          }),
+        },
+      },
+    },
+    paApproved: {
+      on: {
+        VERIFY_PA_APPROVED_SMS: {
+          target: "paApprovedSmsVerified",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paApprovedSmsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_SMS', 'patient', 9)],
+          }),
+        },
+        VERIFY_SMS: {
+          guard: ({ context }) => !context.workflowData.smsVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, smsVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_SMS', 'patient', 3)],
+          }),
+        },
+        VERIFY_OTP: {
+          guard: ({ context }) => context.workflowData.smsVerified && !context.workflowData.otpVerified,
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, otpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_OTP', 'patient', 4)],
+          }),
+        },
+        CONFIRM_CONSENT: {
+          guard: ({ context }) => context.workflowData.otpVerified && context.workflowData.consentStatus === "pending",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, consentStatus: "confirmed" }),
+            events: ({ context }) => [...context.events, createEvent(context, 'CONFIRM_CONSENT', 'patient', 5)],
+          }),
+        },
+      },
+    },
+    paApprovedSmsVerified: {
+      on: {
+        VERIFY_PA_APPROVED_OTP: {
+          target: "paApprovedOtpVerified",
+          actions: assign({
+            workflowData: ({ context }) => ({ ...context.workflowData, paApprovedOtpVerified: true }),
+            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PA_APPROVED_OTP', 'patient', 9)],
+          }),
+        },
+      },
+    },
+    // Patient picks a specific network pharmacy — no Retail-vs-Mail-Order
+    // choice, no dollar amounts, no Copay upsell (Scenario 3, not this one,
+    // is where a cash price ever shows). Assigns the pharmacy AND sets
+    // pricingOption to "retail" together, joining pricingSelected so this
+    // outcome gets CoA_Copay's Retail treatment from here on (dispatch-
+    // eligible immediately, no address/date/payment step, fulfillment
+    // outside AssistRx's own pipeline — see crm/pages/Index.tsx's
+    // isCopayRetailFlow and WorkflowEngine.ts's derivePatientRoute).
+    paApprovedOtpVerified: {
+      on: {
+        SELECT_PHARMACY: {
+          target: "pricingSelected",
+          actions: assign({
+            workflowData: ({ context, event }) => ({
+              ...context.workflowData,
+              pricingOption: "retail",
+              selectedPharmacy: event.pharmacy,
+            }),
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'patient', 9)],
+          }),
+        },
       },
     },
     // Scenario 2's own tap-through SMS beat — same shape as Scenario 1/3's
@@ -440,9 +592,9 @@ export const coaDmeMachine = setup({
         },
       },
     },
-    // Scenario 3's own tap-through SMS beat — same shape as Scenario 1's
-    // pharmacySmsSent/pharmacySmsVerified pair just above (mirrors the very
-    // first enrollment SMS bubble), just with its own dedicated fields
+    // Scenario 3's own tap-through SMS beat — mirrors the very first
+    // enrollment SMS bubble (SMSMessage.tsx/enrolled->smsVerified above),
+    // just a second, later milestone with its own dedicated fields
     // (cashOfferSmsSent/cashOfferSmsVerified). VERIFY_CASH_OFFER_SMS is the
     // patient's tap; no OTP step, same single-tap-through shape.
     cashOfferSmsSent: {
@@ -478,61 +630,16 @@ export const coaDmeMachine = setup({
         },
       },
     },
-    // Scenario 1's own tap-through SMS beat — mirrors the very first
-    // enrollment SMS bubble (SMSMessage.tsx/enrolled->smsVerified above),
-    // just a second, later milestone with its own dedicated fields
-    // (pharmacyCoverageSmsSent/pharmacyCoverageSmsVerified) rather than
-    // reusing smsVerified/otpVerified. VERIFY_PHARMACY_SMS is the patient's
-    // tap; there's no OTP step for this beat (single tap-through, not a
-    // re-verify).
-    pharmacySmsSent: {
-      on: {
-        VERIFY_PHARMACY_SMS: {
-          target: "pharmacySmsVerified",
-          actions: assign({
-            workflowData: ({ context }) => ({ ...context.workflowData, pharmacyCoverageSmsVerified: true }),
-            events: ({ context }) => [...context.events, createEvent(context, 'VERIFY_PHARMACY_SMS', 'patient', 9)],
-          }),
-        },
-      },
-    },
-    // Patient picks a specific network pharmacy — no Retail-vs-Mail-Order
-    // choice, no dollar amounts, no Copay upsell (Scenario 3, not this one,
-    // is where a cash price ever shows). This SELECT_PHARMACY handler is
-    // scoped to this state only — unlike the SELECT_PHARMACY handlers inside
-    // pricingSelected/addressSet/shipDateSelected below (which only let CRM
-    // override an already-picked pharmacy without touching pricingOption or
-    // changing state), this one both assigns the pharmacy AND sets
-    // pricingOption to "retail" together, joining pricingSelected so this
-    // outcome gets CoA_Copay's Retail treatment from here on (dispatch-
-    // eligible immediately, no address/date/payment step, fulfillment
-    // outside AssistRx's own pipeline — see crm/pages/Index.tsx's
-    // isCopayRetailFlow and WorkflowEngine.ts's derivePatientRoute).
-    pharmacySmsVerified: {
-      on: {
-        SELECT_PHARMACY: {
-          target: "pricingSelected",
-          actions: assign({
-            workflowData: ({ context, event }) => ({
-              ...context.workflowData,
-              pricingOption: "retail",
-              selectedPharmacy: event.pharmacy,
-            }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PHARMACY', 'patient', 9)],
-          }),
-        },
-      },
-    },
     // ── Fulfillment tail (Scenarios 1 and 3) ──────────────────────────────
     // Copied from coaDtp.ts's pricingSelected -> addressSet ->
     // shipDateSelected -> rxProcessing -> rxReady -> rxShipped -> rxDelivered
     // almost verbatim (same event handlers/shapes) — see that file's own
-    // comments on each state for the full reasoning. No PA anywhere in this
-    // tail; it's reached directly from biComplete/pharmacySmsVerified for
-    // both Scenario 1 (network pharmacy pick, insurance-billed, ends at
-    // Dispatch to Triage — no address/date/payment) and Scenario 3
-    // (self-pay, cash-billed, keeps the full address/date/payment/dispatch
-    // chain).
+    // comments on each state for the full reasoning. This tail is reached
+    // from paApprovedOtpVerified's own SELECT_PHARMACY for Scenario 1
+    // (network pharmacy pick, insurance-billed, ends at Dispatch to Triage —
+    // no address/date/payment) and from cashOfferSmsVerified's
+    // SELECT_SELF_PAY for Scenario 3 (self-pay, cash-billed, keeps the full
+    // address/date/payment/dispatch chain).
     pricingSelected: {
       on: {
         PATIENT_SETS_ADDRESS: {
@@ -543,9 +650,9 @@ export const coaDmeMachine = setup({
           }),
         },
         // CoA's pharmacy is already known the moment pricing is chosen (see
-        // pharmacySmsVerified's SELECT_PHARMACY/SELECT_SELF_PAY above) —
-        // well before the patient sets an address. The CRM's Dispatch to
-        // Triage tab lets
+        // paApprovedOtpVerified's SELECT_PHARMACY / biComplete's
+        // SELECT_SELF_PAY above) — well before the patient sets an address.
+        // The CRM's Dispatch to Triage tab lets
         // staff dispatch to pharmacy as soon as a pharmacy is assigned (see
         // Index.tsx's canDispatchToPharmacy), so this state needs its own
         // FILL_RX/SELECT_PHARMACY handlers too, not just addressSet/

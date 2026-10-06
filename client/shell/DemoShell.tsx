@@ -299,15 +299,15 @@ const STEP_LABELS_COA_COPAY_RETAIL = [
 // workflows/coaDme.ts's header comment) — mirrors CoA_DTP's own
 // STEP_LABELS_COA bar (same "eRx Received"/"Consent" naming, same
 // eRx-to-fulfillment shape), just without a Prior Authorization step at all
-// — this flow never submits one, in any of its 3 outcomes. Used for
-// Scenario 3 only now (neither covered, cash pay) — Scenario 1 (pharmacy
-// covered) has its own, shorter STEP_LABELS_DME_PHARMACY bar below (no
-// pricing/address/date/payment at all in that outcome anymore — see
-// coaDme.ts). Scenario 2 (medical covered) is a completely different, much
-// shorter path — see STEP_LABELS_DME_MEDICAL below — swapped in once
-// medicalBenefitStatus resolves to "covered" (see isDmeMedicalFlow in
-// StepBar below), the same way isCopayRetailFlow swaps in
-// STEP_LABELS_COA_COPAY_RETAIL once CoA_Copay's own pricingOption resolves.
+// — only Scenario 3 (neither covered, cash pay) never submits one; Scenario
+// 1 (pharmacy covered) now does, see STEP_LABELS_DME_PHARMACY below. Used
+// for Scenario 3 only now (neither covered, cash pay) — Scenario 1 (pharmacy
+// covered) has its own, shorter STEP_LABELS_DME_PHARMACY bar below. Scenario
+// 2 (medical covered) is a completely different, much shorter path — see
+// STEP_LABELS_DME_MEDICAL below — swapped in once medicalBenefitStatus
+// resolves to "covered" (see isDmeMedicalFlow in StepBar below), the same
+// way isCopayRetailFlow swaps in STEP_LABELS_COA_COPAY_RETAIL once
+// CoA_Copay's own pricingOption resolves.
 const STEP_LABELS_DME = [
   "eRx Received",
   "Consent",
@@ -320,18 +320,21 @@ const STEP_LABELS_DME = [
 ];
 
 // CoA_DME Scenario 1 only (pharmacyBenefitStatus === "covered",
-// medicalBenefitStatus !== "covered") — this outcome no longer has a
-// pricing/address/date/payment step at all (see coaDme.ts's header comment):
-// CRM sends a second, later SMS milestone ("Patient Notification"), the
-// patient picks a network pharmacy, and fulfillment happens outside
-// AssistRx's own pipeline from there — same shape as
+// medicalBenefitStatus !== "covered") — this outcome now requires a real
+// Prior Authorization (mirroring CoA_DTP's own submit/auto-approve/SMS+OTP
+// re-verify pattern, no denial branch — see coaDme.ts's header comment and
+// its paSubmitted/paApproved/paApprovedSmsVerified/paApprovedOtpVerified
+// states), then the patient picks a network pharmacy, and fulfillment
+// happens outside AssistRx's own pipeline from there — same shape as
 // STEP_LABELS_COA_COPAY_RETAIL's own 6-step, Dispatch-to-Triage-terminal bar,
-// just with this flow's own step names.
+// just with this flow's own step names. This replaces the scenario's old
+// single automatic tap-through SMS milestone ("Patient Notification")
+// entirely.
 const STEP_LABELS_DME_PHARMACY = [
   "eRx Received",
   "Consent",
   "Benefits Investigation",
-  "Patient Notification",
+  "Prior Authorization",
   "Pharmacy Selection",
   "Dispatch to Triage",
 ];
@@ -436,7 +439,7 @@ function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
 // consent, not just an invite sent — matches computeIAssistStepDone's own
 // "Patient Enrolled" step for the same reason.
 function computeDmeStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, medicalBenefitStatus, pharmacyBenefitStatus, dmeProviderTransferStatus, pricingOption, paymentVerified, pharmacyStatus, pharmacyCoverageSmsSent } = workflowData;
+  const { enrollmentStatus, consentStatus, biStatus, medicalBenefitStatus, pharmacyBenefitStatus, dmeProviderTransferStatus, pricingOption, paymentVerified, pharmacyStatus, paStatus } = workflowData;
 
   // Scenario 2 — medical benefit covered (always wins). Same first-3-step
   // shape as the branches below, but its own short, terminal bar (see
@@ -450,20 +453,22 @@ function computeDmeStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
     ];
   }
 
-  // Scenario 1 — pharmacy covered, medical not. No pricing/address/date/
-  // payment step at all anymore (see coaDme.ts's header comment) — CRM
-  // sends the second SMS milestone, the patient picks a network pharmacy,
-  // then this mirrors CoA_Copay Retail's own short, Dispatch-to-Triage-
-  // terminal bar (see STEP_LABELS_DME_PHARMACY/computeCoaStepDone's own
-  // isCopayRetailFlow shape for the analogous "dispatched" signal).
+  // Scenario 1 — pharmacy covered, medical not. Requires a real PA now (see
+  // coaDme.ts's header comment); Step 4 is judged on paStatus === 'approved'
+  // (always true once reached, per the confirmed no-denial design) instead
+  // of this outcome's old single tap-through SMS flag. Once approved, the
+  // patient picks a network pharmacy, then this mirrors CoA_Copay Retail's
+  // own short, Dispatch-to-Triage-terminal bar (see STEP_LABELS_DME_PHARMACY/
+  // computeCoaStepDone's own isCopayRetailFlow shape for the analogous
+  // "dispatched" signal).
   if (pharmacyBenefitStatus === 'covered') {
     return [
-      enrollmentStatus !== 'none',    // 1 eRx Received
-      consentStatus === 'confirmed',  // 2 Consent
-      biStatus === 'complete',        // 3 Benefits Investigation
-      pharmacyCoverageSmsSent,        // 4 Patient Notification
-      pricingOption !== null,         // 5 Pharmacy Selection
-      pharmacyStatus !== 'none',      // 6 Dispatch to Triage
+      enrollmentStatus !== 'none',       // 1 eRx Received
+      consentStatus === 'confirmed',     // 2 Consent
+      biStatus === 'complete',           // 3 Benefits Investigation
+      paStatus === 'approved',           // 4 Prior Authorization
+      pricingOption !== null,            // 5 Pharmacy Selection
+      pharmacyStatus !== 'none',         // 6 Dispatch to Triage
     ];
   }
 
@@ -1320,26 +1325,22 @@ export default function DemoShell() {
 
     // CoA_DME's own ladder — shares WF1's generic stage-number/label shape
     // below (this flow has no dedicated dropdown list, see the "Reset to
-    // Stage" menu further down), but this flow's own machine (coaDme.ts) has
-    // no SUBMIT_PA/APPROVE_PA events at all, and COMPLETE_BI now takes
-    // pharmacyBenefitStatus/medicalBenefitStatus instead of a bare result —
-    // sending the generic block's shapes below would silently do nothing (no
-    // matching transition) and leave the BI outcome fields unset. The
-    // "Benefits Investigation" rung (stage >= 4, where COMPLETE_BI actually
-    // resolves — see the generic block below) defaults to Scenario 1
-    // (Pharmacy Coverage) via the same replayDmeToBiComplete() helper
-    // Index.tsx's BIR-0431 toggle buttons use, so the two can't drift apart.
-    // Stage 5 now sends Scenario 1's real pharmacy-pick sequence
-    // (VERIFY_PHARMACY_SMS -> SELECT_PHARMACY) instead of the old
-    // SELECT_PRICING_OPTION/PATIENT_SETS_ADDRESS pair. SEND_PHARMACY_SMS
-    // itself no longer needs to be sent here — coaDme.ts's biComplete state
-    // fires it automatically (an eventless `always` transition) the instant
-    // replayDmeToBiComplete()'s COMPLETE_BI lands above, so by the time
-    // stage 5 runs the actor is already past that beat. This outcome no
-    // longer has an address/date step at all (see coaDme.ts's header
-    // comment), so stage 6 goes straight to FILL_RX. Index.tsx's
-    // toggle buttons are the real mechanism for switching scenarios, not
-    // this ladder.
+    // Stage" menu further down), but this flow's own machine (coaDme.ts)
+    // takes pharmacyBenefitStatus/medicalBenefitStatus on COMPLETE_BI instead
+    // of a bare result — sending the generic block's shapes below would
+    // silently do nothing (no matching transition) and leave the BI outcome
+    // fields unset. The "Benefits Investigation" rung (stage >= 4, where
+    // COMPLETE_BI actually resolves — see the generic block below) defaults
+    // to Scenario 1 (Pharmacy Coverage) via the same replayDmeToBiComplete()
+    // helper Index.tsx's BIR-0431 toggle buttons use, so the two can't drift
+    // apart. Stage 5 now sends Scenario 1's real PA sequence (SUBMIT_PA ->
+    // APPROVE_PA -> VERIFY_PA_APPROVED_SMS -> VERIFY_PA_APPROVED_OTP ->
+    // SELECT_PHARMACY), mirroring CoA_DTP's own always-approves PA chain —
+    // this replaces the old VERIFY_PHARMACY_SMS tap-through entirely, since
+    // that milestone and its field no longer exist (see coaDme.ts's header
+    // comment). This outcome still has no address/date step at all, so
+    // stage 6 goes straight to FILL_RX. Index.tsx's toggle buttons are the
+    // real mechanism for switching scenarios, not this ladder.
     if (isDmeFlow) {
       if (stage >= 2) {
         actor.send({ type: 'ENROLL', portal: 'crm' });
@@ -1354,7 +1355,10 @@ export default function DemoShell() {
         replayDmeToBiComplete(actor);
       }
       if (stage >= 5) {
-        actor.send({ type: 'VERIFY_PHARMACY_SMS', portal: 'patient' });
+        actor.send({ type: 'SUBMIT_PA', portal: 'crm' });
+        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
+        actor.send({ type: 'VERIFY_PA_APPROVED_SMS', portal: 'patient' });
+        actor.send({ type: 'VERIFY_PA_APPROVED_OTP', portal: 'patient' });
         actor.send({
           type: 'SELECT_PHARMACY',
           portal: 'patient',

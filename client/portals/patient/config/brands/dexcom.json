@@ -1,0 +1,50 @@
+{
+  "presetName": "Dexcom",
+  "data": {
+    "manufacturer": {
+      "name": "Dexcom",
+      "tagline": "Your self-start journey with Dexcom G7",
+      "logo": {
+        "colors": "/.netlify/functions/serve-upload/1790804267399-dexcom_logo_green_137d00.png",
+        "white": "/.netlify/functions/serve-upload/1790804275341-dexcom_logo_white.png",
+        "requiresFilter": false
+      },
+      "support": {
+        "label": "",
+        "phone": ""
+      },
+      "legal": {
+        "privacyUrl": "#",
+        "termsUrl": "#",
+        "safetyUrl": "#",
+        "prescribingUrl": "#"
+      },
+      "copyright": ""
+    },
+    "program": {
+      "name": "Dexcom G7",
+      "drugDisplayName": "",
+      "description": "15 Day",
+      "dosageForm": "",
+      "logo": {
+        "colors": "/.netlify/functions/serve-upload/1790807458690-dexcom_g7_color_transparent.png",
+        "white": "/.netlify/functions/serve-upload/1790807467112-dexcom_g7_white_transparent.png",
+        "requiresFilter": false
+      },
+      "colors": {
+        "primary": "#137d00",
+        "primaryDark": "#000000",
+        "primaryLight": "#FFFFFF",
+        "primaryWash": "#f5f5f5"
+      },
+      "educationVideo": {
+        "title": "",
+        "description": "",
+        "thumbnail": "",
+        "embedUrl": ""
+      }
+    },
+    "chatbotIcon": "/.netlify/functions/serve-upload/1790804332397-482GS01.svg",
+    "favicon": "/.netlify/functions/serve-upload/1790804320440-favicon-196x196.io_v1_static_favicon-196x196.png"
+  }
+}

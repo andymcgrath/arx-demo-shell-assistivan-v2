@@ -1,38 +1,16 @@
 import { setup, assign } from "xstate";
 import type { MachineContext, DemoEvent, Pharmacy, WorkflowData } from "@/engine/types";
 
-// coaCopay.ts — CoAssist Copay Program (WF4)
-//
-// Started as a direct copy of client/workflows/coaDtp.ts (WF3/CoA_DTP) — see
-// git history — and has now diverged at the pricing step. CoA_DTP's Copay
-// option is a third mutually-exclusive pricing tier (enroll → straight to
-// pricingSelected with a dedicated "CoAssist Pharmacy"). Here, Copay is no
-// longer mutually exclusive with Retail/Mail: enrolling (SELECT_SELF_PAY)
-// only sets copayEnrolled and parks in the new `copayEnrolled` state below —
-// the patient still has to pick Retail or Mail Order as the real fulfillment
-// channel afterward (SELECT_PRICING_OPTION), same as picking one directly
-// from paApprovedOtpVerified. Every other state below this point is
-// unchanged from coaDtp.ts.
-
 // Full contact details (not just a name) so the CRM's shared "Triage
 // Pharmacy Details" card — reused from WF1's Dispatch to Triage stage, see
 // Index.tsx's STAGES_LIVE — doesn't render blank address/phone fields for
-// CoA_Copay cases.
-//
-// RETAIL_PHARMACY is only a placeholder here — the instant the patient picks
-// Retail, PharmacySelection.tsx dispatches SELECT_PHARMACY with their actual
-// choice, overwriting this. It's kept in sync with that screen's CVS entry
-// (same Orlando, FL address as Keanu Dixon's home — see PATIENT_SEED in
-// patientStore.ts — matching coaDtp.ts's SELF_PAY_PHARMACY convention) so
-// nothing looks inconsistent in the sliver of time before that dispatch
-// fires. MAIL_ORDER_PHARMACY is untouched — Mail Order never routes through
-// PharmacySelection.tsx (ships from a distribution center, not somewhere
-// Keanu drives to), so there's no local-address expectation for it.
-const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" };
+// CoA_DTP cases.
+const RETAIL_PHARMACY: Pharmacy = { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" };
 const MAIL_ORDER_PHARMACY: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
+const SELF_PAY_PHARMACY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 const INITIAL_WORKFLOW_DATA: WorkflowData = {
-  flowType: "CoA_Copay",
+  flowType: "CoA_DTP",
   enrollmentStatus: "none",
   smsVerified: false,
   otpVerified: false,
@@ -63,6 +41,8 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   dmeProviderTransferStatus: "none",
   pharmacyBenefitStatus: "none",
   medicalBenefitStatus: "none",
+  pharmacyCoverageSmsSent: false,
+  pharmacyCoverageSmsVerified: false,
   cashOfferSmsSent: false,
   cashOfferSmsVerified: false,
   dmeTransferSmsSent: false,
@@ -78,7 +58,10 @@ const initialContext: MachineContext = {
 // Mirrors workflowMachine.ts's createEvent exactly — every transition below
 // appends one of these to context.events, which is the only thing Field
 // Portal's email notifications (getGeneratedEmails, WorkflowEngine.ts) read
-// from.
+// from. Before this, none of CoA_DTP's transitions touched context.events
+// at all (every action only ever assigned workflowData), so events stayed
+// permanently empty and the Field Portal inbox looked empty for the entire
+// WF3 flow no matter how far the demo progressed.
 const createEvent = (
   context: MachineContext,
   eventType: string,
@@ -94,7 +77,7 @@ const createEvent = (
   createdAt: new Date().toISOString(),
 });
 
-export const coaCopayMachine = setup({
+export const coaDtpMachine = setup({
   types: {
     context: {} as MachineContext,
     events: {} as
@@ -124,7 +107,7 @@ export const coaCopayMachine = setup({
       | { type: "RESET" },
   },
 }).createMachine({
-  id: "coaCopay",
+  id: "coaDtp",
   context: initialContext,
   initial: "idle",
   on: {
@@ -183,7 +166,7 @@ export const coaCopayMachine = setup({
     //
     // All three events are guarded so a stray re-dispatch (e.g. a demo
     // operator manually firing one again) can't stomp an already-running/
-    // complete/submitted result. Mirrors coaDtp.ts exactly.
+    // complete/submitted result.
     enrolled: {
       on: {
         VERIFY_SMS: {
@@ -358,7 +341,7 @@ export const coaCopayMachine = setup({
     // derivePatientRoute (WorkflowEngine.ts) has already forced them through
     // consent first (it checks consentStatus before ever looking at
     // paStatus), so consentStatus is always confirmed by then regardless of
-    // how far ahead PA raced. Mirrors coaDtp.ts exactly.
+    // how far ahead PA raced.
     paSubmitted: {
       on: {
         APPROVE_PA: {
@@ -368,9 +351,9 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'APPROVE_PA', 'provider', 9)],
           }),
         },
-        // Kept for demo flexibility — like CoA_DTP, CoA_Copay's live flow
-        // always approves (see CRM Index.tsx), but the denial → cash-offer
-        // chain below is still fully wired if a future scenario needs it.
+        // Kept for demo flexibility — CoA_DTP's live flow always approves
+        // (see CRM Index.tsx), but the denial → cash-offer chain below is
+        // still fully wired if a future scenario needs it.
         DENY_PA: {
           target: "paDenied",
           actions: assign({
@@ -466,45 +449,21 @@ export const coaCopayMachine = setup({
           }),
         },
         // Third option on Benefit Pricing — patient applies to the CoAssist
-        // Copay Program instead of picking Retail/Mail directly. Unlike
-        // coaDtp.ts, this does NOT assign a pharmacy or leave
-        // paApprovedOtpVerified for pricingSelected — enrolling only unlocks
-        // the reduced price and parks in `copayEnrolled` below, still
-        // waiting on the patient to pick Retail or Mail Order as the actual
-        // fulfillment channel. pricingOption/selectedPharmacy stay null
-        // until that pick happens.
+        // Copay Program instead of picking Retail/Mail. Enrollment just
+        // records the choice (unlocks the reduced price) — it is NOT
+        // payment. It joins the same pricingSelected state Retail/Mail use,
+        // so it goes through the identical address/date flow; the actual
+        // charge happens later at the payment step (PATIENT_PAYS/
+        // VERIFY_PAYMENT, handled below in pricingSelected).
         SELECT_SELF_PAY: {
-          target: "copayEnrolled",
-          actions: assign({
-            workflowData: ({ context }) => ({ ...context.workflowData, copayEnrolled: true }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
-          }),
-        },
-      },
-    },
-    // Reached only via SELECT_SELF_PAY above (Copay enrollment) — the
-    // patient is enrolled (copayEnrolled: true, see WorkflowEngine's
-    // derivePatientRoute: pricingOption is still null here, so it correctly
-    // routes back to /benefit-pricing, now showing only Retail/Mail Order at
-    // the discounted Copay rates — see BenefitPricing.tsx's isCopayWorkflow
-    // branch). SELECT_PRICING_OPTION here reuses the exact same event
-    // Retail/Mail dispatch directly from paApprovedOtpVerified, just from a
-    // different state, and lands in the same pricingSelected state they'd
-    // reach either way — copayEnrolled carries forward via the ...context
-    // spread below, so DeliveryDate.tsx's skipPayment and CRM Index.tsx's
-    // Cash Offer label can still tell a direct Retail/Mail pick apart from
-    // an enrolled-then-picked one.
-    copayEnrolled: {
-      on: {
-        SELECT_PRICING_OPTION: {
           target: "pricingSelected",
           actions: assign({
-            workflowData: ({ context, event }) => ({
+            workflowData: ({ context }) => ({
               ...context.workflowData,
-              pricingOption: event.option,
-              selectedPharmacy: event.option === "retail" ? RETAIL_PHARMACY : MAIL_ORDER_PHARMACY,
+              pricingOption: "self_pay",
+              selectedPharmacy: SELF_PAY_PHARMACY,
             }),
-            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_PRICING_OPTION', 'patient', 9)],
+            events: ({ context }) => [...context.events, createEvent(context, 'SELECT_SELF_PAY', 'patient', 9)],
           }),
         },
       },
@@ -568,8 +527,8 @@ export const coaCopayMachine = setup({
             events: ({ context }) => [...context.events, createEvent(context, 'SEND_CASH_OFFER', 'crm', 9)],
           }),
         },
-        // Unreachable in the live flow today (CoA_Copay always approves —
-        // see CRM Index.tsx), but kept in step with paSubmitted/paApproved's
+        // Unreachable in the live flow today (CoA_DTP always approves — see
+        // CRM Index.tsx), but kept in step with paSubmitted/paApproved's
         // same additions above for demo-flexibility consistency, in case a
         // denial scenario is ever exercised while consent is still pending.
         VERIFY_SMS: {
@@ -729,7 +688,7 @@ export const coaCopayMachine = setup({
     // Mirrors workflowMachine.ts's order sub-machine exactly: processing →
     // ready → shipped → delivered. The Pharmacy Status (PS-14278) tab's
     // "Advance Pharmacy Status" panel — shared verbatim between WF1 and
-    // CoA_Copay — dispatches READY_RX from its "Mark as Received at Pharmacy"
+    // CoA_DTP — dispatches READY_RX from its "Mark as Received at Pharmacy"
     // button, so this step is required, not optional.
     rxProcessing: {
       on: {
