@@ -10,7 +10,7 @@ import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
 // WorkflowEngine.ts's derivePatientRoute — this is the real terminal route).
 export default function DmeProviderTransfer() {
   return (
-    <main className="flex-grow flex items-center justify-center px-6 py-6 bg-arx-primary">
+    <main className="flex-grow min-h-full flex items-center justify-center px-6 py-6 bg-arx-primary">
       <div className="text-center max-w-sm mx-auto">
         <h1 className="text-xl font-bold text-white mt-0 mb-3 leading-snug">
           You're all set!

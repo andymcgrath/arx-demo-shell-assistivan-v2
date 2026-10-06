@@ -99,7 +99,7 @@ export default function MedicationDelivered() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                {isDmeNetworkPharmacyFlow ? `Your ${drugName} is ready at the pharmacy` : "Your medication has arrived!"}
+                {isDmeNetworkPharmacyFlow ? `Your ${drugName} has been sent to the pharmacy.` : "Your medication has arrived!"}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
                 <span className="text-xl">{isDmeNetworkPharmacyFlow ? "📍" : "🚚"}</span>
@@ -108,7 +108,6 @@ export default function MedicationDelivered() {
 
             {isDmeNetworkPharmacyFlow ? (
               <>
-                <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">Pick it up anytime during pharmacy hours.</p>
                 <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
                   Before you start, review the step-by-step guide to learn how to insert your sensor and get connected.
                 </p>
