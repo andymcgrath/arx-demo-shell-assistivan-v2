@@ -36,6 +36,22 @@ export default function MedicationDelivered() {
   const isIAssistPap = workflowData.flowType === 'iAssist_PAP';
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
+  // CoA_DME Scenario 1 only (pharmacy covered, medical not) — this is the
+  // same condition as crm/pages/Index.tsx's isDmeRetailFlow. The Rx never
+  // ships to the patient at all in this outcome — it's picked up at
+  // whichever network pharmacy the patient chose on
+  // NetworkPharmacySelection.tsx (see coaDme.ts's header comment) — so the
+  // generic "Your medication has arrived!" card below (written for a home
+  // delivery) doesn't describe what actually happened here. This flow's own
+  // terminal screen instead focuses on getting the patient set up with the
+  // Dexcom G7 sensor itself, not on a package that was never shipped to
+  // them.
+  const isDmeNetworkPharmacyFlow =
+    workflowData.flowType === 'CoA_DME' &&
+    workflowData.pharmacyBenefitStatus === 'covered' &&
+    workflowData.medicalBenefitStatus !== 'covered';
+  const drugName = PROGRAM.drugDisplayName || PROGRAM.name;
+
   return (
     <main className="flex-grow pt-5 pb-8 relative">
         <div className="max-w-lg mx-auto px-4 space-y-5">
@@ -82,16 +98,29 @@ export default function MedicationDelivered() {
             </div>
 
             <div className="flex items-start justify-between gap-3 mb-3">
-              <h2 className="text-xl font-bold leading-snug text-arx-slate">Your medication has arrived!</h2>
+              <h2 className="text-xl font-bold leading-snug text-arx-slate">
+                {isDmeNetworkPharmacyFlow ? `Your ${drugName} is ready at the pharmacy` : "Your medication has arrived!"}
+              </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
-                <span className="text-xl">🚚</span>
+                <span className="text-xl">{isDmeNetworkPharmacyFlow ? "📍" : "🚚"}</span>
               </div>
             </div>
 
-            <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">It's time to get ready for your first dose.</p>
-            <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-              Before starting, review the step-by-step guide to learn how to store, prepare, and take Assistivan safely.
-            </p>
+            {isDmeNetworkPharmacyFlow ? (
+              <>
+                <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">Pick it up anytime during pharmacy hours.</p>
+                <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
+                  Before you start, review the step-by-step guide to learn how to insert your sensor and get connected.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">It's time to get ready for your first dose.</p>
+                <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
+                  Before starting, review the step-by-step guide to learn how to store, prepare, and take {drugName} safely.
+                </p>
+              </>
+            )}
 
             <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">
               <span>Review guide</span>
@@ -190,7 +219,7 @@ export default function MedicationDelivered() {
                 className="w-full h-40 object-cover"
               />
               <div className="p-5">
-                <h4 className="text-lg font-bold mb-2 text-arx-slate">What makes Assistivan different?</h4>
+                <h4 className="text-lg font-bold mb-2 text-arx-slate">What makes {drugName} different?</h4>
                 <p className="text-sm leading-relaxed mb-4 text-arx-body-copy">
                   We know everybody has a unique journey and experience — but sometimes it helps to hear from someone like you.
                 </p>

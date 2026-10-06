@@ -3084,6 +3084,31 @@ export default function Index() {
                           Pharmacy assigned — ready to dispatch
                         </span>
                       </div>
+                    ) : isDmeRetailFlow ? (
+                      // CoA_DME Scenario 1 — the patient picks their own
+                      // network pharmacy on NetworkPharmacySelection.tsx
+                      // (SELECT_PHARMACY, only valid once the PA chain
+                      // reaches paApprovedOtpVerified — see coaDme.ts), not
+                      // the CRM agent. The generic "Choose Pharmacy" button
+                      // below let an agent pick one from here instead — but
+                      // the machine isn't in a state that accepts
+                      // SELECT_PHARMACY that early (e.g. right after a
+                      // "Reset to Pharmacy Coverage Confirmed," before the PA
+                      // chain has run), so the click silently did nothing and
+                      // left this section blank for the rest of the case.
+                      // Kept as a real (disabled) button rather than swapped
+                      // out for plain text — same slot, same shape as the
+                      // generic branch below, just inert — so the form
+                      // visibly stays prepopulated from the patient's own
+                      // selection (Triage Pharmacy Details, left column)
+                      // without implying there's a CRM action left to take.
+                      <button
+                        disabled
+                        title={selectedPharmacy ? "Already selected by the patient — nothing to do here." : "The patient selects their own pharmacy on this flow; this isn't an available CRM action."}
+                        className="w-full px-4 py-2 rounded text-[13px] font-semibold text-[#9a9a9a] bg-[#f3f3f3] border border-[#dddbda] cursor-not-allowed"
+                      >
+                        {selectedPharmacy ? "Pharmacy selected by patient" : "Awaiting pharmacy selection by patient"}
+                      </button>
                     ) : (
                       <button
                         onClick={() => setPharmacyModalOpen(true)}

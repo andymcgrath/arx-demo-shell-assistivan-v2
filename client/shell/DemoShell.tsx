@@ -1671,14 +1671,18 @@ export default function DemoShell() {
                       { stage: 6, label: "Rx Shipped" },
                       { stage: 7, label: "Medication Delivered" },
                     ]
-                    // CoA_DME has no Prior Authorization step at all, in any
-                    // of its 3 outcomes (see workflows/coaDme.ts) — its own
-                    // list, not the generic one below, so this dropdown
-                    // never mislabels stage 4 as "Prior Authorization".
-                    // Stage 4 defaults to Scenario 1 (Pharmacy Coverage) via
-                    // resetActorToStage's own isDmeFlow branch above; the
-                    // BIR-0431 toggle buttons in crm/pages/Index.tsx are the
-                    // real way to reach Scenario 2/3 instead.
+                    // CoA_DME's own list, not the generic one below — its
+                    // own machine (coaDme.ts) takes
+                    // pharmacyBenefitStatus/medicalBenefitStatus on
+                    // COMPLETE_BI instead of a bare result, so the generic
+                    // block below would silently do nothing. Only Scenario 1
+                    // (pharmacy covered, medical not) ever submits a real PA
+                    // — Scenarios 2/3 still never do — see workflows/
+                    // coaDme.ts's header comment. Stage 4 defaults to
+                    // Scenario 1 (Pharmacy Coverage) via resetActorToStage's
+                    // own isDmeFlow branch above; the BIR-0431 toggle buttons
+                    // in crm/pages/Index.tsx are the real way to reach
+                    // Scenario 2/3 instead.
                     : isDmeFlow
                     ? [
                       { stage: 1, label: "Referral Received" },
@@ -1686,13 +1690,18 @@ export default function DemoShell() {
                       { stage: 3, label: "Benefits Investigation" },
                       // Matches resetActorToStage's own isDmeFlow branch
                       // above exactly — stage 4 defaults to Scenario 1
-                      // (Pharmacy Coverage) via replayDmeToBiComplete(). No
-                      // pricing/address/date step at all anymore (see
-                      // coaDme.ts's header comment) — stage 5 sends the
-                      // second SMS milestone and the patient's network
-                      // pharmacy pick together.
-                      { stage: 4, label: "Pharmacy Coverage Confirmed" },
-                      { stage: 5, label: "Pharmacy Selected" },
+                      // (Pharmacy Coverage) via replayDmeToBiComplete(), but
+                      // only resolves BI — it does NOT yet submit/approve the
+                      // PA (see crm/pages/Index.tsx's own isDmeFlow-scoped
+                      // SUBMIT_PA effect, which fires once this component
+                      // mounts, and PA-14274's existing tab-open auto-approve
+                      // effect, which still needs that tab opened manually).
+                      // Stage 5 sends the whole PA chain (SUBMIT_PA ->
+                      // APPROVE_PA -> VERIFY_PA_APPROVED_SMS ->
+                      // VERIFY_PA_APPROVED_OTP) and the patient's network
+                      // pharmacy pick together in one jump.
+                      { stage: 4, label: "Pharmacy Coverage Confirmed (PA not yet submitted)" },
+                      { stage: 5, label: "PA Approved & Pharmacy Selected" },
                       { stage: 6, label: "Rx Processing" },
                       { stage: 7, label: "Rx Shipped" },
                       { stage: 8, label: "Medication Delivered" },
