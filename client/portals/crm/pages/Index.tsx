@@ -2753,6 +2753,15 @@ export default function Index() {
                         <FieldRow label="Reimbursement Plan" value={pharmacyBenefitStatus === "covered" ? "Standard" : ""} />
                         <FieldRow label="Sub-Status" value={pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
                         <FieldRow label="Insured?" value={pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
+                        {/* Scenario 1 only (pharmacy covered, medical not) —
+                            see coaDme.ts's biComplete SUBMIT_PA guard and
+                            this component's own isDmeFlow-scoped SUBMIT_PA
+                            effect, which use this exact condition. Medical
+                            covered always wins (Scenario 2), so a pharmacy
+                            benefit that's merely "covered" alongside a
+                            covered medical benefit still never submits a
+                            PA. */}
+                        <FieldRow label="PA Required?" value={pharmacyBenefitStatus === "covered" && medicalBenefitStatus !== "covered" ? "Yes" : "No"} />
                       </div>
                     </div>
                   </div>
@@ -2806,7 +2815,10 @@ export default function Index() {
                       </div>
                       <div className="px-3 py-2 border-b border-[#dddbda]">
                         <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                        <div className="text-[13px] text-[#3e3e3c]">No</div>
+                        {/* Same Scenario-1-only condition as the Pharmacy
+                            Benefits section's own PA Required? row above —
+                            see that FieldRow's comment. */}
+                        <div className="text-[13px] text-[#3e3e3c]">{pharmacyBenefitStatus === "covered" && medicalBenefitStatus !== "covered" ? "Yes" : "No"}</div>
                       </div>
                     </div>
                   </div>
