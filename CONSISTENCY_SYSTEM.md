@@ -1,5 +1,7 @@
 # Global Consistency System
 
+> **Note:** describes the pre-XState architecture. State now lives in the XState actor, not a single `demoStore` — see `ARCHITECTURE.md` for the current shape. The request/Q&A process below is still valid.
+
 **Your Core Principle:** *Stages and Global data with dynamic variables—users can click any navigation tab without the experience being out of sync.*
 
 This system ensures every feature maintains that principle automatically.

@@ -1,5 +1,7 @@
 # Consistency System - Complete Documentation Index
 
+> **Note:** this index and the three docs it points to describe the pre-XState architecture (a single `demoStore` holding all workflow data). State now lives in the XState actor — see `ARCHITECTURE.md` for the current shape. The request workflow itself (`[CONSISTENCY] Feature: ...`) is still valid; the code samples underneath it are not.
+
 **Your Core Principle:** *Stages and Global data with dynamic variables—users can click any navigation tab without the experience being out of sync.*
 
 ---

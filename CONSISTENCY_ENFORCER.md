@@ -1,5 +1,7 @@
 # Consistency Enforcer
 
+> **Note:** the "Architecture: Separation of Concerns" section below (single `demoStore` global, `_deriveStep`, `_snapshot`, `_logEvent`) and the `initializePatientAndRx()` worked example describe the pre-XState architecture and don't match the current code. State now lives in the XState actor — see `ARCHITECTURE.md` for the current shape. The consistency checklist and review questions are still useful; the code samples are historical.
+
 **Core Principle:** *Stages and Global data with dynamic variables—users can click any navigation tab without the experience being out of sync.*
 
 ---

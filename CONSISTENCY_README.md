@@ -1,5 +1,7 @@
 # ⚡ Quick Start: Consistency System
 
+> **Note:** the `[CONSISTENCY] Feature:` request workflow below is still the right way to ask for a new cross-portal feature. The code examples throughout this doc set (a single `demoStore` holding all patient/Rx/status data, `_deriveStep()`, `_snapshot()`, `_logEvent()`, `initializePatientAndRx()`) describe the architecture from before the XState migration, though, and no longer match the code. State now lives in the XState actor, not `demoStore` — see `ARCHITECTURE.md` for the current shape. Read this for the request *process*, not for the literal store shape.
+
 Your app has a core principle: **Users can click any tab without the experience being out of sync.**
 
 This guide ensures every feature maintains that.

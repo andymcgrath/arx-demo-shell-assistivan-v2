@@ -1,5 +1,7 @@
 # Order Store Architecture
 
+> **Historical note:** this document describes an intermediate refactor where order/pharmacy state lived in its own Zustand `orderStore`, separate from `demoStore`. That store no longer exists. Order and pharmacy fields (`pharmacyStatus`, `dispatchStatus`, `selectedPharmacy`, and so on) now live directly in the XState actor's `WorkflowData`, alongside every other workflow field. See `ARCHITECTURE.md` for the current state model. Kept here for the project-history context on why order state was split out of the main store in the first place.
+
 ## Overview
 
 This refactoring separates **pharmacy/order state management** from **clinical workflow state**, eliminating fragility in the patient portal navigation system.
