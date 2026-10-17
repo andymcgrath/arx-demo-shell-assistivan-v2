@@ -35,6 +35,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 - Machine tests live in `client/engine/__tests__/`. They drive machines with event lists and assert on `workflowData`, emitted events, and `derivePatientRoute()`. Do not assert on internal state names.
 - Expected output lives in `__fixtures__/*.json`. If behavior changes on purpose, run `RECORD=1 pnpm test`, review the fixture diff, and commit it with the change. Never record to make a failing test pass without reading the diff.
 - Add or update a scenario in `scenarios.ts` whenever a flow or branch is added.
+- Checkpoint tags: when a refactor step is finished and `pnpm test` and `pnpm typecheck:ratchet` both pass, commit, then tag it `refactor/NN-short-name` (annotated, numbered in order, for example `refactor/01-coassist-machine`). Put the test count and type-error baseline in the tag message. Never tag a red build. To go back, `git switch -c <name> <tag>`.
 - `pnpm typecheck:ratchet` fails if the type-error count rises above `.typecheck-baseline`. Lower the baseline with `--update` whenever the count drops. At zero, switch to plain `pnpm typecheck`.
 
 ## Brand and deploy rules
