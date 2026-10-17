@@ -33,20 +33,9 @@ export const PROGRAM = activeBrand.program;
 
 export const CHATBOT_ICON = activeBrand.chatbotIcon;
 
-export const FAVICON = activeBrand.favicon ?? "";
 
-// Push PROGRAM.colors into the --arx-primary* CSS variables, and swap the
-// browser tab icon to the brand favicon (falls back to the static
-// /favicon.svg in index.html when none is set).
+// Push PROGRAM.colors into the --arx-primary* CSS variables. The favicon is set at build time
+// (see brandFaviconPlugin in vite.config.ts).
 if (typeof document !== "undefined") {
   applyBrandCssVars(PROGRAM.colors);
-  if (FAVICON) {
-    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
-    link.href = FAVICON;
-  }
 }

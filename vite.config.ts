@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import fs from "fs";
@@ -15,8 +15,20 @@ if (!fs.existsSync(brandFile)) {
 }
 const brand = JSON.parse(fs.readFileSync(brandFile, "utf8"));
 
+/** Puts the brand favicon in the HTML at build time. Falls back to public/favicon.png. */
+function brandFaviconPlugin(favicon: string | undefined): Plugin {
+  return {
+    name: "brand-favicon",
+    transformIndexHtml(html) {
+      if (!favicon) return html;
+      const type = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
+      return html.replace(/<link rel="icon"[^>]*>/, `<link rel="icon" type="${type}" href="${favicon}" />`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), brandFaviconPlugin(brand.favicon)],
   define: { __BRAND__: JSON.stringify(brand) },
   resolve: {
     alias: {
