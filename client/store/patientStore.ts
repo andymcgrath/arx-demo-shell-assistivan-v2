@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { BRAND } from '@/brand';
+import { DEFAULT_FLOW } from '@/brand';
+import { personaFor } from '@/workflows/persona';
 
 export interface PatientIdentity {
   patientName: string;
@@ -48,36 +49,9 @@ export interface PatientIdentity {
   healthConditions: string;
 }
 
-// drugName is the one piece of brand data that every portal shares (CRM, Provider,
-// iAssist, Patient). It comes from the active brand, bundled at build time.
-const ACTIVE_DRUG_NAME = BRAND.program.drugDisplayName || BRAND.program.name;
-const ACTIVE_DOSAGE_FORM = BRAND.program.dosageForm ?? "";
-
-export const PATIENT_SEED: PatientIdentity = {
-  patientName: "Keanu Dixon",
-  patientDob: "09/02/1964",
-  drugName: ACTIVE_DRUG_NAME,
-  rxNumber: "40002500",
-  phone: "(555) 310-4200",
-  email: "keanu.dixon@email.com",
-  payer: "Commercial",
-  caseNumber: "00056249",
-  npi: "1234567890",
-  deliveryAddress: "123 Main Street, Orlando, FL 32801",
-  preferredMethodOfContact: "Text",
-  dosageForm: ACTIVE_DOSAGE_FORM,
-  gender: "Male",
-  phoneType: "Cell",
-  preferredLanguage: "English",
-  householdSize: "2",
-  householdIncome: "$62,000",
-  memberId: "HQK883883ZZ88",
-  rxBin: "003858",
-  rxPcn: "A4",
-  rxGroup: "RX4471",
-  currentMedications: "Lisinopril 10mg once daily, Atorvastatin 20mg once daily",
-  healthConditions: "Hypertension, Hyperlipidemia",
-};
+// The starting patient. The persona is scenario data (client/workflows/persona.ts). The drug name
+// and dosage form come from the brand. Every flow shares one persona today.
+export const PATIENT_SEED: PatientIdentity = personaFor(DEFAULT_FLOW);
 
 interface PatientStore extends PatientIdentity {
   reset: () => void;

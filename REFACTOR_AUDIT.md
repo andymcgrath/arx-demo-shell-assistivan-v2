@@ -131,6 +131,13 @@ Not done yet:
 - On the default brand the text is unchanged. Other brands now read their own drug name. Copy such as "Copay Program" is still the Assistivan wording with the drug name swapped in. Check Dexcom and TG screens for text that reads wrong.
 - Still open: patient name, DOB and other identity data live in `patientStore` and `PATIENT_SEED`. The audit wants them in the scenario file. That is a separate step.
 
+### Step 12: patient identity is scenario data (tag `refactor/12-scenario-identity`)
+
+- The patient (Keanu Dixon and the rest) moved out of `patientStore.ts` into `client/workflows/persona.ts` as `DEFAULT_PERSONA`. `ScenarioDefinition` has an optional `patient` field that overrides single fields. `personaFor(flowType)` returns the shared persona, then the override, then the drug and dosage from the brand. A scenario cannot set the drug.
+- `client/workflows/scenarios.ts` lists every scenario. A test checks each tested flow has one.
+- `PATIENT_SEED` is now `personaFor(DEFAULT_FLOW)`. Nothing changes on screen. No scenario overrides a field yet.
+- Not done, on purpose: per-scenario patients at runtime. About ten files still read `PATIENT_SEED` as a load-time constant (`caseWizardStore`, `samplePatients`, Provider lists, the iAssist dashboard). They need to read the store or the active scenario before an override can take effect. The sample rosters in `samplePatients.ts` and the Provider portal still hold their own names.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

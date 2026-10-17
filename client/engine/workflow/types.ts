@@ -2,6 +2,34 @@ import type { FlowType, WorkflowData } from "@/engine/types";
 
 export type Portal = "crm" | "patient" | "provider" | "analytics" | "field";
 
+/**
+ * The patient a scenario starts with. Drug name and dosage form are not here: they come from the brand.
+ * Every flow shares one patient today. A scenario overrides single fields through `patient`.
+ */
+export interface PatientPersona {
+  patientName: string;
+  patientDob: string;
+  rxNumber: string;
+  phone: string;
+  email: string;
+  payer: string;
+  caseNumber: string;
+  npi: string;
+  deliveryAddress: string;
+  preferredMethodOfContact: string;
+  gender: string;
+  phoneType: string;
+  preferredLanguage: string;
+  householdSize: string;
+  householdIncome: string;
+  memberId: string;
+  rxBin: string;
+  rxPcn: string;
+  rxGroup: string;
+  currentMedications: string;
+  healthConditions: string;
+}
+
 /** A scenario is data: starting values plus content (pharmacies, prices, labels). */
 export interface ScenarioDefinition<Content = unknown> {
   flowType: FlowType;
@@ -15,6 +43,8 @@ export interface ScenarioDefinition<Content = unknown> {
   legacy?: boolean;
   /** Starting values that differ from the shared defaults. */
   initialData?: Partial<WorkflowData>;
+  /** Patient fields that differ from the shared persona. */
+  patient?: Partial<PatientPersona>;
   /** Scenario-specific content that rules read. */
   content: Content;
 }
