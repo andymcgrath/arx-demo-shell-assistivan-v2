@@ -50,7 +50,13 @@ export default async (req: Request) => {
       const store = uploadsStore();
       for (const asset of body.assets) {
         const base64 = asset.dataUrl.split(",")[1] ?? asset.dataUrl;
-        await store.set(asset.filename, Buffer.from(base64, "base64"), {
+        // Blobs' BlobInput type wants a plain ArrayBuffer, not a Buffer view.
+        const buffer = Buffer.from(base64, "base64");
+        const bytes = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        ) as ArrayBuffer;
+        await store.set(asset.filename, bytes, {
           metadata: { contentType: asset.contentType ?? "application/octet-stream" },
         });
       }

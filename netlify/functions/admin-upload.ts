@@ -30,7 +30,12 @@ export default async (req: Request) => {
     const buffer = Buffer.from(base64, "base64");
     const filename = safeFilename(body.filename);
 
-    await uploadsStore().set(filename, buffer, { metadata: { contentType } });
+    // Blobs' BlobInput type wants a plain ArrayBuffer, not a Buffer view.
+    const bytes = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength,
+    ) as ArrayBuffer;
+    await uploadsStore().set(filename, bytes, { metadata: { contentType } });
 
     return json(200, { url: servedUploadUrl(filename), filename });
   } catch (err) {
