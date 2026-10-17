@@ -6,9 +6,7 @@
  */
 
 import { workflowMachine } from "@/engine/workflowMachine";
-import { coaDtpMachine } from "@/workflows/coaDtp";
-import { coaCopayMachine } from "@/workflows/coaCopay";
-import { coaDmeMachine } from "@/workflows/coaDme";
+import { coassistMachine } from "@/workflows/coassist";
 import { iAssistMachine } from "@/workflows/iAssist";
 import { iAssistPapMachine } from "@/workflows/iAssistPap";
 import { presPapMachine } from "@/workflows/presPap";
@@ -50,17 +48,17 @@ workflowRegistry.registerWorkflow("enrollment", workflowMachine, {
   description: "Standard enrollment with fax QS and PA approval",
 });
 
-workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
+workflowRegistry.registerWorkflow("CoA_DTP", coassistMachine, {
   label: "COA Direct to Patient",
   description: "Cash-pay direct-to-patient workflow via CoAssist",
 });
 
-workflowRegistry.registerWorkflow("CoA_Copay", coaCopayMachine, {
+workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, {
   label: "CoAssist Copay",
   description: "CoAssist Copay Program variation — currently a direct copy of CoA_DTP (WF3), pending its own divergent behavior",
 });
 
-workflowRegistry.registerWorkflow("CoA_DME", coaDmeMachine, {
+workflowRegistry.registerWorkflow("CoA_DME", coassistMachine, {
   label: "CoAssist DME (Medical Benefit)",
   description: "Commercial medical-benefit DME coverage — transfers to an outside DME provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
 });

@@ -71,7 +71,8 @@ export function withFrozenClock<T>(fn: () => T): T {
 export function startFlow(flowType: FlowType) {
   const machine = workflowRegistry.getWorkflow(machineIdForFlow(flowType));
   if (!machine) throw new Error(`No machine registered for ${flowType}`);
-  const actor = createActor(machine);
+  // Same input actorSingleton passes. Machines that take no input ignore it.
+  const actor = createActor(machine, { input: { flowType } } as any);
   actor.start();
   // Same correction actorSingleton sends for the shared "enrollment" machine.
   if (machineIdForFlow(flowType) === "enrollment") {

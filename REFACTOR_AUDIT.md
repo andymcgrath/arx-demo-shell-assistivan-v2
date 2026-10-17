@@ -2,6 +2,24 @@
 
 Audited on `main` (same commit as `Refactor`), 17 Oct 2026. Numbers come from the repo, not estimates. Read-only audit: no code changed.
 
+## Progress
+
+### Step 01: CoAssist on the factory (tag `refactor/01-coassist-machine`)
+
+Three machines (2,305 lines) became one rules table (`workflows/coassist/rules.ts`, 284 lines), three scenarios as data (48 lines), and a generic factory that every other workflow can reuse (`engine/workflow/`, 202 lines). CoAssist now totals 347 lines. Verification: all golden-path, undo, reset, and email fixtures recorded from the OLD machines pass unchanged against the new one. A second set of fixtures, the presenter's jump-to-stage replays, was recorded at `refactor/00-baseline` and also passes. New ordering tests (rule 12) fail when preconditions are weakened. Type errors stayed at 198.
+
+Intentional differences from the old machines (none visible in the fixtures, all in edge cases):
+
+- The machine has one state. Preconditions read `workflowData`. No code read the old state names.
+- Onboarding events (SMS, OTP, consent) are accepted until done, in any order BI and PA are in. The old machines accepted them only up to the PA-approved sub-step.
+- Repeat events are ignored (a second `RUN_BI`, `PATIENT_PAYS`, `VERIFY_PAYMENT`, address, or ENROLL). The old machines re-fired some of them and appended duplicate log entries.
+- DME: the cash-offer SMS goes out whenever BI completes with neither benefit covered. The old machine sent it only if the machine happened to be in its BI-complete node, so a BI that finished before the patient's onboarding missed it.
+- Snapshots saved in sessionStorage by the old machines cannot restore, so the snapshot key moved to `-v2` and a failed restore now starts fresh. Open demo sessions reset once.
+
+Still true, pinned as-is: the three CoAssist flows do not support Undo, and the DME jump-to-stage menu never advances past stage 6, because it sends `SHIP_RX` without `READY_RX`. Stage 7 and 8 are ignored. That is an existing bug in `resetActorToStage`.
+
+Not yet done for CoAssist: auto-advance timers still run in the CRM React component, preconditions for PA (BI says a PA is required) are not enforced for DTP and Copay, and screen order is still `derivePatientRoute`. Those are the next steps.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

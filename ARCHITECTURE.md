@@ -8,15 +8,14 @@ This document reflects the current architecture. An earlier revision described a
 
 ## Workflow layer: XState machines
 
-**Where:** `client/engine/workflowMachine.ts`, plus one dedicated machine per newer workflow in `client/workflows/`:
+**Where:** `client/engine/workflowMachine.ts`, plus one module per newer workflow in `client/workflows/`:
 
-- `coaDtp.ts` — CoA_DTP
-- `coaCopay.ts` — CoA_Copay
+- `coassist/` (CoA_DTP, CoA_Copay, CoA_DME) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `coaDme.ts` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
 - `iAssist.ts` — iAssist_PA_Approved
 - `iAssistPap.ts` — iAssist_PAP
 - `presPap.ts` — PrES_PAP
 
-`Fax_QS_PA_Approved` and `Fax_PAP_Audit` share `workflowMachine.ts` directly (registry id `"enrollment"`) rather than getting their own file.
+`Fax_QS_PA_Approved` and `Fax_PAP_Audit` share `workflowMachine.ts` directly (registry id `"enrollment"`) rather than getting their own file. The remaining machines migrate to the factory in later steps.
 
 **Responsibility:**
 - Workflow progression and validation
@@ -71,8 +70,9 @@ Registers every machine directly at module load, keyed by a registry id:
 
 ```typescript
 workflowRegistry.registerWorkflow("enrollment", workflowMachine, { ... });
-workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, { ... });
-workflowRegistry.registerWorkflow("CoA_Copay", coaCopayMachine, { ... });
+workflowRegistry.registerWorkflow("CoA_DTP", coassistMachine, { ... });   // one machine, three scenarios
+workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, { ... });
+workflowRegistry.registerWorkflow("CoA_DME", coassistMachine, { ... });
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, { ... });
 workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, { ... });
 workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, { ... });
@@ -129,7 +129,7 @@ const targetRoute = useSelector(
 ## How to add a new workflow
 
 ### 1. Create a machine
-Add `client/workflows/my-workflow.ts`, following the shape of an existing one (`coaDtp.ts` is a good template):
+New workflows follow `client/workflows/coassist/`: a rules table, scenarios as data, and `createWorkflowMachine`. The older hand-written shape below is still what `iAssist.ts`, `iAssistPap.ts`, `presPap.ts`, and `workflowMachine.ts` use until they migrate:
 
 ```typescript
 export interface MyContext {
@@ -187,7 +187,9 @@ UI action (e.g. clicking "Approve PA" in the CRM)
 | File | Purpose |
 |------|---------|
 | `client/engine/workflowMachine.ts` | Shared machine for `Fax_QS_PA_Approved` / `Fax_PAP_Audit` — enrollment + PA + BI + order |
-| `client/workflows/coaDtp.ts`, `coaCopay.ts`, `iAssist.ts`, `iAssistPap.ts`, `presPap.ts` | Dedicated machines, one per remaining workflow |
+| `client/workflows/coassist/` | CoAssist workflow: rules table, three scenarios, one machine |
+| `client/engine/workflow/` | Workflow factory: rule and scenario types, shared initial data, `createWorkflowMachine` |
+| `client/workflows/iAssist.ts`, `iAssistPap.ts`, `presPap.ts` | Dedicated machines, not yet migrated |
 | `client/engine/types.ts` | `FlowType`, `WorkflowData`, `MachineContext` shapes |
 | `client/engine/WorkflowRegistry.ts` | Runtime workflow registration |
 | `client/engine/actorSingleton.ts` | Module-level actor instance, flow switching, snapshot persistence |

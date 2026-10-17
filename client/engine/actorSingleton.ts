@@ -74,7 +74,9 @@ function readPersistedFlowType(): FlowType {
 // Fast in-memory cache; sessionStorage (below) is the durable backing store.
 const actorSnapshots = new Map<FlowType, unknown>();
 
-const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots";
+// v2: the CoAssist machines were rebuilt (refactor step 01), so snapshots saved by the old
+// state-graph machines cannot restore. Bump this whenever a machine's shape changes.
+const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v2";
 
 function readSnapshotStore(): Partial<Record<FlowType, unknown>> {
   try {
@@ -215,9 +217,20 @@ function createActorForFlow(
   // why we never trust a flowType embedded inside the snapshot itself.
   const restoreFrom = snapshot ?? loadPersistedSnapshot(flowType);
 
-  const actor = restoreFrom
-    ? createActor(machine, { snapshot: restoreFrom } as any)
-    : createActor(machine);
+  const freshActor = () => createActor(machine, { input: { flowType } } as any);
+  let actor: ReturnType<typeof createActor>;
+  if (restoreFrom) {
+    try {
+      actor = createActor(machine, { snapshot: restoreFrom } as any);
+    } catch (e) {
+      // A snapshot saved by an older machine shape can fail to restore. Start fresh instead of crashing the demo.
+      console.warn(`[actorSingleton] Could not restore "${flowType}" snapshot, starting fresh`, e);
+      clearPersistedSnapshot(flowType);
+      actor = freshActor();
+    }
+  } else {
+    actor = freshActor();
+  }
   actor.start();
 
   // Keep sessionStorage in sync with every future transition on this actor,

@@ -1,0 +1,105 @@
+[
+  {
+    "stage": 2,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "none",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 3,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "running",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 4,
+    "ignored": [
+      "ENROLL",
+      "VERIFY_SMS",
+      "VERIFY_OTP",
+      "CONFIRM_CONSENT",
+      "RUN_BI"
+    ],
+    "route": "/",
+    "biStatus": "complete",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 5,
+    "ignored": [
+      "ENROLL",
+      "VERIFY_SMS",
+      "VERIFY_OTP",
+      "CONFIRM_CONSENT",
+      "RUN_BI"
+    ],
+    "route": "/order-tracker",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": "retail",
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 6,
+    "ignored": [
+      "ENROLL",
+      "VERIFY_SMS",
+      "VERIFY_OTP",
+      "CONFIRM_CONSENT",
+      "RUN_BI"
+    ],
+    "route": "/order-tracker",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": "retail",
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "processing"
+  },
+  {
+    "stage": 7,
+    "ignored": [
+      "ENROLL",
+      "VERIFY_SMS",
+      "VERIFY_OTP",
+      "CONFIRM_CONSENT",
+      "RUN_BI",
+      "SHIP_RX"
+    ],
+    "route": "/order-tracker",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": "retail",
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "processing"
+  },
+  {
+    "stage": 8,
+    "ignored": [
+      "ENROLL",
+      "VERIFY_SMS",
+      "VERIFY_OTP",
+      "CONFIRM_CONSENT",
+      "RUN_BI",
+      "SHIP_RX",
+      "DELIVER_RX"
+    ],
+    "route": "/order-tracker",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": "retail",
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "processing"
+  }
+]

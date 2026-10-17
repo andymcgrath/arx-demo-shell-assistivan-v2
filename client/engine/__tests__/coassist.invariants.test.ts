@@ -1,0 +1,159 @@
+import { describe, it, expect } from "vitest";
+import type { FlowType } from "@/engine/types";
+import { ctx, runSteps, startFlow, withFrozenClock, type Step } from "./harness";
+
+/**
+ * Ordering rules for the CoAssist workflow (CLAUDE.md rules 11 and 12).
+ * Golden paths only send valid events, so they cannot catch a weakened
+ * precondition. These tests send events at the wrong time and expect them
+ * to be ignored.
+ */
+const COA: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_DME"];
+const PHARMACY = { name: "Test Pharmacy" };
+
+const BI_DTP: Step = { type: "COMPLETE_BI", result: "coverage_found" };
+const bi = (flowType: FlowType, pharmacy: "covered" | "not_covered" = "covered", medical: "covered" | "not_covered" = "not_covered"): Step =>
+  flowType === "CoA_DME"
+    ? { type: "COMPLETE_BI", pharmacyBenefitStatus: pharmacy, medicalBenefitStatus: medical }
+    : BI_DTP;
+
+const everyEvent: Step[] = [
+  { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" },
+  { type: "RUN_BI" }, bi("CoA_DTP"), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "DENY_PA" },
+  { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" },
+  { type: "SELECT_PRICING_OPTION", option: "retail" }, { type: "SELECT_SELF_PAY" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
+  { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
+  { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
+  { type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" },
+  { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_DME_TRANSFER_SMS" }, { type: "VERIFY_CASH_OFFER_SMS" },
+];
+
+const accepts = (actor: ReturnType<typeof startFlow>, step: Step) => actor.getSnapshot().can(step as any);
+
+describe("CoAssist ordering rules", () => {
+  for (const flow of COA) {
+    describe(flow, () => {
+      it("accepts nothing before ENROLL except ENROLL", () => {
+        withFrozenClock(() => {
+          const actor = startFlow(flow);
+          expect(everyEvent.filter((s) => accepts(actor, s)).map((s) => s.type)).toEqual([]);
+          expect(accepts(actor, { type: "ENROLL" })).toBe(true);
+        });
+      });
+
+      it("ENROLL only counts once", () => {
+        withFrozenClock(() => {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }]);
+          expect(accepts(actor, { type: "ENROLL" })).toBe(false);
+        });
+      });
+
+      it("blocks the PA until BI has completed", () => {
+        withFrozenClock(() => {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }]);
+          expect(accepts(actor, { type: "SUBMIT_PA" })).toBe(false);
+          expect(accepts(actor, bi(flow))).toBe(false); // BI cannot complete before it runs
+          runSteps(actor, [{ type: "RUN_BI" }]);
+          expect(accepts(actor, { type: "SUBMIT_PA" })).toBe(false); // still running
+        });
+      });
+
+      it("blocks approval, pricing, payment, and fulfillment before their prerequisites", () => {
+        withFrozenClock(() => {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow)]);
+          const blocked = ["APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "SELECT_PRICING_OPTION", "PATIENT_PAYS", "VERIFY_PAYMENT", "PATIENT_SETS_ADDRESS", "FILL_RX", "READY_RX", "SHIP_RX", "DELIVER_RX"];
+          expect(everyEvent.filter((s) => blocked.includes(s.type) && accepts(actor, s)).map((s) => s.type)).toEqual([]);
+        });
+      });
+
+      it("blocks fulfillment steps out of order", () => {
+        withFrozenClock(() => {
+          const actor = startFlow(flow);
+          const path: Step[] =
+            flow === "CoA_DME"
+              ? [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
+              : [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
+          runSteps(actor, path);
+          expect(accepts(actor, { type: "READY_RX" })).toBe(false);
+          expect(accepts(actor, { type: "SHIP_RX" })).toBe(false);
+          expect(accepts(actor, { type: "DELIVER_RX" })).toBe(false);
+          expect(accepts(actor, { type: "FILL_RX" })).toBe(true);
+          runSteps(actor, [{ type: "FILL_RX" }]);
+          expect(accepts(actor, { type: "PATIENT_SETS_ADDRESS" })).toBe(false); // too late once the Rx is filling
+          expect(accepts(actor, { type: "FILL_RX" })).toBe(false);
+          expect(accepts(actor, { type: "SHIP_RX" })).toBe(false);
+          runSteps(actor, [{ type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }]);
+          expect(ctx(actor).workflowData.pharmacyStatus).toBe("delivered");
+          expect(accepts(actor, { type: "DELIVER_RX" })).toBe(false);
+        });
+      });
+    });
+  }
+
+  describe("scenario differences", () => {
+    it("DTP and Copay can deny the PA. DME cannot.", () => {
+      withFrozenClock(() => {
+        for (const flow of COA) {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }]);
+          expect(accepts(actor, { type: "DENY_PA" })).toBe(flow !== "CoA_DME");
+        }
+      });
+    });
+
+    it("DME: a PA is needed only when the pharmacy benefit covers and the medical benefit does not", () => {
+      withFrozenClock(() => {
+        const cases: [string, "covered" | "not_covered", "covered" | "not_covered", boolean][] = [
+          ["pharmacy only", "covered", "not_covered", true],
+          ["both covered", "covered", "covered", false],
+          ["medical only", "not_covered", "covered", false],
+          ["neither", "not_covered", "not_covered", false],
+        ];
+        for (const [label, pharmacy, medical, paAllowed] of cases) {
+          const actor = startFlow("CoA_DME");
+          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", pharmacy, medical)]);
+          expect([label, accepts(actor, { type: "SUBMIT_PA" })]).toEqual([label, paAllowed]);
+        }
+      });
+    });
+
+    it("DME: provider transfer needs medical coverage. The cash-offer SMS needs neither covered.", () => {
+      withFrozenClock(() => {
+        const medical = startFlow("CoA_DME");
+        runSteps(medical, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", "covered", "covered")]);
+        expect(accepts(medical, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(true);
+        expect(accepts(medical, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(false);
+
+        const neither = startFlow("CoA_DME");
+        runSteps(neither, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", "not_covered", "not_covered")]);
+        expect(accepts(neither, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(false);
+        expect(accepts(neither, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(true);
+        expect(accepts(neither, { type: "SELECT_SELF_PAY" })).toBe(false); // SMS tap-through comes first
+      });
+    });
+
+    it("Copay: enrolling in the copay program is one-time, and the patient still picks Retail or Mail Order", () => {
+      withFrozenClock(() => {
+        const actor = startFlow("CoA_Copay");
+        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_SELF_PAY" }]);
+        expect(ctx(actor).workflowData.copayEnrolled).toBe(true);
+        expect(ctx(actor).workflowData.pricingOption).toBeNull();
+        expect(accepts(actor, { type: "SELECT_SELF_PAY" })).toBe(false);
+        expect(accepts(actor, { type: "FILL_RX" })).toBe(false);
+        expect(accepts(actor, { type: "SELECT_PRICING_OPTION", option: "mail_order" })).toBe(true);
+      });
+    });
+
+    it("Payment can only be verified once", () => {
+      withFrozenClock(() => {
+        const actor = startFlow("CoA_DTP");
+        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "DENY_PA" }, { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" }]);
+        expect(accepts(actor, { type: "VERIFY_PAYMENT" })).toBe(false);
+        expect(accepts(actor, { type: "PATIENT_PAYS" })).toBe(false);
+      });
+    });
+  });
+});

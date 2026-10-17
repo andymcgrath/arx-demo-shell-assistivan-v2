@@ -1,0 +1,98 @@
+/**
+ * createWorkflowMachine: turns a WorkflowDefinition (a rules table plus
+ * scenarios) into an XState machine.
+ *
+ * Why one state, not a state graph: for these workflows every "state" was a
+ * function of WorkflowData (paStatus, biStatus, pricingOption, and so on),
+ * and nothing in the UI reads the machine's state value. Preconditions on
+ * WorkflowData say the same thing with no duplicated handlers.
+ *
+ * The scenario arrives as XState `input` ({ flowType }) and lives on in
+ * workflowData.flowType, so persisted snapshots restore with it.
+ */
+import { assign, setup } from "xstate";
+import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
+import { createInitialWorkflowData } from "./baseData";
+import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
+
+function createEvent(context: MachineContext, eventType: string, portal: Portal, step: number): DemoEvent {
+  return {
+    id: crypto.randomUUID(),
+    eventType,
+    portal,
+    flowType: context.workflowData.flowType,
+    workflowStep: step,
+    metadata: null,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+const toArray = <T,>(v: T | T[] | undefined): T[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
+
+export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
+  const scenarioFor = (flowType: FlowType | undefined): ScenarioDefinition<C> => {
+    const scenario = (flowType && def.scenarios[flowType]) || def.scenarios[def.defaultFlowType];
+    if (!scenario) throw new Error(`Workflow "${def.id}" has no scenario for ${flowType ?? def.defaultFlowType}`);
+    return scenario;
+  };
+
+  const startingData = (flowType: FlowType | undefined) => {
+    const scenario = scenarioFor(flowType);
+    return createInitialWorkflowData(scenario.flowType, scenario.initialData);
+  };
+
+  // Group rules by event, keeping declaration order (first match wins).
+  const byEvent = new Map<string, Rule<any, C>[]>();
+  for (const rule of def.rules) byEvent.set(rule.on, [...(byEvent.get(rule.on) ?? []), rule]);
+
+  const appliesTo = (rule: Rule<any, C>, flowType: FlowType) => !rule.scenarios || rule.scenarios.includes(flowType);
+
+  const on: Record<string, any[]> = {};
+  for (const [eventType, rules] of byEvent) {
+    on[eventType] = rules.map((rule) => ({
+      guard: ({ context, event }: any) => {
+        const data = context.workflowData;
+        return appliesTo(rule, data.flowType) && (rule.when ? rule.when(data, event, scenarioFor(data.flowType)) : true);
+      },
+      actions: assign(({ context, event }: any) => {
+        const scenario = scenarioFor(context.workflowData.flowType);
+        const data = { ...context.workflowData, ...(rule.set ? rule.set(context.workflowData, event, scenario) : {}) };
+        const emitted = toArray(rule.emit)
+          .filter((e) => (e.when ? e.when(data, event, scenario) : true))
+          .map((e) => createEvent(context, e.type ?? event.type, e.portal, e.step));
+        return { workflowData: data, events: [...context.events, ...emitted] };
+      }),
+    }));
+  }
+
+  return setup({
+    types: {
+      context: {} as MachineContext,
+      input: {} as { flowType?: FlowType } | undefined,
+      events: {} as { type: string; [key: string]: unknown },
+    },
+  }).createMachine({
+    id: def.id,
+    context: ({ input }) => ({
+      workflowData: startingData(input?.flowType),
+      events: [],
+      _snapshots: [],
+    }),
+    initial: "active",
+    states: {
+      active: {
+        on: {
+          ...on,
+          // RESET keeps the running scenario.
+          RESET: {
+            actions: assign(({ context }: any) => ({
+              workflowData: startingData(context.workflowData.flowType),
+              events: [],
+              _snapshots: [],
+            })),
+          },
+        },
+      },
+    },
+  });
+}
