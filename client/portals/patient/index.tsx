@@ -81,7 +81,7 @@ const DELIVERY_FLOW_PATHS = [
   '/medication-delivered',
   // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
   // underlying machine state (enrollmentStatus 'none') — role selection and
-  // the has-prescription question both happen before ENROLL ever fires. Once
+  // the has-prescription question both happen before REFERRAL_RECEIVED ever fires. Once
   // the patient clicks past /pes-home to /pes-attestation, this guard keeps
   // derivePatientRoute's still-correct-but-stale '/pes-home' target from
   // bouncing them straight back, the same way the delivery/order paths above

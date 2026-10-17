@@ -31,7 +31,7 @@ export {
 } from "./coassistLadders";
 
 /**
- * Replays ENROLL -> VERIFY_SMS -> VERIFY_OTP -> CONFIRM_CONSENT -> RUN_BI ->
+ * Replays REFERRAL_RECEIVED -> VERIFY_SMS -> VERIFY_OTP -> CONFIRM_CONSENT -> RUN_BI ->
  * COMPLETE_BI on an already-RESET actor. Callers that need a full reset
  * first should call resetDmeToBiComplete() below instead — this lower-level
  * version exists so DemoShell's own resetActorToStage (which already does
@@ -50,7 +50,7 @@ export function replayDmeToBiComplete(
  * Index.tsx's own effect already uses to snap its open stage tabs back to
  * "keanu" and re-run its consent-confirmed auto-open-detail effect, landing
  * the CRM back on Keanu's BIR-0431 detail view with the new combo visible)
- * before replaying ENROLL through COMPLETE_BI with the given scenario.
+ * before replaying REFERRAL_RECEIVED through COMPLETE_BI with the given scenario.
  * Defaults to Scenario 1 (Pharmacy Coverage) when no scenario is given.
  */
 export function resetDmeToBiComplete(scenario: DmeBiScenario = DME_SCENARIO_1_PHARMACY_COVERAGE): void {
@@ -80,7 +80,7 @@ export function resetDmeToBiRunning(): void {
 
   const actor = getWorkflowActor();
   actor.send({ type: "RESET" });
-  actor.send({ type: "ENROLL", portal: "crm" });
+  actor.send({ type: "REFERRAL_RECEIVED", portal: "crm" });
   actor.send({ type: "VERIFY_SMS", portal: "patient" });
   actor.send({ type: "VERIFY_OTP", portal: "patient" });
   actor.send({ type: "CONFIRM_CONSENT", portal: "patient" });

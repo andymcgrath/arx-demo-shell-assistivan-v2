@@ -2,7 +2,7 @@
   "flowType": "PrES_PAP",
   "steps": [
     {
-      "event": "ENROLL",
+      "event": "REFERRAL_RECEIVED",
       "accepted": true,
       "route": "/pes-patient-info",
       "changed": {
@@ -11,7 +11,7 @@
       },
       "newEvents": [
         {
-          "eventType": "ENROLL",
+          "eventType": "REFERRAL_RECEIVED",
           "portal": "crm",
           "workflowStep": 1
         }

@@ -11,7 +11,7 @@ import { PROGRAM } from "@/config/branding";
  * Entry.tsx ("attestation") screen. Ready by the patient themself (no CRM
  * referral / SMS invite needed first), unlike WF1/WF2/WF4.
  *
- * On Continue, bundles ENROLL → INVITE → VERIFY_SMS → VERIFY_OTP into one
+ * On Continue, bundles REFERRAL_RECEIVED → INVITE → VERIFY_SMS → VERIFY_OTP into one
  * dispatch sequence — presPap.ts's machine is unchanged from the other
  * flows' shape, it just has no SMS/OTP screens in WF5's real UI, so this
  * collapses that beat into the single self-attestation step, the same way
@@ -26,7 +26,7 @@ export default function PesAttestation() {
 
   function handleContinue() {
     if (!hasPrescription) return;
-    dispatch("ENROLL", { portal: "patient" });
+    dispatch("REFERRAL_RECEIVED", { portal: "patient" });
     dispatch("INVITE", { portal: "patient" });
     dispatch("VERIFY_SMS", { portal: "patient" });
     dispatch("VERIFY_OTP", { portal: "patient" });

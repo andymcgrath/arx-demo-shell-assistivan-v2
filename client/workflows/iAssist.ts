@@ -192,10 +192,10 @@ export const iAssistMachine = createMachine(
           idle: {
             on: {
               // WF1's CRM-driven flow treats "enrolled" and "invited" as two
-              // separate manual clicks (see useEnrollPatient.ts) — ENROLL
+              // separate manual clicks (see useEnrollPatient.ts) — REFERRAL_RECEIVED
               // goes to 'pending', then a separate INVITE event moves to
               // 'invited'. iAssist has no such second step: Rx submission
-              // (finishCase's ENROLL dispatch) already sends the welcome
+              // (finishCase's REFERRAL_RECEIVED dispatch) already sends the welcome
               // text in the same moment (enrollmentInviteSent is set true by
               // updateEnrollmentPending below), so it must land directly in
               // 'invited' — otherwise the region is stuck in 'pending'
@@ -203,7 +203,7 @@ export const iAssistMachine = createMachine(
               // and VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT — all only handled
               // from 'invited' onward — get silently ignored no matter how
               // correctly the patient walks through those screens.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'invited',
                 actions: 'updateEnrollmentPending',
               },
@@ -256,7 +256,7 @@ export const iAssistMachine = createMachine(
                 actions: 'updateBISubmitted',
               },
               // iAssist starts BI the moment the eRx is submitted, same
-              // ENROLL dispatch that auto-submits PA below — iAssist runs
+              // REFERRAL_RECEIVED dispatch that auto-submits PA below — iAssist runs
               // its own benefits investigation instantly rather than
               // waiting on the patient consent RUN_BI normally requires.
               // Targets 'submitted' (biStatus: 'running'), same as RUN_BI
@@ -266,10 +266,10 @@ export const iAssistMachine = createMachine(
               // (see crm/pages/Index.tsx's COMPLETE_BI-on-tab-open effect,
               // unchanged) before it actually resolves 3s later. Per
               // request: BI and PA both start "waiting" in parallel off this
-              // one ENROLL, and each only resolves once its own tab is
+              // one REFERRAL_RECEIVED, and each only resolves once its own tab is
               // opened — this used to jump straight to 'complete' here,
               // skipping that pause entirely.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'submitted',
                 actions: 'updateBISubmitted',
               },
@@ -298,18 +298,18 @@ export const iAssistMachine = createMachine(
                 actions: 'updatePASubmitted',
               },
               // iAssist auto-submits PA the moment the eRx is submitted
-              // (finishCase's ENROLL dispatch), in parallel with
-              // benefitsInquiry's own ENROLL handler above — both start
+              // (finishCase's REFERRAL_RECEIVED dispatch), in parallel with
+              // benefitsInquiry's own REFERRAL_RECEIVED handler above — both start
               // "waiting for response" off this one event, independently of
               // each other. Deliberately unguarded (not canSubmitPA, which
               // reads biStatus==='complete'): guards in a sibling parallel
               // region see context as it was *before* this same event's
               // actions run, so gating on biStatus here would only ever see
-              // its pre-ENROLL value ('none') and never fire. PA still
+              // its pre-REFERRAL_RECEIVED value ('none') and never fire. PA still
               // doesn't resolve (approved/denied) until the agent opens the
               // PA-14274 tab and waits 3s — see crm/pages/Index.tsx's
               // PA-14274-tab-open effect, unchanged.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'submitted',
                 actions: 'updatePASubmitted',
               },
@@ -375,7 +375,7 @@ export const iAssistMachine = createMachine(
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'REFERRAL_RECEIVED', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assign(({ context }) => ({

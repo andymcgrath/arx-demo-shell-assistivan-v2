@@ -51,7 +51,7 @@ export interface LadderEvent {
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
 const IDENTITY: LadderEvent[] = [
-  ev("ENROLL", "crm"),
+  ev("REFERRAL_RECEIVED", "crm"),
   ev("VERIFY_SMS", "patient"),
   ev("VERIFY_OTP", "patient"),
   ev("CONFIRM_CONSENT", "patient"),
@@ -59,9 +59,9 @@ const IDENTITY: LadderEvent[] = [
 
 const DME_DEFAULT_PHARMACY = { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" };
 
-/** ENROLL through COMPLETE_BI for a DME scenario, on an already-RESET actor. */
+/** REFERRAL_RECEIVED through COMPLETE_BI for a DME scenario, on an already-RESET actor. */
 export function dmeBiCompleteEvents(scenario: DmeBiScenario = DME_SCENARIO_1_PHARMACY_COVERAGE): LadderEvent[] {
-  // BI starts on its own when ENROLL lands (workflows/coassist/rules.ts), so there is no RUN_BI.
+  // BI starts on its own when REFERRAL_RECEIVED lands (workflows/coassist/rules.ts), so there is no RUN_BI.
   return [...IDENTITY, dmeCompleteBi(scenario)];
 }
 
@@ -78,7 +78,7 @@ export function coassistStageEvents(flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME
   const upTo = (n: number) => stage >= n;
 
   if (upTo(2)) out.push(...IDENTITY);
-  // Stage 3 (BI running) needs no event: ENROLL starts BI, and COMPLETE_BI submits the PA when one is required.
+  // Stage 3 (BI running) needs no event: REFERRAL_RECEIVED starts BI, and COMPLETE_BI submits the PA when one is required.
 
   if (flowType === "CoA_DME") {
     if (upTo(4)) out.push(dmeCompleteBi(DME_SCENARIO_1_PHARMACY_COVERAGE));

@@ -66,7 +66,7 @@ export default function EnrollmentComplete() {
 
           <button
             onClick={() => {
-              dispatch('ENROLL', { portal: 'patient' });
+              dispatch('REFERRAL_RECEIVED', { portal: 'patient' });
               navigate(isCopayMailOrder ? "/order-tracker" : "/");
             }}
             className="w-full bg-white text-arx-primary font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"

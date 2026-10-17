@@ -27,7 +27,7 @@ export function useEnrollPatient() {
   const mutate = useCallback(
     (_payload: EnrollPayload, options?: { onSuccess?: () => void }) => {
       const timer = setTimeout(() => {
-        dispatch('ENROLL', { portal: 'crm' });
+        dispatch('REFERRAL_RECEIVED', { portal: 'crm' });
         dispatch('INVITE', { portal: 'crm' });
         options?.onSuccess?.();
       }, 600);

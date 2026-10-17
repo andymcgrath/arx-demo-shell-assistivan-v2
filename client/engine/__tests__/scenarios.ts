@@ -41,7 +41,7 @@ export const SCENARIOS: Scenario[] = [
     name: "fax-standard-pa-approved",
     flowType: "Fax_QS_PA_Approved",
     steps: [
-      { type: "ENROLL" }, { type: "INVITE" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
       { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "SUBMIT_PA" }, { type: "APPROVE_PA" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
@@ -52,7 +52,7 @@ export const SCENARIOS: Scenario[] = [
     name: "fax-standard-pa-denied",
     flowType: "Fax_QS_PA_Approved",
     steps: [
-      { type: "ENROLL" }, { type: "INVITE" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
       { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "SUBMIT_PA" }, { type: "DENY_PA" },
     ],
@@ -61,7 +61,7 @@ export const SCENARIOS: Scenario[] = [
     name: "fax-pap-audit",
     flowType: "Fax_PAP_Audit",
     steps: [
-      { type: "ENROLL" }, { type: "INVITE" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
       { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "no_insurance" },
       { type: "START_INCOME_QUALIFICATION" },
       { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, { type: "VERIFY_INCOME" },
@@ -75,7 +75,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dtp-pa-approved-retail",
     flowType: "CoA_DTP",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
@@ -90,7 +90,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dtp-pa-approved-before-patient-consent",
     flowType: "CoA_DTP",
     steps: [
-      { type: "ENROLL" },
+      { type: "REFERRAL_RECEIVED" },
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" },
       ...verifyIdentity,
@@ -103,7 +103,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dtp-pa-approved-self-pay",
     flowType: "CoA_DTP",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_SELF_PAY" },
@@ -114,7 +114,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dtp-pa-denied-cash-offer",
     flowType: "CoA_DTP",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "DENY_PA" },
       { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
@@ -127,7 +127,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-copay-enroll-then-mail-order",
     flowType: "CoA_Copay",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_SELF_PAY" },
@@ -139,7 +139,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-copay-direct-retail",
     flowType: "CoA_Copay",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
@@ -153,7 +153,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dme-1-pharmacy-covered",
     flowType: "CoA_DME",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
@@ -164,7 +164,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dme-2-medical-covered-provider-transfer",
     flowType: "CoA_DME",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
       { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_DME_TRANSFER_SMS" },
     ],
@@ -173,7 +173,7 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-dme-3-no-coverage-cash-pay",
     flowType: "CoA_DME",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },
       { type: "VERIFY_CASH_OFFER_SMS" }, { type: "SELECT_SELF_PAY" },
       { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
@@ -186,7 +186,7 @@ export const SCENARIOS: Scenario[] = [
     name: "iassist-pa-approved",
     flowType: "iAssist_PA_Approved",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
@@ -198,7 +198,7 @@ export const SCENARIOS: Scenario[] = [
     name: "iassist-pa-denied-appeal",
     flowType: "iAssist_PAP",
     steps: [
-      { type: "ENROLL" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "DENY_PA" }, { type: "INITIATE_APPEAL" }, { type: "APPROVE_APPEAL" },
       { type: "PATIENT_SELECTS_INFUSION_DATE" },
@@ -212,7 +212,7 @@ export const SCENARIOS: Scenario[] = [
     name: "pres-pap",
     flowType: "PrES_PAP",
     steps: [
-      { type: "ENROLL" }, { type: "INVITE" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
       { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "no_insurance" },
       { type: "START_INCOME_QUALIFICATION" },
       { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, { type: "VERIFY_INCOME" },

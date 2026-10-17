@@ -196,7 +196,7 @@ export const workflowMachine = createMachine(
         states: {
           idle: {
             on: {
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'pending',
                 actions: 'updateEnrollmentPending',
               },
@@ -334,7 +334,7 @@ export const workflowMachine = createMachine(
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'REFERRAL_RECEIVED', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assign(({ context }) => ({

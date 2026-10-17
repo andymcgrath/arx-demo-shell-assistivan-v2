@@ -11,11 +11,11 @@ export default function Index() {
   const enrollmentAcknowledged = workflowData.enrollmentAcknowledged;
   // Gate on enrollmentStatus (not flowType) so this doesn't need a
   // per-flow exclusion list. Once a case has actually started (CRM/iAssist
-  // dispatches ENROLL — enrollmentStatus flips to 'enrolled' immediately,
+  // dispatches REFERRAL_RECEIVED — enrollmentStatus flips to 'enrolled' immediately,
   // ahead of the patient ever touching SMS/OTP/consent), the Welcome Card
   // no longer applies even if the patient later lands back on Home before
   // welcomeDismissed/enrollmentAcknowledged catch up (e.g. iAssist's
-  // ENROLL-triggered auto BI-complete/PA-submit can advance the case to a
+  // REFERRAL_RECEIVED-triggered auto BI-complete/PA-submit can advance the case to a
   // state where derivePatientRoute sends the patient back to "/" before
   // they've dismissed Welcome or finished consent — this previously showed
   // a stale Welcome Card here for CoA_DTP too, worked around with a

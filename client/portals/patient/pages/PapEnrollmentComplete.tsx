@@ -28,7 +28,7 @@ export default function PapEnrollmentComplete() {
         </p>
 
         <button
-          onClick={() => { dispatch('ENROLL', { portal: 'patient' }); navigate("/"); }}
+          onClick={() => { dispatch('REFERRAL_RECEIVED', { portal: 'patient' }); navigate("/"); }}
           className="w-full bg-white text-arx-primary font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"
         >
           Got it

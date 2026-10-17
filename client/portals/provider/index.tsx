@@ -1072,7 +1072,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 //
 // Only patients with an active Rx show up by default — Keanu starts with
 // none (CoaRxForm is what creates his eRx), so he's hidden from the default
-// view but still findable by name/DOB search. Once ENROLL fires (eRx sent),
+// view but still findable by name/DOB search. Once REFERRAL_RECEIVED fires (eRx sent),
 // his real workflow state — not static demo data like everyone else's row —
 // drives his status, and he moves to the top of the default list.
 
@@ -1654,7 +1654,7 @@ function PresPapProviderExperience({
               // this application at all, so it's set here rather than shown
               // as its own question (the reference has no such screen).
               setField('hasPrescription', 'Yes');
-              dispatch('ENROLL', { portal: 'provider' });
+              dispatch('REFERRAL_RECEIVED', { portal: 'provider' });
               dispatch('INVITE', { portal: 'provider' });
               dispatch('VERIFY_SMS', { portal: 'provider' });
               dispatch('VERIFY_OTP', { portal: 'provider' });
@@ -1955,7 +1955,7 @@ function CoaProviderExperience({
         pharmacy={pharmacy}
         onPharmacyChange={setPharmacy}
         onSend={() => {
-          dispatch('ENROLL', { portal: 'provider' });
+          dispatch('REFERRAL_RECEIVED', { portal: 'provider' });
           setStep("coa-sent");
         }}
         onBack={() => setStep("coa-dashboard")}

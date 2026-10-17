@@ -7,7 +7,7 @@ export function getPersonaActions(state: MachineContext, persona: PersonaId): st
   const { workflowData } = state;
 
   if (persona === 'crm') {
-    return ['ENROLL', 'INVITE', 'RUN_BI', 'APPROVE_PA', 'FILL_RX'];
+    return ['REFERRAL_RECEIVED', 'INVITE', 'RUN_BI', 'APPROVE_PA', 'FILL_RX'];
   }
 
   if (persona === 'patient') {
@@ -181,7 +181,7 @@ export function derivePatientRoute(state: MachineContext): string {
 
   // ── iAssist_PAP (WF5) fast-forward ────────────────────────────────────
   // This flow's BI/PA/Appeal race ahead of the patient's own SMS/OTP/consent
-  // pace the moment ENROLL fires (see workflows/iAssistPap.ts) — a real,
+  // pace the moment REFERRAL_RECEIVED fires (see workflows/iAssistPap.ts) — a real,
   // reachable state is "appeal already filed or approved, patient portal
   // never opened yet, consentStatus still 'pending'". Without this, opening
   // the portal for the first time at that point would force the patient
@@ -706,7 +706,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
     };
 
     switch (event.event_type) {
-      case 'ENROLL':
+      case 'REFERRAL_RECEIVED':
         emails.push({
           ...base,
           subject: `New Patient Enrolled - ${patientName}`,

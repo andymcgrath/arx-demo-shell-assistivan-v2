@@ -223,7 +223,7 @@ export const iAssistPapMachine = createMachine(
             on: {
               // Matches iAssist.ts exactly: Rx submission lands straight in
               // 'invited' (welcome text already sent), no separate INVITE step.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'invited',
                 actions: 'updateEnrollmentPending',
               },
@@ -276,13 +276,13 @@ export const iAssistPapMachine = createMachine(
                 actions: 'updateBISubmitted',
               },
               // Matches iAssist.ts: BI starts (not completes) the moment
-              // the eRx is submitted, same ENROLL dispatch that auto-submits
+              // the eRx is submitted, same REFERRAL_RECEIVED dispatch that auto-submits
               // PA below — targets 'submitted' (biStatus: 'running') so BI
               // still requires opening the BI-14273 tab and waiting 3s (see
               // crm/pages/Index.tsx's COMPLETE_BI-on-tab-open effect) before
               // it resolves, same pulsing "waiting" pause every other flow's
               // BI has.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'submitted',
                 actions: 'updateBISubmitted',
               },
@@ -311,14 +311,14 @@ export const iAssistPapMachine = createMachine(
                 actions: 'updatePASubmitted',
               },
               // Matches iAssist.ts: PA auto-submits the moment the eRx is
-              // submitted, in parallel with benefitsInquiry's own ENROLL
+              // submitted, in parallel with benefitsInquiry's own REFERRAL_RECEIVED
               // handler above — deliberately unguarded, since a sibling
               // parallel region's guard would only see biStatus's
-              // pre-ENROLL value. PA still doesn't resolve
+              // pre-REFERRAL_RECEIVED value. PA still doesn't resolve
               // (approved/denied) until the agent opens the PA-14274 tab
               // and waits 3s — see crm/pages/Index.tsx's PA-14274-tab-open
               // effect, unchanged.
-              ENROLL: {
+              REFERRAL_RECEIVED: {
                 target: 'submitted',
                 actions: 'updatePASubmitted',
               },
@@ -384,7 +384,7 @@ export const iAssistPapMachine = createMachine(
           enrollmentStatus: 'enrolled',
           enrollmentInviteSent: true,
         },
-        events: [...context.events, createEvent(context, 'ENROLL', 'crm', 1)],
+        events: [...context.events, createEvent(context, 'REFERRAL_RECEIVED', 'crm', 1)],
         _snapshots: pushSnapshot(context._snapshots, context),
       })),
       updateEnrollmentInvited: assign(({ context }) => ({

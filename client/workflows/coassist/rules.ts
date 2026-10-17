@@ -45,7 +45,7 @@ const REVEAL_MS = 3000;
 export const COASSIST_RULES: CoaRule[] = [
   // ── Enrollment and patient onboarding ──────────────────────────────
   {
-    on: "ENROLL",
+    on: "REFERRAL_RECEIVED",
     when: (d) => d.enrollmentStatus === "none",
     set: () => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
     emit: { portal: "crm", step: 1 },

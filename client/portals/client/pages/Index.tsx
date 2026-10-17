@@ -510,7 +510,7 @@ const SITES_OF_CARE: PharmacyOption[] = [
 //
 // Mimics a Salesforce Service Console "My Cases" list view. This is what the
 // CoA_DTP CRM/HUB shows before Keanu's eRx is submitted — a realistic-looking
-// caseload with no active case yet. Once ENROLL fires, his row appears at
+// caseload with no active case yet. Once REFERRAL_RECEIVED fires, his row appears at
 // the top; clicking it opens the existing case-detail tab strip (unchanged).
 // Gated entirely behind isCoaFlow in Index() below — WF1/WF2/WF4 keep their
 // current always-detail-view behavior.
@@ -922,7 +922,7 @@ export default function Index() {
 
   // CoA_DTP/CoA_Copay (WF3/WF4) only — business rule change: Benefits
   // Investigation no longer waits on patient consent, it can run off the
-  // referral/eRx alone. Fires the instant ENROLL lands (enrollmentStatus
+  // referral/eRx alone. Fires the instant REFERRAL_RECEIVED lands (enrollmentStatus
   // leaves "none"), which can be well before the patient has opened their
   // SMS link, let alone confirmed consent. coaDtp.ts/coaCopay.ts's RUN_BI
   // handler is now reachable from enrolled/smsVerified/otpVerified/
@@ -3437,7 +3437,7 @@ export default function Index() {
                           <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">{isCoaFlow ? "Delays Prior Authorization submission" : "Benefits Investigation has not yet run"}</td>
                           <td className="px-3 py-2.5 border-b border-[#dddbda]">
                             <button
-                              onClick={() => dispatch('ENROLL', { portal: 'crm' })}
+                              onClick={() => dispatch('REFERRAL_RECEIVED', { portal: 'crm' })}
                               className="px-2.5 py-1 rounded text-[11px] font-semibold text-white transition-colors hover:opacity-90"
                               style={{ background: FC_BLUE }}
                             >

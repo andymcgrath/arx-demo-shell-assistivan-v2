@@ -2,7 +2,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { ChevronLeft, Mic } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
-// iAssist_PAP (WF5) auto-submits AND auto-resolves BI/PA the moment ENROLL
+// iAssist_PAP (WF5) auto-submits AND auto-resolves BI/PA the moment REFERRAL_RECEIVED
 // fires (see workflows/iAssistPap.ts) — independent of the patient's own
 // pace through this very first SMS/OTP/consent beat. That means a PA can
 // already be Denied (and even appealed) before the patient has tapped this

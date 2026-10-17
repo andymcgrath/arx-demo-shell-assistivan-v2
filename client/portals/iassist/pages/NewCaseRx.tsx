@@ -98,14 +98,14 @@ export default function NewCaseRx() {
   }
 
   // Completing (or skipping) the last wizard step is this demo's stand-in for
-  // "case submitted" — dispatching ENROLL flips the live-wired sample patient
+  // "case submitted" — dispatching REFERRAL_RECEIVED flips the live-wired sample patient
   // (Keanu Dixon) out of enrollmentStatus "none" so he surfaces on the
   // Dashboard's active-patient list, same event CoaRxForm's onSend dispatches
   // on WF3 (client/portals/provider/index.tsx). Resetting the wizard after
   // submit keeps the next case from inheriting this one's answers.
   const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
   function finishCase() {
-    dispatch("ENROLL", { portal: "provider" });
+    dispatch("REFERRAL_RECEIVED", { portal: "provider" });
     resetCaseWizard();
     navigate("/");
   }

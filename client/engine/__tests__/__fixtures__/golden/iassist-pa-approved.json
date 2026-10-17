@@ -2,7 +2,7 @@
   "flowType": "iAssist_PA_Approved",
   "steps": [
     {
-      "event": "ENROLL",
+      "event": "REFERRAL_RECEIVED",
       "accepted": true,
       "route": "/sms-message",
       "changed": {
@@ -14,7 +14,7 @@
       },
       "newEvents": [
         {
-          "eventType": "ENROLL",
+          "eventType": "REFERRAL_RECEIVED",
           "portal": "crm",
           "workflowStep": 1
         },

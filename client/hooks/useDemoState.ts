@@ -101,7 +101,7 @@ export function useDemoState(portal: Portal) {
     .slice(0, 50);
 
   const actions = {
-    enrollPatient:  () => dispatch('ENROLL', { portal }),
+    enrollPatient:  () => dispatch('REFERRAL_RECEIVED', { portal }),
     runBI:          () => dispatch('RUN_BI', { portal }),
     completeBI:     (result: DemoState["bi_result"]) => dispatch('COMPLETE_BI', { portal, result }),
     submitPA:       (metadata?: Record<string, unknown>) => dispatch('SUBMIT_PA', { portal, metadata }),

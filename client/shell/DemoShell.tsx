@@ -508,7 +508,7 @@ function computeDmeStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
 // iAssist-specific step completion — unlike WF1/WF2/CoA (where consent,
 // BI, and PA naturally happen in that order, so a single "how far along"
 // number works), iAssist's Rx submission auto-completes BI and auto-submits
-// PA immediately (see iAssist.ts's ENROLL handlers on those regions),
+// PA immediately (see iAssist.ts's REFERRAL_RECEIVED handlers on those regions),
 // independent of and often well ahead of the patient's own SMS/OTP/consent
 // progress. A single scalar workflowStep can't represent "PA already
 // submitted, but the patient hasn't consented yet" — the generic threshold
@@ -1155,7 +1155,7 @@ export default function DemoShell() {
     // final, terminal stage.
     if (isIAssistPapFlow) {
       if (stage >= 2) {
-        actor.send({ type: 'ENROLL', portal: 'provider' });
+        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'provider' });
       }
       if (stage >= 3) {
         actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
@@ -1216,21 +1216,21 @@ export default function DemoShell() {
     }
 
     if (isIAssistFlow) {
-      // iAssist's own ladder — a single ENROLL auto-starts BI and
+      // iAssist's own ladder — a single REFERRAL_RECEIVED auto-starts BI and
       // auto-submits PA in parallel (see iAssist.ts's benefitsInquiry/
-      // priorAuth ENROLL handlers), so this can't reuse WF1/WF2's ladder,
-      // which treats "ENROLL", "BI complete", and "PA submitted" as three
+      // priorAuth REFERRAL_RECEIVED handlers), so this can't reuse WF1/WF2's ladder,
+      // which treats "REFERRAL_RECEIVED", "BI complete", and "PA submitted" as three
       // separate, sequential stages. Stage 2 collapses both of iAssist's
       // automated side effects (BI + PA both landing in their own "waiting
       // for response" state, welcome text sent) into one jump — that's the
       // whole point of iAssist automation. Patient Enrolled moves to stage 3
       // and is dispatched independently, since consent doesn't ride along
-      // with ENROLL — the patient still has to actually do SMS/OTP/consent.
+      // with REFERRAL_RECEIVED — the patient still has to actually do SMS/OTP/consent.
       if (stage >= 2) {
-        actor.send({ type: 'ENROLL', portal: 'provider' });
+        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'provider' });
       }
       if (stage >= 3) {
-        // No INVITE here — iAssist's ENROLL (stage 2, above) already lands
+        // No INVITE here — iAssist's REFERRAL_RECEIVED (stage 2, above) already lands
         // the enrollment region on 'invited' directly (see iAssist.ts), so
         // VERIFY_SMS is valid immediately without a separate invite step.
         actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
@@ -1294,7 +1294,7 @@ export default function DemoShell() {
       // ("Dispatch to Triage") landing on "ready, not yet dispatched" one
       // stage before "Rx Processing" fires FILL_RX.
       if (stage >= 2) {
-        actor.send({ type: 'ENROLL', portal: 'crm' });
+        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'crm' });
         actor.send({ type: 'INVITE', portal: 'crm' });
         actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
         actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
@@ -1352,7 +1352,7 @@ export default function DemoShell() {
     // only from here on — every other flow returns early above).
     // Each stage builds on the previous
     if (stage >= 2) {
-      actor.send({ type: 'ENROLL', portal: 'crm' });
+      actor.send({ type: 'REFERRAL_RECEIVED', portal: 'crm' });
       actor.send({ type: 'INVITE', portal: 'crm' });
       actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
       actor.send({ type: 'VERIFY_OTP', portal: 'patient' });

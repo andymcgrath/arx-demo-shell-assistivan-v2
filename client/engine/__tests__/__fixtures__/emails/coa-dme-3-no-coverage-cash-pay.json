@@ -1,6 +1,6 @@
 [
   {
-    "eventType": "ENROLL",
+    "eventType": "REFERRAL_RECEIVED",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "New Patient Enrolled - Test Patient",
