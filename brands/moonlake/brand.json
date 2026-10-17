@@ -16,8 +16,8 @@
     "name": "Moon Lake",
     "tagline": "",
     "logo": {
-      "colors": "/brands/moonlake/1788900248303-imgi_36_logo.png",
-      "white": "/brands/moonlake/1788900253633-imgi_69_FooterLogo.png",
+      "colors": "/brands/moonlake/imgi_36_logo.png",
+      "white": "/brands/moonlake/imgi_69_FooterLogo.png",
       "requiresFilter": false
     },
     "support": {
@@ -38,8 +38,8 @@
     "description": "120 mg Injectable",
     "dosageForm": "",
     "logo": {
-      "colors": "/brands/moonlake/1788902259114-Rx_recolored_reversed.png",
-      "white": "/brands/moonlake/1788900857273-Rx_grayscale.png",
+      "colors": "/brands/moonlake/Rx_recolored_reversed.png",
+      "white": "/brands/moonlake/Rx_grayscale.png",
       "requiresFilter": false
     },
     "colors": {
@@ -56,5 +56,5 @@
     }
   },
   "chatbotIcon": "",
-  "favicon": "/brands/moonlake/1788900309954-imgi_6_moonlake-tx-blue-cirlce.png"
+  "favicon": "/brands/moonlake/imgi_6_moonlake-tx-blue-cirlce.png"
 }

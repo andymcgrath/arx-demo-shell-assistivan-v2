@@ -14,11 +14,6 @@ const FLOW_IDS = SCENARIOS.map((s) => s.flowType as string);
 // Images a brand points at that are not committed yet. Add the file, then delete the entry.
 // Do not add new entries. Folders that start with "_" (such as brands/_export) are not brands.
 const KNOWN_MISSING_ASSETS = new Set<string>([
-  "/brands/moonlake/1788900248303-imgi_36_logo.png",
-  "/brands/moonlake/1788900253633-imgi_69_FooterLogo.png",
-  "/brands/moonlake/1788902259114-Rx_recolored_reversed.png",
-  "/brands/moonlake/1788900857273-Rx_grayscale.png",
-  "/brands/moonlake/1788900309954-imgi_6_moonlake-tx-blue-cirlce.png",
   "/brands/pharmaessentia/1786817527600-imgi_64_260408-PEC-logo-V500-5.jpg",
   "/brands/pharmaessentia/1786817534526-imgi_6_logo-pharmaessentia-white.svg",
   "/brands/pharmaessentia/1786842602083-besremi-logo-transparent.png",
