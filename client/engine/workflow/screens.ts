@@ -12,6 +12,12 @@ export interface Screen {
   group: string;
   /** Show only for these scenarios. Omit for every scenario of the workflow. */
   scenarios?: FlowType[];
+  /**
+   * The patient may sit here while the data has not caught up: a one-time
+   * confirmation, or a screen reached by a tap before its event fires.
+   * The portal does not navigate away on a state change. A reset still does.
+   */
+  sticky?: boolean;
 }
 
 /**
@@ -25,6 +31,8 @@ export interface ScreenRule {
 }
 
 export interface ScreenMap {
+  /** Scenarios this map serves. */
+  flows: FlowType[];
   /** Menu order. Screens reached only by a tap (no rule picks them) belong here too. */
   screens: Screen[];
   /** Route order. First match wins. */
@@ -82,4 +90,9 @@ export function menuPaths(map: ScreenMap, flowType: FlowType): string[] {
 export function routedPaths(map: ScreenMap, flowType: FlowType): string[] {
   const paths = map.rules.filter((r) => appliesTo(r.scenarios, flowType)).map((r) => r.path);
   return [...new Set([...paths, map.fallback])];
+}
+
+/** True when the patient portal should leave the patient on this screen for this scenario. */
+export function isSticky(map: ScreenMap, flowType: FlowType, path: string): boolean {
+  return map.screens.some((s) => s.path === path && s.sticky === true && appliesTo(s.scenarios, flowType));
 }

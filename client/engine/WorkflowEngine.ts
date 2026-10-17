@@ -1,7 +1,7 @@
 import type { MachineContext, PersonaId } from './types';
 import { daysFromToday } from '@/lib/relativeDate';
 import { routeFor } from './workflow/screens';
-import { COASSIST_SCREENS } from '@/workflows/coassist/screens';
+import { screenMapFor } from '@/workflows/screenMaps';
 
 export function getPersonaActions(state: MachineContext, persona: PersonaId): string[] {
   const { workflowData } = state;
@@ -90,11 +90,10 @@ export function derivePatientRoute(state: MachineContext): string {
   const { workflowData } = state;
 
   const flowType = workflowData.flowType;
-  // CoAssist (DTP, Copay, DME): the workflow's screen list picks the route.
-  // See workflows/coassist/screens.ts. The hamburger menu reads the same list.
-  if (flowType === 'CoA_DTP' || flowType === 'CoA_Copay' || flowType === 'CoA_DME') {
-    return routeFor(COASSIST_SCREENS, workflowData);
-  }
+  // Workflows on the screen list (CoAssist so far): the list picks the route.
+  // The hamburger menu and the stay-put guard read the same list.
+  const screenMap = screenMapFor(flowType);
+  if (screenMap) return routeFor(screenMap, workflowData);
 
   // ── PrES_PAP (WF5): its own capture flow, entirely separate from the
   // shared WF1/WF2/WF4 onboarding logic below ──────────────────────────

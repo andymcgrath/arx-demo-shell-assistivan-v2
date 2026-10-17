@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
-import { menuFor, menuPaths, routedPaths } from "@/engine/workflow/screens";
+import { isSticky, menuFor, menuPaths, routedPaths } from "@/engine/workflow/screens";
+import { screenMapFor } from "@/workflows/screenMaps";
 import { runSteps, startFlow, withFrozenClock } from "./harness";
 import { SCENARIOS } from "./scenarios";
 
@@ -46,6 +47,24 @@ describe("CoAssist screen list", () => {
       });
     });
   }
+
+  it("keeps the patient on tap-through and confirmation screens, and moves them off waiting screens", () => {
+    for (const flowType of COA_FLOWS) {
+      expect(isSticky(COASSIST_SCREENS, flowType, "/order-tracker")).toBe(true);
+      expect(isSticky(COASSIST_SCREENS, flowType, "/phone-verification")).toBe(true);
+      expect(isSticky(COASSIST_SCREENS, flowType, "/sms-message")).toBe(false);
+      expect(isSticky(COASSIST_SCREENS, flowType, "/confirm-details")).toBe(false);
+      expect(isSticky(COASSIST_SCREENS, flowType, "/lock-screen")).toBe(false);
+    }
+    // Scenario-specific: only DME has the network pharmacy screen.
+    expect(isSticky(COASSIST_SCREENS, "CoA_DME", "/network-pharmacy-selection")).toBe(true);
+    expect(isSticky(COASSIST_SCREENS, "CoA_DTP", "/network-pharmacy-selection")).toBe(false);
+  });
+
+  it("is found by the registry for every CoAssist scenario", () => {
+    for (const flowType of COA_FLOWS) expect(screenMapFor(flowType) === COASSIST_SCREENS).toBe(true);
+    expect(screenMapFor("Fax_QS_PA_Approved") === undefined).toBe(true);
+  });
 
   it("has a catalog entry for every path a rule returns, for some scenario", () => {
     const catalog = new Set(COASSIST_SCREENS.screens.map((s) => s.path));

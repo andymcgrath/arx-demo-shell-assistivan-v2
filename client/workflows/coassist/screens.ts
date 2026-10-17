@@ -8,6 +8,9 @@ import type { ScreenMap } from "@/engine/workflow/screens";
  * current data, first match wins. derivePatientRoute and the menu both read this
  * file, so a screen cannot be in one and missing from the other.
  *
+ * `sticky` marks screens the patient can sit on while the data has not caught up.
+ * StateDrivenNav reads it instead of the old global DELIVERY_FLOW_PATHS list.
+ *
  * Scenarios: DTP and Copay share one chain. DME has its own, because its Benefits
  * Investigation has three outcomes (medical covered, pharmacy covered, no coverage).
  */
@@ -18,6 +21,7 @@ const PA_FLOWS = [DTP, COPAY];
 const ORDER_FLOWS = [DTP, COPAY, DME];
 
 export const COASSIST_SCREENS: ScreenMap = {
+  flows: [DTP, COPAY, DME],
   fallback: "/lock-screen",
   hidden: ["/lock-screen"],
 
@@ -25,33 +29,34 @@ export const COASSIST_SCREENS: ScreenMap = {
     { path: "/", label: "Home", group: "" },
 
     { path: "/sms-message", label: "SMS Verification", group: "Enrollment" },
+    { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true },
     { path: "/otp-verification", label: "OTP Verification", group: "Enrollment" },
     { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment" },
-    { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment" },
+    { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment", sticky: true },
 
-    { path: "/pa-approved-sms", label: "PA Approved SMS", group: "Prior authorization" },
-    { path: "/pa-approved-otp", label: "PA Approved OTP", group: "Prior authorization" },
+    { path: "/pa-approved-sms", label: "PA Approved SMS", group: "Prior authorization", sticky: true },
+    { path: "/pa-approved-otp", label: "PA Approved OTP", group: "Prior authorization", sticky: true },
     { path: "/pa-denied", label: "PA Denied and Cash Offer", group: "Prior authorization", scenarios: PA_FLOWS },
 
-    { path: "/benefit-pricing", label: "Benefit Pricing", group: "Pricing and pharmacy", scenarios: PA_FLOWS },
-    { path: "/copay-enroll", label: "Copay Enrollment", group: "Pricing and pharmacy", scenarios: PA_FLOWS },
-    { path: "/pharmacy-selection", label: "Pharmacy Selection", group: "Pricing and pharmacy", scenarios: [COPAY] },
-    { path: "/network-pharmacy-selection", label: "Network Pharmacy Selection", group: "Pricing and pharmacy", scenarios: [DME] },
-    { path: "/pharmacy-selection-confirmation", label: "Pharmacy Confirmation", group: "Pricing and pharmacy", scenarios: [DME] },
+    { path: "/benefit-pricing", label: "Benefit Pricing", group: "Pricing and pharmacy", scenarios: PA_FLOWS, sticky: true },
+    { path: "/copay-enroll", label: "Copay Enrollment", group: "Pricing and pharmacy", scenarios: PA_FLOWS, sticky: true },
+    { path: "/pharmacy-selection", label: "Pharmacy Selection", group: "Pricing and pharmacy", scenarios: [COPAY], sticky: true },
+    { path: "/network-pharmacy-selection", label: "Network Pharmacy Selection", group: "Pricing and pharmacy", scenarios: [DME], sticky: true },
+    { path: "/pharmacy-selection-confirmation", label: "Pharmacy Confirmation", group: "Pricing and pharmacy", scenarios: [DME], sticky: true },
 
     { path: "/cash-offer-sms", label: "Cash Offer SMS", group: "Cash pay", scenarios: [DME] },
     { path: "/pa-denied", label: "No Coverage and Cash Option", group: "Cash pay", scenarios: [DME] },
 
     { path: "/dme-transfer-sms", label: "Transfer SMS", group: "Provider transfer", scenarios: [DME] },
-    { path: "/dme-provider-transfer", label: "DME Provider Transfer", group: "Provider transfer", scenarios: [DME] },
+    { path: "/dme-provider-transfer", label: "DME Provider Transfer", group: "Provider transfer", scenarios: [DME], sticky: true },
 
-    { path: "/delivery-address", label: "Delivery Address", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/delivery-date", label: "Delivery Date", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/delivery-payment", label: "Payment", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/delivery-confirmation", label: "Order Confirmation", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/order-tracker", label: "Order Tracker", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/order-shipped", label: "Order Shipped / In Transit", group: "{program} order", scenarios: ORDER_FLOWS },
-    { path: "/medication-delivered", label: "Medication Delivered", group: "{program} order", scenarios: ORDER_FLOWS },
+    { path: "/delivery-address", label: "Delivery Address", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/delivery-date", label: "Delivery Date", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/delivery-payment", label: "Payment", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/delivery-confirmation", label: "Order Confirmation", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/order-tracker", label: "Order Tracker", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/order-shipped", label: "Order Shipped / In Transit", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
+    { path: "/medication-delivered", label: "Medication Delivered", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
   ],
 
   rules: [

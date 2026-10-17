@@ -24,10 +24,16 @@ import { PortalRouter, Routes, Route, useNavigate, useLocation } from "@/lib/por
 import { ChatProvider, useChatContext } from "./components/ChatContext";
 import ChatModal from "./components/ChatModal";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
+import type { FlowType } from "@/engine/types";
 import { useWorkflowActor, usePersonaState } from "@/engine/WorkflowProvider";
 import { useSelector } from "@xstate/react";
 import { useDemoStore } from "@/store/demoStore";
+import { isSticky } from "@/engine/workflow/screens";
+import { screenMapFor } from "@/workflows/screenMaps";
 
+// Legacy stay-put list for flows not yet on the screen list (Fax, PAP, PrES,
+// iAssist). Flows on the screen list mark `sticky` screens in their catalog
+// instead (see isStaying below). Delete entries as each workflow migrates.
 const DELIVERY_FLOW_PATHS = [
   '/phone-verification',
   '/pa-approved-sms',
@@ -156,6 +162,12 @@ import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 
 
+/** True when the patient should stay on this screen for this flow. Screen-list flows read their catalog. */
+function isStaying(flowType: FlowType, path: string): boolean {
+  const map = screenMapFor(flowType);
+  return map ? isSticky(map, flowType, path) : DELIVERY_FLOW_PATHS.includes(path);
+}
+
 /** Watches actor state and navigates the patient portal accordingly */
 function StateDrivenNav() {
   const navigate = useNavigate();
@@ -190,10 +202,10 @@ function StateDrivenNav() {
 
     // Don't interrupt delivery/order flows — user may have manually navigated.
     // A reset overrides this: the screen must always land on the correct step.
-    if (!isReset && DELIVERY_FLOW_PATHS.includes(pathnameRef.current)) return;
+    if (!isReset && isStaying(actor.getSnapshot().context.workflowData.flowType, pathnameRef.current)) return;
 
     navigate(targetRoute, { replace: true });
-  }, [targetRoute, navigate, resetNonce]);
+  }, [targetRoute, navigate, resetNonce, actor]);
 
   return null;
 }

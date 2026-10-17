@@ -8,7 +8,7 @@ import { hexToColorFilter } from "@/lib/brandFilter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { FlowType } from "@/store/demoStore";
 import { menuFor } from "@/engine/workflow/screens";
-import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
+import { screenMapFor } from "@/workflows/screenMaps";
 
 type NavEntry =
   | { label: string; path: string }
@@ -88,10 +88,11 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     ];
   }
 
-  // CoAssist: the menu comes from the workflow's screen list, the same list
-  // derivePatientRoute reads (workflows/coassist/screens.ts).
-  if (flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_DME") {
-    return menuFor(COASSIST_SCREENS, flowType).map((entry) =>
+  // Workflows on the screen list: the menu comes from the same list
+  // derivePatientRoute reads.
+  const screenMap = screenMapFor(flowType);
+  if (screenMap) {
+    return menuFor(screenMap, flowType).map((entry) =>
       "group" in entry ? { ...entry, group: entry.group.replace("{program}", PROGRAM.name) } : entry,
     );
   }
