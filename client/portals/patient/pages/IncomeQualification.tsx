@@ -2,10 +2,10 @@ import { useState } from "react";
 import { CheckCircle, ChevronRight, Users, DollarSign, Loader2 } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import ProgramLogo from "@/components/brand/ProgramLogo";
-import { useChatContext } from "@/components/ChatContext";
-import { CHATBOT_ICON, PROGRAM } from "@/config/branding";
-import { hexToColorFilter } from "@/lib/brandFilter";
+import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import { useChatContext } from "@/portals/patient/components/ChatContext";
+import { CHATBOT_ICON, PROGRAM } from "@/portals/patient/config/branding";
+import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 
 const HOUSEHOLD_SIZES = ["1", "2", "3", "4", "5", "6", "7", "8+"];
 

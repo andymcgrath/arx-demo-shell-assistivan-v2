@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ArrowRight, ChevronRight, Play, X, Calendar, MapPin, Phone } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
-import { useChatContext } from "@patient/components/ChatContext";
-import ProgramLogo from "@patient/components/brand/ProgramLogo";
-import { PROGRAM } from "@patient/config/branding";
+import { useChatContext } from "@/portals/patient/components/ChatContext";
+import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 const DELIVERY_DATE = "May 30, 10:00 AM";

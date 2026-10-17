@@ -1,5 +1,5 @@
 import { CheckCircle, Phone } from "lucide-react";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
 
 // CoA_DME's terminal screen — mirrors PapEnrollmentComplete.tsx's structure

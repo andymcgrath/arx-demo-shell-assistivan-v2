@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArxButton } from "@/components/design-system/ArxButton";
+import { ArxButton } from "@/portals/patient/components/design-system/ArxButton";
 import {
   ChevronDown,
   ChevronUp,

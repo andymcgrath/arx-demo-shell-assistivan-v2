@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Users, DollarSign, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePresPapStore } from "@/store/presPapStore";
 
 function formatIncome(raw: string): string {

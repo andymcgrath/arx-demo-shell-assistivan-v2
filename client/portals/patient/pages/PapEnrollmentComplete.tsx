@@ -1,5 +1,5 @@
 import { CheckCircle } from "lucide-react";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 

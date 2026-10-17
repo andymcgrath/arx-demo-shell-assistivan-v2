@@ -3,7 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ClipboardList, Camera, Check } from "lucide-react";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 
 interface UploadedFile {
   url: string;

@@ -15,7 +15,7 @@ import DemoShell, { FLOW_START_PORTAL, PORTAL_SLUG } from "@/shell/DemoShell";
 import { useDemoStore } from "@/store/demoStore";
 import WorkflowProvider from './engine/WorkflowProvider';
 import { StageInspector } from '@/components/StageInspector';
-import BrandingAdmin from "@patient/pages/Admin";
+import BrandingAdmin from "@/portals/patient/pages/Admin";
 
 // Toggle to bring StageInspector back — kept mounted-but-hidden behind this
 // flag rather than removed, so re-enabling it later is a one-line change.

@@ -1,7 +1,7 @@
 import { ChevronLeft, Mic } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 // CoA_DME Scenario 3 only — neither benefit covered. Mirrors
 // PharmacyCoverageSms.tsx's exact shape (same second, later SMS milestone

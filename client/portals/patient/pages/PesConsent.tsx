@@ -2,12 +2,12 @@ import { useEffect } from "react";
 import { PenLine, ChevronRight } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
-import YesNoToggle from "@/components/enrollment/YesNoToggle";
-import SignatureField from "@/components/enrollment/SignatureField";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import YesNoToggle from "@/portals/patient/components/enrollment/YesNoToggle";
+import SignatureField from "@/portals/patient/components/enrollment/SignatureField";
 import { usePresPapStore } from "@/store/presPapStore";
 import { usePatientStore } from "@/store/patientStore";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 const HEALTH_INFO_CONSENT = `By signing this form, I give my permission for my physicians, pharmacies, laboratories, and other healthcare providers ("Healthcare Providers") and my health insurers to share my health information with the organization administering the ${PROGRAM.name} Patient Assistance Program and its vendors and affiliates. This authorization will expire one (1) year from the date I sign below. I understand I have the right to revoke this authorization at any time by contacting the program administrator.`;
 

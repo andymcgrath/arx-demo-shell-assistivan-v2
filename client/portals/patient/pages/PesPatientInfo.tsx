@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronRight, User } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePatientStore } from "@/store/patientStore";
 
 const US_STATES = [

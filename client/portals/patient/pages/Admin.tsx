@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { hexToColorFilter } from "@/lib/brandFilter";
+import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 import { usePatientStore } from "@/store/patientStore";
 import { CheckCircle, AlertCircle, Loader2, Save, Eye, EyeOff, FolderOpen, Trash2, FilePlus2, ArrowLeft } from "lucide-react";
 import ManufacturerSection from "./admin/ManufacturerSection";

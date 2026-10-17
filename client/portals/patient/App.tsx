@@ -1,9 +1,9 @@
 import "./global.css";
 
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/ui/toaster";
 import { createRoot } from "react-dom/client";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster as Sonner } from "@/ui/sonner";
+import { TooltipProvider } from "@/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
@@ -26,8 +26,8 @@ import MedicationDelivered from "./pages/MedicationDelivered";
 import NotFound from "./pages/NotFound";
 import DesignSystem from "./pages/DesignSystem";
 import Admin from "./pages/Admin";
-import { ChatProvider, useChatContext } from "@/components/ChatContext";
-import ChatModal from "@/components/ChatModal";
+import { ChatProvider, useChatContext } from "@/portals/patient/components/ChatContext";
+import ChatModal from "@/portals/patient/components/ChatModal";
 
 const queryClient = new QueryClient();
 

@@ -1,7 +1,7 @@
 import { ArrowLeft, ArrowRight, Store } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import type { Pharmacy } from "@/engine/types";
 
 /**

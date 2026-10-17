@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronRight } from "lucide-react";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 
 export default function Consent() {
   const navigate = useNavigate();

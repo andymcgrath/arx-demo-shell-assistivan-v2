@@ -1,6 +1,6 @@
 import { useNavigate } from "@/lib/portalRouter";
 import PesHome from "@/components/enrollment/PesHome";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
 /**

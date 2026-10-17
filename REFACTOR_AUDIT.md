@@ -106,6 +106,15 @@ Not done yet:
 - Stage ladders now exist for all 10 flows (`client/shell/faxLadders.ts` added).
 - Check in a browser: Fax and PAP golden paths, the PrES route chain, and the enroll and BI buttons in the CRM.
 
+### Step 09: one UI kit and one `@/` alias (tag `refactor/09-ui-kit-alias`)
+
+- The four portal `components/ui` folders were byte-identical (49 files each). They are now one folder at `client/ui/`. `use-toast`, `use-mobile` and `cn` live in `client/hooks/` and `client/lib/`.
+- The `portalAliasPlugin` and the `@crm`, `@patient` and other portal aliases are gone. Portal code that used a portal-local `@/` path now says `@/portals/<name>/...`. 153 imports were rewritten by script.
+- Pure re-export shims (`portals/*/hooks/useDemoState.ts` and friends) are deleted. Importers use `@/hooks/...`.
+- `scripts/sync-portals.sh` and `scripts/setup-portals.mjs` are deleted. The portals are no longer synced from outside repos.
+- Type errors fell from 198 to 2 because the duplicates and the alias guessing caused most of them. Baseline is now 2.
+- Not run: `vite build` (the sandbox has no macOS binding). Run `pnpm build:client` and open each portal.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

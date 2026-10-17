@@ -32,7 +32,7 @@
  * serve-upload.ts). Rewriting here means every already-saved brand
  * (bundled defaults included) renders correctly without needing new data.
  */
-import fallbackBrand from "@patient/config/active-brand.json";
+import fallbackBrand from "@/portals/patient/config/active-brand.json";
 import { resolveAssetUrlsDeep } from "./assetUrl";
 
 type ActiveBrand = typeof fallbackBrand;

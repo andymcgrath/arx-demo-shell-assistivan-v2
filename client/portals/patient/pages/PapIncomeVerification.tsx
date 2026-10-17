@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",

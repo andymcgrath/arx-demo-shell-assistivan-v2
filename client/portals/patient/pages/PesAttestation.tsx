@@ -1,10 +1,10 @@
 import { FileCheck, ChevronRight } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
-import YesNoToggle from "@/components/enrollment/YesNoToggle";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import YesNoToggle from "@/portals/patient/components/enrollment/YesNoToggle";
 import { usePresPapStore } from "@/store/presPapStore";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * WF5 (PrES_PAP) entry point — ported from arx-pes-prototype-omniplan's

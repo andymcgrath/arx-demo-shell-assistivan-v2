@@ -2,7 +2,7 @@ import { ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { daysFromToday } from "@/lib/relativeDate";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 const ORDER_NUMBER = "428046573";
 const ORDER_DATE = daysFromToday(-4);
 

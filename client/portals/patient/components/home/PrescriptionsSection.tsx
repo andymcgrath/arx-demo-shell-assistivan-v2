@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronRight, ArrowRight } from "lucide-react";
-import ProgramLogo from "@/components/brand/ProgramLogo";
-import { PROGRAM } from "@/config/branding";
+import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 interface Prescription {
   name: string;

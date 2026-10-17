@@ -16,13 +16,7 @@
     "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./client/*"],
-      "@crm/*": ["./client/portals/crm/*"],
-      "@client/*": ["./client/portals/client/*"],
-      "@patient/*": ["./client/portals/patient/*"],
-      "@analytics/*": ["./client/portals/analytics/*"],
-      "@field/*": ["./client/portals/field/*"],
-      "@provider/*": ["./client/portals/provider/*"]
+      "@/*": ["./client/*"]
     }
   },
   "include": ["client", "shared"],

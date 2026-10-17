@@ -1,7 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, Store, Truck, Sparkles } from "lucide-react";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * Benefit Pricing — CoA_DTP and iAssist_PA_Approved (WF4 replicates this

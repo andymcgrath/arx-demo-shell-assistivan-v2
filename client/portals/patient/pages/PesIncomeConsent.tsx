@@ -1,9 +1,9 @@
 import { FileSignature, ChevronRight } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
-import YesNoToggle from "@/components/enrollment/YesNoToggle";
-import SignatureField from "@/components/enrollment/SignatureField";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import YesNoToggle from "@/portals/patient/components/enrollment/YesNoToggle";
+import SignatureField from "@/portals/patient/components/enrollment/SignatureField";
 import { usePresPapStore } from "@/store/presPapStore";
 
 const INCOME_CONSENT = `By signing and dating below, I, the applicant named above, understand that I am providing authorization under applicable law to obtain information regarding my income and financial status. I authorize the collection of financial information from my credit profile or other sources for the purpose of determining financial eligibility for the patient assistance program. I understand that I may cancel this Authorization at any time by submitting a written request, but that this cancellation will not apply to any information already used or disclosed through this Authorization.`;

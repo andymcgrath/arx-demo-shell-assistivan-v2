@@ -1,6 +1,6 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { ChevronLeft, Mic } from "lucide-react";
 
 /**

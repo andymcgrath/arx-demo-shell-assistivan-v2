@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 function isUnavailable(d: Date): boolean {

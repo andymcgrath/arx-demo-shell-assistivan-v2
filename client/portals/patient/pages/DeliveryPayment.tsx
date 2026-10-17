@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 const LIST_PRICE = 575;

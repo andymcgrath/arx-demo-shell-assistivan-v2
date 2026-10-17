@@ -1,9 +1,9 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronRight, ArrowRight, HelpCircle } from "lucide-react";
-import { useChatContext } from "@/components/ChatContext";
-import ProgramLogo from "@/components/brand/ProgramLogo";
-import { PROGRAM, CHATBOT_ICON } from "@/config/branding";
-import { hexToColorFilter } from "@/lib/brandFilter";
+import { useChatContext } from "@/portals/patient/components/ChatContext";
+import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import { PROGRAM, CHATBOT_ICON } from "@/portals/patient/config/branding";
+import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 
 export default function PAStatus() {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { Check } from "lucide-react";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 
 export default function ConfirmDetails() {
   const navigate = useNavigate();

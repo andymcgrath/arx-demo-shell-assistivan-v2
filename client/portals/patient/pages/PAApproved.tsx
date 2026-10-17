@@ -1,7 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, ChevronRight, BookOpen, CreditCard } from "lucide-react";
-import ProgramLogo from "@/components/brand/ProgramLogo";
-import { PROGRAM } from "@/config/branding";
+import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
 export default function PAApproved() {

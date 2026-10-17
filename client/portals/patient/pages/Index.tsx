@@ -1,8 +1,8 @@
-import WelcomeCard from "@/components/home/WelcomeCard";
-import PapNoInsuranceCard from "@/components/home/PapNoInsuranceCard";
-import InfoCard from "@/components/home/InfoCard";
-import PrescriptionsSection from "@/components/home/PrescriptionsSection";
-import SuggestedSection from "@/components/home/SuggestedSection";
+import WelcomeCard from "@/portals/patient/components/home/WelcomeCard";
+import PapNoInsuranceCard from "@/portals/patient/components/home/PapNoInsuranceCard";
+import InfoCard from "@/portals/patient/components/home/InfoCard";
+import PrescriptionsSection from "@/portals/patient/components/home/PrescriptionsSection";
+import SuggestedSection from "@/portals/patient/components/home/SuggestedSection";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
 export default function Index() {

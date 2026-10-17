@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useLocation, useNavigate } from "@/lib/portalRouter";
-import { useChatContext } from "@/components/ChatContext";
-import ManufacturerLogo from "@/components/brand/ManufacturerLogo";
-import { MANUFACTURER, CHATBOT_ICON, PROGRAM } from "@/config/branding";
-import { hexToColorFilter } from "@/lib/brandFilter";
+import { useChatContext } from "@/portals/patient/components/ChatContext";
+import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLogo";
+import { MANUFACTURER, CHATBOT_ICON, PROGRAM } from "@/portals/patient/config/branding";
+import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { FlowType } from "@/store/demoStore";
 import { menuFor, type MenuEntry } from "@/engine/workflow/screens";

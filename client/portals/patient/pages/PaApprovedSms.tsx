@@ -1,7 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { ChevronLeft, Mic } from "lucide-react";
-import { PROGRAM } from "@/config/branding";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this

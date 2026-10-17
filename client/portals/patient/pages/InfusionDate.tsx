@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
-import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
+import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 
 // iAssist_PAP (WF5) only — this is WF5's replacement for DeliveryDate.tsx.

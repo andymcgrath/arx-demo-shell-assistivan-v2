@@ -1,5 +1,5 @@
-import { PROGRAM } from "@/config/branding";
-import { hexToColorFilter } from "@/lib/brandFilter";
+import { PROGRAM } from "@/portals/patient/config/branding";
+import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 
 interface ProgramLogoProps {
   /** "colors" → brand-colored logo, for white/light backgrounds (default)
