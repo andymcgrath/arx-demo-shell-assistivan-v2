@@ -74,6 +74,17 @@ Build it in three layers:
 2. **Scenario** (small data object, many per workflow): outcome choices (BI result, PA approve or deny, pricing path, terminal state), extra or skipped stages, and content overrides. Scenarios do not contain state-machine code.
 3. **One machine per workflow**, built by a shared factory. The scenario enters as XState `input` and guards read it from context. Where a scenario needs extra states (DME provider transfer, appeal), add them as state fragments that the factory includes only for that scenario.
 
+### Findings from building the test harness (17 Oct 2026)
+
+Driving every flow headless showed things the first pass missed:
+
+- **The machines do not own the timing.** `ARCHITECTURE.md` said delayed transitions live in XState. They do not. BI completion, PA approve or deny, and appeal filing are `setTimeout` effects in `portals/crm/pages/Index.tsx`. The CRM component also picks the outcome (for example, which DME scenario, or deny instead of approve for `iAssist_PAP`). That is scenario logic living in UI code. There are 51 `setTimeout` calls across the portals. This is the strongest argument for the scenario model: outcomes and timers move into scenario data and machine `after` transitions.
+- **Undo is inconsistent.** `CoA_DTP`, `CoA_Copay`, and `CoA_DME` ignore `UNDO`. The other five flows restore the previous step.
+- **Pinned as-is, confirm intent.** After `DELIVER_RX`, the CoAssist flows stay on `/order-tracker` on purpose (a code comment in `derivePatientRoute` says so), and the iAssist approval flow does the same. The Fax and PAP flows go to `/medication-delivered`. The iAssist appeal flow stays on `/pa-approved` through delivery, which nothing explains.
+- **Four missing `WorkflowData` fields** in five machines were fixed (they started as `undefined`).
+
+The tests cover the machines and route logic only. They do not cover the React timers above. After those move into the machines, the same event lists can run with no UI.
+
 ### Step modules
 
 Scenarios share steps, such as payment, pharmacy selection, address and ship date, and enrollment with SMS and OTP. Make each shared step a **step module**. A scenario adds modules to a workflow in order.

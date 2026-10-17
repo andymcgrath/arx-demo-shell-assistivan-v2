@@ -21,7 +21,16 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 6. Extract a module only when two or more scenarios use it. Keep one-off steps inline until a second scenario needs them.
 7. Do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition.
 8. Every scenario ships with a headless test: an event list that must reach a named end state.
-9. Keep XState. Its parallel regions, delayed transitions, and undo are the reason it is here.
+9. Keep XState. Its parallel regions, delayed transitions, and undo are the reason to keep it.
+10. Auto-advance timers that decide scenario outcomes (BI result, PA approve or deny, appeal) belong in the machine as `after` transitions, not in React `setTimeout` effects. Today they live in `portals/crm/pages/Index.tsx`. Move them as each workflow migrates.
+
+## Test rules
+
+- Run `pnpm test` before and after every refactor step. It must stay green.
+- Machine tests live in `client/engine/__tests__/`. They drive machines with event lists and assert on `workflowData`, emitted events, and `derivePatientRoute()`. Do not assert on internal state names.
+- Expected output lives in `__fixtures__/*.json`. If behavior changes on purpose, run `RECORD=1 pnpm test`, review the fixture diff, and commit it with the change. Never record to make a failing test pass without reading the diff.
+- Add or update a scenario in `scenarios.ts` whenever a flow or branch is added.
+- `pnpm typecheck:ratchet` fails if the type-error count rises above `.typecheck-baseline`. Lower the baseline with `--update` whenever the count drops. At zero, switch to plain `pnpm typecheck`.
 
 ## Brand and deploy rules
 

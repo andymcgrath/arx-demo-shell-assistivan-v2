@@ -1,0 +1,62 @@
+[
+  {
+    "eventType": "ENROLL",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medical Benefit Coverage Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation confirmed Test Patient's DME (CGM sensor) is covered under their commercial medical benefit.",
+      "The case is being transferred to an outside DME provider for fulfillment — no Prior Authorization is needed on this case."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "NOTIFY_PROVIDER_TRANSFER",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "DME Provider Transfer Notified - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient's case has been transferred to Advanced Diabetes Supply for fulfillment, now that medical-benefit coverage is confirmed.",
+      "Advanced Diabetes Supply will contact the patient directly to complete the order ((858) 555-0148). No further action is needed on this case."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  }
+]

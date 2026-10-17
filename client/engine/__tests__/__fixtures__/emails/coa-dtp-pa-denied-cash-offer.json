@@ -1,0 +1,174 @@
+[
+  {
+    "eventType": "ENROLL",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Needed - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation confirmed Dr. Test needs to submit a prior authorization for Test Patient.",
+      "The Prior Authorization task is now open on this patient's case."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "SUBMIT_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Submitted - Test Patient",
+    "bodyParagraphs": [
+      "A prior authorization request was submitted to the payer for Test Patient.",
+      "AssistRx is monitoring for a decision and will notify you once the payer responds."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "DENY_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Denied - Test Patient",
+    "bodyParagraphs": [
+      "The payer denied the prior authorization request for Test Patient.",
+      "An appeal is recommended. Review the denial reason and coordinate next steps with Dr. Test."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "SEND_CASH_OFFER",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Send Cash Offer - Test Patient",
+    "bodyParagraphs": [
+      "Send Cash Offer occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_PAYS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Patient Pays - Test Patient",
+    "bodyParagraphs": [
+      "Patient Pays occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "VERIFY_PAYMENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Verify Payment - Test Patient",
+    "bodyParagraphs": [
+      "Verify Payment occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_SETS_ADDRESS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Shipping Address Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed the delivery address for their medication shipment."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_SELECTS_SHIP_DATE",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Preferred Ship Date Selected - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient selected a preferred ship date for their medication."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "FILL_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Filled - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy filled the prescription for Test Patient.",
+      "The order is ready for dispatch."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "READY_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Ready for Fulfillment - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy verified and is preparing to fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SHIP_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Shipped - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient's medication has shipped and is expected within 2-3 business days."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "DELIVER_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Delivered - Test Patient",
+    "bodyParagraphs": [
+      "Delivery has been confirmed for Test Patient's medication."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  }
+]

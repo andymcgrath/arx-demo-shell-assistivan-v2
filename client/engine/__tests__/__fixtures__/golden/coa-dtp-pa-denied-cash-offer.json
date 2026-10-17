@@ -1,0 +1,266 @@
+{
+  "flowType": "CoA_DTP",
+  "steps": [
+    {
+      "event": "ENROLL",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "ENROLL",
+          "portal": "crm",
+          "workflowStep": 1
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "RUN_BI",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "payload": {
+        "result": "coverage_found"
+      },
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "biStatus": "complete"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "SUBMIT_PA",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "paStatus": "submitted",
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "DENY_PA",
+      "accepted": true,
+      "route": "/pa-denied",
+      "changed": {
+        "paStatus": "denied"
+      },
+      "newEvents": [
+        {
+          "eventType": "DENY_PA",
+          "portal": "provider",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SEND_CASH_OFFER",
+      "accepted": true,
+      "route": "/delivery-payment",
+      "changed": {
+        "cashOfferStatus": "sent"
+      },
+      "newEvents": [
+        {
+          "eventType": "SEND_CASH_OFFER",
+          "portal": "crm",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_PAYS",
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "cashOfferStatus": "paid"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_PAYS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PAYMENT",
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "paymentVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PAYMENT",
+          "portal": "crm",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/delivery-date",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "processing",
+        "dispatchStatus": "dispatched"
+      },
+      "newEvents": [
+        {
+          "eventType": "FILL_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "ready"
+      },
+      "newEvents": [
+        {
+          "eventType": "READY_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-shipped",
+      "changed": {
+        "pharmacyStatus": "shipped"
+      },
+      "newEvents": [
+        {
+          "eventType": "SHIP_RX",
+          "portal": "field",
+          "workflowStep": 11
+        }
+      ]
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "delivered"
+      },
+      "newEvents": [
+        {
+          "eventType": "DELIVER_RX",
+          "portal": "field",
+          "workflowStep": 12
+        }
+      ]
+    }
+  ]
+}

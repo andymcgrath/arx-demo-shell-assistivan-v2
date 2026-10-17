@@ -1,0 +1,134 @@
+{
+  "flowType": "CoA_DME",
+  "steps": [
+    {
+      "event": "ENROLL",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "ENROLL",
+          "portal": "crm",
+          "workflowStep": 1
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "RUN_BI",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "payload": {
+        "pharmacyBenefitStatus": "covered",
+        "medicalBenefitStatus": "covered"
+      },
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "biStatus": "complete",
+        "biResult": "dme_covered",
+        "pharmacyBenefitStatus": "covered",
+        "medicalBenefitStatus": "covered"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "NOTIFY_PROVIDER_TRANSFER",
+      "accepted": true,
+      "route": "/dme-transfer-sms",
+      "changed": {
+        "dmeProviderTransferStatus": "notified",
+        "dmeTransferSmsSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "NOTIFY_PROVIDER_TRANSFER",
+          "portal": "crm",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_DME_TRANSFER_SMS",
+      "accepted": true,
+      "route": "/dme-provider-transfer",
+      "changed": {
+        "dmeTransferSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_DME_TRANSFER_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    }
+  ]
+}

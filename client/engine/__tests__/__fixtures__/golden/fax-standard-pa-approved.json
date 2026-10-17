@@ -1,0 +1,241 @@
+{
+  "flowType": "Fax_QS_PA_Approved",
+  "steps": [
+    {
+      "event": "ENROLL",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "ENROLL",
+          "portal": "crm",
+          "workflowStep": 1
+        }
+      ]
+    },
+    {
+      "event": "INVITE",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {},
+      "newEvents": [
+        {
+          "eventType": "INVITE",
+          "portal": "crm",
+          "workflowStep": 2
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "enrollmentAcknowledged": true,
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "RUN_BI",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "payload": {
+        "result": "coverage_found"
+      },
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "biStatus": "complete",
+        "biResult": "coverage_found"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "SUBMIT_PA",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "paStatus": "submitted",
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "APPROVE_PA",
+      "accepted": true,
+      "route": "/pa-approved",
+      "changed": {
+        "paStatus": "approved",
+        "dispatchStatus": "pending_selection",
+        "paApprovedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "APPROVE_PA",
+          "portal": "provider",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SELECT_PHARMACY",
+      "payload": {
+        "pharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "dispatchStatus": "selected",
+        "selectedPharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_PHARMACY",
+          "portal": "crm",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "processing",
+        "dispatchStatus": "dispatched"
+      },
+      "newEvents": [
+        {
+          "eventType": "FILL_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "ready"
+      },
+      "newEvents": [
+        {
+          "eventType": "READY_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-shipped",
+      "changed": {
+        "pharmacyStatus": "shipped"
+      },
+      "newEvents": [
+        {
+          "eventType": "SHIP_RX",
+          "portal": "field",
+          "workflowStep": 11
+        }
+      ]
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/medication-delivered",
+      "changed": {
+        "pharmacyStatus": "delivered"
+      },
+      "newEvents": [
+        {
+          "eventType": "DELIVER_RX",
+          "portal": "field",
+          "workflowStep": 12
+        }
+      ]
+    }
+  ]
+}

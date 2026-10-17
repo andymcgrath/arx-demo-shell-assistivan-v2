@@ -16,6 +16,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
     "typecheck:functions": "tsc -p netlify/functions/tsconfig.json"
   },
   "dependencies": {

@@ -39,9 +39,14 @@ interface MachineContext {
 }
 ```
 
-**Delayed transitions (no `setTimeout` in React):**
-- PA auto-approval: 3 seconds after `paStatus === "submitted"`
-- Order auto-ship: 3 seconds after `pharmacyStatus === "processing"`
+**Auto-advance timers (correction, 17 Oct 2026):** these do NOT live in the machines. No machine defines an `after` transition. The timers are `setTimeout` calls in React effects, mainly `client/portals/crm/pages/Index.tsx`:
+- BI completes 3 seconds after the agent opens the BI tab (and picks the BI result, including the DME scenario)
+- PA resolves 3 seconds after the agent opens the PA tab (approve, or deny for `iAssist_PAP`)
+- Appeal is filed 2.5 seconds after PA denial when the Rules portal appeal rule is active
+
+There are 51 `setTimeout` calls across the portals in total. The refactor moves the scenario-relevant ones into the machines so scenarios can be tested headless.
+
+**Undo:** `UNDO` is handled by `Fax_*`, `iAssist_*`, and `PrES_PAP`. `CoA_DTP`, `CoA_Copay`, and `CoA_DME` do not handle it (pinned by `client/engine/__tests__/__fixtures__/undo/`).
 
 ---
 

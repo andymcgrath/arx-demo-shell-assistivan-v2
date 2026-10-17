@@ -1,0 +1,151 @@
+[
+  {
+    "eventType": "ENROLL",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "INVITE",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Identity Verification Sent - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx sent an identity verification text to Test Patient to continue enrollment.",
+      "No action is needed from you unless the patient reports an issue receiving it."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "No Coverage Found - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation found no insurance coverage for Test Patient.",
+      "The patient may qualify for AssistRx's Free Goods financial assistance program. No Prior Authorization task will open on this case."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "START_INCOME_QUALIFICATION",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Income Qualification Started - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient needs to submit proof of income to finish qualifying for the Free Goods financial assistance program."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SEND_PAP_SMS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Financial Assistance Verification Sent - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx sent an identity verification text to Test Patient for the Free Goods financial assistance program."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "VERIFY_INCOME",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Income Verification Submitted - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient submitted income verification for the financial assistance program review."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SELECT_PHARMACY",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Specialty Pharmacy Selected - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx selected the specialty pharmacy that will fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "FILL_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Filled - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy filled the prescription for Test Patient.",
+      "The order is ready for dispatch."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "READY_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Ready for Fulfillment - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy verified and is preparing to fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SHIP_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Shipped - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient's medication has shipped and is expected within 2-3 business days."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "DELIVER_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Delivered - Test Patient",
+    "bodyParagraphs": [
+      "Delivery has been confirmed for Test Patient's medication."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  }
+]

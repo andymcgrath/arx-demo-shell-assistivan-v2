@@ -1,0 +1,86 @@
+[
+  {
+    "eventType": "ENROLL",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "INVITE",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Identity Verification Sent - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx sent an identity verification text to Test Patient to continue enrollment.",
+      "No action is needed from you unless the patient reports an issue receiving it."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Needed - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation confirmed Dr. Test needs to submit a prior authorization for Test Patient.",
+      "The Prior Authorization task is now open on this patient's case."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "SUBMIT_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Submitted - Test Patient",
+    "bodyParagraphs": [
+      "A prior authorization request was submitted to the payer for Test Patient.",
+      "AssistRx is monitoring for a decision and will notify you once the payer responds."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "DENY_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Denied - Test Patient",
+    "bodyParagraphs": [
+      "The payer denied the prior authorization request for Test Patient.",
+      "An appeal is recommended. Review the denial reason and coordinate next steps with Dr. Test."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  }
+]
