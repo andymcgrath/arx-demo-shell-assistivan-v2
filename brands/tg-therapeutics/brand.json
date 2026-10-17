@@ -1,6 +1,7 @@
 {
   "slug": "tg-therapeutics",
   "name": "TG Therapeutics",
+  "title": "BRIUMVI Demo",
   "enabledFlows": [
     "iAssist_PA_Approved",
     "iAssist_PAP"

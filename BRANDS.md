@@ -6,7 +6,7 @@ One brand per client. Each client has one Netlify site that builds from `main`.
 
 1. Create `brands/<slug>/brand.json`. Copy an existing one. The type is `BrandConfig` in `client/brand/schema.ts`.
 2. Put images in `public/brands/<slug>/` and refer to them as `/brands/<slug>/<file>`.
-3. Set `enabledFlows`. The first entry is the flow a new session starts on.
+3. Set `title` (the browser tab title) and `enabledFlows`. The first entry is the flow a new session starts on.
 4. Run `pnpm test`. The brand test checks required fields, real flow ids, and that every local image exists.
 
 ## Pick a brand

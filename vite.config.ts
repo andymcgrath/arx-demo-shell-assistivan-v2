@@ -15,20 +15,24 @@ if (!fs.existsSync(brandFile)) {
 }
 const brand = JSON.parse(fs.readFileSync(brandFile, "utf8"));
 
-/** Puts the brand favicon in the HTML at build time. Falls back to public/favicon.png. */
-function brandFaviconPlugin(favicon: string | undefined): Plugin {
+/** Puts the brand title and favicon in the HTML at build time. Falls back to what index.html says. */
+function brandHtmlPlugin(brand: { title?: string; favicon?: string }): Plugin {
   return {
-    name: "brand-favicon",
+    name: "brand-html",
     transformIndexHtml(html) {
-      if (!favicon) return html;
-      const type = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
-      return html.replace(/<link rel="icon"[^>]*>/, `<link rel="icon" type="${type}" href="${favicon}" />`);
+      let out = html;
+      if (brand.title) out = out.replace(/<title>[^<]*<\/title>/, `<title>${brand.title}</title>`);
+      if (brand.favicon) {
+        const type = brand.favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
+        out = out.replace(/<link rel="icon"[^>]*>/, `<link rel="icon" type="${type}" href="${brand.favicon}" />`);
+      }
+      return out;
     },
   };
 }
 
 export default defineConfig({
-  plugins: [react(), brandFaviconPlugin(brand.favicon)],
+  plugins: [react(), brandHtmlPlugin(brand)],
   define: { __BRAND__: JSON.stringify(brand) },
   resolve: {
     alias: {

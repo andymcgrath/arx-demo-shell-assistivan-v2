@@ -1,6 +1,7 @@
 {
   "slug": "assistivan",
   "name": "Assistivan",
+  "title": "Assistivan Demo",
   "enabledFlows": [
     "Fax_QS_PA_Approved",
     "Fax_PAP_Audit",

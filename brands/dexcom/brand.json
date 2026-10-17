@@ -1,6 +1,7 @@
 {
   "slug": "dexcom",
   "name": "Dexcom",
+  "title": "Dexcom G7 Demo",
   "enabledFlows": [
     "CoA_DME"
   ],

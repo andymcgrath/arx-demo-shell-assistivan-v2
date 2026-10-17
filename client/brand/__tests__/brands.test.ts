@@ -34,7 +34,7 @@ for (const slug of slugs) {
 
     it("has the slug of its folder and the required fields", () => {
       expect(brand.slug).toBe(slug);
-      for (const field of ["name", "enabledFlows", "manufacturer", "program", "chatbotIcon"]) {
+      for (const field of ["name", "title", "enabledFlows", "manufacturer", "program", "chatbotIcon"]) {
         expect(field in brand).toBe(true);
       }
       expect(typeof brand.program.drugDisplayName).toBe("string");

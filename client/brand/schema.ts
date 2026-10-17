@@ -12,6 +12,8 @@ export interface BrandConfig {
   slug: string;
   /** Human name for the brand. Shown in tooling, never in the demo UI. */
   name: string;
+  /** Browser tab title. Written into the HTML at build time. */
+  title: string;
   /** Flows this client sees. The first entry is the starting flow. */
   enabledFlows: FlowType[];
   manufacturer: {
