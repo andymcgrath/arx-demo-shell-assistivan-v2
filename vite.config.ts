@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import fs from "fs";
-import { resolveBrand } from "./client/brand/resolve";
+import { brandChain, pruneBrandAssets, resolveBrand } from "./client/brand/resolve";
 
 /**
  * The brand is chosen at build time. Set BRAND=<slug> to bundle brands/<slug>/brand.json.
@@ -16,6 +16,21 @@ if (!fs.existsSync(path.join(brandsDir, brandSlug, "brand.json"))) {
 }
 // resolveBrand follows "extends", so a brand can start from another one.
 const brand = resolveBrand(brandsDir, brandSlug) as { title?: string; favicon?: string };
+
+/** Keeps only this brand's images (and its parents') in the build. Other clients' images never ship. */
+function brandAssetIsolationPlugin(keep: string[]): Plugin {
+  let outDir = "";
+  return {
+    name: "brand-asset-isolation",
+    apply: "build",
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      pruneBrandAssets(outDir, keep);
+    },
+  };
+}
 
 /** Puts the brand title and favicon in the HTML at build time. Falls back to what index.html says. */
 function brandHtmlPlugin(brand: { title?: string; favicon?: string }): Plugin {
@@ -34,7 +49,7 @@ function brandHtmlPlugin(brand: { title?: string; favicon?: string }): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), brandHtmlPlugin(brand)],
+  plugins: [react(), brandHtmlPlugin(brand), brandAssetIsolationPlugin(brandChain(brandsDir, brandSlug))],
   define: { __BRAND__: JSON.stringify(brand) },
   resolve: {
     alias: {

@@ -143,7 +143,7 @@ Not done yet:
 - A brand can start from another with `"extends": "<slug>"`. `client/brand/resolve.ts` merges it at build time (objects field by field, arrays replace) and rejects loops and missing parents. `hikma` is the first user: the default look with the fax and iAssist flows. More default-look clients need only a short file.
 - Four live-site brands were converted from their exports: Edding Genor, Hikma, Moon Lake and PharmaEssentia. Images came from the old sites. Edding, Hikma and PharmaEssentia use placeholder flow lists until the flows per client are confirmed.
 - Hikma assets in `public/brands/hikma/` are left untracked on purpose, for a later real Hikma brand.
-- Open: every client's images still ship in every build because Vite copies all of `public/`. Fix before cutover by copying only the active brand's folder, plus its parents' folders.
+- Image isolation (tag `refactor/14-asset-isolation`): a build plugin deletes every other brand's folder from `dist/brands/` after Vite copies `public/`. The brand test requires each brand to use only its own folder or a parent's. Not run in a real build here: check `ls dist/brands` after `BRAND=hikma pnpm build:client`. It should list `hikma` and `assistivan` only (hikma only if it has files).
 
 ## Short answers
 

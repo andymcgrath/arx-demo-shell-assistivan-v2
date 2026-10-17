@@ -25,6 +25,10 @@ A brand that looks like the default but shows different flows needs only a short
 
 The build merges it over the parent. Objects merge field by field. Arrays and values replace the parent's, so a child's `enabledFlows` replaces the whole list. Change only what differs. A change to the parent reaches every child. The brand test checks the merged result.
 
+## Images stay with their client
+
+The build keeps only the active brand's image folder, plus the folders of any brand it extends. Other clients' folders are deleted from the build, so their URLs return nothing on that site. A brand may therefore point only at images in its own folder or a parent's. The brand test checks this. `pnpm dev` still serves every folder.
+
 ## Pick a brand
 
 Set `BRAND=<slug>` in the Netlify site settings. The default is `assistivan`. The build fails when the slug has no `brands/<slug>/brand.json`.

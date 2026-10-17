@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { SCENARIOS } from "@/engine/__tests__/scenarios";
-import { listBrandSlugs, resolveBrand } from "@/brand/resolve";
+import { brandChain, listBrandSlugs, resolveBrand } from "@/brand/resolve";
 
 /**
  * Every folder under brands/ must resolve to a complete, self-consistent brand
@@ -48,6 +48,13 @@ for (const slug of slugs) {
       expect(brand.enabledFlows.length > 0).toBe(true);
       for (const flow of brand.enabledFlows) expect(FLOW_IDS.includes(flow)).toBe(true);
       expect(new Set(brand.enabledFlows).size).toBe(brand.enabledFlows.length);
+    });
+
+    it("only uses images from its own folder or a parent's, so isolation keeps them", () => {
+      const allowed = brandChain(BRANDS_DIR, slug);
+      for (const url of localAssets(brand)) {
+        expect(allowed.includes(url.split("/")[2])).toBe(true);
+      }
     });
 
     it("points every local image at a committed file", () => {

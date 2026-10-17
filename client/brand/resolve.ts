@@ -60,3 +60,21 @@ export function listBrandSlugs(brandsDir: string): string[] {
     .readdirSync(brandsDir)
     .filter((d) => !d.startsWith("_") && fs.statSync(path.join(brandsDir, d)).isDirectory());
 }
+
+/**
+ * Deletes every brand image folder from a finished build except the ones in `keep`
+ * (the active brand and its parents). Vite copies all of public/, so without this each
+ * client's site would also serve every other client's images.
+ * Returns the folders it removed.
+ */
+export function pruneBrandAssets(distDir: string, keep: string[]): string[] {
+  const root = path.join(distDir, "brands");
+  if (!fs.existsSync(root)) return [];
+  const removed: string[] = [];
+  for (const dir of fs.readdirSync(root)) {
+    if (keep.includes(dir)) continue;
+    fs.rmSync(path.join(root, dir), { recursive: true, force: true });
+    removed.push(dir);
+  }
+  return removed;
+}

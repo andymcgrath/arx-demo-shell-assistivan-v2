@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { brandChain, mergeBrand, resolveBrand } from "@/brand/resolve";
+import { brandChain, mergeBrand, pruneBrandAssets, resolveBrand } from "@/brand/resolve";
 
 function brandsDir(brands: Record<string, object>): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "brands-"));
@@ -59,5 +59,25 @@ describe("brand extends", () => {
   it("rejects a parent that does not exist", () => {
     const dir = brandsDir({ a: { extends: "ghost", slug: "a" } });
     expect(error(() => resolveBrand(dir, "a")).includes('extends "ghost"')).toBe(true);
+  });
+});
+
+describe("brand asset isolation", () => {
+  it("removes every brand image folder except the ones kept", () => {
+    const dist = fs.mkdtempSync(path.join(os.tmpdir(), "dist-"));
+    for (const slug of ["mine", "parent", "other", "another"]) {
+      fs.mkdirSync(path.join(dist, "brands", slug), { recursive: true });
+      fs.writeFileSync(path.join(dist, "brands", slug, "logo.png"), "x");
+    }
+    fs.writeFileSync(path.join(dist, "favicon.png"), "x");
+    const removed = pruneBrandAssets(dist, ["mine", "parent"]);
+    expect(removed.sort()).toEqual(["another", "other"]);
+    expect(fs.readdirSync(path.join(dist, "brands")).sort()).toEqual(["mine", "parent"]);
+    expect(fs.existsSync(path.join(dist, "favicon.png"))).toBe(true);
+  });
+
+  it("does nothing when the build has no brands folder", () => {
+    const dist = fs.mkdtempSync(path.join(os.tmpdir(), "dist-"));
+    expect(pruneBrandAssets(dist, ["mine"])).toEqual([]);
   });
 });
