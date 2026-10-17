@@ -2,6 +2,7 @@ import { ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { daysFromToday } from "@/lib/relativeDate";
+import { PROGRAM } from "@/config/branding";
 const ORDER_NUMBER = "428046573";
 const ORDER_DATE = daysFromToday(-4);
 
@@ -153,7 +154,7 @@ function RetailPharmacyTracker({ selectedPharmacyName, isMailOrder }: { selected
         <section>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-            <h3 className="font-semibold text-sm text-arx-primary">Assistivan pharmacy status</h3>
+            <h3 className="font-semibold text-sm text-arx-primary">{PROGRAM.name} pharmacy status</h3>
           </div>
           <div className="space-y-2">
             {steps.map(step => (
@@ -186,6 +187,24 @@ export default function OrderTracker() {
     );
   }
 
+  // CoA_DME Scenario 1 (pharmacy covered, medical not) — mirrors CoA_Copay's
+  // Retail path exactly (confirmed design decision), including this same
+  // 2-step tracker: fulfillment happens outside AssistRx's own pipeline (see
+  // crm/pages/Index.tsx's isDmeRetailFlow, which drops the Pharmacy Status
+  // stage the same way isCopayRetailFlow does), so the default 5-step
+  // shipping tracker below would get stuck forever on "Routing to pharmacy."
+  if (workflowData.flowType === "CoA_DME" &&
+      workflowData.pharmacyBenefitStatus === "covered" &&
+      workflowData.medicalBenefitStatus !== "covered" &&
+      workflowData.pricingOption === "retail") {
+    return (
+      <RetailPharmacyTracker
+        selectedPharmacyName={workflowData.selectedPharmacy?.name ?? null}
+        isMailOrder={false}
+      />
+    );
+  }
+
   const steps = buildSteps(0, pharmacyStatus);
   return (
     <main className="flex-grow pt-5 pb-8">
@@ -209,7 +228,7 @@ export default function OrderTracker() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Assistivan delivery status</h3>
+              <h3 className="font-semibold text-sm text-arx-primary">{PROGRAM.name} delivery status</h3>
             </div>
             <div className="space-y-2">
               {steps.map(step => (

@@ -81,6 +81,10 @@ export const COA_STAGES: { state: string; label: string; fields: (keyof Workflow
   { state: 'rxReady', label: 'Ready to ship', fields: ['pharmacyStatus'] },
   { state: 'rxShipped', label: 'Shipped', fields: ['pharmacyStatus'] },
   { state: 'rxDelivered', label: 'Delivered', fields: ['pharmacyStatus'] },
+  // CoA_DME (workflows/coaDme.ts) only — shares every state name above it
+  // through 'biComplete' verbatim (see that file's header comment), then
+  // ends here instead of continuing into 'paSubmitted' and beyond.
+  { state: 'providerTransferNotified', label: 'DME provider transfer notified — complete', fields: ['dmeProviderTransferStatus'] },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

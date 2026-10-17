@@ -90,25 +90,25 @@ export default function ProgramSection({ data, onChange }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ColorField
             label="Primary"
-            hint="Main brand color"
+            hint="Main brand color — buttons, links, active icons."
             value={data.colors.primary}
             onChange={v => handleColorChange("primary", v)}
           />
           <ColorField
             label="Primary Dark"
-            hint="~15% darker, for hover states"
+            hint="~15% darker — hover/pressed state for primary buttons."
             value={data.colors.primaryDark}
             onChange={v => handleColorChange("primaryDark", v)}
           />
           <ColorField
             label="Primary Light"
-            hint="~50% lighter tint"
+            hint="Fill behind checkmark icons in trackers (Order Tracker, Medication Delivered). The icon is white, so avoid white or very pale values — the checkmark disappears."
             value={data.colors.primaryLight}
             onChange={v => handleColorChange("primaryLight", v)}
           />
           <ColorField
             label="Primary Wash"
-            hint="Very light tint, for subtle backgrounds"
+            hint="Very light tint for hover backgrounds and soft section fills. Pale/near-white is fine — nothing white sits on top of it."
             value={data.colors.primaryWash}
             onChange={v => handleColorChange("primaryWash", v)}
           />
@@ -141,11 +141,15 @@ function ColorField({ label, hint, value, onChange }: { label: string; hint: str
   return (
     <div className="space-y-1">
       <label className="block text-sm font-medium text-[--arx-slate]">{label}</label>
-      {/* Fixed min-height (fits two lines of text-xs) so all four color
-          inputs in the row below line up regardless of which hints happen
-          to wrap to a second line (e.g. "Primary Wash"'s hint is longer
-          than the others) — see feedback: "fix the Brand color alignment". */}
-      <p className="text-xs text-[--arx-inactive] min-h-[2rem]">{hint}</p>
+      {/* Fixed min-height so all four color inputs in the row below line up
+          regardless of which hints happen to wrap to more lines (e.g.
+          "Primary Light"'s hint is longer than the others, since it now
+          explains exactly which app elements it drives, after a brand's
+          primaryLight being set to white made every "done" checkmark badge
+          in the patient portal render invisible) — see feedback: "fix the
+          Brand color alignment". Bumped from 2rem to fit that longer hint
+          at this grid's column width without wrapping past the box. */}
+      <p className="text-xs text-[--arx-inactive] min-h-[3.5rem]">{hint}</p>
       <div className="flex items-center gap-2 border border-[--arx-borders] rounded-lg px-3 py-2 bg-white">
         <input
           type="color"

@@ -64,6 +64,13 @@ const INITIAL_WORKFLOW_DATA: WorkflowData = {
   patientShipDate: null,
   appealStatus: "none",
   infusionDate: null,
+  dmeProviderTransferStatus: "none",
+  pharmacyBenefitStatus: "none",
+  medicalBenefitStatus: "none",
+  cashOfferSmsSent: false,
+  cashOfferSmsVerified: false,
+  dmeTransferSmsSent: false,
+  dmeTransferSmsVerified: false,
 };
 
 const initialContext: MachineContext = {

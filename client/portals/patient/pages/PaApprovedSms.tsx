@@ -1,23 +1,32 @@
 import { useNavigate } from "@/lib/portalRouter";
-import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { ChevronLeft, Mic } from "lucide-react";
+import { PROGRAM } from "@/config/branding";
 
 /**
  * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
  * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
  * iAssist.ts's updatePaApprovedSmsVerified). WF1 (Fax_QS_PA_Approved) never
- * routes here.
+ * routes here. CoA_DME Scenario 1 also routes here now — see this flow's own
+ * header comment below and coaDme.ts's paApproved state — reusing this
+ * screen (rather than a DME-specific clone) replaces that scenario's old
+ * single tap-through SMS entirely, per the confirmed PA design.
  *
  * A second "text message" beat, separate from the original enrollment SMS
  * (SMSMessage.tsx, untouched — this is a new dedicated screen so WF1's
  * onboarding text can't be affected by anything here). Sent once PA is
- * approved, letting the patient know it's time to schedule delivery.
- * Tapping the link dispatches VERIFY_PA_APPROVED_SMS and continues to a
- * second OTP check (PaApprovedOtp.tsx) before Benefit Pricing.
+ * approved, letting the patient know it's time to schedule delivery (or, for
+ * CoA_DME, pick a network pharmacy — there's no "delivery" framing yet at
+ * this point in that flow). Tapping the link dispatches
+ * VERIFY_PA_APPROVED_SMS and continues to a second OTP check
+ * (PaApprovedOtp.tsx) before Benefit Pricing (CoA_DTP/iAssist) or Network
+ * Pharmacy Selection (CoA_DME).
  */
 export default function PaApprovedSms() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const { workflowData } = usePersonaState('patient');
+  const isDmeFlow = workflowData.flowType === "CoA_DME";
 
   const handleTapMessage = () => {
     dispatch("VERIFY_PA_APPROVED_SMS", { portal: "patient" });
@@ -54,7 +63,9 @@ export default function PaApprovedSms() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              Good news! Your Assistivan prior authorization was approved. Time to schedule delivery:
+              {isDmeFlow
+                ? `Good news! Your ${PROGRAM.name} prior authorization was approved. Time to pick a pharmacy:`
+                : "Good news! Your Assistivan prior authorization was approved. Time to schedule delivery:"}
             </p>
             <button
               onClick={handleTapMessage}

@@ -277,6 +277,7 @@ export default function FieldPortal() {
     frmName: FRM_NAME,
     biResult,
     infusionDate,
+    flowType: state.flow_type,
   });
   const selectedEmail = selectedEmailId ? generatedEmails.find((e) => e.id === selectedEmailId) ?? null : null;
 

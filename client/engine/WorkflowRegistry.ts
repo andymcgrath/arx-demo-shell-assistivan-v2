@@ -8,6 +8,7 @@
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coaDtpMachine } from "@/workflows/coaDtp";
 import { coaCopayMachine } from "@/workflows/coaCopay";
+import { coaDmeMachine } from "@/workflows/coaDme";
 import { iAssistMachine } from "@/workflows/iAssist";
 import { iAssistPapMachine } from "@/workflows/iAssistPap";
 import { presPapMachine } from "@/workflows/presPap";
@@ -57,6 +58,11 @@ workflowRegistry.registerWorkflow("CoA_DTP", coaDtpMachine, {
 workflowRegistry.registerWorkflow("CoA_Copay", coaCopayMachine, {
   label: "CoAssist Copay",
   description: "CoAssist Copay Program variation — currently a direct copy of CoA_DTP (WF3), pending its own divergent behavior",
+});
+
+workflowRegistry.registerWorkflow("CoA_DME", coaDmeMachine, {
+  label: "CoAssist DME (Medical Benefit)",
+  description: "Commercial medical-benefit DME coverage — transfers to an outside DME provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
 });
 
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {

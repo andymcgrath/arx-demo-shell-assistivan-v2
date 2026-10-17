@@ -123,6 +123,31 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     ];
   }
 
+  if (flowType === "CoA_DME") {
+    // Medical-benefit DME (no PA/pricing/fulfillment — see
+    // workflows/coaDme.ts): same SMS + OTP + Consent onboarding as
+    // CoA_DTP/CoA_Copay above, but ends at the DME Provider Transfer screen
+    // instead of a Prior Authorization/order chain.
+    return [
+      { label: "Home", path: "/" },
+      {
+        group: "Enrollment",
+        items: [
+          { label: "SMS Verification",         path: "/sms-message" },
+          { label: "OTP Verification",         path: "/otp-verification" },
+          { label: "Confirm Details & Consent", path: "/confirm-details" },
+          { label: "Enrollment Complete",      path: "/enrollment-complete" },
+        ],
+      },
+      {
+        group: "DME Provider Transfer",
+        items: [
+          { label: "DME Provider Transfer", path: "/dme-provider-transfer" },
+        ],
+      },
+    ];
+  }
+
   // Fax_QS_PA_Approved
   if (flowType === "Fax_QS_PA_Approved") {
     return [

@@ -161,12 +161,23 @@ export default function BenefitPricing() {
     return <CopayBenefitPricing copayEnrolled={workflowData.copayEnrolled} />;
   }
 
+  // CoA_DME only reaches this screen for Scenario 1 (pharmacy covered,
+  // medical not — see workflows/coaDme.ts and WorkflowEngine.ts's
+  // derivePatientRoute) — its cash-pay scenario (Scenario 3) is a completely
+  // separate branch triggered only when neither benefit is covered, never a
+  // patient choice on this screen, so there's no self-pay/Copay option here.
+  if (workflowData.flowType === "CoA_DME") {
+    return <DefaultBenefitPricing hideSelfPay />;
+  }
+
   return <DefaultBenefitPricing />;
 }
 
-function DefaultBenefitPricing() {
+function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean }) {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+
+  const pricingOptions = hideSelfPay ? PRICING_OPTIONS.filter((o) => o.key !== "self_pay") : PRICING_OPTIONS;
 
   function choosePricing(option: "retail" | "mail_order") {
     dispatch("SELECT_PRICING_OPTION", { portal: "patient", option });
@@ -198,12 +209,15 @@ function DefaultBenefitPricing() {
               <p className="font-bold text-base text-arx-slate">
                 Great news! {PROGRAM.drugDisplayName} is covered by your insurance
               </p>
-              <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>
+              {/* CoA_DME (hideSelfPay) never submits a Prior Authorization —
+                  see workflows/coaDme.ts's header comment — so this banner
+                  drops that line for this flow only. */}
+              {!hideSelfPay && <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>}
             </div>
 
             {/* Retail, Mail Order, then Copay — stacked vertically */}
             <div className="flex flex-col gap-4">
-              {PRICING_OPTIONS.map((option) => {
+              {pricingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
                   <button

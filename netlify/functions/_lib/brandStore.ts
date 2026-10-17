@@ -16,17 +16,33 @@
  * and prod never share data unless something explicitly copies between
  * them (see admin-promote / admin-promote-receive).
  *
- * Bundled defaults: three brands ship as committed JSON (the same files
+ * Bundled defaults: four brands ship as committed JSON (the same files
  * the old file-based system used) so the dropdown — and the live site
  * itself — is never empty, even on a brand-new store. These are imported
  * directly (not read via fs) so Netlify's function bundler inlines them
  * at build time; a runtime fs.readFileSync from a deployed function can't
  * reliably reach files outside the function's own bundle.
+ *
+ * dexcom.json was added after the Dexcom brand got silently overwritten
+ * more than once by switching the active brand to demo a different drug —
+ * it had only ever existed as a one-off "active-brand" Blobs record (never
+ * saved as a named preset), so there was nothing to reload once something
+ * else replaced it. Bundling it here means it always shows up in the "Load
+ * brand" dropdown, in every environment, regardless of what's currently
+ * active or whether this environment's Blobs store has ever seen it
+ * before. Its logo/favicon/chatbotIcon fields still point at
+ * /.netlify/functions/serve-upload/... paths uploaded on the
+ * dexcom-demo.netlify.app site specifically (see uploadStore.ts) — those
+ * images will keep rendering correctly there, but would 404 if this
+ * preset were loaded on a *different* site that never had those exact
+ * files uploaded to its own "uploads" Blobs store. Re-upload the logos via
+ * /admin on any new site before relying on this preset there.
  */
 import { getStore } from "@netlify/blobs";
 import assistivanPreset from "../../../client/portals/patient/config/brands/assistivan.json";
 import boehringerPreset from "../../../client/portals/patient/config/brands/boehringer-ingelheim.json";
 import tgPreset from "../../../client/portals/patient/config/brands/tg-therapuetics.json";
+import dexcomPreset from "../../../client/portals/patient/config/brands/dexcom.json";
 
 export interface BrandPreset {
   presetName: string;
@@ -39,6 +55,7 @@ const BUNDLED_PRESETS: Record<string, BrandPreset> = {
   assistivan: assistivanPreset as BrandPreset,
   "boehringer-ingelheim": boehringerPreset as BrandPreset,
   "tg-therapuetics": tgPreset as BrandPreset,
+  dexcom: dexcomPreset as BrandPreset,
 };
 
 const STORE_NAME = "brands";
