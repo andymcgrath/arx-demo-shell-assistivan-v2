@@ -115,45 +115,17 @@
     {
       "event": "CONFIRM_CONSENT",
       "accepted": true,
-      "route": "/pa-approved-sms",
+      "route": "/benefit-pricing",
       "changed": {
-        "consentStatus": "confirmed"
+        "consentStatus": "confirmed",
+        "paApprovedSmsVerified": true,
+        "paApprovedOtpVerified": true
       },
       "newEvents": [
         {
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_PA_APPROVED_SMS",
-      "accepted": true,
-      "route": "/pa-approved-otp",
-      "changed": {
-        "paApprovedSmsVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_PA_APPROVED_SMS",
-          "portal": "patient",
-          "workflowStep": 9
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_PA_APPROVED_OTP",
-      "accepted": true,
-      "route": "/benefit-pricing",
-      "changed": {
-        "paApprovedOtpVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_PA_APPROVED_OTP",
-          "portal": "patient",
-          "workflowStep": 9
         }
       ]
     },

@@ -85,7 +85,8 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     // BI and PA run off the eRx alone, so the PA can be approved while the patient is still
-    // enrolling. Pricing options reach the patient only after they consent.
+    // enrolling. They are in the app, so after they consent they go straight to pricing: no
+    // PA-approved SMS and no second one-time code.
     name: "coa-dtp-pa-approved-before-patient-consent",
     flowType: "CoA_DTP",
     steps: [
@@ -93,7 +94,6 @@ export const SCENARIOS: Scenario[] = [
       { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "SUBMIT_PA" }, { type: "APPROVE_PA" },
       ...verifyIdentity,
-      ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...addressAndDate, ...fulfillment,

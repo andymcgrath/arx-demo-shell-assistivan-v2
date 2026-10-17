@@ -150,18 +150,32 @@ describe("CoAssist ordering rules", () => {
       });
     });
 
-    it("Pricing options wait for enrollment: a PA approved before consent reaches the patient only after consent", () => {
+    it("A PA approved before consent: nothing reaches the patient until they consent, then they go straight to pricing", () => {
       withFrozenClock(() => {
         for (const flow of COA) {
           const actor = startFlow(flow);
           runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }]);
           expect(ctx(actor).workflowData.paStatus).toBe("approved");
+          // Still enrolling: the pricing SMS cannot go out.
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]);
           runSteps(actor, [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }]);
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]); // consent still pending
           runSteps(actor, [{ type: "CONFIRM_CONSENT" }]);
+          // In the app and already verified: no second SMS or one-time code.
+          expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]);
+          expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_OTP" })]).toEqual([flow, false]);
+          expect(ctx(actor).workflowData.paApprovedOtpVerified).toBe(true);
+          if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/benefit-pricing");
+        }
+      });
+    });
+
+    it("A PA approved after consent still sends the SMS and one-time code (the patient is away)", () => {
+      withFrozenClock(() => {
+        for (const flow of COA) {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }, ...ENROLLED, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }]);
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, true]);
-          // The patient's next screen is the pricing SMS, not the home screen.
           if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/pa-approved-sms");
         }
       });

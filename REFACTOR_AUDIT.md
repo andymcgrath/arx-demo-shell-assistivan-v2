@@ -30,6 +30,14 @@ Found by a presenter run of CoAssist DTP: BI and PA run off the eRx, so the PA c
 - The CRM label ignored consent. It now says "pricing options will be sent once the patient completes enrollment" until consent is confirmed.
 - Screen order lives in three places that disagree: `derivePatientRoute`, the patient portal's `DELIVERY_FLOW_PATHS` guard (it will not navigate away from `/enrollment-complete`), and hard-coded `navigate()` calls in pages. `UploadInsurance` fired consent and then hard-coded `/enrollment-complete`, which the guard then protected. The page now navigates to the state-derived route (still `/enrollment-complete` when nothing further is due). This is a patch. Screen order as one list in the workflow definition (rule 13) removes the class of bug.
 
+### Step 04: no second SMS when the patient is already in the app (tag `refactor/04-pa-approved-in-session`)
+
+Presenter feedback on CoAssist DTP: after finishing enrollment, the patient got a "PA approved" text and a second one-time code, then pricing. A real patient is already in the app and would just continue. The PA-approved SMS and code exist for a patient who is away when the decision lands.
+
+Rule, in `coassist/rules.ts` (all three CoAssist scenarios): if the PA was approved before the patient confirmed consent, `CONFIRM_CONSENT` also marks the PA-approved SMS and code as done, so the next screen is pricing. If the PA is approved after consent, the SMS and code still happen. Two invariant tests and one updated golden path pin both cases.
+
+This is the pattern the step-module model describes: the PA-approved notification is a module with a condition (is the patient away?), not a fixed screen. When screen order moves into the workflow definition, this condition moves with it.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

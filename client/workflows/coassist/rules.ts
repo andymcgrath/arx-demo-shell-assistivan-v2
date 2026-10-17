@@ -60,9 +60,15 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "patient", step: 4 },
   },
   {
+    // If the PA was approved while the patient was still enrolling, they are already in the app
+    // (and already verified), so they go straight to pricing. The PA-approved SMS and one-time code
+    // exist for a patient who is away when the decision lands.
     on: "CONFIRM_CONSENT",
     when: (d) => d.otpVerified && d.consentStatus === "pending",
-    set: () => ({ consentStatus: "confirmed" }),
+    set: (d) => ({
+      consentStatus: "confirmed",
+      ...(d.paStatus === "approved" ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true } : {}),
+    }),
     emit: { portal: "patient", step: 5 },
   },
 
