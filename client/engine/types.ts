@@ -104,13 +104,16 @@ export interface WorkflowData {
   /** iAssist_PAP (WF5) only: tracks the Appeal milestone after a PA denial.
    *  'initiated' is what unlocks dispatch/fulfillment for this flow in place
    *  of paStatus === 'approved' (which this flow's PA never reaches — see
-   *  canFillRX in workflows/iAssistPap.ts); fulfillment doesn't wait for
+   *  canFillRX in workflows/iassist/rules.ts); fulfillment doesn't wait for
    *  'approved'. 'approved' is a payer-response outcome layered on top,
    *  populated when the CRM agent opens the Appeals stage tab (see
    *  APPROVE_APPEAL/updateApproveAppeal there) — it only changes what the
    *  Appeals stage detail view displays, not what's already unlocked. Stays
    *  'none' for every other flow. */
   appealStatus: 'none' | 'initiated' | 'approved';
+  /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
+   *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
+  appealRuleActive?: boolean;
   /** iAssist_PAP (WF5) only: the infusion date the patient picks once the
    *  appeal is approved (InfusionDate.tsx). MPX captures it and it's
    *  reflected into iAssist (see Dashboard.tsx's "Infusion Scheduled"

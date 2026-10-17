@@ -75,6 +75,28 @@ Not done yet:
 - The manual "Complete BI" button in the CRM still sends COMPLETE_BI directly.
 - None of the CRM or patient portal changes were run in a browser.
 
+### Step 07: iAssist on the factory (tag `refactor/07-iassist-factory`)
+
+Two copied 600-line machines (`iAssist.ts`, `iAssistPap.ts`) became `workflows/iassist/` (rules, scenarios, screens) on the shared factory. `iAssist_PA_Approved` and `iAssist_PAP` (the appeal) are two scenarios of one workflow.
+
+**Event rename.** `ENROLL` is now `REFERRAL_RECEIVED` everywhere (source, tests, fixtures). It is the eRx arriving, not patient enrollment. A pure rename: 156 lines swapped and every test passed against the renamed fixtures. The snapshot key moved to v3.
+
+**BI first, PA after.** Before, one referral started BI and submitted the PA at the same moment. Now the referral starts BI, and the PA starts when BI completes with a result that requires one. This is rule 11 for an `erx` workflow. iAssist BI no longer waits for patient consent (the old CRM effect did). A BI that says no PA is required leaves the PA at `none`.
+
+**Appeal automation.** The "Initiate Appeal on PA denial" rule built in the Rules portal now reaches the machine as `SET_APPEAL_RULE` (the CRM reports the store value, and again after a reset). The machine files the appeal 2.5 seconds after a denial, or after the rule is activated on a case already denied. Turning the rule off cancels it. Opening the Appeals stage approves the appeal after 2.5 seconds (`VIEW_STAGE`). `appealRuleActive` is a new optional `WorkflowData` field.
+
+**Undo in the factory.** iAssist had Undo and the CoAssist machines did not. The factory now keeps a snapshot per step, so every factory workflow has Undo (the CoAssist undo fixtures changed from unsupported to supported). One Undo takes back what a person did. A same-step automation (BI starting, the PA submitting) rides along with the step that fired it. A delayed reveal is its own step. VIEW_STAGE and LEAVE_STAGE are UI signals and are not steps. Undo and reset cancel pending delayed automations.
+
+**Stricter ordering.** The old iAssist events were mostly unguarded. They now have preconditions like CoAssist: pricing needs the PA-approved SMS and code done, fulfillment needs a ship date (and payment for self-pay), an appeal needs a denied PA, and the appeal scenario never approves its PA. The "approved before the patient consents" rule from step 04 now applies to iAssist too, so that patient also skips the second SMS and code.
+
+**Ladders.** `shell/iassistLadders.ts` holds the iAssist jump-to-stage lists and the ladder test covers them. The old ladder approved the PA while BI was still running, which the new order rejects.
+
+Not done yet:
+- The DME BI outcome still rides on `VIEW_STAGE` from the CRM toggle buttons.
+- Fax, PAP and PrES still use the old machines, the CRM timers and the hand-written route chain and menu.
+- `/pa-denied` and `/pa-approved` for the appeal flow stay on screen after the infusion is scheduled when no date is passed. This is pinned as it was.
+- None of the CRM, patient portal or Rules portal changes were run in a browser.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

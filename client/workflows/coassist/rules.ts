@@ -119,6 +119,7 @@ export const COASSIST_RULES: CoaRule[] = [
   // The machine owns the delay and the outcome. Leaving the stage cancels a pending reveal.
   {
     on: "VIEW_STAGE",
+    snapshot: false,
     scenarios: [...DTP_COPAY],
     when: (d, e) => e.stage === "BI" && d.biStatus === "running",
     then: {
@@ -131,6 +132,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // DME: the presenter picks the BI outcome on the CRM and the stage view carries it.
     on: "VIEW_STAGE",
+    snapshot: false,
     scenarios: ["CoA_DME"],
     when: (d, e) => e.stage === "BI" && d.biStatus === "running",
     then: {
@@ -146,6 +148,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     on: "VIEW_STAGE",
+    snapshot: false,
     when: (d, e) => e.stage === "PA" && d.paStatus === "submitted",
     then: {
       trigger: "agent",
@@ -156,13 +159,14 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     on: "VIEW_STAGE",
+    snapshot: false,
     scenarios: ["CoA_DME"],
     when: (d, e) => e.stage === "DME_TRANSFER" && d.biStatus === "complete" && d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus === "none",
     then: { trigger: "agent", id: "dme-transfer", after: REVEAL_MS, send: () => ({ type: "NOTIFY_PROVIDER_TRANSFER" }) },
   },
-  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
-  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
-  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "DME_TRANSFER", cancel: ["dme-transfer"] },
+  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
+  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
+  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "DME_TRANSFER", cancel: ["dme-transfer"] },
 
   // ── Prior Authorization ────────────────────────────────────────────
   {

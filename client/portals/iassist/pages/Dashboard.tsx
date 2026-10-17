@@ -57,7 +57,7 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
   }
   if (workflowData.paStatus === "denied") {
     // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
-    // workflows/iAssistPap.ts) — this roster row otherwise sat on "PA
+    // workflows/iassist/rules.ts) — this roster row otherwise sat on "PA
     // Denied" forever once the Action Factory rule (or a CRM agent) filed
     // and later resolved the appeal, even though the CRM/patient portal had
     // both moved on. Every other flow leaves appealStatus at 'none' forever,

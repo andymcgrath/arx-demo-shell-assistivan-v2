@@ -61,6 +61,8 @@ export interface Rule<E = any, C = any> {
   then?: Automation<E, C> | Automation<E, C>[];
   /** Ids of delayed automations to cancel when this rule runs. */
   cancel?: string[];
+  /** Set false for UI signals (such as VIEW_STAGE) that should not become an UNDO step. Default true. */
+  snapshot?: boolean;
 }
 
 export interface WorkflowDefinition<C = any> {

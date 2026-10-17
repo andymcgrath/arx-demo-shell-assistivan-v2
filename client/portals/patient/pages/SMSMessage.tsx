@@ -3,7 +3,7 @@ import { ChevronLeft, Mic } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
 // iAssist_PAP (WF5) auto-submits AND auto-resolves BI/PA the moment REFERRAL_RECEIVED
-// fires (see workflows/iAssistPap.ts) — independent of the patient's own
+// fires (see workflows/iassist/rules.ts) — independent of the patient's own
 // pace through this very first SMS/OTP/consent beat. That means a PA can
 // already be Denied (and even appealed) before the patient has tapped this
 // message, so the generic "your prescription is ready to process" copy
@@ -13,7 +13,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 function getMessageCopy(paStatus: string, appealStatus: string): string {
   if (paStatus === "denied") {
     // !== "none" rather than === "initiated": stays accurate once the CRM
-    // agent resolves the appeal to "approved" (see workflows/iAssistPap.ts's
+    // agent resolves the appeal to "approved" (see workflows/iassist/rules.ts's
     // APPROVE_APPEAL) — an appeal was still filed on the patient's behalf
     // either way, this copy doesn't need to change based on the outcome.
     return appealStatus !== "none"

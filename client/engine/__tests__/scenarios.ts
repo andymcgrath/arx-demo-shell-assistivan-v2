@@ -182,6 +182,7 @@ export const SCENARIOS: Scenario[] = [
   },
 
   // ── iAssist ──────────────────────────────────────────────────────────
+  // BI starts with the referral. A BI that requires a PA submits it. No RUN_BI or SUBMIT_PA steps.
   {
     name: "iassist-pa-approved",
     flowType: "iAssist_PA_Approved",
@@ -192,6 +193,21 @@ export const SCENARIOS: Scenario[] = [
       { type: "SELECT_PRICING_OPTION", option: "retail" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...addressAndDate, ...fulfillment,
+    ],
+  },
+  {
+    // The PA is approved while the patient is still enrolling. They are in the app, so after they consent
+    // they go straight to pricing: no PA-approved SMS and no second one-time code.
+    name: "iassist-pa-approved-before-patient-consent",
+    flowType: "iAssist_PA_Approved",
+    steps: [
+      { type: "REFERRAL_RECEIVED" },
+      { type: "COMPLETE_BI", result: "coverage_found" }, { type: "APPROVE_PA" },
+      ...verifyIdentity,
+      { type: "SELECT_SELF_PAY" },
+      ...addressAndDate,
+      { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
+      ...fulfillment,
     ],
   },
   {

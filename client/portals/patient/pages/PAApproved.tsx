@@ -14,7 +14,7 @@ export default function PAApproved() {
   const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // iAssist_PAP (WF5) reaches this screen via an approved APPEAL, not a
   // straight-through PA approval (see WorkflowEngine.ts's derivePatientRoute
-  // and workflows/iAssistPap.ts's appealStatus) — the generic "covered by
+  // and workflows/iassist/rules.ts's appealStatus) — the generic "covered by
   // your insurance" headline reads like a non sequitur right after the
   // patient was told PA was denied, so this flow gets its own headline that
   // closes that loop instead of silently reusing WF1's copy.

@@ -7,8 +7,7 @@
 
 import { workflowMachine } from "@/engine/workflowMachine";
 import { coassistMachine } from "@/workflows/coassist";
-import { iAssistMachine } from "@/workflows/iAssist";
-import { iAssistPapMachine } from "@/workflows/iAssistPap";
+import { iassistMachine } from "@/workflows/iassist";
 import { presPapMachine } from "@/workflows/presPap";
 
 export interface WorkflowMetadata {
@@ -63,14 +62,14 @@ workflowRegistry.registerWorkflow("CoA_DME", coassistMachine, {
   description: "Commercial medical-benefit DME coverage — transfers to an outside DME provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
 });
 
-workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, {
+workflowRegistry.registerWorkflow("iAssist_PA_Approved", iassistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",
 });
 
-workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, {
+workflowRegistry.registerWorkflow("iAssist_PAP", iassistMachine, {
   label: "iAssist Appeal",
-  description: "Structural clone of iAssist (WF4) with PA denied instead of approved",
+  description: "iAssist scenario with the PA denied, an appeal started by a Rules portal automation, then the infusion scheduled",
 });
 
 workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, {

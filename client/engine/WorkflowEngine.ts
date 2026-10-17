@@ -179,24 +179,8 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/medication-delivered';
   }
 
-  // ── iAssist_PAP (WF5) fast-forward ────────────────────────────────────
-  // This flow's BI/PA/Appeal race ahead of the patient's own SMS/OTP/consent
-  // pace the moment REFERRAL_RECEIVED fires (see workflows/iAssistPap.ts) — a real,
-  // reachable state is "appeal already filed or approved, patient portal
-  // never opened yet, consentStatus still 'pending'". Without this, opening
-  // the portal for the first time at that point would force the patient
-  // through lock-screen/SMS/OTP/confirm-details before ever reaching the
-  // denial/appeal screens CRM, iAssist, and Field already show — a jarring
-  // interrupt with no real purpose, since there's nothing left for the
-  // patient to actually consent to that hasn't already happened. Assume
-  // consent so routing skips straight to the resolved state instead.
-  const assumeConsentGiven =
-    flowType === 'iAssist_PAP' &&
-    workflowData.appealStatus !== 'none' &&
-    workflowData.consentStatus === 'pending';
-
   // ── Phase gate: once otpVerified, NEVER return to pre-OTP screens ────
-  const onboardingComplete = workflowData.otpVerified === true || assumeConsentGiven;
+  const onboardingComplete = workflowData.otpVerified === true;
 
   // ── Pre-enrollment ──────────────────────────────────────────────────
   if (!onboardingComplete) {
@@ -209,7 +193,7 @@ export function derivePatientRoute(state: MachineContext): string {
   }
 
   // ── Onboarding (otpVerified = true, consent pending) ────────────────
-  if (workflowData.consentStatus === 'pending' && !assumeConsentGiven)
+  if (workflowData.consentStatus === 'pending')
     return '/confirm-details';
 
   // ── Post-consent waiting state ───────────────────────────────────────
@@ -279,85 +263,12 @@ export function derivePatientRoute(state: MachineContext): string {
     return '/medication-delivered';
   }
 
-  // ── Clinical workflow ────────────────────────────────────────────────
-  // iAssist_PAP (WF5): its PA stays 'denied' forever (see iAssistPap.ts) —
-  // once the appeal is approved (appealStatus flips via APPROVE_APPEAL in
-  // crm/pages/Index.tsx), the patient should see the same approval
-  // messaging/next-steps any other flow's approved PA gets, not keep
-  // sitting on /pa-denied's "still working on it" copy. Checked before the
-  // generic paStatus === 'denied' fallback right below, which would
-  // otherwise catch this flow forever since paStatus itself never changes.
-  // No SMS/OTP re-verify or pricing gate here (unlike iAssist_PA_Approved's
-  // own post-approval branch above) — that scheduling chain was never part
-  // of this flow's intended script (see iAssistPap.ts's header), dispatch
-  // already unlocked the moment the appeal was filed.
-  if (flowType === 'iAssist_PAP' && workflowData.appealStatus === 'approved') {
-    // WF5 dispenses "Keanu to facility" — a site of care, not a pharmacy
-    // shipment — so it never touches pharmacyStatus at all (that field stays
-    // 'none' for this flow's whole post-appeal path; see crm/pages/Index.tsx's
-    // SITES_OF_CARE/officeDispenseOptions and the Dispatch to Triage stage).
-    // Once the patient has picked an infusion date, this flow is done —
-    // CRM handles dispatch to the site of care from here with no further
-    // patient-facing steps. /medication-delivered (shared with every other
-    // flow's "what's next" screen) is the real terminal screen; it shows
-    // the Infusion Appointment details up top for this flow. InfusionDate.tsx
-    // still lands the patient on /appointment-confirmation immediately after
-    // picking a date (a one-time "text from the doctor's office" beat,
-    // tolerated by DELIVERY_FLOW_PATHS) — but the route this function itself
-    // computes is the actual terminal one, so reset/state-driven navigation
-    // (and AppointmentConfirmation's own link onward) lands here, not on a
-    // screen that requires a manual tap to leave.
-    if (workflowData.infusionDate !== null) return '/medication-delivered';
-
-    // Not yet scheduled — patient picks a date on InfusionDate.tsx.
-    return '/pa-approved';
-  }
-
+  // ── Clinical workflow (Fax_QS_PA_Approved) ───────────────────────────
   if (workflowData.paStatus === 'denied') return '/pa-denied';
 
   if (workflowData.biStatus !== 'none' &&
       workflowData.paStatus !== 'approved')
     return '/';
-
-  // ── iAssist post-PA-approval: replicates CoA_DTP's approved-path
-  // scheduling chain exactly (SMS/OTP re-verify -> pricing -> address ->
-  // ship date -> fill/ship/deliver). iAssist never denies PA (see
-  // iAssist.ts), so unlike the isCoA branch above this never needs the
-  // paDenied/cashOfferSent/paymentProcessed detour — only the self-pay
-  // PATIENT_PAYS/VERIFY_PAYMENT beat (reached the same way CoA's
-  // pricingSelected/addressSet/shipDateSelected states reach it). WF1
-  // (Fax_QS_PA_Approved) is untouched — it keeps the generic /pa-approved
-  // screen further below.
-  if (flowType === 'iAssist_PA_Approved' && workflowData.paStatus === 'approved') {
-    if (!workflowData.paApprovedSmsVerified) return '/pa-approved-sms';
-
-    if (!workflowData.paApprovedOtpVerified) return '/pa-approved-otp';
-
-    if (workflowData.pricingOption === null) return '/benefit-pricing';
-
-    if (workflowData.dispatchStatus === 'none' ||
-        workflowData.dispatchStatus === 'pending_selection')
-      return '/delivery-address';
-
-    if (workflowData.patientShipDate === null) return '/delivery-date';
-
-    // Retail/Mail Order cost is handled at the pharmacy counter, same as
-    // CoA — only self-pay collects payment through this screen.
-    if (workflowData.pricingOption === 'self_pay' && !workflowData.paymentVerified)
-      return '/delivery-payment';
-
-    if (workflowData.pharmacyStatus === 'none') return '/enrollment-complete';
-
-    if (workflowData.pharmacyStatus === 'processing' ||
-        workflowData.pharmacyStatus === 'ready')
-      return '/order-tracker';
-
-    if (workflowData.pharmacyStatus === 'shipped') return '/order-shipped';
-
-    // Stay on the tracker for "delivered" too, same as CoA — see the isCoA
-    // branch's comment above for why.
-    return '/order-tracker';
-  }
 
   // ── Delivery flow ────────────────────────────────────────────────────
   // "Schedule delivery now" only while CRM hasn't assigned a dispatch
@@ -429,7 +340,7 @@ export interface LiveWorkItemInputs {
   biStatus: string;
   paStatus: string;
   // iAssist_PAP (WF5) only — its paStatus stays 'denied' forever even after
-  // a payer overturns that denial on appeal (see workflows/iAssistPap.ts),
+  // a payer overturns that denial on appeal (see workflows/iassist/rules.ts),
   // so the PA task below needs this to know the PA is actually resolved.
   // Stays 'none' for every other flow, so it never affects them.
   appealStatus: string;
@@ -637,7 +548,7 @@ export interface GeneratedEmailInputs {
   biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | 'dme_covered' | null;
   // iAssist_PAP (WF5) only — read directly off current workflow state
   // (like biResult above) rather than event.metadata, since createEvent()
-  // never populates metadata (see workflows/iAssistPap.ts) — the event log
+  // never populates metadata (see workflows/iassist/rules.ts) — the event log
   // alone can't say WHICH date got picked, just that the event fired. Null
   // for every other flow.
   infusionDate: string | null;

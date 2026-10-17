@@ -9,7 +9,7 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 // pharmacy (see crm/pages/Index.tsx's SITES_OF_CARE/officeDispenseOptions),
 // so there's no address/payment beat here — just a date for the infusion
 // appointment itself. Selecting one dispatches PATIENT_SELECTS_INFUSION_DATE
-// (workflows/iAssistPap.ts), which MPX "captures" (cosmetic) and reflects
+// (workflows/iassist/rules.ts), which MPX "captures" (cosmetic) and reflects
 // into iAssist's dashboard as "Infusion Scheduled" (see Dashboard.tsx).
 
 function isUnavailable(d: Date): boolean {

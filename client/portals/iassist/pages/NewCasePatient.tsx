@@ -163,7 +163,7 @@ export default function NewCasePatient() {
   // file header) — but iAssist_PAP (WF5) is the one flow where reopening
   // Keanu's Patient Information after his appeal is approved and an
   // infusion date is picked (InfusionDate.tsx, PATIENT_SELECTS_INFUSION_DATE
-  // — see workflows/iAssistPap.ts) should surface that appointment right
+  // — see workflows/iassist/rules.ts) should surface that appointment right
   // here, closing the "record added to iAssist" narrative beat. "provider"
   // persona id used only for tagging, same as Dashboard.tsx's own read of
   // this same live actor — no events are dispatched from this screen.

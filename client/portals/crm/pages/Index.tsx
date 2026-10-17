@@ -976,11 +976,12 @@ export default function Index() {
     // for the same reason — it gets the same immediate-BI-on-enrollment
     // effect right below too. Every other flow keeps this original
     // consent-gated trigger unchanged.
-    if (isCoaFlow || isDmeFlow) return;
+    // Flows the machine automates start BI themselves (workflows/<name>/rules.ts).
+    if (ownsAutomation) return;
     if (consentStatus !== "confirmed") return;
     if (biStatus !== "none") return;
     dispatch('RUN_BI', { portal: 'crm' });
-  }, [isCoaFlow, isDmeFlow, consentStatus, biStatus, dispatch]);
+  }, [ownsAutomation, consentStatus, biStatus, dispatch]);
 
   // CoAssist (DTP, Copay, DME): BI starts when REFERRAL_RECEIVED lands, and the PA starts
   // when BI completes with a result that requires one. Both are automations in
@@ -1063,36 +1064,21 @@ export default function Index() {
   // rerun" requirement. appealStatus flipping to 'initiated' after the first
   // run is what stops this from re-firing on every re-render/tab switch.
   const appealRuleActive = useRulesPortalStore((s) => s.appealRuleActive);
+  // Reports the Rules portal state to the machine. The machine files the appeal
+  // (workflows/iassist/rules.ts, SET_APPEAL_RULE and DENY_PA). Sent again after a
+  // reset, because a reset clears the machine's copy but not the Rules portal's.
   useEffect(() => {
     if (flowType !== 'iAssist_PAP') return;
-    if (!appealRuleActive) return;
-    if (paStatus !== 'denied') return;
-    if (appealStatus !== 'none') return;
+    dispatch('SET_APPEAL_RULE', { portal: 'crm', active: appealRuleActive });
+  }, [flowType, appealRuleActive, resetNonce, dispatch]);
 
-    const timer = setTimeout(() => {
-      dispatch('INITIATE_APPEAL', { portal: 'crm' });
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [flowType, appealRuleActive, paStatus, appealStatus, dispatch]);
-
-  // Payer-response follow-up: once the appeal has been filed, opening the
-  // Appeals stage tab auto-resolves it to 'approved' after a few seconds —
-  // same "watch it happen" pattern as the BI/PA auto-complete effects above,
-  // giving the Appeals stage its own resolved detail view (see the
-  // "Appeal Approval Detail View" block below and appealStage's 'approved'
-  // branch) instead of sitting at "awaiting payer response" indefinitely.
-  // Purely cosmetic — canFillRX already unlocked fulfillment when the appeal
-  // was first initiated, this doesn't gate anything further.
+  // Payer-response follow-up: opening the Appeals stage tab shows the payer's
+  // answer a few seconds later. The machine owns the delay (rules.ts, VIEW_STAGE).
   useEffect(() => {
     if (activeTopTab !== 'A-14275') return;
     if (appealStatus !== 'initiated') return;
-
-    const timer = setTimeout(() => {
-      dispatch('APPROVE_APPEAL', { portal: 'crm' });
-    }, 2500);
-
-    return () => clearTimeout(timer);
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'APPEAL' });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'APPEAL' });
   }, [activeTopTab, appealStatus, dispatch]);
 
   // CoA_DME: the provider transfer notice follows the agent opening the DME
@@ -1212,7 +1198,7 @@ export default function Index() {
   // iAssist_PAP (WF5) is the one flow that actually files a real Appeal
   // (appealStatus flips 'initiated' via INITIATE_APPEAL, then 'approved' via
   // APPROVE_APPEAL once the agent opens this stage's tab — see
-  // workflows/iAssistPap.ts). Every other flow leaves appealStatus at 'none'
+  // workflows/iassist/rules.ts). Every other flow leaves appealStatus at 'none'
   // forever, so this only ever shows "Filed"/"Approved" for WF5, matching
   // paStage's existing "PA Denied — Appeal initiated" copy for the first
   // time instead of contradicting it.
@@ -2236,7 +2222,7 @@ export default function Index() {
              WF1/WF4/WF5's denial path — CoA_DTP has its own version above
              (cash-pay offer instead of an appeal, its own record data).
              iAssist_PAP (WF5) is the one flow with a real appealStatus field
-             (see workflows/iAssistPap.ts) — the info box below and the right
+             (see workflows/iassist/rules.ts) — the info box below and the right
              rail react to it live; every other flow leaves appealStatus at
              'none' forever, so they always see the "recommended" copy. */
           <div>
@@ -2330,7 +2316,7 @@ export default function Index() {
                 </div>
 
                 {/* Info Box — reacts live to appealStatus (iAssist_PAP/WF5's
-                    own field, see workflows/iAssistPap.ts); every other flow
+                    own field, see workflows/iassist/rules.ts); every other flow
                     leaves appealStatus at 'none' so it always shows the
                     "recommended" copy below. */}
                 {appealStatus === "approved" ? (

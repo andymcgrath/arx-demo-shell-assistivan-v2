@@ -22,7 +22,6 @@ import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePresPapStore } from "@/store/presPapStore";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
-import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
 import { useSelector } from "@xstate/react";
@@ -36,6 +35,7 @@ import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigu
 import { FLOW_OPTIONS } from "./flowOptions";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
+import { iassistStageEvents } from "./iassistLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -538,7 +538,7 @@ function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>
 // Triage" (step 6) is this flow's final step — it never touches
 // pharmacyStatus. Step 4 (Prior Authorization) is judged as "resolved" on
 // denial, not approval — this flow's PA never reaches 'approved' (see
-// workflows/iAssistPap.ts) — and step 5 only ticks once the Appeal is
+// workflows/iassist/rules.ts) — and step 5 only ticks once the Appeal is
 // actually filed (appealStatus, INITIATE_APPEAL), which is also what
 // unlocks dispatch/fulfillment here.
 function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
@@ -552,7 +552,7 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
     // Only 'approved' counts as done — per request, this step shouldn't
     // check off just because the appeal was sent (appealStatus ===
     // 'initiated'); it should wait for the payer response (see
-    // workflows/iAssistPap.ts's APPROVE_APPEAL). While 'initiated', StepBar
+    // workflows/iassist/rules.ts's APPROVE_APPEAL). While 'initiated', StepBar
     // below gives it the same pending/pulsing treatment as Prior
     // Authorization while awaiting its own response.
     appealStatus === 'approved',                   // 5 Appeal
@@ -1142,134 +1142,11 @@ export default function DemoShell() {
     // Always start with a full reset
     actor.send({ type: 'RESET' });
 
-    // WF5's own ladder — checked before the shared isIAssistFlow block below
-    // (isIAssistFlow is true for WF5 too) since it diverges at stage 4: PA
-    // resolves to Denied instead of Approved. Stage 5 files the Appeal
-    // (INITIATE_APPEAL — see workflows/iAssistPap.ts), which unlocks
-    // fulfillment the same way an approval normally would. Unlike WF4, this
-    // flow's tail is only 6 stages, not 8 — WF5 dispenses "Keanu to
-    // facility" (a site of care, not a pharmacy shipment), so there's no
-    // Rx Processing/Rx Shipped/Medication Delivered chain to jump through;
-    // stage 6 (SELECT_PHARMACY with Keanu's own site of care — see
-    // engine/WorkflowEngine.ts's KEANU_SITE_OF_CARE_FACTS) is this flow's
-    // final, terminal stage.
-    if (isIAssistPapFlow) {
-      if (stage >= 2) {
-        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'provider' });
-      }
-      if (stage >= 3) {
-        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-      }
-      if (stage >= 4) {
-        actor.send({ type: 'DENY_PA', portal: 'crm' });
-      }
-      if (stage >= 5) {
-        actor.send({ type: 'INITIATE_APPEAL', portal: 'crm' });
-      }
-      if (stage >= 6) {
-        // Stage 6 ("Dispatch to Triage") only happens once the payer has
-        // overturned the denial — SELECT_PHARMACY below presupposes the
-        // appeal already unlocked fulfillment. Without this, appealStatus
-        // stayed stuck at 'initiated' from the stage-5 dispatch above (the
-        // only other path to 'approved' is crm/pages/Index.tsx's 2.5s
-        // Appeals-tab auto-resolve effect, which requires that tab to be
-        // open — but the reset this function starts with force-closes it),
-        // so jumping straight to stage 6 landed the patient back on
-        // AppointmentConfirmation.tsx's "Awaiting Response" state instead of
-        // treating the appeal as resolved and immutable.
-        actor.send({ type: 'APPROVE_APPEAL', portal: 'crm' });
-
-        const pharmacy = {
-          name: KEANU_SITE_OF_CARE_FACTS.facilityName,
-          address: KEANU_SITE_OF_CARE_FACTS.address,
-          city: KEANU_SITE_OF_CARE_FACTS.city,
-          state: KEANU_SITE_OF_CARE_FACTS.state,
-          zip: KEANU_SITE_OF_CARE_FACTS.zip,
-          phone: KEANU_SITE_OF_CARE_FACTS.contactPhone,
-        };
-        actor.send({
-          type: 'SELECT_PHARMACY',
-          portal: 'crm',
-          pharmacy
-        });
-
-        // APPROVE_APPEAL above unlocks fulfillment but leaves infusionDate
-        // null — derivePatientRoute (WorkflowEngine.ts) treats "appeal
-        // approved, no date yet" as /pa-approved (Schedule Infusion), not
-        // this flow's real terminal screen. Without picking a date the same
-        // way InfusionDate.tsx would, jumping straight to Stage 6 landed on
-        // "Great news! Your appeal was approved" instead of Medication
-        // Delivered, even though Stage 6's whole premise is that dispatch is
-        // already complete.
-        const infusionDate = new Date();
-        infusionDate.setDate(infusionDate.getDate() + 7);
-        infusionDate.setHours(9, 0, 0, 0);
-        actor.send({
-          type: 'PATIENT_SELECTS_INFUSION_DATE',
-          portal: 'patient',
-          date: infusionDate.toISOString(),
-        });
-      }
-      return;
-    }
-
-    if (isIAssistFlow) {
-      // iAssist's own ladder — a single REFERRAL_RECEIVED auto-starts BI and
-      // auto-submits PA in parallel (see iAssist.ts's benefitsInquiry/
-      // priorAuth REFERRAL_RECEIVED handlers), so this can't reuse WF1/WF2's ladder,
-      // which treats "REFERRAL_RECEIVED", "BI complete", and "PA submitted" as three
-      // separate, sequential stages. Stage 2 collapses both of iAssist's
-      // automated side effects (BI + PA both landing in their own "waiting
-      // for response" state, welcome text sent) into one jump — that's the
-      // whole point of iAssist automation. Patient Enrolled moves to stage 3
-      // and is dispatched independently, since consent doesn't ride along
-      // with REFERRAL_RECEIVED — the patient still has to actually do SMS/OTP/consent.
-      if (stage >= 2) {
-        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'provider' });
-      }
-      if (stage >= 3) {
-        // No INVITE here — iAssist's REFERRAL_RECEIVED (stage 2, above) already lands
-        // the enrollment region on 'invited' directly (see iAssist.ts), so
-        // VERIFY_SMS is valid immediately without a separate invite step.
-        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-      }
-      if (stage >= 4) {
-        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
-      }
-      if (stage >= 5) {
-        // Matches iAssist.ts's SELF_PAY_PHARMACY exactly — the iAssist case
-        // wizard's own Medication step defaults "Preferred Pharmacy" to
-        // CoAssist (AssistRx's own specialty pharmacy, see
-        // NewCaseMedication.tsx's STANDARD_PHARMACY_OPTIONS), and a real
-        // walkthrough of the post-PA-approval scheduling chain lands on the
-        // same CoAssist Pharmacy whenever the patient picks the Assistivan
-        // Copay Program option. The stage-jump ladder should land on the
-        // identical pharmacy, not a different placeholder (previously
-        // "Accredo Health Group Inc.", copy-pasted from WF1's ladder below).
-        const pharmacy = {
-          name: 'CoAssist Pharmacy',
-          address: '2400 Sand Lake Road, Suite 200',
-          city: 'Orlando',
-          state: 'FL',
-          zip: '32809',
-          phone: '(800) 555-0175',
-        };
-        actor.send({
-          type: 'SELECT_PHARMACY',
-          portal: 'crm',
-          pharmacy
-        });
-        actor.send({ type: 'FILL_RX', portal: 'crm' });
-      }
-      if (stage >= 6) {
-        actor.send({ type: 'SHIP_RX', portal: 'crm' });
-      }
-      if (stage >= 7) {
-        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+    // iAssist flows (iAssist_PA_Approved and the iAssist_PAP appeal): the ladders live in
+    // iassistLadders.ts so the headless tests run the same event lists.
+    if (isIAssistPapFlow || isIAssistFlow) {
+      for (const event of iassistStageEvents(isIAssistPapFlow ? 'iAssist_PAP' : 'iAssist_PA_Approved', stage)) {
+        actor.send(event as any);
       }
       return;
     }

@@ -27,6 +27,14 @@ function createEvent(context: MachineContext, eventType: string, portal: Portal,
   };
 }
 
+const MAX_SNAPSHOTS = 20;
+
+/** Stores a copy of the context for UNDO. `_snapshots` is stripped so snapshots do not nest and bloat storage. */
+function pushSnapshot(snapshots: MachineContext[], context: MachineContext): MachineContext[] {
+  const updated = [...snapshots, { ...context, _snapshots: [] }];
+  return updated.length > MAX_SNAPSHOTS ? updated.slice(-MAX_SNAPSHOTS) : updated;
+}
+
 const toArray = <T,>(v: T | T[] | undefined): T[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
 
 export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
@@ -71,7 +79,14 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
           const emitted = toArray(rule.emit)
             .filter((e) => (e.when ? e.when(data, event, scenario) : true))
             .map((e) => createEvent(context, e.type ?? event.type, e.portal, e.step));
-          return { workflowData: data, events: [...context.events, ...emitted] };
+          // One UNDO step per thing a person did. A same-step automation (`_auto`) rides along with the
+          // step that fired it. UI signals (`snapshot: false`) are not steps.
+          const takeSnapshot = rule.snapshot !== false && !event._auto;
+          return {
+            workflowData: data,
+            events: [...context.events, ...emitted],
+            _snapshots: takeSnapshot ? pushSnapshot(context._snapshots, context) : context._snapshots,
+          };
         }),
         // Runs after the assign above, so `context` already holds the new data.
         ...(rule.then || rule.cancel
@@ -83,8 +98,9 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
                 for (const a of toArray(rule.then)) {
                   if (a.when && !a.when(data, event, scenario)) continue;
                   const next = a.send(data, event, scenario);
+                  // A delayed automation is a visible step (the reveal), so it can be undone. A same-step one is not.
                   if (a.after) enqueue.raise(next, { delay: a.after, id: a.id });
-                  else enqueue.raise(next);
+                  else enqueue.raise({ ...next, _auto: true });
                 }
               }),
             ]
@@ -111,6 +127,19 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
       active: {
         on: {
           ...on,
+          // UNDO restores the context from before the last step and drops any pending delayed automation.
+          UNDO: {
+            guard: ({ context }: any) => context._snapshots.length > 0,
+            actions: [
+              enqueueActions(({ enqueue }: any) => {
+                for (const id of automationIds) enqueue.cancel(id);
+              }),
+              assign(({ context }: any) => {
+                const last = context._snapshots[context._snapshots.length - 1];
+                return { ...last, _snapshots: context._snapshots.slice(0, -1) };
+              }),
+            ],
+          },
           // RESET keeps the running scenario.
           RESET: {
             actions: [

@@ -8,9 +8,7 @@
       "changed": {
         "enrollmentStatus": "enrolled",
         "enrollmentInviteSent": true,
-        "paStatus": "submitted",
-        "biStatus": "running",
-        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
+        "biStatus": "running"
       },
       "newEvents": [
         {
@@ -22,11 +20,6 @@
           "eventType": "RUN_BI",
           "portal": "analytics",
           "workflowStep": 6
-        },
-        {
-          "eventType": "SUBMIT_PA",
-          "portal": "provider",
-          "workflowStep": 8
         }
       ]
     },
@@ -84,14 +77,21 @@
       "accepted": true,
       "route": "/",
       "changed": {
+        "paStatus": "submitted",
         "biStatus": "complete",
-        "biResult": "coverage_found"
+        "biResult": "coverage_found",
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
       },
       "newEvents": [
         {
           "eventType": "COMPLETE_BI",
           "portal": "analytics",
           "workflowStep": 7
+        },
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
         }
       ]
     },
@@ -181,9 +181,8 @@
         }
       },
       "accepted": true,
-      "route": "/delivery-date",
+      "route": "/delivery-address",
       "changed": {
-        "dispatchStatus": "selected",
         "selectedPharmacy": {
           "name": "Test Pharmacy",
           "address": "1 Main St",
@@ -205,7 +204,9 @@
       "event": "PATIENT_SETS_ADDRESS",
       "accepted": true,
       "route": "/delivery-date",
-      "changed": {},
+      "changed": {
+        "dispatchStatus": "selected"
+      },
       "newEvents": [
         {
           "eventType": "PATIENT_SETS_ADDRESS",

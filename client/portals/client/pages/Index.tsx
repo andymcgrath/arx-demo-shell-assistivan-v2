@@ -1146,7 +1146,7 @@ export default function Index() {
   // iAssist_PAP (WF5) is the one flow that actually files a real Appeal
   // (appealStatus flips 'initiated' via INITIATE_APPEAL, then 'approved' via
   // APPROVE_APPEAL once the agent opens this stage's tab — see
-  // workflows/iAssistPap.ts). Every other flow leaves appealStatus at 'none'
+  // workflows/iassist/rules.ts). Every other flow leaves appealStatus at 'none'
   // forever, so this only ever shows "Filed"/"Approved" for WF5, matching
   // paStage's existing "PA Denied — Appeal initiated" copy for the first
   // time instead of contradicting it.
@@ -1938,7 +1938,7 @@ export default function Index() {
              WF1/WF4/WF5's denial path — CoA_DTP has its own version above
              (cash-pay offer instead of an appeal, its own record data).
              iAssist_PAP (WF5) is the one flow with a real appealStatus field
-             (see workflows/iAssistPap.ts) — the info box below and the right
+             (see workflows/iassist/rules.ts) — the info box below and the right
              rail react to it live; every other flow leaves appealStatus at
              'none' forever, so they always see the "recommended" copy. */
           <div>
@@ -2032,7 +2032,7 @@ export default function Index() {
                 </div>
 
                 {/* Info Box — reacts live to appealStatus (iAssist_PAP/WF5's
-                    own field, see workflows/iAssistPap.ts); every other flow
+                    own field, see workflows/iassist/rules.ts); every other flow
                     leaves appealStatus at 'none' so it always shows the
                     "recommended" copy below. */}
                 {appealStatus === "approved" ? (

@@ -24,18 +24,6 @@
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "SUBMIT_PA",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Prior Authorization Submitted - Test Patient",
-    "bodyParagraphs": [
-      "A prior authorization request was submitted to the payer for Test Patient.",
-      "AssistRx is monitoring for a decision and will notify you once the payer responds."
-    ],
-    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
-    "linkedItemLabel": "View Task: Prior Authorization Requested"
-  },
-  {
     "eventType": "CONFIRM_CONSENT",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
@@ -55,6 +43,18 @@
     "bodyParagraphs": [
       "Benefits investigation confirmed Dr. Test needs to submit a prior authorization for Test Patient.",
       "The Prior Authorization task is now open on this patient's case."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "SUBMIT_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Submitted - Test Patient",
+    "bodyParagraphs": [
+      "A prior authorization request was submitted to the payer for Test Patient.",
+      "AssistRx is monitoring for a decision and will notify you once the payer responds."
     ],
     "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
     "linkedItemLabel": "View Task: Prior Authorization Requested"

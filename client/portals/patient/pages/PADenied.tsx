@@ -25,7 +25,7 @@ export default function PADenied() {
   // this navigates to /delivery-address, not /delivery-payment.
   const isDmeFlow = flowType === 'CoA_DME';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
-  // workflows/iAssistPap.ts) — its copy below reacts to whether an appeal
+  // workflows/iassist/rules.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other
   // flow reaching this screen (WF1) keeps its original, unconditional
   // "we submitted an appeal" copy untouched — appealStatus stays 'none'
@@ -34,7 +34,7 @@ export default function PADenied() {
   const isIAssistPap = flowType === 'iAssist_PAP';
   // !== 'none' rather than === 'initiated': appealStatus advances to
   // 'approved' once the CRM agent opens the Appeals tab (see
-  // workflows/iAssistPap.ts's APPROVE_APPEAL) — this patient-facing "we've
+  // workflows/iassist/rules.ts's APPROVE_APPEAL) — this patient-facing "we've
   // filed an appeal" copy is still accurate at that point, so it shouldn't
   // revert to the pre-appeal copy just because the payer has since responded.
   const appealFiled = workflowData.appealStatus !== 'none';

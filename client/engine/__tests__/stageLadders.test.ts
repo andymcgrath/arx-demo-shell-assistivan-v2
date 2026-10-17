@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { coassistStageEvents } from "@/shell/coassistLadders";
+import { iassistStageEvents } from "@/shell/iassistLadders";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
 
@@ -12,15 +13,21 @@ import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from 
  * Each stage is replayed on a fresh actor. The fixture records which events
  * the machine ignored, so a stage that does not actually land shows up.
  */
-const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
+const LADDERS = [
+  { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DTP", stage) },
+  { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
+  { flowType: "CoA_DME", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DME", stage) },
+  { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
+  { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
+] as const;
 
 describe("stage ladders (jump to stage)", () => {
-  for (const flowType of FLOWS) {
+  for (const { flowType, stages: stageNumbers, events } of LADDERS) {
     it(flowType, () => {
       withFrozenClock(() => {
-        const stages = [2, 3, 4, 5, 6, 7, 8].map((stage) => {
+        const stages = stageNumbers.map((stage) => {
           const actor = startFlow(flowType);
-          const records = runSteps(actor, coassistStageEvents(flowType, stage));
+          const records = runSteps(actor, events(stage));
           const { workflowData: d } = ctx(actor);
           const out = {
             stage,
