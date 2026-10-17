@@ -24,6 +24,7 @@
  */
 
 import { PATIENT_SEED } from "./patientStore";
+import { BRAND } from "@/brand";
 
 export type PatientDotState = "completed" | "pending" | "attention" | "disabled";
 
@@ -54,7 +55,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "laura-olson",
     name: "Laura Olson",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     hasActiveRx: true,
     status: { label: "PA Questions", color: "warning", dots: ["completed", "completed", "completed", "attention", "disabled", "disabled"] },
   },
@@ -94,7 +95,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "eric-herr",
     name: "Eric Herr",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     hasActiveRx: true,
     status: { label: "Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] },
   },
@@ -102,7 +103,7 @@ export const SAMPLE_PATIENTS: SamplePatient[] = [
     id: "katherine-johnson",
     name: "Katherine Johnson",
     dob: "04/10/1950",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     hasActiveRx: true,
     status: { label: "Complete", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] },
   },

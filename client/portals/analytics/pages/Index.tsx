@@ -3,6 +3,9 @@ import { daysFromToday } from "@/lib/relativeDate";
 import ExplorePerformance from "./ExplorePerformance";
 import DiscoverTrends from "./DiscoverTrends";
 import GenieAI from "./GenieAI";
+import { BRAND } from "@/brand";
+
+const DRUG_UPPER = BRAND.program.drugDisplayName.toUpperCase();
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TEAL = "#00a5b4";
@@ -1098,7 +1101,7 @@ const CONFIDENCE_BRACKETS = [
   { range: "85–89%", pct: 10 }, { range: "<85%", pct: 5 },
 ];
 const LEARNED_TERMS = [
-  { term: "JASCAYD", uses: "4,203" }, { term: "Prior Authorization", uses: "3,847" },
+  { term: DRUG_UPPER, uses: "4,203" }, { term: "Prior Authorization", uses: "3,847" },
   { term: "Specialty Pharmacy", uses: "2,941" }, { term: "Hub Services", uses: "2,105" },
   { term: "Copay Assistance", uses: "1,892" }, { term: "PA Appeal", uses: "1,447" },
   { term: "Free Drug Program", uses: "1,203" }, { term: "Benefits Verification", uses: "984" },
@@ -1134,7 +1137,7 @@ function Tab4Transcription() {
           </div>
         </div>
         <div className="flex-1 rounded-xl border border-navy-light p-5" style={{ background: "hsl(220 55% 10%)" }}>
-          <SectionTitle tip="Custom terminology learned from JASCAYD-specific calls, weighted by usage frequency.">Top Learned Terms — This Month</SectionTitle>
+          <SectionTitle tip={`Custom terminology learned from ${DRUG_UPPER}-specific calls, weighted by usage frequency.`}>Top Learned Terms — This Month</SectionTitle>
           <div className="space-y-2">
             {LEARNED_TERMS.map(({ term, uses }) => (
               <div key={term} className="flex items-center justify-between py-1.5 border-b border-navy-light/40 last:border-0">
@@ -1220,7 +1223,7 @@ function Tab5PlaybackAndCompliance() {
           <div className="rounded-xl border-l-4 border-teal p-4" style={{ background: "hsl(220 48% 8%)", fontFamily: "ui-monospace, monospace" }}>
             <div className="text-xs text-muted-foreground mb-3">Call #8841 · {daysFromToday(-3)} · 4:23 duration<br />Agent: Martinez, Sofia</div>
             <div className="text-xs font-bold text-teal uppercase tracking-widest mb-2">Summary</div>
-            <p className="text-sm text-white/85 leading-relaxed mb-4">Patient called regarding prior authorization status for JASCAYD. Expressed frustration with 3-day delay. Agent confirmed PA submitted and escalated to PA specialist team.</p>
+            <p className="text-sm text-white/85 leading-relaxed mb-4">Patient called regarding prior authorization status for {DRUG_UPPER}. Expressed frustration with 3-day delay. Agent confirmed PA submitted and escalated to PA specialist team.</p>
             <div className="space-y-1.5 border-t border-navy-light pt-3">
               <div className="text-xs"><span className="text-teal font-semibold">OUTCOME: </span><span className="text-white/80">Escalated — PA Specialist follow-up required</span></div>
               <div className="text-xs"><span className="text-amber-400 font-semibold">SENTIMENT: </span><span className="text-white/80">Frustrated → Resolved</span></div>
@@ -1306,11 +1309,11 @@ function Tab6GenieAI() {
           ))}
         </div>
         <div className="lg:w-72 xl:w-80 flex-shrink-0">
-          <SectionTitle tip="Genie AI accepts plain-English questions across all JASCAYD call data.">Natural Language Query</SectionTitle>
+          <SectionTitle tip={`Genie AI accepts plain-English questions across all ${DRUG_UPPER} call data.`}>Natural Language Query</SectionTitle>
           <div className="rounded-xl border border-navy-light p-4" style={{ background: "hsl(220 55% 10%)" }}>
             <div className="rounded-lg border border-teal/30 p-3 mb-3" style={{ background: "hsl(220 48% 8%)" }}>
-              <div className="text-sm text-muted-foreground mb-2">Ask anything about JASCAYD calls...</div>
-              <div className="text-sm text-white/80 italic">"Show refill adherence trend for patients on JASCAYD in Q2..."</div>
+              <div className="text-sm text-muted-foreground mb-2">Ask anything about {DRUG_UPPER} calls...</div>
+              <div className="text-sm text-white/80 italic">"Show refill adherence trend for patients on {DRUG_UPPER} in Q2..."</div>
               <div className="flex justify-end mt-3">
                 <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center text-navy">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

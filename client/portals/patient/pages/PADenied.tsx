@@ -92,7 +92,7 @@ export default function PADenied() {
               </h2>
 
               <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-                Your insurer denied the prior authorization for Assistivan. The good news: you may be eligible for our cash pay program at a significantly reduced cost.
+                Your insurer denied the prior authorization for {PROGRAM.drugDisplayName}. The good news: you may be eligible for our cash pay program at a significantly reduced cost.
               </p>
 
               <button
@@ -119,7 +119,7 @@ export default function PADenied() {
 
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                  We're still working on getting Assistivan approved
+                  We're still working on getting {PROGRAM.drugDisplayName} approved
                 </h2>
                 <button
                   onClick={() => navigate("/pa-approved")}
@@ -133,9 +133,9 @@ export default function PADenied() {
               <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
                 {isIAssistPap
                   ? appealFiled
-                    ? "Your insurance company denied payment for Assistivan, but we've already filed an appeal on your behalf. We'll let you know when we have an update. It could take up to 10 days."
-                    : "Your insurance company denied payment for Assistivan. We're reviewing your options and will let you know what's next."
-                  : "Your insurance company denied payment for Assistivan, but we submitted an appeal. We'll let you know when we have an update. It could take up to 10 days."}
+                    ? `Your insurance company denied payment for ${PROGRAM.drugDisplayName}, but we've already filed an appeal on your behalf. We'll let you know when we have an update. It could take up to 10 days.`
+                    : `Your insurance company denied payment for ${PROGRAM.drugDisplayName}. We're reviewing your options and will let you know what's next.`
+                  : `Your insurance company denied payment for ${PROGRAM.drugDisplayName}, but we submitted an appeal. We'll let you know when we have an update. It could take up to 10 days.`}
               </p>
 
               <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">

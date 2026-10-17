@@ -124,6 +124,13 @@ Not done yet:
 - A brand test checks required fields, real flow ids and that every local image exists. Mutation checks (a bogus flow, a missing image) both fail the test.
 - Gaps: six Dexcom images exist only in a deployed site's Blobs and were never committed. The test lists them as known missing. Four unreferenced images in `public/uploads` were deleted with the folder. `@netlify/blobs` and `@netlify/functions` are still in `package.json` until someone runs `pnpm remove` (the lockfile needs pnpm). Hardcoded brand and drug names in source are still there (Step 11).
 
+### Step 11: brand and drug names out of source (tag `refactor/11-brand-copy`)
+
+- 35 hardcoded names in 15 files now read the active brand: the patient pages (`PADenied`, `PAApproved`, `PaApprovedSms`, `CopayEnroll`, `BenefitPricing`, `PapUpdateSms`, `OrderShipped`) use `PROGRAM.drugDisplayName`. The Provider portal, Analytics, `samplePatients` and the Client tab banner use `BRAND`. The Rules portal route `/profile/wegovy` is now `/profile/default`.
+- A test (`client/brand/__tests__/noBrandNames.test.ts`) fails when a brand or drug name appears in code or strings. Comments may name them. "CoAssist" is a workflow name and is allowed. A planted name in a page made the test fail.
+- On the default brand the text is unchanged. Other brands now read their own drug name. Copy such as "Copay Program" is still the Assistivan wording with the drug name swapped in. Check Dexcom and TG screens for text that reads wrong.
+- Still open: patient name, DOB and other identity data live in `patientStore` and `PATIENT_SEED`. The audit wants them in the scenario file. That is a separate step.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

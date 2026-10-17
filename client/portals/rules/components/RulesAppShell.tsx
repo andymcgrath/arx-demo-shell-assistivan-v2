@@ -36,7 +36,7 @@ const SF_TOPBAR = "#16325c";
 type AppTab = "profiles" | "rules" | "reports" | "dashboards" | "errorlogs";
 
 const TABS: { id: AppTab; label: string; to?: string }[] = [
-  { id: "profiles", label: "Profiles", to: "/profile/wegovy" },
+  { id: "profiles", label: "Profiles", to: "/profile/default" },
   { id: "rules", label: "Rules", to: "/rules" },
   { id: "reports", label: "Reports" },
   { id: "dashboards", label: "Dashboards" },

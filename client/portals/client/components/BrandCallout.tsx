@@ -12,6 +12,7 @@
  * ./branding.ts already pushes into .portal-client, so this stays in sync
  * with that one source of truth automatically.
  */
+import { BRAND } from "@/brand";
 import { CLIENT_MANUFACTURER, CLIENT_PROGRAM } from "../branding";
 
 // tg-therapuetics.json's manufacturer.logo.white was blank — pointed at
@@ -27,7 +28,7 @@ function LogoMark({ size = 22 }: { size?: number }) {
   return (
     <img
       src={logo}
-      alt="TG Therapeutics"
+      alt={BRAND.name}
       style={{ height: size, width: "auto", display: "block" }}
     />
   );
@@ -45,7 +46,7 @@ export default function BrandCallout() {
       <LogoMark />
       <div className="min-w-0">
         <div className="text-white text-[13px] font-bold leading-tight truncate">
-          TG Therapeutics Client Portal
+          {BRAND.name} Client Portal
         </div>
         <div className="text-white/75 text-[10px] leading-tight truncate">
           {CLIENT_PROGRAM.name}

@@ -109,7 +109,7 @@ export default function NewRule() {
             </div>
             <div className="flex flex-col px-3 py-2">
               <span className="text-[11px] text-[#706e6b] uppercase tracking-wide">Profile</span>
-              <SfLink onClick={() => navigate("/profile/wegovy")}>{drugName}</SfLink>
+              <SfLink onClick={() => navigate("/profile/default")}>{drugName}</SfLink>
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+import { PROGRAM } from "@/portals/patient/config/branding";
 import { ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { daysFromToday } from "@/lib/relativeDate";
@@ -65,7 +66,7 @@ export default function OrderShipped() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Assistivan delivery status</h3>
+              <h3 className="font-semibold text-sm text-arx-primary">{PROGRAM.drugDisplayName} delivery status</h3>
             </div>
             <div className="space-y-2">
               {STEPS.map(step => (

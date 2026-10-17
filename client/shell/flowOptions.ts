@@ -45,7 +45,7 @@ export const ALL_FLOW_OPTIONS: FlowOption[] = [
   {
     value: "CoA_DME",
     label: "5. CoAssist DME",
-    description: "Medical-benefit DME (Dexcom CGM sensor) coverage — three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)",
+    description: "Medical-benefit DME (CGM sensor) coverage — three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)",
   },
   {
     value: "iAssist_PA_Approved",

@@ -44,7 +44,7 @@ function ResetToHome() {
   useEffect(() => {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
-    navigate("/profile/wegovy");
+    navigate("/profile/default");
   }, [resetNonce, navigate]);
 
   return null;
@@ -53,7 +53,7 @@ function ResetToHome() {
 function RulesPortalRoutes() {
   const path = usePortalPath();
 
-  if (path === "/" || path === "/profile/wegovy") return <ProfileDetail />;
+  if (path === "/" || path === "/profile/default") return <ProfileDetail />;
   if (path.startsWith("/profile/")) return <ProfileDetail />; // only one profile exists in this demo
   if (path === "/rules") return <RulesList />;
   // Checked before the "/rule/" prefix match below — "/rule/new" would
@@ -69,7 +69,7 @@ function RulesPortalRoutes() {
 
 export default function RulesPortal() {
   return (
-    <PortalRouter initialPath="/profile/wegovy">
+    <PortalRouter initialPath="/profile/default">
       <ToastProvider>
         <ResetToHome />
         <RulesPortalRoutes />

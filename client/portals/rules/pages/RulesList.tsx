@@ -42,7 +42,7 @@ export default function RulesList() {
       <div className="bg-white p-5">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="text-[12px] text-[#706e6b]">
-            Profile: <SfLink onClick={() => navigate("/profile/wegovy")}>{drugName}</SfLink>
+            Profile: <SfLink onClick={() => navigate("/profile/default")}>{drugName}</SfLink>
           </div>
           <SfPrimaryButton onClick={() => navigate("/rule/new")}>+ New Rule</SfPrimaryButton>
         </div>

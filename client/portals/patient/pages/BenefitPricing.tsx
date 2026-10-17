@@ -80,7 +80,7 @@ const PRICING_OPTIONS: PricingOption[] = [
   {
     key: "self_pay",
     icon: Sparkles,
-    label: "Assistivan Copay Program",
+    label: `${PROGRAM.drugDisplayName} Copay Program`,
     price: 25,
     cadence: "/month",
     description: `Pay a reduced price by filling through the CoAssist Pharmacy — no separate insurance approval needed for this option.`,
@@ -96,7 +96,7 @@ const COPAY_PRE_ENROLL_OPTIONS: PricingOption[] = [
   {
     key: "self_pay",
     icon: Sparkles,
-    label: "Assistivan Copay Program",
+    label: `${PROGRAM.drugDisplayName} Copay Program`,
     price: 25,
     cadence: "/month",
     description: `As low as $25/month — enroll, then pick Retail or Mail Order for pickup or delivery at the discounted rate. No separate insurance approval needed.`,
@@ -314,7 +314,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
               <div className="rounded-xl p-4 bg-arx-primary/10 border border-arx-primary/30">
                 <p className="font-bold text-sm text-arx-primary flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  You're enrolled in the Assistivan Copay Program
+                  You're enrolled in the {PROGRAM.drugDisplayName} Copay Program
                 </p>
                 <p className="text-xs mt-1 text-arx-body-copy">
                   Pick Retail or Mail Order below to lock in your discounted rate.

@@ -65,7 +65,7 @@ export default function PaApprovedSms() {
             <p className="mb-2">
               {isDmeFlow
                 ? `Good news! Your ${PROGRAM.name} prior authorization was approved. Time to pick a pharmacy:`
-                : "Good news! Your Assistivan prior authorization was approved. Time to schedule delivery:"}
+                : `Good news! Your ${PROGRAM.drugDisplayName} prior authorization was approved. Time to schedule delivery:`}
             </p>
             <button
               onClick={handleTapMessage}

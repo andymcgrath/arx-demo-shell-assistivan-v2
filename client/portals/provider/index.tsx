@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
+import { BRAND } from "@/brand";
 import { usePresPapStore } from "@/store/presPapStore";
 import { useDemoStore } from "@/store/demoStore";
 import PesHome from "@/components/enrollment/PesHome";
@@ -1025,7 +1026,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 
       <div className="pa-questions-section">
         <p style={{ fontSize: 13, color: "#3e3e3c", marginBottom: 16 }}>
-          Confirm that <strong>{patientName}</strong> meets income eligibility requirements for the Jascayd free drug program. The program covers patients whose household income qualifies them for assistance.
+          Confirm that <strong>{patientName}</strong> meets income eligibility requirements for the {BRAND.program.drugDisplayName} free drug program. The program covers patients whose household income qualifies them for assistance.
         </p>
 
         <div className="pa-question">
@@ -2429,7 +2430,7 @@ const PATIENTS: PatientRow[] = [
     name: "Laura Olson",
     dob: "DOB 04/10/1950",
     address: "8753 Carlton Dr. Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     status: "PA Questions",
     statusColor: "warning",
   },
@@ -2474,7 +2475,7 @@ const PATIENTS: PatientRow[] = [
     name: "Eric Herr",
     dob: "DOB 04/10/1950",
     address: "348 Dominion Circle Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     status: "Complete",
     statusColor: "success",
   },
@@ -2483,7 +2484,7 @@ const PATIENTS: PatientRow[] = [
     name: "Katherine Johnson",
     dob: "DOB 04/10/1950",
     address: "690 Northwest Blvd. #90 Orlando, FL 50000",
-    medication: "Assistivan",
+    medication: BRAND.program.drugDisplayName,
     status: "Complete",
     statusColor: "success",
   },
