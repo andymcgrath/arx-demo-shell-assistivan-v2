@@ -14,12 +14,6 @@ const FLOW_IDS = SCENARIOS.map((s) => s.flowType as string);
 // Images a brand points at that are not committed yet. Add the file, then delete the entry.
 // Do not add new entries. Folders that start with "_" (such as brands/_export) are not brands.
 const KNOWN_MISSING_ASSETS = new Set<string>([
-  "/brands/pharmaessentia/1786817527600-imgi_64_260408-PEC-logo-V500-5.jpg",
-  "/brands/pharmaessentia/1786817534526-imgi_6_logo-pharmaessentia-white.svg",
-  "/brands/pharmaessentia/1786842602083-besremi-logo-transparent.png",
-  "/brands/pharmaessentia/1786842607739-besremi-logo-white-outline.png",
-  "/brands/pharmaessentia/1786842310571-video_hcp_thumbnail.png",
-  "/brands/pharmaessentia/1786842235097-favicon-96x96.png",
 ]);
 
 function localAssets(value: unknown): string[] {

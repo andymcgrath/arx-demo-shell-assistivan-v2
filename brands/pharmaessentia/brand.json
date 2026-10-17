@@ -16,8 +16,8 @@
     "name": "PharmaEssentia",
     "tagline": "",
     "logo": {
-      "colors": "/brands/pharmaessentia/1786817527600-imgi_64_260408-PEC-logo-V500-5.jpg",
-      "white": "/brands/pharmaessentia/1786817534526-imgi_6_logo-pharmaessentia-white.svg",
+      "colors": "/brands/pharmaessentia/imgi_64_260408-PEC-logo-V500-5.jpg",
+      "white": "/brands/pharmaessentia/imgi_6_logo-pharmaessentia-white.svg",
       "requiresFilter": false
     },
     "support": {
@@ -38,8 +38,8 @@
     "description": "COUNT ON BESREMi to change the course of PV",
     "dosageForm": "500 mcg/0.5 mL Injection",
     "logo": {
-      "colors": "/brands/pharmaessentia/1786842602083-besremi-logo-transparent.png",
-      "white": "/brands/pharmaessentia/1786842607739-besremi-logo-white-outline.png",
+      "colors": "/brands/pharmaessentia/besremi-logo-transparent.png",
+      "white": "/brands/pharmaessentia/besremi-logo-white-outline.png",
       "requiresFilter": false
     },
     "colors": {
@@ -51,10 +51,10 @@
     "educationVideo": {
       "title": "BESREMi Pen™",
       "description": " Watch the BESREMi Pen Instructions for Use video to see how to give yourself a BESREMi injection.",
-      "thumbnail": "/brands/pharmaessentia/1786842310571-video_hcp_thumbnail.png",
+      "thumbnail": "/brands/pharmaessentia/video_hcp_thumbnail.png",
       "embedUrl": "https://www.youtube.com/watch?v=XiMcT0Wt3KA"
     }
   },
   "chatbotIcon": "/brands/pharmaessentia/1786842247150-482GS01.svg",
-  "favicon": "/brands/pharmaessentia/1786842235097-favicon-96x96.png"
+  "favicon": "/brands/pharmaessentia/favicon-96x96.png"
 }
