@@ -173,6 +173,19 @@ The workflow definition owns screen order for every app. Today the patient route
 - The same list drives the CRM stage cards and stage bar, the Provider screens, and the patient routes.
 - The golden-path fixtures record the patient route at every step. The generated function must reproduce them exactly, except for the intentional iAssist change.
 
+### Hamburger menu: a fourth owner of screen order
+
+The patient portal's menu (`portals/patient/components/Header.tsx`, `buildNavLinks`) is a hand-written list per flow. It disagrees with what the flows actually do. Measured on 17 Oct 2026 by comparing each menu with the screens the golden paths visit (a screen a presenter reaches but cannot jump to is the clearest gap):
+
+- **CoA_DME:** 6 menu entries, 16 screens visited. Ten are missing, including the network pharmacy pick, the cash-offer SMS, delivery, and the order tracker. The menu only covers the provider-transfer scenario.
+- **Fax PAP:** 9 screens visited but not in the menu (SMS and OTP, the PAP update SMS and code, delivery, tracker, delivered).
+- **CoA_DTP:** missing `/pa-denied` and `/delivery-payment` (the denial and cash-offer path). **CoA_Copay** shares DTP's menu, so it lacks its own copay screens and lists screens its path skips.
+- **iAssist (both):** no entry of their own. They fall through to the generic menu, which lists Phone Verification, Consent, Signature, and "Copay Enrollment". None of those screens exist in the iAssist flows.
+- **CoAssist menus list "Medication Delivered"**, which those flows never reach by design (they end on the order tracker). The group title says "CoA Direct-to-Patient Order" for Copay too.
+- Any item added to the PA-approved SMS and one-time-code step (now skipped when the patient is in the app) is still listed.
+
+Fix: the menu is generated from the same ordered screen list as the route. Each screen entry carries a section, a label, the scenarios it applies to, and its condition. The menu shows the screens the running scenario can reach, grouped by section, and highlights the one the state currently selects. Add a test: every screen a scenario's golden paths visit appears in that scenario's menu, and every menu entry is reachable by some path (or is marked manual-only).
+
 ### Step modules
 
 Scenarios share steps, such as payment, pharmacy selection, address and ship date, and enrollment with SMS and OTP. Make each shared step a **step module**. A scenario adds modules to a workflow in order.
