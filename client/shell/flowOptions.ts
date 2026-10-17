@@ -2,10 +2,7 @@
  * FLOW_OPTIONS — the single source of truth for the 8 demo workflows
  *
  * Every FlowType (client/engine/types.ts) needs exactly one entry here.
- * DemoShell's flow dropdown and DemoConfigurator's workflow selector both
- * render from this list, so there is no risk of the two drifting out of
- * sync or a flow (e.g. Fax_PAP_Audit / WF2) being present in one picker
- * but missing from the other.
+ * DemoShell's flow dropdown renders from this list.
  *
  * CoA_DME sits at position 5, right after CoA_Copay — grouping all three
  * CoAssist flows (DTP, Copay, DME) together instead of tacking DME onto the

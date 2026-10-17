@@ -156,7 +156,7 @@ Add the new flow name to the `FlowType` union in `client/engine/types.ts`.
 In `client/engine/WorkflowRegistry.ts`, import the machine and call `registerWorkflow(id, machine, metadata)` with it, using the same id as the new `FlowType` (unless it should share an existing machine, the way `Fax_QS_PA_Approved`/`Fax_PAP_Audit` share `"enrollment"` — in that case, add the mapping to `machineIdForFlow()` in `actorSingleton.ts` instead of registering a new machine).
 
 ### 4. Add it to the flow picker
-Add an entry to `FLOW_OPTIONS` in `client/shell/flowOptions.ts`. This is what actually drives the dropdown in `DemoShell` and `DemoConfigurator` — it's a separate, deliberately UI-facing list from the registry, so a flow isn't visible in the picker just because it's registered.
+Add an entry to `FLOW_OPTIONS` in `client/shell/flowOptions.ts`. This is what actually drives the dropdown in `DemoShell` — it's a separate, deliberately UI-facing list from the registry, so a flow isn't visible in the picker just because it's registered.
 
 ### 5. Set its starting portal
 Add an entry to `FLOW_START_PORTAL` in `client/shell/DemoShell.tsx` so switching to (or resetting) the new flow lands on the right opening screen.

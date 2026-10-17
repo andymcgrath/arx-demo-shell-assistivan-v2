@@ -27,11 +27,10 @@ import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveF
 import { useSelector } from "@xstate/react";
 import {
   RefreshCw, Undo2, ChevronDown,
-  LayoutTemplate, LayoutPanelLeft, LayoutGrid, Settings,
+  LayoutTemplate, LayoutPanelLeft, LayoutGrid,
   CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
 import { FLOW_OPTIONS } from "./flowOptions";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
@@ -1025,7 +1024,6 @@ export default function DemoShell() {
   // walkthrough too.
   const deactivateAppealRule = useRulesPortalStore((s) => s.deactivateAppealRule);
   const [showStageReset, setShowStageReset] = useState(false);
-  const [showConfigurator, setShowConfigurator] = useState(false);
   const actor = useWorkflowActor();
   const canUndo = useSelector(actor, (s) => (s.context._snapshots?.length ?? 0) > 0);
 
@@ -1037,12 +1035,6 @@ export default function DemoShell() {
   // Layout state
   const [layout, setLayout] = useState<LayoutMode>("1up");
   const [panels, setPanels] = useState<PanelState[]>([{ portal: urlPortal }]);
-
-  // Portal visibility state
-  const [visiblePortals, setVisiblePortals] = useState<ConfigPortalId[]>(() => {
-    const stored = sessionStorage.getItem("arx-demo-portal-visibility");
-    return stored ? JSON.parse(stored) : ["patient", "provider", "analytics", "field"];
-  });
 
   // Measure shell header height so panels can fill the remaining viewport
   const headerRef = useRef<HTMLElement>(null);
@@ -1453,15 +1445,6 @@ export default function DemoShell() {
                 </div>
               )}
             </div>
-
-            <button
-              onClick={() => setShowConfigurator(!showConfigurator)}
-              className="flex items-center gap-1 text-[11px] bg-white/10 hover:bg-white/20 border border-white/20 text-white px-2.5 py-1.5 rounded transition-colors"
-              aria-label="Configure demo"
-            >
-              <Settings size={12} />
-              <span className="hidden sm:inline">Config</span>
-            </button>
           </div>
         </div>
 
@@ -1503,20 +1486,6 @@ export default function DemoShell() {
           );
         })}
       </div>
-
-      {/* Configurator Panel */}
-      <DemoConfigurator
-        visiblePortals={visiblePortals}
-        onPortalVisibilityChange={setVisiblePortals}
-        isOpen={showConfigurator}
-        onClose={() => setShowConfigurator(false)}
-        onReset={() => {
-          setLayout("1up");
-          const startPortal = FLOW_START_PORTAL[flowType];
-          setPanels([{ portal: startPortal }]);
-          navigate(`/${PORTAL_SLUG[startPortal]}`);
-        }}
-      />
     </div>
   );
 }
