@@ -19,29 +19,16 @@
  */
 import { getWorkflowActor } from "@/engine/actorSingleton";
 import { useDemoStore } from "@/store/demoStore";
+import { DME_SCENARIO_1_PHARMACY_COVERAGE, dmeBiCompleteEvents, type DmeBiScenario } from "./coassistLadders";
 
-export interface DmeBiScenario {
-  pharmacyBenefitStatus: "covered" | "not_covered";
-  medicalBenefitStatus: "covered" | "not_covered";
-}
-
-/** Scenario 1 — Pharmacy Coverage. The default for every CoA_DME entry
- *  point into this replay (DemoShell's ladder, and Index.tsx's toggle
- *  buttons when no explicit scenario is passed). */
-export const DME_SCENARIO_1_PHARMACY_COVERAGE: DmeBiScenario = {
-  pharmacyBenefitStatus: "covered",
-  medicalBenefitStatus: "not_covered",
-};
-
-export const DME_SCENARIO_2_COVERED_BY_BOTH: DmeBiScenario = {
-  pharmacyBenefitStatus: "covered",
-  medicalBenefitStatus: "covered",
-};
-
-export const DME_SCENARIO_3_NO_COVERAGE: DmeBiScenario = {
-  pharmacyBenefitStatus: "not_covered",
-  medicalBenefitStatus: "not_covered",
-};
+// The scenario constants and the event list live in coassistLadders.ts (pure, so
+// the headless tests run the same events). Re-exported so existing imports keep working.
+export {
+  DME_SCENARIO_1_PHARMACY_COVERAGE,
+  DME_SCENARIO_2_COVERED_BY_BOTH,
+  DME_SCENARIO_3_NO_COVERAGE,
+  type DmeBiScenario,
+} from "./coassistLadders";
 
 /**
  * Replays ENROLL -> VERIFY_SMS -> VERIFY_OTP -> CONFIRM_CONSENT -> RUN_BI ->
@@ -55,17 +42,7 @@ export function replayDmeToBiComplete(
   actor: ReturnType<typeof getWorkflowActor>,
   scenario: DmeBiScenario = DME_SCENARIO_1_PHARMACY_COVERAGE
 ): void {
-  actor.send({ type: "ENROLL", portal: "crm" });
-  actor.send({ type: "VERIFY_SMS", portal: "patient" });
-  actor.send({ type: "VERIFY_OTP", portal: "patient" });
-  actor.send({ type: "CONFIRM_CONSENT", portal: "patient" });
-  actor.send({ type: "RUN_BI", portal: "crm" });
-  actor.send({
-    type: "COMPLETE_BI",
-    portal: "crm",
-    pharmacyBenefitStatus: scenario.pharmacyBenefitStatus,
-    medicalBenefitStatus: scenario.medicalBenefitStatus,
-  });
+  for (const event of dmeBiCompleteEvents(scenario)) actor.send(event as any);
 }
 
 /**

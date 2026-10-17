@@ -21,13 +21,7 @@
   },
   {
     "stage": 4,
-    "ignored": [
-      "ENROLL",
-      "VERIFY_SMS",
-      "VERIFY_OTP",
-      "CONFIRM_CONSENT",
-      "RUN_BI"
-    ],
+    "ignored": [],
     "route": "/",
     "biStatus": "complete",
     "paStatus": "none",
@@ -37,13 +31,7 @@
   },
   {
     "stage": 5,
-    "ignored": [
-      "ENROLL",
-      "VERIFY_SMS",
-      "VERIFY_OTP",
-      "CONFIRM_CONSENT",
-      "RUN_BI"
-    ],
+    "ignored": [],
     "route": "/order-tracker",
     "biStatus": "complete",
     "paStatus": "approved",
@@ -53,13 +41,7 @@
   },
   {
     "stage": 6,
-    "ignored": [
-      "ENROLL",
-      "VERIFY_SMS",
-      "VERIFY_OTP",
-      "CONFIRM_CONSENT",
-      "RUN_BI"
-    ],
+    "ignored": [],
     "route": "/order-tracker",
     "biStatus": "complete",
     "paStatus": "approved",
@@ -69,37 +51,22 @@
   },
   {
     "stage": 7,
-    "ignored": [
-      "ENROLL",
-      "VERIFY_SMS",
-      "VERIFY_OTP",
-      "CONFIRM_CONSENT",
-      "RUN_BI",
-      "SHIP_RX"
-    ],
+    "ignored": [],
     "route": "/order-tracker",
     "biStatus": "complete",
     "paStatus": "approved",
     "pricingOption": "retail",
     "dispatchStatus": "dispatched",
-    "pharmacyStatus": "processing"
+    "pharmacyStatus": "shipped"
   },
   {
     "stage": 8,
-    "ignored": [
-      "ENROLL",
-      "VERIFY_SMS",
-      "VERIFY_OTP",
-      "CONFIRM_CONSENT",
-      "RUN_BI",
-      "SHIP_RX",
-      "DELIVER_RX"
-    ],
+    "ignored": [],
     "route": "/order-tracker",
     "biStatus": "complete",
     "paStatus": "approved",
     "pricingOption": "retail",
     "dispatchStatus": "dispatched",
-    "pharmacyStatus": "processing"
+    "pharmacyStatus": "delivered"
   }
 ]

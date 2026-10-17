@@ -16,7 +16,9 @@ Intentional differences from the old machines (none visible in the fixtures, all
 - DME: the cash-offer SMS goes out whenever BI completes with neither benefit covered. The old machine sent it only if the machine happened to be in its BI-complete node, so a BI that finished before the patient's onboarding missed it.
 - Snapshots saved in sessionStorage by the old machines cannot restore, so the snapshot key moved to `-v2` and a failed restore now starts fresh. Open demo sessions reset once.
 
-Still true, pinned as-is: the three CoAssist flows do not support Undo, and the DME jump-to-stage menu never advances past stage 6, because it sends `SHIP_RX` without `READY_RX`. Stage 7 and 8 are ignored. That is an existing bug in `resetActorToStage`.
+Still true, pinned as-is: the three CoAssist flows do not support Undo.
+
+Fixed after step 01 (tag `refactor/02-dme-ladder-fix`): the DME jump-to-stage menu never advanced past stage 6 because it sent `SHIP_RX` without `READY_RX`. The CoAssist ladders now live in `shell/coassistLadders.ts`, a pure module that both `DemoShell` and the tests use (the test used to mirror a copy, which hid the bug). Stage 7 now lands on shipped and stage 8 on delivered. A test fails if any ladder sends an event the machine ignores.
 
 Not yet done for CoAssist: auto-advance timers still run in the CRM React component, preconditions for PA (BI says a PA is required) are not enforced for DTP and Copay, and screen order is still `derivePatientRoute`. Those are the next steps.
 

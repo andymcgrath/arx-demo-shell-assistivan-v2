@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import DemoConfigurator, { type PortalId as ConfigPortalId } from "./DemoConfigurator";
 import { FLOW_OPTIONS } from "./flowOptions";
 import { usePatientToastStore } from "@/store/patientToastStore";
-import { replayDmeToBiComplete } from "./resetToStage";
+import { coassistStageEvents } from "./coassistLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -1339,110 +1339,11 @@ export default function DemoShell() {
       return;
     }
 
-    // CoA_DME's own ladder — shares WF1's generic stage-number/label shape
-    // below (this flow has no dedicated dropdown list, see the "Reset to
-    // Stage" menu further down), but this flow's own machine (coaDme.ts)
-    // takes pharmacyBenefitStatus/medicalBenefitStatus on COMPLETE_BI instead
-    // of a bare result — sending the generic block's shapes below would
-    // silently do nothing (no matching transition) and leave the BI outcome
-    // fields unset. The "Benefits Investigation" rung (stage >= 4, where
-    // COMPLETE_BI actually resolves — see the generic block below) defaults
-    // to Scenario 1 (Pharmacy Coverage) via the same replayDmeToBiComplete()
-    // helper Index.tsx's BIR-0431 toggle buttons use, so the two can't drift
-    // apart. Stage 5 now sends Scenario 1's real PA sequence (SUBMIT_PA ->
-    // APPROVE_PA -> VERIFY_PA_APPROVED_SMS -> VERIFY_PA_APPROVED_OTP ->
-    // SELECT_PHARMACY), mirroring CoA_DTP's own always-approves PA chain —
-    // this replaces the old VERIFY_PHARMACY_SMS tap-through entirely, since
-    // that milestone and its field no longer exist (see coaDme.ts's header
-    // comment). This outcome still has no address/date step at all, so
-    // stage 6 goes straight to FILL_RX. Index.tsx's toggle buttons are the
-    // real mechanism for switching scenarios, not this ladder.
-    if (isDmeFlow) {
-      if (stage >= 2) {
-        actor.send({ type: 'ENROLL', portal: 'crm' });
-        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-      }
-      if (stage >= 3) {
-        actor.send({ type: 'RUN_BI', portal: 'crm' });
-      }
-      if (stage >= 4) {
-        replayDmeToBiComplete(actor);
-      }
-      if (stage >= 5) {
-        actor.send({ type: 'SUBMIT_PA', portal: 'crm' });
-        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
-        actor.send({ type: 'VERIFY_PA_APPROVED_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_PA_APPROVED_OTP', portal: 'patient' });
-        actor.send({
-          type: 'SELECT_PHARMACY',
-          portal: 'patient',
-          pharmacy: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
-        });
-      }
-      if (stage >= 6) {
-        actor.send({ type: 'FILL_RX', portal: 'crm' });
-      }
-      if (stage >= 7) {
-        actor.send({ type: 'SHIP_RX', portal: 'crm' });
-      }
-      if (stage >= 8) {
-        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
-      }
-      return;
-    }
-
-    // CoA_DTP/CoA_Copay — own ladder, not the generic WF1 block below.
-    // That generic block only ever sent APPROVE_PA at "stage 5" and never
-    // sent VERIFY_PA_APPROVED_SMS/VERIFY_PA_APPROVED_OTP at all — fine for
-    // WF1 (paStatus === 'approved' alone unlocks its own /pa-approved
-    // screen), but CoA's own paApproved/paApprovedSmsVerified/
-    // paApprovedOtpVerified states (coaDtp.ts/coaCopay.ts) require both
-    // re-verify events before /benefit-pricing is even reachable — without
-    // them the patient portal was stranded on /enrollment-complete forever
-    // (StateDrivenNav bouncing right back every time), which is what "stuck
-    // at PA results" for CoA_Copay actually was. The generic block's later
-    // stage>=6/7/8 SELECT_PHARMACY/FILL_RX/SHIP_RX/DELIVER_RX sends were
-    // ALSO all no-ops for CoA (paApproved has no handler for any of them —
-    // only pricingSelected/addressSet/shipDateSelected/rxProcessing/rxReady
-    // do), on top of never having sent SELECT_PRICING_OPTION/
-    // PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE/READY_RX at all — this
-    // rebuilds the whole tail to match coaDtp.ts's/coaCopay.ts's real state
-    // shape instead. Defaults pricing to Retail (a plausible "just get me
-    // to Dispatch to Triage" choice); this ladder is a quick jump, not a
-    // scenario picker.
-    if (isCoaFlow) {
-      if (stage >= 2) {
-        actor.send({ type: 'ENROLL', portal: 'crm' });
-        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-      }
-      if (stage >= 3) {
-        actor.send({ type: 'RUN_BI', portal: 'crm' });
-      }
-      if (stage >= 4) {
-        actor.send({ type: 'COMPLETE_BI', portal: 'crm', result: 'coverage_found' });
-        actor.send({ type: 'SUBMIT_PA', portal: 'provider' });
-        actor.send({ type: 'APPROVE_PA', portal: 'crm' });
-        actor.send({ type: 'VERIFY_PA_APPROVED_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_PA_APPROVED_OTP', portal: 'patient' });
-      }
-      if (stage >= 5) {
-        actor.send({ type: 'SELECT_PRICING_OPTION', portal: 'patient', option: 'retail' });
-        actor.send({ type: 'PATIENT_SETS_ADDRESS', portal: 'patient' });
-        actor.send({ type: 'PATIENT_SELECTS_SHIP_DATE', portal: 'patient' });
-      }
-      if (stage >= 6) {
-        actor.send({ type: 'FILL_RX', portal: 'crm' });
-      }
-      if (stage >= 7) {
-        actor.send({ type: 'READY_RX', portal: 'field' });
-        actor.send({ type: 'SHIP_RX', portal: 'crm' });
-      }
-      if (stage >= 8) {
-        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+    // CoAssist flows (CoA_DTP, CoA_Copay, CoA_DME): the ladders live in
+    // coassistLadders.ts so the headless tests run the same event lists.
+    if (isDmeFlow || isCoaFlow) {
+      for (const event of coassistStageEvents(isDmeFlow ? 'CoA_DME' : (flowType as 'CoA_DTP' | 'CoA_Copay'), stage)) {
+        actor.send(event as any);
       }
       return;
     }
