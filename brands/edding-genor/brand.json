@@ -16,8 +16,8 @@
     "name": "Edding Genor",
     "tagline": "",
     "logo": {
-      "colors": "/brands/edding-genor/1789072751993-edding_color_final.png",
-      "white": "/brands/edding-genor/1789071748256-edding_transparent.png",
+      "colors": "/brands/edding-genor/edding_color_final.png",
+      "white": "/brands/edding-genor/edding_transparent.png",
       "requiresFilter": false
     },
     "support": {
@@ -38,8 +38,8 @@
     "description": "3 mg tablet",
     "dosageForm": "",
     "logo": {
-      "colors": "/brands/edding-genor/1789072131117-imgi_1_Mulpleta-US-logo.svg",
-      "white": "/brands/edding-genor/1789072738157-Mulpleta-US-logo-white.png",
+      "colors": "/brands/edding-genor/imgi_1_Mulpleta-US-logo.svg",
+      "white": "/brands/edding-genor/Mulpleta-US-logo-white.png",
       "requiresFilter": false
     },
     "colors": {
@@ -55,5 +55,5 @@
       "embedUrl": ""
     }
   },
-  "chatbotIcon": "/brands/edding-genor/1789072797093-482GS01.svg"
+  "chatbotIcon": "/brands/edding-genor/482GS01.svg"
 }
