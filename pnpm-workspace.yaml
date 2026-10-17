@@ -1,5 +1,5 @@
 allowBuilds:
-  electron-winstaller: true
+  electron-winstaller: set this to true or false
   esbuild: true
   netlify-cli: true
   sharp: true
