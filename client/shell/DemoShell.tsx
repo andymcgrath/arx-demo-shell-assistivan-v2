@@ -36,6 +36,7 @@ import { FLOW_OPTIONS } from "./flowOptions";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
 import { iassistStageEvents } from "./iassistLadders";
+import { faxStageEvents } from "./faxLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -1151,71 +1152,6 @@ export default function DemoShell() {
       return;
     }
 
-    if (isPapFlow) {
-      // Fax_PAP_Audit's own ladder — this flow never submits/approves a
-      // traditional PA (paStatus stays 'none' forever, see
-      // workflowMachine.ts's SEND_PAP_SMS/VERIFY_INCOME comment), so it
-      // can't reuse WF1's generic ladder below, which drives SUBMIT_PA/
-      // APPROVE_PA instead. Stage 4 collapses BI coming back no_insurance,
-      // the Fulfillment Center staging the Application Update, and the
-      // patient tapping through its SMS→OTP beat, all the way to the
-      // eIncome check passing — mirrors how WF1's stage 4 collapses
-      // "BI complete" + "PA submitted" into one jump. See
-      // client/portals/patient/pages/PapUpdateSms.tsx/PapUpdateOtp.tsx for
-      // the real (non-jumped) version of that beat, and
-      // WorkflowEngine.ts's Fax_PAP_Audit branch for how these fields
-      // gate routing. Stage 5 adds the patient's delivery address/date
-      // confirmation (PATIENT_SETS_ADDRESS/PATIENT_SELECTS_SHIP_DATE,
-      // mirrors CoA_DTP/iAssist's own beat) plus CRM's pharmacy choice,
-      // stopping short of actually dispatching — matches WF1's own stage 5
-      // ("Dispatch to Triage") landing on "ready, not yet dispatched" one
-      // stage before "Rx Processing" fires FILL_RX.
-      if (stage >= 2) {
-        actor.send({ type: 'REFERRAL_RECEIVED', portal: 'crm' });
-        actor.send({ type: 'INVITE', portal: 'crm' });
-        actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-        actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-      }
-      if (stage >= 3) {
-        actor.send({ type: 'RUN_BI', portal: 'crm' });
-      }
-      if (stage >= 4) {
-        actor.send({ type: 'COMPLETE_BI', portal: 'crm', result: 'no_insurance' });
-        actor.send({ type: 'SEND_PAP_SMS', portal: 'crm' });
-        actor.send({ type: 'VERIFY_PAP_SMS', portal: 'patient' });
-        actor.send({ type: 'VERIFY_PAP_OTP', portal: 'patient' });
-        actor.send({ type: 'VERIFY_INCOME', portal: 'patient' });
-      }
-      if (stage >= 5) {
-        const pharmacy = {
-          name: 'CoAssist Pharmacy',
-          address: '2400 Sand Lake Road, Suite 200',
-          city: 'Orlando',
-          state: 'FL',
-          zip: '32809',
-          phone: '(800) 555-0175',
-        };
-        actor.send({ type: 'PATIENT_SETS_ADDRESS', portal: 'patient' });
-        actor.send({ type: 'PATIENT_SELECTS_SHIP_DATE', portal: 'patient' });
-        actor.send({
-          type: 'SELECT_PHARMACY',
-          portal: 'crm',
-          pharmacy
-        });
-      }
-      if (stage >= 6) {
-        actor.send({ type: 'FILL_RX', portal: 'crm' });
-      }
-      if (stage >= 7) {
-        actor.send({ type: 'SHIP_RX', portal: 'crm' });
-      }
-      if (stage >= 8) {
-        actor.send({ type: 'DELIVER_RX', portal: 'crm' });
-      }
-      return;
-    }
-
     // CoAssist flows (CoA_DTP, CoA_Copay, CoA_DME): the ladders live in
     // coassistLadders.ts so the headless tests run the same event lists.
     if (isDmeFlow || isCoaFlow) {
@@ -1225,51 +1161,10 @@ export default function DemoShell() {
       return;
     }
 
-    // Walk the actor forward to the target stage (WF1/Fax_QS_PA_Approved
-    // only from here on — every other flow returns early above).
-    // Each stage builds on the previous
-    if (stage >= 2) {
-      actor.send({ type: 'REFERRAL_RECEIVED', portal: 'crm' });
-      actor.send({ type: 'INVITE', portal: 'crm' });
-      actor.send({ type: 'VERIFY_SMS', portal: 'patient' });
-      actor.send({ type: 'VERIFY_OTP', portal: 'patient' });
-      actor.send({ type: 'CONFIRM_CONSENT', portal: 'patient' });
-    }
-    if (stage >= 3) {
-      actor.send({ type: 'RUN_BI', portal: 'crm' });
-    }
-    if (stage >= 4) {
-      actor.send({
-        type: 'COMPLETE_BI',
-        portal: 'crm',
-        result: 'coverage_found'
-      });
-      actor.send({ type: 'SUBMIT_PA', portal: 'provider' });
-    }
-    if (stage >= 5) {
-      actor.send({ type: 'APPROVE_PA', portal: 'crm' });
-    }
-    if (stage >= 6) {
-      const pharmacy = {
-        name: 'Accredo Health Group Inc.',
-        address: '789 Pharma Ave',
-        city: 'Tampa',
-        state: 'FL',
-        zip: '33602',
-        phone: '(813) 555-5678',
-      };
-      actor.send({
-        type: 'SELECT_PHARMACY',
-        portal: 'crm',
-        pharmacy
-      });
-      actor.send({ type: 'FILL_RX', portal: 'crm' });
-    }
-    if (stage >= 7) {
-      actor.send({ type: 'SHIP_RX', portal: 'crm' });
-    }
-    if (stage >= 8) {
-      actor.send({ type: 'DELIVER_RX', portal: 'crm' });
+    // Standard (Fax_QS_PA_Approved) and PAP (Fax_PAP_Audit, PrES_PAP): the ladders live in
+    // faxLadders.ts so the headless tests run the same event lists.
+    for (const event of faxStageEvents(isPapFlow ? 'pap' : 'standard', stage)) {
+      actor.send(event as any);
     }
   }, [resetDemo, isIAssistFlow, isIAssistPapFlow, isPapFlow, isDmeFlow, isCoaFlow]);
 

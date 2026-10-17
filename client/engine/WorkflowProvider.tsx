@@ -4,7 +4,7 @@ import { createContext, useContext, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useSelector } from '@xstate/react';
 import type { ActorRefFrom } from 'xstate';
-import { workflowMachine } from './workflowMachine';
+import type { standardMachine } from '@/workflows/standard';
 import { getWorkflowActor, switchWorkflow, getActiveFlowType, useActorStore } from './actorSingleton';
 import type { MachineContext, PersonaId, DemoEvent, WorkflowData, FlowType } from './types';
 import {
@@ -13,7 +13,7 @@ import {
   derivePatientRoute,
 } from './WorkflowEngine';
 
-type ActorRef = ActorRefFrom<typeof workflowMachine>;
+type ActorRef = ActorRefFrom<typeof standardMachine>;
 
 interface WorkflowContextType {
   actor: ActorRef;

@@ -11,7 +11,7 @@
  */
 import type { WorkflowData } from './types';
 
-// ── Parallel "enrollment" machine (workflowMachine.ts) ───────────────────────
+// ── Regions (derived from WorkflowData, see regionsFromData) ─────────────────
 
 export type ParallelRegion = 'enrollment' | 'benefitsInquiry' | 'priorAuth' | 'order';
 
@@ -60,32 +60,25 @@ export const PARALLEL_REGION_FIELDS: Record<ParallelRegion, (keyof WorkflowData)
   ],
 };
 
-// ── Linear CoA_DTP machine (workflows/coaDtp.ts) ─────────────────────────────
-
-export const COA_STAGES: { state: string; label: string; fields: (keyof WorkflowData)[] }[] = [
-  { state: 'idle', label: 'Awaiting enrollment', fields: ['enrollmentStatus'] },
-  { state: 'enrolled', label: 'Enrolled — awaiting SMS verification', fields: ['enrollmentStatus', 'enrollmentInviteSent', 'smsVerified'] },
-  { state: 'smsVerified', label: 'SMS verified — awaiting OTP', fields: ['smsVerified', 'otpVerified'] },
-  { state: 'otpVerified', label: 'OTP verified — awaiting consent', fields: ['otpVerified', 'consentStatus'] },
-  { state: 'consentConfirmed', label: 'Consent confirmed — ready for BI', fields: ['consentStatus'] },
-  { state: 'biRunning', label: 'Benefits investigation running', fields: ['biStatus'] },
-  { state: 'biComplete', label: 'BI complete — ready for PA', fields: ['biStatus', 'biResult'] },
-  { state: 'paSubmitted', label: 'PA submitted', fields: ['paStatus', 'paSubmittedAt'] },
-  { state: 'paDenied', label: 'PA denied — cash pay offered', fields: ['paStatus', 'cashOfferStatus'] },
-  { state: 'cashOfferSent', label: 'Cash offer sent', fields: ['cashOfferStatus'] },
-  { state: 'paymentProcessed', label: 'Payment processed — verifying', fields: ['cashOfferStatus', 'paymentVerified'] },
-  { state: 'paymentVerified', label: 'Payment verified — needs address', fields: ['paymentVerified', 'dispatchStatus'] },
-  { state: 'addressSet', label: 'Address set — needs ship date', fields: ['dispatchStatus', 'patientShipDate'] },
-  { state: 'shipDateSelected', label: 'Ship date selected — ready to fill', fields: ['patientShipDate'] },
-  { state: 'rxProcessing', label: 'Pharmacy processing', fields: ['pharmacyStatus'] },
-  { state: 'rxReady', label: 'Ready to ship', fields: ['pharmacyStatus'] },
-  { state: 'rxShipped', label: 'Shipped', fields: ['pharmacyStatus'] },
-  { state: 'rxDelivered', label: 'Delivered', fields: ['pharmacyStatus'] },
-  // CoA_DME (workflows/coaDme.ts) only — shares every state name above it
-  // through 'biComplete' verbatim (see that file's header comment), then
-  // ends here instead of continuing into 'paSubmitted' and beyond.
-  { state: 'providerTransferNotified', label: 'DME provider transfer notified — complete', fields: ['dmeProviderTransferStatus'] },
-];
+/**
+ * The four regions, read off WorkflowData. The workflow machines have one state, so the
+ * inspector cannot read regions from the machine. Every region is a function of the data.
+ */
+export function regionsFromData(d: WorkflowData): Record<ParallelRegion, string> {
+  const enrollment =
+    d.enrollmentStatus === 'none' ? 'idle'
+    : d.consentStatus === 'confirmed' ? 'consented'
+    : d.otpVerified ? 'otp_verified'
+    : d.smsVerified ? 'sms_verified'
+    : 'invited';
+  const benefitsInquiry = d.biStatus === 'none' ? 'idle' : d.biStatus === 'running' ? 'submitted' : 'complete';
+  const priorAuth = d.paStatus === 'none' ? 'idle' : d.paStatus;
+  const order =
+    d.pharmacyStatus === 'none' ? 'idle'
+    : d.pharmacyStatus === 'ready' ? 'processing'
+    : d.pharmacyStatus;
+  return { enrollment, benefitsInquiry, priorAuth, order };
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

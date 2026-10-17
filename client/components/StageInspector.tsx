@@ -19,15 +19,14 @@
 import { useState } from 'react';
 import { useSelector } from '@xstate/react';
 import { ChevronDown, Copy } from 'lucide-react';
-import { useWorkflowActor, useActiveWorkflowId } from '@/engine/WorkflowProvider';
+import { useWorkflowActor } from '@/engine/WorkflowProvider';
 import type { WorkflowData } from '@/engine/types';
 import {
-  type ParallelRegion,
   PARALLEL_REGION_ORDER,
   PARALLEL_REGION_LABELS,
   PARALLEL_REGION_TERMINAL,
   PARALLEL_REGION_FIELDS,
-  COA_STAGES,
+  regionsFromData,
   formatValue,
   fieldLabel,
   workflowDataEqual,
@@ -35,43 +34,22 @@ import {
 
 export function StageInspector() {
   const actor = useWorkflowActor();
-  const flowType = useActiveWorkflowId();
   const [isOpen, setIsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
   // useSelector re-renders this component on every real transition — no
   // manual subscribe, no module-level state to fall out of sync.
-  const stateValue = useSelector(actor, (s) => s.value);
   const workflowData = useSelector(actor, (s) => s.context.workflowData, workflowDataEqual);
 
-  // CoA_DME shares CoA_DTP's linear-machine shape (see coaDme.ts/COA_STAGES)
-  // through 'biComplete', so it reuses this same lookup rather than the
-  // parallel-region fallback below, which assumes a Record<ParallelRegion,
-  // string> state value CoA_DME's flat machine never produces.
-  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay' || flowType === 'CoA_DME';
-
-  let stageLabel: string;
-  let relevantFields: (keyof WorkflowData)[];
-  let regionSummary: { label: string; node: string; active: boolean }[];
-
-  if (isCoA) {
-    const current = typeof stateValue === 'string' ? stateValue : 'idle';
-    const stage = COA_STAGES.find((s) => s.state === current) ?? COA_STAGES[0];
-    stageLabel = stage.label;
-    relevantFields = stage.fields;
-    regionSummary = [{ label: 'CoA Direct-to-Patient', node: current, active: true }];
-  } else {
-    const value = (stateValue as Record<ParallelRegion, string>) ?? ({} as Record<ParallelRegion, string>);
-    const activeRegion =
-      PARALLEL_REGION_ORDER.find((r) => !PARALLEL_REGION_TERMINAL[r].includes(value[r])) ?? 'order';
-    stageLabel = `${PARALLEL_REGION_LABELS[activeRegion]} — ${value[activeRegion]}`;
-    relevantFields = PARALLEL_REGION_FIELDS[activeRegion];
-    regionSummary = PARALLEL_REGION_ORDER.map((r) => ({
-      label: PARALLEL_REGION_LABELS[r],
-      node: value[r],
-      active: r === activeRegion,
-    }));
-  }
+  const value = regionsFromData(workflowData);
+  const activeRegion = PARALLEL_REGION_ORDER.find((r) => !PARALLEL_REGION_TERMINAL[r].includes(value[r])) ?? 'order';
+  const stageLabel = `${PARALLEL_REGION_LABELS[activeRegion]} — ${value[activeRegion]}`;
+  const relevantFields: (keyof WorkflowData)[] = PARALLEL_REGION_FIELDS[activeRegion];
+  const regionSummary = PARALLEL_REGION_ORDER.map((r) => ({
+    label: PARALLEL_REGION_LABELS[r],
+    node: value[r],
+    active: r === activeRegion,
+  }));
 
   const fieldsToShow = showAll ? (Object.keys(workflowData) as (keyof WorkflowData)[]) : relevantFields;
 
@@ -110,7 +88,7 @@ export function StageInspector() {
             </div>
           </div>
 
-          {!isCoA && (
+          {(
             <div className="bg-[#0f172a] px-4 py-2 border-b border-[#334155] flex flex-wrap gap-x-3 gap-y-1">
               {regionSummary.map((r) => (
                 <span key={r.label} className={r.active ? 'text-cyan-400' : 'text-[#64748b]'}>

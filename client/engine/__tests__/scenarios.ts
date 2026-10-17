@@ -36,13 +36,13 @@ export interface Scenario {
 }
 
 export const SCENARIOS: Scenario[] = [
-  // ── Fax intake (shared "enrollment" machine) ──────────────────────────
+  // ── Standard (fax) and PAP. BI starts when the patient consents, so no RUN_BI step. ──
   {
     name: "fax-standard-pa-approved",
     flowType: "Fax_QS_PA_Approved",
     steps: [
       { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "SUBMIT_PA" }, { type: "APPROVE_PA" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
@@ -53,7 +53,7 @@ export const SCENARIOS: Scenario[] = [
     flowType: "Fax_QS_PA_Approved",
     steps: [
       { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "COMPLETE_BI", result: "coverage_found" },
       { type: "SUBMIT_PA" }, { type: "DENY_PA" },
     ],
   },
@@ -62,9 +62,10 @@ export const SCENARIOS: Scenario[] = [
     flowType: "Fax_PAP_Audit",
     steps: [
       { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "no_insurance" },
-      { type: "START_INCOME_QUALIFICATION" },
-      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, { type: "VERIFY_INCOME" },
+      { type: "COMPLETE_BI", result: "no_insurance" },
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
     ],
@@ -229,9 +230,10 @@ export const SCENARIOS: Scenario[] = [
     flowType: "PrES_PAP",
     steps: [
       { type: "REFERRAL_RECEIVED" }, { type: "INVITE" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "no_insurance" },
-      { type: "START_INCOME_QUALIFICATION" },
-      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, { type: "VERIFY_INCOME" },
+      { type: "COMPLETE_BI", result: "no_insurance" },
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
     ],

@@ -5,6 +5,14 @@ export type Portal = "crm" | "patient" | "provider" | "analytics" | "field";
 /** A scenario is data: starting values plus content (pharmacies, prices, labels). */
 export interface ScenarioDefinition<Content = unknown> {
   flowType: FlowType;
+  /**
+   * How the referral reaches the platform. `erx` holds everything the PA needs, so a PA starts on its own once
+   * BI says one is required. `fax` needs a manual PA: an email asks the provider and their submission starts it.
+   * `esign` is the provider e-signature intake.
+   */
+  intake: "erx" | "fax" | "esign";
+  /** Keep working and tested. Add no new features. */
+  legacy?: boolean;
   /** Starting values that differ from the shared defaults. */
   initialData?: Partial<WorkflowData>;
   /** Scenario-specific content that rules read. */

@@ -21,7 +21,9 @@
       "event": "INVITE",
       "accepted": true,
       "route": "/sms-message",
-      "changed": {},
+      "changed": {
+        "patientInvited": true
+      },
       "newEvents": [
         {
           "eventType": "INVITE",
@@ -66,24 +68,15 @@
       "route": "/enrollment-complete",
       "changed": {
         "enrollmentAcknowledged": true,
-        "consentStatus": "confirmed"
+        "consentStatus": "confirmed",
+        "biStatus": "running"
       },
       "newEvents": [
         {
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "RUN_BI",
-      "accepted": true,
-      "route": "/enrollment-complete",
-      "changed": {
-        "biStatus": "running"
-      },
-      "newEvents": [
+        },
         {
           "eventType": "RUN_BI",
           "portal": "analytics",
@@ -107,21 +100,6 @@
           "eventType": "COMPLETE_BI",
           "portal": "analytics",
           "workflowStep": 7
-        }
-      ]
-    },
-    {
-      "event": "START_INCOME_QUALIFICATION",
-      "accepted": true,
-      "route": "/enrollment-complete",
-      "changed": {
-        "incomeStatus": "pending"
-      },
-      "newEvents": [
-        {
-          "eventType": "START_INCOME_QUALIFICATION",
-          "portal": "patient",
-          "workflowStep": 8
         }
       ]
     },
@@ -158,7 +136,7 @@
     {
       "event": "VERIFY_PAP_OTP",
       "accepted": true,
-      "route": "/income-qualification",
+      "route": "/",
       "changed": {
         "papOtpVerified": true
       },
@@ -167,6 +145,21 @@
           "eventType": "VERIFY_PAP_OTP",
           "portal": "patient",
           "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "START_INCOME_QUALIFICATION",
+      "accepted": true,
+      "route": "/income-qualification",
+      "changed": {
+        "incomeStatus": "pending"
+      },
+      "newEvents": [
+        {
+          "eventType": "START_INCOME_QUALIFICATION",
+          "portal": "patient",
+          "workflowStep": 8
         }
       ]
     },
@@ -188,6 +181,36 @@
       ]
     },
     {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/delivery-date",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/pap-enrollment-complete",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
       "event": "SELECT_PHARMACY",
       "payload": {
         "pharmacy": {
@@ -200,9 +223,8 @@
         }
       },
       "accepted": true,
-      "route": "/delivery-date",
+      "route": "/pap-enrollment-complete",
       "changed": {
-        "dispatchStatus": "selected",
         "selectedPharmacy": {
           "name": "Test Pharmacy",
           "address": "1 Main St",

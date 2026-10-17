@@ -60,17 +60,6 @@
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "START_INCOME_QUALIFICATION",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Income Qualification Started - Test Patient",
-    "bodyParagraphs": [
-      "Test Patient needs to submit proof of income to finish qualifying for the Free Goods financial assistance program."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
     "eventType": "SEND_PAP_SMS",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
@@ -82,12 +71,45 @@
     "linkedItemLabel": "View Case"
   },
   {
+    "eventType": "START_INCOME_QUALIFICATION",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Income Qualification Started - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient needs to submit proof of income to finish qualifying for the Free Goods financial assistance program."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
     "eventType": "VERIFY_INCOME",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "Income Verification Submitted - Test Patient",
     "bodyParagraphs": [
       "Test Patient submitted income verification for the financial assistance program review."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_SETS_ADDRESS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Shipping Address Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed the delivery address for their medication shipment."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_SELECTS_SHIP_DATE",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Preferred Ship Date Selected - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient selected a preferred ship date for their medication."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"

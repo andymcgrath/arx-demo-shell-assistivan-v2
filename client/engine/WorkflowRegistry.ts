@@ -5,10 +5,10 @@
  * then switched at runtime. The active workflow ID is persisted to sessionStorage.
  */
 
-import { workflowMachine } from "@/engine/workflowMachine";
 import { coassistMachine } from "@/workflows/coassist";
 import { iassistMachine } from "@/workflows/iassist";
-import { presPapMachine } from "@/workflows/presPap";
+import { standardMachine } from "@/workflows/standard";
+import { papMachine } from "@/workflows/pap";
 
 export interface WorkflowMetadata {
   id: string;
@@ -42,9 +42,14 @@ class WorkflowRegistry {
 
 export const workflowRegistry = new WorkflowRegistry();
 
-workflowRegistry.registerWorkflow("enrollment", workflowMachine, {
+workflowRegistry.registerWorkflow("Fax_QS_PA_Approved", standardMachine, {
   label: "Fax QS / PA Approved",
   description: "Standard enrollment with fax QS and PA approval",
+});
+
+workflowRegistry.registerWorkflow("Fax_PAP_Audit", papMachine, {
+  label: "Fax PAP / Audit",
+  description: "Faxed referral, no insurance found, patient applies for the free drug program (income qualification)",
 });
 
 workflowRegistry.registerWorkflow("CoA_DTP", coassistMachine, {
@@ -72,7 +77,7 @@ workflowRegistry.registerWorkflow("iAssist_PAP", iassistMachine, {
   description: "iAssist scenario with the PA denied, an appeal started by a Rules portal automation, then the infusion scheduled",
 });
 
-workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, {
+workflowRegistry.registerWorkflow("PrES_PAP", papMachine, {
   label: "PrES / PAP",
   description: "Provider e-signature intake workflow with PAP income-qualification (foundation placeholder)",
 });

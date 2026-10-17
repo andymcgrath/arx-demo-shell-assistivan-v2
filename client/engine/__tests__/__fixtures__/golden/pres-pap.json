@@ -21,7 +21,9 @@
       "event": "INVITE",
       "accepted": true,
       "route": "/pes-patient-info",
-      "changed": {},
+      "changed": {
+        "patientInvited": true
+      },
       "newEvents": [
         {
           "eventType": "INVITE",
@@ -66,24 +68,15 @@
       "route": "/pes-home",
       "changed": {
         "enrollmentAcknowledged": true,
-        "consentStatus": "confirmed"
+        "consentStatus": "confirmed",
+        "biStatus": "running"
       },
       "newEvents": [
         {
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "RUN_BI",
-      "accepted": true,
-      "route": "/pes-home",
-      "changed": {
-        "biStatus": "running"
-      },
-      "newEvents": [
+        },
         {
           "eventType": "RUN_BI",
           "portal": "analytics",
@@ -111,21 +104,6 @@
       ]
     },
     {
-      "event": "START_INCOME_QUALIFICATION",
-      "accepted": true,
-      "route": "/pes-home",
-      "changed": {
-        "incomeStatus": "pending"
-      },
-      "newEvents": [
-        {
-          "eventType": "START_INCOME_QUALIFICATION",
-          "portal": "patient",
-          "workflowStep": 8
-        }
-      ]
-    },
-    {
       "event": "SEND_PAP_SMS",
       "accepted": true,
       "route": "/pes-pap-update-sms",
@@ -143,7 +121,7 @@
     {
       "event": "VERIFY_PAP_SMS",
       "accepted": true,
-      "route": "/pes-income-submission",
+      "route": "/pes-home",
       "changed": {
         "papSmsVerified": true
       },
@@ -156,17 +134,17 @@
       ]
     },
     {
-      "event": "VERIFY_PAP_OTP",
+      "event": "START_INCOME_QUALIFICATION",
       "accepted": true,
       "route": "/pes-income-submission",
       "changed": {
-        "papOtpVerified": true
+        "incomeStatus": "pending"
       },
       "newEvents": [
         {
-          "eventType": "VERIFY_PAP_OTP",
+          "eventType": "START_INCOME_QUALIFICATION",
           "portal": "patient",
-          "workflowStep": 7
+          "workflowStep": 8
         }
       ]
     },
@@ -188,6 +166,36 @@
       ]
     },
     {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/delivery-date",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/pes-confirmation",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
       "event": "SELECT_PHARMACY",
       "payload": {
         "pharmacy": {
@@ -200,9 +208,8 @@
         }
       },
       "accepted": true,
-      "route": "/delivery-date",
+      "route": "/pes-confirmation",
       "changed": {
-        "dispatchStatus": "selected",
         "selectedPharmacy": {
           "name": "Test Pharmacy",
           "address": "1 Main St",

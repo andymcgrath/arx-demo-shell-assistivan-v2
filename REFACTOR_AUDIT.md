@@ -97,6 +97,15 @@ Not done yet:
 - `/pa-denied` and `/pa-approved` for the appeal flow stay on screen after the infusion is scheduled when no date is passed. This is pinned as it was.
 - None of the CRM, patient portal or Rules portal changes were run in a browser.
 
+### Step 08: Standard and PAP on the factory (tag `refactor/08-standard-pap`)
+
+- Every flow now runs on a factory machine: `standardMachine` (Fax_QS_PA_Approved), `papMachine` (Fax_PAP_Audit and PrES_PAP, with PrES marked `legacy`), `coassistMachine`, `iassistMachine`. The old `workflowMachine.ts`, `presPap.ts` and the `SET_FLOW_TYPE` hack are gone. `derivePatientRoute` is a lookup and throws if a flow has no screen map.
+- Shared intake rules live in `workflows/shared/intake.ts`. Both fax workflows use them. A fax or esign intake never starts a PA on its own. The PA is manual and needs a BI result that requires one.
+- BI runs at consent for fax and esign, and at referral for erx. The CRM no longer fires RUN_BI or SUBMIT_PA. It only sends `VIEW_STAGE` and `LEAVE_STAGE`.
+- `useEnrollPatient` and `useRunEBenefits` read `isPending` from `workflowData` (`patientInvited`, `biStatus`). They used to read machine children.
+- Stage ladders now exist for all 10 flows (`client/shell/faxLadders.ts` added).
+- Check in a browser: Fax and PAP golden paths, the PrES route chain, and the enroll and BI buttons in the CRM.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

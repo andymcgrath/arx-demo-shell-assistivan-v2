@@ -21,7 +21,9 @@
       "event": "INVITE",
       "accepted": true,
       "route": "/sms-message",
-      "changed": {},
+      "changed": {
+        "patientInvited": true
+      },
       "newEvents": [
         {
           "eventType": "INVITE",
@@ -63,27 +65,18 @@
     {
       "event": "CONFIRM_CONSENT",
       "accepted": true,
-      "route": "/enrollment-complete",
+      "route": "/",
       "changed": {
         "enrollmentAcknowledged": true,
-        "consentStatus": "confirmed"
+        "consentStatus": "confirmed",
+        "biStatus": "running"
       },
       "newEvents": [
         {
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "RUN_BI",
-      "accepted": true,
-      "route": "/",
-      "changed": {
-        "biStatus": "running"
-      },
-      "newEvents": [
+        },
         {
           "eventType": "RUN_BI",
           "portal": "analytics",

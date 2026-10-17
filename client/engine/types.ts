@@ -114,6 +114,8 @@ export interface WorkflowData {
   /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;
+  /** Fax and e-sign workflows: the CRM agent sent the patient their invite text (INVITE). The patient cannot verify before this. */
+  patientInvited?: boolean;
   /** iAssist_PAP (WF5) only: the infusion date the patient picks once the
    *  appeal is approved (InfusionDate.tsx). MPX captures it and it's
    *  reflected into iAssist (see Dashboard.tsx's "Infusion Scheduled"

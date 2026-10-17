@@ -6,8 +6,7 @@
  * handled externally (tab-click detection in Index.tsx) so the UI
  * shows the "Running" state before auto-completing.
  *
- * isPending derives from XState actor benefitsInquiry state:
- * true when submitted and not yet complete.
+ * isPending is true while workflowData.biStatus is "running".
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useSelector } from "@xstate/react";
@@ -19,10 +18,8 @@ export function useRunEBenefits() {
   const onSuccessRef = useRef<(() => void) | null>(null);
   const actor = getWorkflowActor();
 
-  const isPending = useSelector(actor, (snapshot) => {
-    const biState = snapshot.children.benefitsInquiry?.getSnapshot();
-    return biState?.status === "active" && biState?.value !== "complete";
-  });
+  // Running until the result lands. Read off the data: the workflow machines have a single state.
+  const isPending = useSelector(actor, (snapshot) => snapshot.context.workflowData.biStatus === "running");
 
   const mutate = useCallback(
     (_caseId: string, options?: { onSuccess?: () => void; onError?: () => void }) => {

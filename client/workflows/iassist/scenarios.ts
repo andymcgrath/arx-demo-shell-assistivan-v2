@@ -25,12 +25,14 @@ const SELF_PAY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake
 /** The PA is approved, then pricing, delivery and fulfillment. */
 export const IA_PA_APPROVED: ScenarioDefinition<IassistContent> = {
   flowType: "iAssist_PA_Approved",
+  intake: "erx",
   content: { biResult: "coverage_found", paOutcome: "approved", retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
 };
 
 /** The PA is denied. An appeal (started by an automation rule built in the Rules portal) is approved, then the infusion is scheduled. */
 export const IA_PA_DENIED_APPEAL: ScenarioDefinition<IassistContent> = {
   flowType: "iAssist_PAP",
+  intake: "erx",
   content: { biResult: "coverage_found", paOutcome: "denied", retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
 };
 

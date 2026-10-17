@@ -11,13 +11,9 @@
  * CoAssist flows (DTP, Copay, DME) together instead of tacking DME onto the
  * end of the list.
  *
- * This intentionally does NOT import from client/engine/WorkflowRegistry.ts.
- * That registry tracks XState machine IDs, not FlowTypes — CoA_DTP and
- * iAssist_PA_Approved each get their own machine, but Fax_QS_PA_Approved
- * (WF1) and Fax_PAP_Audit (WF2) share the "enrollment" machine (see
- * machineIdForFlow() in actorSingleton.ts). Deriving a user-facing flow
- * picker from machine IDs collapses WF1/WF2 into one option and is what
- * caused WF2 to go missing from the old DemoConfigurator dropdown.
+ * This list stays separate from client/engine/WorkflowRegistry.ts. Several flows share one
+ * machine (the three CoAssist flows, the two iAssist flows, Fax PAP and PrES), and the picker
+ * needs one entry per flow, with its label and description.
  */
 import type { FlowType } from "@/engine/types";
 

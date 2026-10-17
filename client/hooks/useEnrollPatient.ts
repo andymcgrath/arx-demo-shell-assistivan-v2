@@ -3,7 +3,7 @@
  *
  * Drop-in replacement for arx-prototype-crm's useEnrollPatient.ts
  * Dispatches INVITE event to the workflow actor.
- * Loading state derives from XState actor enrollment parallel state.
+ * Loading state derives from workflowData.patientInvited.
  */
 import { useCallback } from "react";
 import { useSelector } from "@xstate/react";
@@ -19,10 +19,8 @@ export function useEnrollPatient() {
   const dispatch = useWorkflowDispatch();
   const actor = getWorkflowActor();
 
-  const isPending = useSelector(actor, (snapshot) => {
-    const enrollState = snapshot.children.enrollment?.getSnapshot();
-    return enrollState?.status === "active" && enrollState?.value !== "invited";
-  });
+  // Pending until the invite goes out. Read off the data: the workflow machines have a single state.
+  const isPending = useSelector(actor, (snapshot) => !snapshot.context.workflowData.patientInvited);
 
   const mutate = useCallback(
     (_payload: EnrollPayload, options?: { onSuccess?: () => void }) => {

@@ -25,6 +25,7 @@ const SELF_PAY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake
 
 export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
+  intake: "erx",
   content: {
     biResult: "coverage_found",
     paOutcome: "approved",
@@ -36,6 +37,7 @@ export const COA_DTP: ScenarioDefinition<CoassistContent> = {
 
 export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Copay",
+  intake: "erx",
   content: {
     biResult: "coverage_found",
     paOutcome: "approved",
@@ -48,6 +50,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
 /** DME never offers Retail or Mail Order. The patient picks a network pharmacy, or pays cash through CoAssist's own. */
 export const COA_DME: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DME",
+  intake: "erx",
   content: {
     biResult: "coverage_found",
     paOutcome: "approved",

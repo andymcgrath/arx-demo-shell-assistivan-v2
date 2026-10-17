@@ -1,0 +1,72 @@
+[
+  {
+    "stage": 2,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "running",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 3,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "running",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 4,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "complete",
+    "paStatus": "submitted",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 5,
+    "ignored": [],
+    "route": "/pa-approved",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "pending_selection",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 6,
+    "ignored": [],
+    "route": "/order-tracker",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "processing"
+  },
+  {
+    "stage": 7,
+    "ignored": [],
+    "route": "/order-shipped",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "shipped"
+  },
+  {
+    "stage": 8,
+    "ignored": [],
+    "route": "/medication-delivered",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "delivered"
+  }
+]

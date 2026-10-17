@@ -31,86 +31,6 @@ import { useDemoStore } from "@/store/demoStore";
 import { isSticky } from "@/engine/workflow/screens";
 import { screenMapFor } from "@/workflows/screenMaps";
 
-// Legacy stay-put list for flows not yet on the screen list (Fax, PAP, PrES,
-// iAssist). Flows on the screen list mark `sticky` screens in their catalog
-// instead (see isStaying below). Delete entries as each workflow migrates.
-const DELIVERY_FLOW_PATHS = [
-  '/phone-verification',
-  '/pa-approved-sms',
-  '/pa-approved-otp',
-  '/benefit-pricing',
-  '/copay-enroll',
-  // CoA_Copay (WF4) only, Retail path — see PharmacySelection.tsx's header
-  // comment. pricingOption is still null while this screen shows (the
-  // SELECT_PRICING_OPTION dispatch only fires once a specific pharmacy is
-  // picked), so without this entry derivePatientRoute would bounce the
-  // patient straight back to /benefit-pricing.
-  '/pharmacy-selection',
-  // CoA_Copay (WF4) Mail Order path only — DeliveryAddress.tsx navigates
-  // here ("Thanks! Your details were received") right after the address is
-  // confirmed, but WorkflowEngine.ts's derivePatientRoute already computes
-  // /order-tracker as the real target at that same moment (dispatchStatus
-  // leaves 'none'), same as the Retail bypass right above it. Without this
-  // entry the patient would never see this one-time "Thanks!" screen at
-  // all — StateDrivenNav would bounce them straight to /order-tracker
-  // before they could read it. EnrollmentComplete.tsx's "Got it" button
-  // then sends CoA_Copay + mail_order patients on to /order-tracker itself.
-  '/enrollment-complete',
-  '/delivery-address',
-  '/delivery-date',
-  '/delivery-payment',
-  '/delivery-confirmation',
-  '/order-tracker',
-  '/order-shipped',
-  // iAssist_PAP (WF5) only: /infusion-date is this flow's replacement for
-  // /delivery-date (see InfusionDate.tsx) — same manual-navigation
-  // tolerance while the patient is mid-selection, before
-  // PATIENT_SELECTS_INFUSION_DATE has fired. InfusionDate.tsx's handleSave()
-  // then does a one-time manual navigate() to /appointment-confirmation (a
-  // "text from the doctor's office" beat) even though derivePatientRoute
-  // itself now targets /medication-delivered the moment infusionDate is set
-  // — without this entry, that fresh derivePatientRoute computation would
-  // bounce the patient off the SMS screen before they've read it.
-  '/infusion-date',
-  '/appointment-confirmation',
-  // /medication-delivered is every flow's shared terminal "what's next"
-  // screen, including iAssist_PAP (WF5) since derivePatientRoute now points
-  // there once appealStatus is 'approved' and infusionDate is set (see
-  // WorkflowEngine.ts) — AppointmentConfirmation.tsx's own link forward
-  // lands here too, same as every other flow's dispatch-complete state.
-  '/medication-delivered',
-  // WF5 (PrES_PAP) only: /pes-home and /pes-attestation share the exact same
-  // underlying machine state (enrollmentStatus 'none') — role selection and
-  // the has-prescription question both happen before REFERRAL_RECEIVED ever fires. Once
-  // the patient clicks past /pes-home to /pes-attestation, this guard keeps
-  // derivePatientRoute's still-correct-but-stale '/pes-home' target from
-  // bouncing them straight back, the same way the delivery/order paths above
-  // tolerate a manual forward navigation ahead of what the state machine has
-  // caught up to yet.
-  '/pes-attestation',
-  // WF5 (PrES_PAP) only: /pes-home and /pes-income-consent share the same
-  // gate (papSmsVerified === true && incomeStatus === 'none') once a
-  // provider's referral has cleared BI and the Fulfillment Center's
-  // "application update" SMS has been tapped — see WorkflowEngine.ts's
-  // PrES_PAP branch and pes-home's own patient wrapper, which is what
-  // actually navigates here. Same tolerance as the /pes-attestation entry
-  // above, one phase later.
-  '/pes-income-consent',
-  // CoA_DME only: this flow's real terminal screen (see WorkflowEngine.ts's
-  // derivePatientRoute) — added here for the same reason /medication-delivered
-  // is, so StateDrivenNav doesn't keep recomputing away from it once the
-  // patient has landed on it.
-  '/dme-provider-transfer',
-  // CoA_DME Scenario 1 only (pharmacy covered, medical not) — pricingOption
-  // is still null while /network-pharmacy-selection shows (the
-  // SELECT_PHARMACY dispatch hasn't fired yet), and
-  // /pharmacy-selection-confirmation is a one-time manual-nav stop reached
-  // right after it (mirrors DeliveryConfirmation.tsx's own tolerance here) —
-  // without both entries, derivePatientRoute would bounce the patient
-  // straight to /order-tracker before they've read the confirmation screen.
-  '/network-pharmacy-selection',
-  '/pharmacy-selection-confirmation',
-];
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -162,10 +82,10 @@ import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 
 
-/** True when the patient should stay on this screen for this flow. Screen-list flows read their catalog. */
+/** True when the patient should stay on this screen. Each workflow marks its `sticky` screens in workflows/<name>/screens.ts. */
 function isStaying(flowType: FlowType, path: string): boolean {
   const map = screenMapFor(flowType);
-  return map ? isSticky(map, flowType, path) : DELIVERY_FLOW_PATHS.includes(path);
+  return map ? isSticky(map, flowType, path) : false;
 }
 
 /** Watches actor state and navigates the patient portal accordingly */

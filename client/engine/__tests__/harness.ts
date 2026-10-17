@@ -25,20 +25,8 @@ process.env.TZ = "UTC";
 
 const FIXTURE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "__fixtures__");
 
-/** Mirrors machineIdForFlow() in actorSingleton.ts. Keep in sync until the refactor replaces both. */
-export function machineIdForFlow(flowType: FlowType): string {
-  switch (flowType) {
-    case "CoA_DTP":
-    case "CoA_Copay":
-    case "CoA_DME":
-    case "iAssist_PA_Approved":
-    case "iAssist_PAP":
-    case "PrES_PAP":
-      return flowType;
-    default:
-      return "enrollment";
-  }
-}
+/** Every flow is registered under its own FlowType (see actorSingleton.ts). */
+export const machineIdForFlow = (flowType: FlowType): string => flowType;
 
 export { SimulatedClock };
 
@@ -80,10 +68,6 @@ export function startFlow(flowType: FlowType, options: { clock?: SimulatedClock 
   // Same input actorSingleton passes. Machines that take no input ignore it.
   const actor = createActor(machine, { input: { flowType }, ...(options.clock ? { clock: options.clock } : {}) } as any);
   actor.start();
-  // Same correction actorSingleton sends for the shared "enrollment" machine.
-  if (machineIdForFlow(flowType) === "enrollment") {
-    actor.send({ type: "SET_FLOW_TYPE", flowType } as any);
-  }
   return actor;
 }
 

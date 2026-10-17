@@ -16,7 +16,6 @@ import {
 } from "@/shell/resetToStage";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
-import { machineOwnsAutomation } from "@/workflows/factoryFlows";
 import { FileText } from "lucide-react";
 import {
   ChevronDown,
@@ -817,7 +816,6 @@ export default function Index() {
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
   const isDmeFlow = flowType === "CoA_DME";
-  const ownsAutomation = machineOwnsAutomation(flowType);
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -964,95 +962,28 @@ export default function Index() {
     }
   }, [enrollmentFormTabOpen]);
 
-  useEffect(() => {
-    // PAP used to be excluded here, which meant biStatus could never leave
-    // "none" for this flow — BI never ran, so the "No Coverage" result and
-    // the SMS-to-patient action below it were unreachable. PAP's BI runs
-    // automatically on consent exactly like WF1's; the CRM-specific step for
-    // this flow is completing it and sending the SMS, not starting it.
-    // CoA_DTP/CoA_Copay (WF3/WF4) are excluded here now — see the
-    // isCoaFlow-scoped effect right below, which fires RUN_BI off the eRx
-    // itself instead of waiting on consent. CoA_DME (isDmeFlow) is excluded
-    // for the same reason — it gets the same immediate-BI-on-enrollment
-    // effect right below too. Every other flow keeps this original
-    // consent-gated trigger unchanged.
-    // Flows the machine automates start BI themselves (workflows/<name>/rules.ts).
-    if (ownsAutomation) return;
-    if (consentStatus !== "confirmed") return;
-    if (biStatus !== "none") return;
-    dispatch('RUN_BI', { portal: 'crm' });
-  }, [ownsAutomation, consentStatus, biStatus, dispatch]);
-
-  // CoAssist (DTP, Copay, DME): BI starts when REFERRAL_RECEIVED lands, and the PA starts
-  // when BI completes with a result that requires one. Both are automations in
-  // workflows/coassist/rules.ts (`then`), not effects here.
-
-  // Auto-complete BI when agent opens the BI stage tab. This is what makes
-  // CoA_DTP/CoA_Copay "remain in this state" (BI running, quietly, in the
-  // background) until the operator actually opens Benefits Investigation —
-  // at which point this reveals the result 3s later, same as every other
-  // flow. Already generic (not gated on isCoaFlow) before this change, so no
-  // CoA-specific version of this effect is needed — the old dedicated one
-  // (RUN_BI-on-tab-open + its own COMPLETE_BI) was removed as dead weight:
-  // RUN_BI now already fires automatically above the moment the eRx is
-  // sent, well before any tab could be opened, and this effect already
-  // covered COMPLETE_BI-on-tab-open for every flow, CoA included.
+  // The workflow machine owns the automation (workflows/<name>/rules.ts, `then`): BI starts
+  // when the referral lands (erx) or when the patient consents (fax and e-sign), and a PA
+  // starts on its own only for erx workflows. This page only reports what the agent is
+  // looking at. The machine owns the 3 second delay and the outcome. Leaving a stage
+  // cancels a pending reveal.
+  //
+  // BI: opening the stage while BI runs. CoA_DME carries the outcome the presenter picked
+  // with the BIR-0431 toggle buttons (dmeSelectedScenario) because that choice lives here.
   useEffect(() => {
     if (activeTopTab !== 'BI-14273') return;
     if (biStatus !== 'running') return;
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'BI' });
+  }, [activeTopTab, biStatus, dispatch, dmeSelectedScenario]);
 
-    // The machine owns the delay and the outcome for the flows it automates.
-    // The CRM only reports that the agent is looking at this stage.
-    if (ownsAutomation) {
-      dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
-      return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'BI' });
-    }
-
-    const timer = setTimeout(() => {
-      // CoA_DME resolves to whichever scenario the operator last picked via
-      // the BIR-0431 toggle buttons (dmeSelectedScenario, defaults to
-      // Scenario 1/Pharmacy Coverage if none was ever clicked) — NOT a
-      // hardcoded value. Those buttons reset back to "BI running" rather
-      // than a resolved result (see resetDmeToBiRunning in
-      // shell/resetToStage.ts), so this effect firing 3s after the operator
-      // sits on this tab is what actually resolves BI to the picked combo.
-      if (isDmeFlow) {
-        dispatch('COMPLETE_BI', { portal: 'crm', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
-      } else {
-        dispatch('COMPLETE_BI', { portal: 'crm', result: isPapFlow ? 'no_insurance' : 'coverage_found' });
-      }
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [activeTopTab, biStatus, dispatch, isPapFlow, isDmeFlow, dmeSelectedScenario, ownsAutomation]);
-
-  // Auto-approve PA when agent opens the PA stage tab. iAssist_PAP (WF5) is
-  // the one flow whose demo path resolves to Denied instead — without this
-  // guard, simply opening the PA tab would silently flip it to Approved
-  // after 3s, the opposite of what this flow exists to demonstrate (see
-  // engine/types.ts's FlowType comment). Auto-deny for that flow instead, so
-  // opening the tab still resolves the PA the same "watch it happen" way
-  // every other flow does, just to the outcome WF5 is actually about.
+  // PA: opening the stage while the PA is submitted. The scenario decides approve or deny.
   useEffect(() => {
     if (activeTopTab !== 'PA-14274') return;
     if (paStatus !== 'submitted') return;
-
-    if (ownsAutomation) {
-      dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PA' });
-      return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PA' });
-    }
-
-    const eventType = flowType === 'iAssist_PAP' ? 'DENY_PA' : 'APPROVE_PA';
-    const timer = setTimeout(() => {
-      dispatch(eventType, { portal: 'crm' });
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [activeTopTab, paStatus, dispatch, flowType, ownsAutomation]);
-
-  // CoA_DTP's PA always approves (CoAssist is an insurance-covered flow, not
-  // a denial → cash-pay one) — the generic auto-approve effect above already
-  // covers this since it isn't gated to a specific flowType.
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PA' });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PA' });
+  }, [activeTopTab, paStatus, dispatch]);
 
   // Action Factory bridge: once the presenter creates & activates the
   // "Initiate Appeal — Upon PA Denial" rule in the Rules portal

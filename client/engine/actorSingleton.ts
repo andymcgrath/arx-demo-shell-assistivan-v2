@@ -26,7 +26,6 @@
 
 import { createActor } from "xstate";
 import { create } from "zustand";
-import { workflowMachine } from "./workflowMachine";
 import { workflowRegistry } from "./WorkflowRegistry";
 import type { FlowType } from "./types";
 
@@ -135,15 +134,9 @@ export function getWorkflowActor() {
   return actorInstance;
 }
 
-/** Maps a FlowType to the machine registry ID. CoA (DTP, Copay, and DME), iAssist, iAssist PAP, and PrES/PAP each have their own dedicated machine; the two Fax flows share "enrollment". */
+/** Every flow is registered under its own FlowType, so the registry id is the FlowType. */
 function machineIdForFlow(flowType: FlowType): string {
-  if (flowType === "CoA_DTP") return "CoA_DTP";
-  if (flowType === "CoA_Copay") return "CoA_Copay";
-  if (flowType === "CoA_DME") return "CoA_DME";
-  if (flowType === "iAssist_PA_Approved") return "iAssist_PA_Approved";
-  if (flowType === "iAssist_PAP") return "iAssist_PAP";
-  if (flowType === "PrES_PAP") return "PrES_PAP";
-  return "enrollment";
+  return flowType;
 }
 
 export function switchWorkflow(flowType: FlowType): void {
@@ -205,10 +198,7 @@ function createActorForFlow(
   const machineId = machineIdForFlow(flowType);
   const machine = workflowRegistry.getWorkflow(machineId);
   if (!machine) {
-    console.error(`[actorSingleton] Machine "${machineId}" not found, falling back to workflowMachine`);
-    const actor = createActor(workflowMachine);
-    actor.start();
-    return actor;
+    throw new Error(`[actorSingleton] No machine registered for "${machineId}"`);
   }
 
   // Restore priority: explicit snapshot arg (in-memory, same-session flow
@@ -239,18 +229,6 @@ function createActorForFlow(
   actor.subscribe(() => {
     persistSnapshot(flowType, actor.getPersistedSnapshot());
   });
-
-  // "enrollment" is shared by WF1 (Fax_QS_PA_Approved) and WF2
-  // (Fax_PAP_Audit) — its own workflowMachine.ts has no way to tell which
-  // one it's actually running, since its static initial context hardcodes
-  // flowType to Fax_QS_PA_Approved. CoA_DTP/iAssist have dedicated machines
-  // that already hardcode their own correct flowType, so they don't need
-  // this. Send the correction now (after subscribe, so it gets persisted)
-  // rather than trusting the machine's own default or a possibly-stale
-  // restored snapshot from before this existed.
-  if (machineId === "enrollment") {
-    actor.send({ type: "SET_FLOW_TYPE", flowType } as any);
-  }
 
   return actor;
 }
