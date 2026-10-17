@@ -3,6 +3,11 @@
 # The build bundles brands/<BRAND>/brand.json. See CLAUDE.md for the brand rules.
 #
 # Build command and publish directory stay in the site settings.
+#
+# NODE_VERSION: Vite 8 needs Node 20.19+ or 22.12+, and pnpm 11 needs a recent 22. This is pinned
+# so a Netlify image update cannot change it. Raise it on purpose.
+[build.environment]
+  NODE_VERSION = "22.14.0"
 [dev]
   command = "vite --port 8080"
   targetPort = 8080

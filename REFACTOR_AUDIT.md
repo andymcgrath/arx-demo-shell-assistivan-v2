@@ -145,6 +145,12 @@ Not done yet:
 - Hikma assets in `public/brands/hikma/` are left untracked on purpose, for a later real Hikma brand.
 - Image isolation (tag `refactor/14-asset-isolation`): a build plugin deletes every other brand's folder from `dist/brands/` after Vite copies `public/`. The brand test requires each brand to use only its own folder or a parent's. Not run in a real build here: check `ls dist/brands` after `BRAND=hikma pnpm build:client`. It should list `hikma` and `assistivan` only (hikma only if it has files).
 
+### Netlify readiness (tag `refactor/15-netlify-readiness`)
+
+- Deleted `package-lock.json`, `deno.lock` and two scratch files. `pnpm-lock.yaml` is the only lockfile, so Netlify uses pnpm.
+- `netlify.toml` pins `NODE_VERSION = "22.14.0"`.
+- Still to do by hand: `pnpm remove @netlify/blobs @netlify/functions` (updates the lockfile), then commit `package.json` and `pnpm-lock.yaml`.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.
