@@ -63,10 +63,12 @@ Proposed shape (the grouping below is my read of the current flows; confirm it):
 
 | Workflow | Scenarios |
 |---|---|
-| Fax intake | PA approved, PAP with audit |
+| Standard (fax) | PA approved (the machine also supports PA denied) |
+| PAP | Fax PAP with 90-day audit, PrES (provider e-sign intake, legacy but supported) |
 | CoAssist | DTP cash pay, Copay, DME (pharmacy covered, medical covered, no coverage) |
-| iAssist | PA approved, PA denied with appeal |
-| Provider e-sign (PrES) | PAP (placeholder until the signature screens exist) |
+| iAssist | PA approved, PA denied with appeal (uses the Rules app) |
+
+PrES is a scenario of the PAP workflow, not a workflow of its own. Its story: BI returns no coverage, the patient goes to the PES to apply for assistance, gets enrolled in the free-drug program, and the Rx goes to the pharmacy while the patient's tracker shows it processed, sent, and delivered. The only difference from Fax PAP is the intake (the provider e-signs instead of faxing). No PA is involved, so intake changes the opening screens and nothing else. Mark it `legacy: true` in its definition: keep it working and tested, label it in the picker, and invest no new features.
 
 Build it in three layers:
 
@@ -81,9 +83,49 @@ Driving every flow headless showed things the first pass missed:
 - **The machines do not own the timing.** `ARCHITECTURE.md` said delayed transitions live in XState. They do not. BI completion, PA approve or deny, and appeal filing are `setTimeout` effects in `portals/crm/pages/Index.tsx`. The CRM component also picks the outcome (for example, which DME scenario, or deny instead of approve for `iAssist_PAP`). That is scenario logic living in UI code. There are 51 `setTimeout` calls across the portals. This is the strongest argument for the scenario model: outcomes and timers move into scenario data and machine `after` transitions.
 - **Undo is inconsistent.** `CoA_DTP`, `CoA_Copay`, and `CoA_DME` ignore `UNDO`. The other five flows restore the previous step.
 - **Pinned as-is, confirm intent.** After `DELIVER_RX`, the CoAssist flows stay on `/order-tracker` on purpose (a code comment in `derivePatientRoute` says so), and the iAssist approval flow does the same. The Fax and PAP flows go to `/medication-delivered`. The iAssist appeal flow stays on `/pa-approved` through delivery, which nothing explains.
+- **Rules portal state lives outside the machine.** The iAssist Appeal scenario is the only one that uses the Rules tab. The story: the PA is denied and the CRM says a letter was sent to the provider (`statusLabel: "Letter sent"`, which is not true). The presenter opens Rules, builds a rule, and activates it. The appeal then files itself and gets approved. Today the rule's "active" flag is `appealRuleActive` in `rulesPortalStore` (a separate Zustand store). A CRM React effect watches it and dispatches `INITIATE_APPEAL` after 2.5 seconds. So the one cross-app interaction in this scenario bypasses XState: reset, undo, and persistence each treat it separately, and the machine accepts `INITIATE_APPEAL` with no rule at all. The golden-path test for this scenario skips the rule step for that reason.
 - **Four missing `WorkflowData` fields** in five machines were fixed (they started as `undefined`).
 
 The tests cover the machines and route logic only. They do not cover the React timers above. After those move into the machines, the same event lists can run with no UI.
+
+### Ordering and automation rules
+
+Real causal rules need to live in the workflow definition once and apply to every scenario. The example: the BI result decides whether a PA is required, so the PA cannot start until BI returns. In an automated workflow like CoAssist, the system fires BI at enrollment and fires the PA the moment BI says one is required. The delays that make this look like automation are pacing only, not logic.
+
+What the code does today (probe run on 17 Oct 2026, limited to two checks):
+
+- Right after `ENROLL`, no flow accepts `SUBMIT_PA`. The basic order holds.
+- After BI reports no coverage, `CoA_DTP` and `CoA_Copay` still accept `SUBMIT_PA`. The Fax, DME, iAssist, and PrES machines do not. The same rule is enforced in some machines and not others.
+- The iAssist machines put BI and PA in flight at the same instant, on `ENROLL`. A recent TG commit did that on purpose ("BI and PA both start waiting-for-response on eRx submit"). The real behavior is sequential: both start automatically, BI first, then the PA once BI returns. The machine does not model that order.
+- Who fires BI and PA lives in CRM React effects, tied to which tab is open, not to the workflow.
+
+Fix: declare two kinds of rule in the workflow definition, and let the factory generate the machine behavior:
+
+1. **Preconditions.** An event is only allowed when its condition holds. Example: `SUBMIT_PA` requires `biStatus === "complete"` and `biOutcome.paRequired`. The scenario supplies the BI outcome, so the same rule covers DTP, Copay, DME, and the rest.
+2. **Automation triggers.** When X happens and a condition holds, fire Y after a delay. Example: on BI complete with `paRequired`, fire `SUBMIT_PA` after 1.5 seconds. Each workflow marks steps as `system` (fires itself, as in CoAssist) or `agent` (waits for a person, as when an agent opens a tab). This replaces the React `setTimeout` effects.
+
+Same precondition, two triggers. The cause is the **intake channel**, a workflow property:
+
+| Intake channel | Workflows | Why | PA trigger after BI says a PA is required |
+|---|---|---|---|
+| `erx` | CoAssist, iAssist | The HCP already submitted everything in the enrollment application (eRx). | The system initiates the PA submission automatically (`system`). |
+| `fax` | Fax intake (standard) | The fax lacks the information needed for the PA. | Manual. An email asks the provider to submit, and the provider's submission in the Provider portal sets PA submitted (`COMPLETE_PROVIDER_PA`). |
+
+The channel defaults from the workflow and a scenario may override it (PrES uses `esign`; it never reaches a PA, because BI returns no coverage). Model the channel once and derive the trigger from it, so a new eRx workflow gets the automatic PA without anyone remembering to wire it. One `paSubmission` step module reads `workflow.intake`.
+
+Decision (17 Oct 2026): for iAssist, BI starts first and the PA starts automatically once BI returns with "PA required". The CRM shows the PA as not started while BI runs. This replaces today's behavior, where both are in flight at `ENROLL`. The iAssist golden-path fixtures change with it, as an intentional re-record. If BI says no PA is required, no PA starts.
+
+One generic invariant test then runs over every scenario: each precondition rejects its event at every point where it does not hold. New scenarios inherit the check for free.
+
+### iAssist Appeal: apps as part of the scenario
+
+The Rules app takes part in one scenario only. Model it as a scenario property, not a global tab:
+
+- The scenario lists its participating apps (`apps: [..., "rules"]`). The shell shows the Rules tab only for scenarios that include it.
+- Rule activation becomes a machine event (for example `ACTIVATE_RULE`, sent by the Rules app). The machine records active rules in its context. An `after` transition files the appeal when a rule is active and the PA is denied. `rulesPortalStore.appealRuleActive` goes away.
+- The false "Letter sent" label is scenario content on purpose (the gap the rule closes). Store it as a named scenario field so no one "fixes" it.
+- Two headless tests: no rule means the case stays at PA Denied; rule activated means the appeal files and is approved.
+- The "new rule" form stays inline in the Rules app. Per rule 6, make it a step module only if a second scenario needs it.
 
 ### Step modules
 

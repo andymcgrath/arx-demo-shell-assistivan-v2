@@ -9,6 +9,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 - **Workflow:** the platform choreography. Which apps take part, which app starts, the stage spine, and which app owns each interaction. Example: CoAssist.
 - **Scenario:** a variant that runs on a workflow. Different outcomes and content, same apps and spine. Example: CoAssist DTP, Copay, DME.
 - **Step module:** a reusable step shared by scenarios. Example: payment, pharmacy selection, address and ship date, enrollment with SMS and OTP.
+- **Legacy scenario:** a scenario marked `legacy: true` (for example PrES). Keep it working and tested. Add no new features to it.
 - **Brand:** client identity (names, logos, colors, copy). Separate from workflow and scenario.
 
 ## Workflow rules
@@ -23,6 +24,9 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 8. Every scenario ships with a headless test: an event list that must reach a named end state.
 9. Keep XState. Its parallel regions, delayed transitions, and undo are the reason to keep it.
 10. Auto-advance timers that decide scenario outcomes (BI result, PA approve or deny, appeal) belong in the machine as `after` transitions, not in React `setTimeout` effects. Today they live in `portals/crm/pages/Index.tsx`. Move them as each workflow migrates.
+11. Ordering rules live in the workflow definition as preconditions (an event is allowed only when a condition holds) and automation triggers (when X happens and a condition holds, fire Y after a delay). Example: a PA needs a completed BI whose outcome says a PA is required. Never encode ordering in a UI effect. Mark each automated step `system` or `agent`. The trigger for a step (system fires it, an agent clicks, or a provider acts after an email) is a parameter of the step module. The precondition stays the same across triggers.
+    Intake channel (`erx`, `fax`, or `esign`) defaults from the workflow and a scenario may override it. `erx` workflows (CoAssist, iAssist) already hold everything the PA needs, so a PA starts automatically once BI completes and says a PA is required. `fax` workflows need a manual PA: an email asks the provider, and the provider's submission starts the PA.
+12. One invariant test runs over every scenario and checks that each precondition rejects its event wherever it does not hold.
 
 ## Test rules
 
