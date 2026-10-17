@@ -68,7 +68,14 @@ export default async (req: Request) => {
     // write problem (as opposed to a one-time cold-store miss) doesn't go
     // unnoticed.
     try {
-      await uploadsStore().set(file, buffer, { metadata: { contentType: builtin.contentType } });
+      // Blobs' BlobInput type wants a plain ArrayBuffer, not a Buffer (a
+      // Uint8Array view). Slice to the Buffer's own byte range, since small
+      // Buffers share a pooled ArrayBuffer.
+      const bytes = buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength,
+      ) as ArrayBuffer;
+      await uploadsStore().set(file, bytes, { metadata: { contentType: builtin.contentType } });
     } catch (seedErr) {
       console.error("[serve-upload] failed to seed built-in upload into Blobs:", file, seedErr);
     }
