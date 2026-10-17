@@ -38,6 +38,22 @@ Rule, in `coassist/rules.ts` (all three CoAssist scenarios): if the PA was appro
 
 This is the pattern the step-module model describes: the PA-approved notification is a module with a condition (is the patient away?), not a fixed screen. When screen order moves into the workflow definition, this condition moves with it.
 
+### Step 05: CoAssist screen list drives the route and the menu (tag `refactor/05-coassist-screens`)
+
+`workflows/coassist/screens.ts` now holds two lists. A catalog lists every screen in menu order, with its label and group. An ordered rule list picks the screen for the current data (first match wins). `derivePatientRoute` calls `routeFor` for CoA_DTP, CoA_Copay and CoA_DME, so about 290 lines of hand-written `if` chain are gone. The hamburger menu for those three flows comes from `menuFor`. The generic helpers are in `engine/workflow/screens.ts`.
+
+The golden and ladder fixtures record the route after every step. They did not change, so the new rules return the same routes as the old chain.
+
+New tests (`coassist.screens.test.ts`): every screen a rule can pick is in the menu, every screen a scenario visits is in the menu, and every rule path has a catalog entry. A throwaway copy with the Order Tracker entry removed fails seven of them.
+
+The menu changed on purpose. DME now lists its PA, pharmacy, cash-pay and order screens. Copay lists Pharmacy Selection. DTP and Copay list Copay Enrollment and the PA-denied cash path.
+
+Not done yet:
+- `DELIVERY_FLOW_PATHS` and the hard-coded `navigate()` calls still exist. They go when the guard can read the catalog.
+- The CRM stage list is still hand-written.
+- Fax, PAP, PrES and iAssist still use the old chain and menu in `Header.tsx`.
+- The Header change was not run in a browser.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

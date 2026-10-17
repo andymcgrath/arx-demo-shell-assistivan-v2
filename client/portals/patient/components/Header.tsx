@@ -7,6 +7,8 @@ import { MANUFACTURER, CHATBOT_ICON, PROGRAM } from "@/config/branding";
 import { hexToColorFilter } from "@/lib/brandFilter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { FlowType } from "@/store/demoStore";
+import { menuFor } from "@/engine/workflow/screens";
+import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 
 type NavEntry =
   | { label: string; path: string }
@@ -86,66 +88,12 @@ function buildNavLinks(flowType: FlowType): NavEntry[] {
     ];
   }
 
-  if (flowType === "CoA_DTP" || flowType === "CoA_Copay") {
-    // Mirrors coaDtp.ts's actual state chain (see WorkflowEngine's isCoA
-    // routing) rather than the generic enrollment steps other flows use —
-    // this flow's onboarding is SMS + OTP + Consent only, no Signature or
-    // Income Qualification screens exist for it.
-    return [
-      { label: "Home", path: "/" },
-      {
-        group: "Enrollment",
-        items: [
-          { label: "SMS Verification",         path: "/sms-message" },
-          { label: "OTP Verification",         path: "/otp-verification" },
-          { label: "Confirm Details & Consent", path: "/confirm-details" },
-          { label: "Enrollment Complete",      path: "/enrollment-complete" },
-        ],
-      },
-      {
-        group: "Prior Authorization Approved",
-        items: [
-          { label: "PA Approved — SMS",  path: "/pa-approved-sms" },
-          { label: "PA Approved — OTP",  path: "/pa-approved-otp" },
-          { label: "Benefit Pricing",    path: "/benefit-pricing" },
-        ],
-      },
-      {
-        group: `${PROGRAM.name} CoA Direct-to-Patient Order`,
-        items: [
-          { label: "Delivery Address",   path: "/delivery-address" },
-          { label: "Delivery Date",      path: "/delivery-date" },
-          { label: "Order Tracker",      path: "/order-tracker" },
-          { label: "Order Shipped / In Transit", path: "/order-shipped" },
-          { label: "Medication Delivered", path: "/medication-delivered" },
-        ],
-      },
-    ];
-  }
-
-  if (flowType === "CoA_DME") {
-    // Medical-benefit DME (no PA/pricing/fulfillment — see
-    // workflows/coaDme.ts): same SMS + OTP + Consent onboarding as
-    // CoA_DTP/CoA_Copay above, but ends at the DME Provider Transfer screen
-    // instead of a Prior Authorization/order chain.
-    return [
-      { label: "Home", path: "/" },
-      {
-        group: "Enrollment",
-        items: [
-          { label: "SMS Verification",         path: "/sms-message" },
-          { label: "OTP Verification",         path: "/otp-verification" },
-          { label: "Confirm Details & Consent", path: "/confirm-details" },
-          { label: "Enrollment Complete",      path: "/enrollment-complete" },
-        ],
-      },
-      {
-        group: "DME Provider Transfer",
-        items: [
-          { label: "DME Provider Transfer", path: "/dme-provider-transfer" },
-        ],
-      },
-    ];
+  // CoAssist: the menu comes from the workflow's screen list, the same list
+  // derivePatientRoute reads (workflows/coassist/screens.ts).
+  if (flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_DME") {
+    return menuFor(COASSIST_SCREENS, flowType).map((entry) =>
+      "group" in entry ? { ...entry, group: entry.group.replace("{program}", PROGRAM.name) } : entry,
+    );
   }
 
   // Fax_QS_PA_Approved
