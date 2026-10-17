@@ -1,0 +1,53 @@
+{
+  "slug": "tg-therapeutics",
+  "name": "TG Therapeutics",
+  "enabledFlows": [
+    "iAssist_PA_Approved",
+    "iAssist_PAP"
+  ],
+  "manufacturer": {
+    "name": "",
+    "tagline": "",
+    "logo": {
+      "colors": "/brands/tg-therapeutics/1786444819116-TGT_Logo_RGB-1.svg-1.svg",
+      "white": "/brands/tg-therapeutics/1786447172989-TG_Therapeutics_Logo-revised_colors-white.png",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "",
+      "phone": ""
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": ""
+  },
+  "program": {
+    "name": "BRIUMVI Patient Support Program",
+    "drugDisplayName": "BRIUMVI® (ublituximab-xiiy)",
+    "description": "BRIUMVI is a prescription medication used to treat adults with relapsing forms of multiple sclerosis (MS).",
+    "dosageForm": "150 mg/6 mL Injection for IV",
+    "logo": {
+      "colors": "/brands/tg-therapeutics/1786445499203-imgi_1_briumvi-logo2-sm.png",
+      "white": "",
+      "requiresFilter": false
+    },
+    "colors": {
+      "primary": "#009CA6",
+      "primaryDark": "#24525C",
+      "primaryLight": "#f7be69",
+      "primaryWash": "#fffdfb"
+    },
+    "educationVideo": {
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": "https://www.youtube.com/embed/DQmclRmqjz0"
+    }
+  },
+  "chatbotIcon": "/brands/tg-therapeutics/1786424090136-482GS01.svg",
+  "favicon": "/brands/tg-therapeutics/1786446283623-icon-32x32.png"
+}

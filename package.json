@@ -8,7 +8,6 @@
   "author": "Andy McGrath <andy.mn@gmail.com>",
   "scripts": {
     "dev": "vite --port 8080",
-    "dev:netlify": "netlify dev",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
     "build:react": "pnpm run build:client && pnpm run build:server",
@@ -16,8 +15,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
-    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
-    "typecheck:functions": "tsc -p netlify/functions/tsconfig.json"
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

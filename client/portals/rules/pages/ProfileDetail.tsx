@@ -4,9 +4,8 @@
  * The Profile's IDENTITY (Profile Name / Product Family / Brand / ARX ID
  * Code, and the page title) is governed by the admin-designated program --
  * read reactively from usePatientStore's `drugName`, which is exactly what
- * a presenter sets on the Branding Admin screen (client/portals/patient/
- * pages/Admin.tsx). This page does NOT hardcode a drug name, so switching
- * the active brand there updates this Profile immediately. See
+ * comes from the active brand (brands/<BRAND>/brand.json). This page does NOT
+ * hardcode a drug name, so switching the brand updates this Profile. See
  * rulesPortalStore.ts's header comment for the full rationale.
  *
  * Column layout: General/Team Structure/Enrollment Welcome Kit each render

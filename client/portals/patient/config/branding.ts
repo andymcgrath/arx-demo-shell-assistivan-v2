@@ -1,35 +1,25 @@
 /**
  * BRANDING CONFIGURATION
  *
- * There are two distinct branding layers:
+ * Two layers:
  *
- *   MANUFACTURER — displayed only in the Header and Footer
- *                  (platform name, logo, tagline, support, legal)
+ *   MANUFACTURER: shown only in the Header and Footer
+ *                 (platform name, logo, tagline, support, legal)
  *
- *   PROGRAM      — displayed throughout the workflow pages
- *                  (drug name, drug logo, description, brand colors)
+ *   PROGRAM:      shown throughout the workflow pages
+ *                 (drug name, drug logo, description, brand colors)
  *
- * The values below come from getCachedActiveBrand(), which holds whatever
- * /api/brand/active returned at app boot (see client/bootstrap.tsx and
- * client/lib/activeBrandCache.ts) — backed by Netlify Blobs, not this
- * file's own bundled ./active-brand.json. That JSON file is only the
- * offline/fallback default now: saving or promoting a brand takes effect
- * immediately without a rebuild, because it's fetched at runtime rather
- * than baked into the JS bundle at build time. Saved brands live in the
- * Blobs store and can be reloaded from the /admin screen's "Load brand"
- * dropdown.
- *
- * PROGRAM.colors also drives the --arx-primary* CSS variables used across
- * the design system — see applyBrandCssVars() below.
+ * Both come from the active brand, `brands/<BRAND>/brand.json`, bundled at build time.
+ * PROGRAM.colors also drives the --arx-primary* CSS variables (see applyBrandCssVars).
  *
  * Logo variants:
- *   colors — transparent background, brand-colored (use on white/light bg)
- *   white  — transparent background, all white    (use on teal/dark bg)
+ *   colors: transparent background, brand-colored (use on white or light backgrounds)
+ *   white:  transparent background, all white (use on dark backgrounds)
  */
-import { getCachedActiveBrand } from "@/lib/activeBrandCache";
+import { BRAND } from "@/brand";
 import { applyBrandCssVars } from "@/lib/applyBrandCssVars";
 
-const activeBrand = getCachedActiveBrand();
+const activeBrand = BRAND;
 
 export const MANUFACTURER = {
   ...activeBrand.manufacturer,
@@ -43,12 +33,11 @@ export const PROGRAM = activeBrand.program;
 
 export const CHATBOT_ICON = activeBrand.chatbotIcon;
 
-export const FAVICON = (activeBrand as { favicon?: string }).favicon ?? "";
+export const FAVICON = activeBrand.favicon ?? "";
 
 // Push PROGRAM.colors into the --arx-primary* CSS variables, and swap the
-// browser tab icon to the admin-configured favicon (falls back to the
-// static /favicon.svg in index.html when none is set). Re-runs on every
-// full page load, including the reload that follows a save in /admin.
+// browser tab icon to the brand favicon (falls back to the static
+// /favicon.svg in index.html when none is set).
 if (typeof document !== "undefined") {
   applyBrandCssVars(PROGRAM.colors);
   if (FAVICON) {

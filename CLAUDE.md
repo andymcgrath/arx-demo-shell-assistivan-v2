@@ -40,7 +40,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 
 ## Brand and deploy rules
 
-- Brand lives in committed JSON under a brand folder. Brand and drug names never appear in source code.
+- Brand lives in committed JSON at `brands/<slug>/brand.json`, with images in `public/brands/<slug>/`. See `BRANDS.md`. Brand and drug names never appear in source code.
 - Each client has one Netlify site pointing at `main`. The `BRAND` environment variable selects the brand at build time. Per-client screens come from `enabledFlows` in config.
 - Do not create long-lived client branches. Feature branches are short-lived and merge back.
 - No runtime brand fetch and no Netlify Blobs for brand config.

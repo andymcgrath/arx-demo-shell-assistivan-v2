@@ -1,4 +1,16 @@
 {
+  "slug": "assistivan",
+  "name": "Assistivan",
+  "enabledFlows": [
+    "Fax_QS_PA_Approved",
+    "Fax_PAP_Audit",
+    "CoA_DTP",
+    "CoA_Copay",
+    "CoA_DME",
+    "iAssist_PA_Approved",
+    "iAssist_PAP",
+    "PrES_PAP"
+  ],
   "manufacturer": {
     "name": "CoAssist",
     "tagline": "Patient assistance & medication access program",

@@ -115,6 +115,15 @@ Not done yet:
 - Type errors fell from 198 to 2 because the duplicates and the alias guessing caused most of them. Baseline is now 2.
 - Not run: `vite build` (the sandbox has no macOS binding). Run `pnpm build:client` and open each portal.
 
+### Step 10: brand as committed JSON, `BRAND` and `enabledFlows` (tag `refactor/10-brand-json`)
+
+- Each brand is `brands/<slug>/brand.json` with a typed schema (`client/brand/schema.ts`). Images live in `public/brands/<slug>/`. Vite inlines the brand chosen by `BRAND` (default `assistivan`) as `__BRAND__`. An unknown slug fails the build.
+- `enabledFlows` filters the flow pickers. The first entry is the start flow. A saved session on a flow the brand does not enable falls back to the start flow. Assistivan and Boehringer show all flows they had before. Dexcom shows `CoA_DME`. TG shows the two iAssist flows. Boehringer omits `CoA_DME` (my guess: confirm).
+- Removed: the boot fetch and its 3 second wait, `activeBrandCache`, `assetUrl`, every Netlify function, the Blobs store, the `/api` and `/uploads` redirects, the `/admin` route and `Admin.tsx`, `BRANDING_ADMIN_GUIDE.md`. All are in git history if the admin app is wanted later (audit item 6).
+- Behavior change: the Client tab used to be fixed to TG. It now follows the active brand like every other portal.
+- A brand test checks required fields, real flow ids and that every local image exists. Mutation checks (a bogus flow, a missing image) both fail the test.
+- Gaps: six Dexcom images exist only in a deployed site's Blobs and were never committed. The test lists them as known missing. Four unreferenced images in `public/uploads` were deleted with the folder. `@netlify/blobs` and `@netlify/functions` are still in `package.json` until someone runs `pnpm remove` (the lockfile needs pnpm). Hardcoded brand and drug names in source are still there (Step 11).
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

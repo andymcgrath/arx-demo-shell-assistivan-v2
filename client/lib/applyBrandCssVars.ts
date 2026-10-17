@@ -4,8 +4,7 @@
  *
  * Rather than rewriting global.css on every rebrand (fragile — text-patching
  * a stylesheet), this injects a small <style> override tag at runtime. It's
- * called once from branding.ts on module load, which re-runs whenever
- * active-brand.json changes (Vite reloads the page after a save).
+ * called once from branding.ts on module load.
  *
  * Mapping (matches the original hand-authored global.css comment) — all four
  * are plain hex-to-HSL conversions of explicit admin fields. Nothing here is

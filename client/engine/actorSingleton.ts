@@ -28,9 +28,10 @@ import { createActor } from "xstate";
 import { create } from "zustand";
 import { workflowRegistry } from "./WorkflowRegistry";
 import type { FlowType } from "./types";
+import { DEFAULT_FLOW, isFlowEnabled } from "@/brand";
 
 let actorInstance: ReturnType<typeof createActor> | null = null;
-let currentFlowType: FlowType = "Fax_QS_PA_Approved";
+let currentFlowType: FlowType = DEFAULT_FLOW;
 
 // demoStore.ts (zustand + persist) is the source of truth for which flow is
 // active, but actorSingleton.ts can't import it directly — demoStore.ts
@@ -55,17 +56,12 @@ let currentFlowType: FlowType = "Fax_QS_PA_Approved";
 function readPersistedFlowType(): FlowType {
   try {
     const raw = sessionStorage.getItem("arx-demo-shell");
-    if (!raw) {
-      return "Fax_QS_PA_Approved";
-    }
-    const parsed = JSON.parse(raw);
-    const flowType = parsed?.state?.flowType as FlowType | undefined;
-    if (!flowType) {
-      return "Fax_QS_PA_Approved";
-    }
-    return flowType;
+    if (!raw) return DEFAULT_FLOW;
+    const flowType = JSON.parse(raw)?.state?.flowType as string | undefined;
+    // A flow this brand does not enable (an old session, or another brand) falls back to the start flow.
+    return isFlowEnabled(flowType) ? flowType : DEFAULT_FLOW;
   } catch (e) {
-    return "Fax_QS_PA_Approved";
+    return DEFAULT_FLOW;
   }
 }
 

@@ -21,6 +21,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { resetCurrentWorkflowActor } from "../engine/actorSingleton";
+import { DEFAULT_FLOW, isFlowEnabled } from "@/brand";
 
 // ── Re-exports so existing portal imports keep working ────────────────────────
 
@@ -156,7 +157,7 @@ export interface DemoActions {
 export type DemoStore = DemoState & DemoActions;
 
 export const SEED: DemoState = {
-  flowType: "Fax_QS_PA_Approved",
+  flowType: DEFAULT_FLOW,
   enrollmentFormTabOpen: false,
   resetNonce: 0,
 };
@@ -195,6 +196,12 @@ export const useDemoStore = create<DemoStore>()(
     {
       name: "arx-demo-shell",
       storage: createJSONStorage(() => sessionStorage),
+      // A stored flow this brand does not enable (an old session) falls back to the start flow.
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as Partial<DemoStore>) };
+        if (!isFlowEnabled(merged.flowType)) merged.flowType = DEFAULT_FLOW;
+        return merged;
+      },
     }
   )
 );

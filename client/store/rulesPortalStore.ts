@@ -11,9 +11,9 @@
  *
  * The Profile's IDENTITY (its display name / product family / brand) is
  * intentionally NOT stored here — it's governed by whatever drug/program
- * the presenter has configured via Branding Admin (see
+ * the presenter has configured in the active brand (see
  * client/store/patientStore.ts's `drugName`, sourced from
- * client/portals/patient/config/active-brand.json). The pages in
+ * brands/<BRAND>/brand.json). The pages in
  * client/portals/rules/ read that value reactively via
  * `usePatientStore((s) => s.drugName)` rather than a fixed "Wegovy" literal,
  * so this store only owns the parts of the Profile that are genuinely this

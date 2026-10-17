@@ -15,7 +15,6 @@ import DemoShell, { FLOW_START_PORTAL, PORTAL_SLUG } from "@/shell/DemoShell";
 import { useDemoStore } from "@/store/demoStore";
 import WorkflowProvider from './engine/WorkflowProvider';
 import { StageInspector } from '@/components/StageInspector';
-import BrandingAdmin from "@/portals/patient/pages/Admin";
 
 // Toggle to bring StageInspector back — kept mounted-but-hidden behind this
 // flag rather than removed, so re-enabling it later is a one-line change.
@@ -69,19 +68,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/hub" replace />} />
             <Route path="/iassist" element={<IAssistRedirect />} />
-            {/* Real top-level route (not nested in the patient portal's
-                in-memory router) so /admin is a URL you can type or
-                bookmark, reachable regardless of demo/workflow state.
-                Wrapped in .portal-patient so the AssistRx CSS variables
-                and font this page depends on are actually defined. */}
-            <Route
-              path="/admin"
-              element={
-                <div className="portal-patient min-h-screen">
-                  <BrandingAdmin />
-                </div>
-              }
-            />
             <Route path="/:portal" element={<DemoShell />} />
             <Route path="*" element={<Navigate to="/hub" replace />} />
           </Routes>

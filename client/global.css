@@ -115,8 +115,7 @@
 
 /* ── Client tab design system (TG Therapeutics brand) ────────────────────── */
 /* Duplicate of the CRM tab, retinted from Salesforce blue to TG
- * Therapeutics' defined colors (client/portals/patient/config/brands/
- * tg-therapuetics.json) — see client/portals/client/branding.ts. These four
+ * Therapeutics' defined colors (brands/<slug>/brand.json) — see client/portals/client/branding.ts. These four
  * are the same hex->HSL conversion applyBrandCssVars() computes at runtime;
  * they're repeated here as static defaults (same pattern .portal-patient
  * uses above) so the tab is never unstyled for a frame before that script

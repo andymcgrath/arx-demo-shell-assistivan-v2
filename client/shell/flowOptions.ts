@@ -16,6 +16,7 @@
  * needs one entry per flow, with its label and description.
  */
 import type { FlowType } from "@/engine/types";
+import { BRAND } from "@/brand";
 
 export interface FlowOption {
   value: FlowType;
@@ -23,7 +24,7 @@ export interface FlowOption {
   description: string;
 }
 
-export const FLOW_OPTIONS: FlowOption[] = [
+export const ALL_FLOW_OPTIONS: FlowOption[] = [
   {
     value: "Fax_QS_PA_Approved",
     label: "1. Standard",
@@ -65,3 +66,10 @@ export const FLOW_OPTIONS: FlowOption[] = [
     description: "Provider e-signature intake with PAP income-qualification (foundation placeholder — capture screens pending)",
   },
 ];
+
+/** The flows this client sees, in the order the brand lists them. */
+export const FLOW_OPTIONS: FlowOption[] = BRAND.enabledFlows.map((flow) => {
+  const option = ALL_FLOW_OPTIONS.find((o) => o.value === flow);
+  if (!option) throw new Error(`brands/${BRAND.slug}: enabledFlows lists unknown flow "${flow}"`);
+  return option;
+});
