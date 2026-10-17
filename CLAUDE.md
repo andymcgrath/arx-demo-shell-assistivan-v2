@@ -1,0 +1,46 @@
+# Project instructions
+
+Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Field, iAssist, Rules, Analytics) driven by one XState actor. All data is representative. Nothing calls a real payment provider, EHR, or database.
+
+`REFACTOR_AUDIT.md` explains the reasoning behind the rules below. `ARCHITECTURE.md` describes the current (pre-refactor) code. Where they differ, the refactor target below wins on the `Refactor` branch.
+
+## Vocabulary
+
+- **Workflow:** the platform choreography. Which apps take part, which app starts, the stage spine, and which app owns each interaction. Example: CoAssist.
+- **Scenario:** a variant that runs on a workflow. Different outcomes and content, same apps and spine. Example: CoAssist DTP, Copay, DME.
+- **Step module:** a reusable step shared by scenarios. Example: payment, pharmacy selection, address and ship date, enrollment with SMS and OTP.
+- **Brand:** client identity (names, logos, colors, copy). Separate from workflow and scenario.
+
+## Workflow rules
+
+1. One XState machine per workflow, built by a shared factory. Do not copy a machine to make a new scenario.
+2. A scenario is data: outcomes, step order, content overrides. It contains no machine code. It enters the machine as XState `input`.
+3. A step module bundles a machine fragment, its screens per app, and metadata (stage label, Field email events, entry and exit points). Scenario values such as price or pharmacy name arrive as props.
+4. Each module declares what it needs and what it sets. Payment needs a selected pharmacy and a price, and sets `paymentVerified`. A test must fail when a scenario orders modules wrongly.
+5. Branching belongs to the scenario. A small decision step (for example, the BI result) picks the next module. A module never knows what follows it.
+6. Extract a module only when two or more scenarios use it. Keep one-off steps inline until a second scenario needs them.
+7. Do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition.
+8. Every scenario ships with a headless test: an event list that must reach a named end state.
+9. Keep XState. Its parallel regions, delayed transitions, and undo are the reason it is here.
+
+## Brand and deploy rules
+
+- Brand lives in committed JSON under a brand folder. Brand and drug names never appear in source code.
+- Each client has one Netlify site pointing at `main`. The `BRAND` environment variable selects the brand at build time. Per-client screens come from `enabledFlows` in config.
+- Do not create long-lived client branches. Feature branches are short-lived and merge back.
+- No runtime brand fetch and no Netlify Blobs for brand config.
+- `/admin` and admin functions must not ship in client-facing builds.
+
+## Code rules
+
+- One UI kit at `client/ui/`. Do not add a `components/ui` folder inside a portal.
+- One `@/` alias. No import-rewriting Vite plugins.
+- One persistence helper with a versioned key and one reset-everything path. Do not call `sessionStorage` directly.
+- Keep files under about 600 lines. Split along existing seams.
+- Do not commit logs, `.fuse_hidden*` files, or generated Netlify state.
+- One lockfile: `pnpm-lock.yaml`. Do not add `package-lock.json` or `deno.lock`. Use pnpm for every install and script.
+- Pin `NODE_VERSION` in `netlify.toml` to a version Vite supports (20.19+ or 22.12+).
+
+## Style
+
+Follow the user's global writing rules. Short sentences. No em dashes. Sentence-case headings.
