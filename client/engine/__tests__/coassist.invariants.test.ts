@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { FlowType } from "@/engine/types";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ctx, runSteps, startFlow, withFrozenClock, type Step } from "./harness";
 
 /**
@@ -10,6 +11,8 @@ import { ctx, runSteps, startFlow, withFrozenClock, type Step } from "./harness"
  */
 const COA: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_DME"];
 const PHARMACY = { name: "Test Pharmacy" };
+/** Patient finishes onboarding. Pricing options reach the patient only after this. */
+const ENROLLED: Step[] = [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }];
 
 const BI_DTP: Step = { type: "COMPLETE_BI", result: "coverage_found" };
 const bi = (flowType: FlowType, pharmacy: "covered" | "not_covered" = "covered", medical: "covered" | "not_covered" = "not_covered"): Step =>
@@ -74,8 +77,8 @@ describe("CoAssist ordering rules", () => {
           const actor = startFlow(flow);
           const path: Step[] =
             flow === "CoA_DME"
-              ? [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
-              : [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
+              ? [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
+              : [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
           runSteps(actor, path);
           expect(accepts(actor, { type: "READY_RX" })).toBe(false);
           expect(accepts(actor, { type: "SHIP_RX" })).toBe(false);
@@ -138,12 +141,29 @@ describe("CoAssist ordering rules", () => {
     it("Copay: enrolling in the copay program is one-time, and the patient still picks Retail or Mail Order", () => {
       withFrozenClock(() => {
         const actor = startFlow("CoA_Copay");
-        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_SELF_PAY" }]);
+        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_SELF_PAY" }]);
         expect(ctx(actor).workflowData.copayEnrolled).toBe(true);
         expect(ctx(actor).workflowData.pricingOption).toBeNull();
         expect(accepts(actor, { type: "SELECT_SELF_PAY" })).toBe(false);
         expect(accepts(actor, { type: "FILL_RX" })).toBe(false);
         expect(accepts(actor, { type: "SELECT_PRICING_OPTION", option: "mail_order" })).toBe(true);
+      });
+    });
+
+    it("Pricing options wait for enrollment: a PA approved before consent reaches the patient only after consent", () => {
+      withFrozenClock(() => {
+        for (const flow of COA) {
+          const actor = startFlow(flow);
+          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }]);
+          expect(ctx(actor).workflowData.paStatus).toBe("approved");
+          expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]);
+          runSteps(actor, [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }]);
+          expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]); // consent still pending
+          runSteps(actor, [{ type: "CONFIRM_CONSENT" }]);
+          expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, true]);
+          // The patient's next screen is the pricing SMS, not the home screen.
+          if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/pa-approved-sms");
+        }
       });
     });
 

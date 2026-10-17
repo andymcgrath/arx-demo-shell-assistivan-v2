@@ -1488,7 +1488,9 @@ export default function Index() {
             : "Denied",
           statusDetail: paStatus === 'none' ? "Awaiting BI completion"
             : paStatus === 'submitted' ? "Awaiting payer decision"
-            : paStatus === 'approved' ? "PA Approved — pricing options sent to patient"
+            : paStatus === 'approved' ? (consentStatus === "confirmed"
+                ? "PA Approved — pricing options sent to patient"
+                : "PA Approved — pricing options will be sent once the patient completes enrollment")
             : "PA Denied — Patient eligible for cash offer",
           isComplete: paStatus === 'denied' || paStatus === 'approved',
           isNotStarted: paStatus === 'none',

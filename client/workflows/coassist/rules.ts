@@ -134,8 +134,10 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "provider", step: 9 },
   },
   {
+    // Pricing options go to the patient only after enrollment is complete. The PA can be approved
+    // earlier (BI and PA run off the eRx alone), but the patient hears about it after they consent.
     on: "VERIFY_PA_APPROVED_SMS",
-    when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified,
+    when: (d) => d.paStatus === "approved" && d.consentStatus === "confirmed" && !d.paApprovedSmsVerified,
     set: () => ({ paApprovedSmsVerified: true }),
     emit: { portal: "patient", step: 9 },
   },

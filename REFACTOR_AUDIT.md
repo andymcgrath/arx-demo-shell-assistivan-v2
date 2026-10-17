@@ -22,6 +22,14 @@ Fixed after step 01 (tag `refactor/02-dme-ladder-fix`): the DME jump-to-stage me
 
 Not yet done for CoAssist: auto-advance timers still run in the CRM React component, preconditions for PA (BI says a PA is required) are not enforced for DTP and Copay, and screen order is still `derivePatientRoute`. Those are the next steps.
 
+### Step 03: pricing options wait for enrollment (tag `refactor/03-pricing-after-enrollment`)
+
+Found by a presenter run of CoAssist DTP: BI and PA run off the eRx, so the PA can be approved while the patient is still enrolling. The CRM then said "pricing options sent to patient", and after the patient finished enrollment they sat on the home screen. This was true before the refactor (the old and new machines behave identically here). Three causes:
+
+- No rule said the patient's pricing SMS needs completed enrollment. Added as a precondition on `VERIFY_PA_APPROVED_SMS` (consent confirmed). A new golden path and an invariant test cover it.
+- The CRM label ignored consent. It now says "pricing options will be sent once the patient completes enrollment" until consent is confirmed.
+- Screen order lives in three places that disagree: `derivePatientRoute`, the patient portal's `DELIVERY_FLOW_PATHS` guard (it will not navigate away from `/enrollment-complete`), and hard-coded `navigate()` calls in pages. `UploadInsurance` fired consent and then hard-coded `/enrollment-complete`, which the guard then protected. The page now navigates to the state-derived route (still `/enrollment-complete` when nothing further is due). This is a patch. Screen order as one list in the workflow definition (rule 13) removes the class of bug.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

@@ -1,0 +1,310 @@
+{
+  "flowType": "CoA_DTP",
+  "steps": [
+    {
+      "event": "ENROLL",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "ENROLL",
+          "portal": "crm",
+          "workflowStep": 1
+        }
+      ]
+    },
+    {
+      "event": "RUN_BI",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "payload": {
+        "result": "coverage_found"
+      },
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "biStatus": "complete"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "SUBMIT_PA",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "paStatus": "submitted",
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "APPROVE_PA",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "paStatus": "approved",
+        "paApprovedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "APPROVE_PA",
+          "portal": "provider",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/pa-approved-sms",
+      "changed": {
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_SMS",
+      "accepted": true,
+      "route": "/pa-approved-otp",
+      "changed": {
+        "paApprovedSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_OTP",
+      "accepted": true,
+      "route": "/benefit-pricing",
+      "changed": {
+        "paApprovedOtpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_OTP",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SELECT_PRICING_OPTION",
+      "payload": {
+        "option": "retail"
+      },
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "selectedPharmacy": {
+          "name": "CVS Pharmacy #3795",
+          "address": "1450 Riverside Drive",
+          "city": "Fairview",
+          "state": "TX",
+          "zip": "75069",
+          "phone": "(972) 555-0142"
+        },
+        "pricingOption": "retail"
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_PRICING_OPTION",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SELECT_PHARMACY",
+      "payload": {
+        "pharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "selectedPharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_PHARMACY",
+          "portal": "crm",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/delivery-date",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "processing",
+        "dispatchStatus": "dispatched"
+      },
+      "newEvents": [
+        {
+          "eventType": "FILL_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "ready"
+      },
+      "newEvents": [
+        {
+          "eventType": "READY_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-shipped",
+      "changed": {
+        "pharmacyStatus": "shipped"
+      },
+      "newEvents": [
+        {
+          "eventType": "SHIP_RX",
+          "portal": "field",
+          "workflowStep": 11
+        }
+      ]
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "delivered"
+      },
+      "newEvents": [
+        {
+          "eventType": "DELIVER_RX",
+          "portal": "field",
+          "workflowStep": 12
+        }
+      ]
+    }
+  ]
+}

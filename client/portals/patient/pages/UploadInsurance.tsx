@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ClipboardList, Camera, Check } from "lucide-react";
 import EnrollmentShell from "@/components/enrollment/EnrollmentShell";
 
@@ -12,6 +13,7 @@ interface UploadedFile {
 export default function UploadInsurance() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const actor = useWorkflowActor();
   const frontRef = useRef<HTMLInputElement>(null);
   const backRef = useRef<HTMLInputElement>(null);
   const [frontFile, setFrontFile] = useState<UploadedFile | null>(null);
@@ -24,6 +26,15 @@ export default function UploadInsurance() {
   }
 
   const bothUploaded = !!frontFile && !!backFile;
+
+  // Last enrollment step: confirm consent, then go where the workflow says. The portal's
+  // navigation guard leaves /enrollment-complete alone, so a hard-coded navigate() there
+  // would strand a patient whose PA was approved while they were still enrolling.
+  function finishEnrollment() {
+    dispatch('CONFIRM_CONSENT', { portal: 'patient' });
+    const route = derivePatientRoute(actor.getSnapshot().context as any);
+    navigate(route === "/" || route === "/enrollment-complete" ? "/enrollment-complete" : route);
+  }
 
   return (
     <main className="flex-grow">
@@ -57,7 +68,7 @@ export default function UploadInsurance() {
           {/* Submit button */}
           <div className="mt-6">
             <button
-              onClick={() => { dispatch('CONFIRM_CONSENT', { portal: 'patient' }); navigate("/enrollment-complete"); }}
+              onClick={finishEnrollment}
               disabled={!bothUploaded}
               className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                 bothUploaded
@@ -71,7 +82,7 @@ export default function UploadInsurance() {
           </div>
 
           <button
-            onClick={() => { dispatch('CONFIRM_CONSENT', { portal: 'patient' }); navigate("/enrollment-complete"); }}
+            onClick={finishEnrollment}
             className="w-full mt-3 text-sm text-arx-body-copy hover:text-arx-slate transition-colors text-center"
           >
             Skip for now
