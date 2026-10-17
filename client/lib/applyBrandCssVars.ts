@@ -1,6 +1,6 @@
 /**
- * Applies the active brand's colors to the Patient Portal's CSS custom
- * properties (see `.portal-patient` in global.css).
+ * Applies a brand's colors to a portal's CSS custom properties (see
+ * `.portal-patient` in global.css).
  *
  * Rather than rewriting global.css on every rebrand (fragile — text-patching
  * a stylesheet), this injects a small <style> override tag at runtime. It's
@@ -16,6 +16,12 @@
  *   colors.primaryDark  -> --arx-primary-dark
  *   colors.primaryLight -> --arx-primary-80
  *   colors.primaryWash  -> --arx-primary-30
+ *
+ * `selector`/`styleTagId` default to the Patient Portal's own values so every
+ * existing call site (branding.ts) is unaffected. The Client tab reuses this
+ * same function with `.portal-client`/"client-brand-css-vars" instead — see
+ * client/portals/client/branding.ts — rather than duplicating the hex->HSL
+ * math for a second portal.
  */
 
 const STYLE_TAG_ID = "brand-css-vars";
@@ -67,7 +73,11 @@ function hslString({ h, s, l }: { h: number; s: number; l: number }): string {
   return `${h} ${s}% ${l}%`;
 }
 
-export function applyBrandCssVars(colors: ProgramColors) {
+export function applyBrandCssVars(
+  colors: ProgramColors,
+  selector: string = ".portal-patient",
+  styleTagId: string = STYLE_TAG_ID,
+) {
   if (typeof document === "undefined") return;
 
   try {
@@ -76,17 +86,17 @@ export function applyBrandCssVars(colors: ProgramColors) {
     const light = hexToHsl(colors.primaryLight);
     const wash = hexToHsl(colors.primaryWash);
 
-    const css = `.portal-patient {
+    const css = `${selector} {
   --arx-primary: ${hslString(primary)};
   --arx-primary-dark: ${hslString(dark)};
   --arx-primary-80: ${hslString(light)};
   --arx-primary-30: ${hslString(wash)};
 }`;
 
-    let tag = document.getElementById(STYLE_TAG_ID) as HTMLStyleElement | null;
+    let tag = document.getElementById(styleTagId) as HTMLStyleElement | null;
     if (!tag) {
       tag = document.createElement("style");
-      tag.id = STYLE_TAG_ID;
+      tag.id = styleTagId;
       document.head.appendChild(tag);
     }
     tag.textContent = css;

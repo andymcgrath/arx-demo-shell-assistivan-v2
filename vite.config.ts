@@ -23,7 +23,7 @@ import fs from "fs";
  *     (client/<rest-of-path>), which is where shared bridges live.
  */
 function portalAliasPlugin(rootDir: string): Plugin {
-  const portals = ["crm", "patient", "analytics", "field", "provider"];
+  const portals = ["crm", "client", "patient", "analytics", "field", "provider"];
   const extensions = [".ts", ".tsx", "/index.ts", "/index.tsx"];
 
   // Matches:  from "@/foo"  |  from '@/foo'
@@ -87,6 +87,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./client"),
       // Per-portal aliases (used when portal files explicitly import @crm/…)
       "@crm": path.resolve(__dirname, "./client/portals/crm"),
+      "@client": path.resolve(__dirname, "./client/portals/client"),
       "@patient": path.resolve(__dirname, "./client/portals/patient"),
       "@analytics": path.resolve(__dirname, "./client/portals/analytics"),
       "@field": path.resolve(__dirname, "./client/portals/field"),
