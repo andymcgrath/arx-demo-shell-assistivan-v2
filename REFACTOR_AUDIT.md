@@ -138,6 +138,13 @@ Not done yet:
 - `PATIENT_SEED` is now `personaFor(DEFAULT_FLOW)`. Nothing changes on screen. No scenario overrides a field yet.
 - Not done, on purpose: per-scenario patients at runtime. About ten files still read `PATIENT_SEED` as a load-time constant (`caseWizardStore`, `samplePatients`, Provider lists, the iAssist dashboard). They need to read the store or the active scenario before an override can take effect. The sample rosters in `samplePatients.ts` and the Provider portal still hold their own names.
 
+### Brand `extends` and the live-site brands (tag `refactor/13-brand-extends`)
+
+- A brand can start from another with `"extends": "<slug>"`. `client/brand/resolve.ts` merges it at build time (objects field by field, arrays replace) and rejects loops and missing parents. `hikma` is the first user: the default look with the fax and iAssist flows. More default-look clients need only a short file.
+- Four live-site brands were converted from their exports: Edding Genor, Hikma, Moon Lake and PharmaEssentia. Images came from the old sites. Edding, Hikma and PharmaEssentia use placeholder flow lists until the flows per client are confirmed.
+- Hikma assets in `public/brands/hikma/` are left untracked on purpose, for a later real Hikma brand.
+- Open: every client's images still ship in every build because Vite copies all of `public/`. Fix before cutover by copying only the active brand's folder, plus its parents' folders.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

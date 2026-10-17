@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { SCENARIOS } from "@/engine/__tests__/scenarios";
+import { listBrandSlugs, resolveBrand } from "@/brand/resolve";
 
 /**
- * Every folder under brands/ must be a complete, self-consistent brand
+ * Every folder under brands/ must resolve to a complete, self-consistent brand
  * (CLAUDE.md: brand is committed JSON, selected by BRAND at build time).
  */
 const ROOT = process.cwd(); // vitest runs from the repo root
@@ -23,7 +24,7 @@ function localAssets(value: unknown): string[] {
   return [];
 }
 
-const slugs = fs.readdirSync(BRANDS_DIR).filter((d) => !d.startsWith("_") && fs.statSync(path.join(BRANDS_DIR, d)).isDirectory());
+const slugs = listBrandSlugs(BRANDS_DIR);
 
 it("there is at least one brand", () => {
   expect(slugs.length > 0).toBe(true);
@@ -31,7 +32,7 @@ it("there is at least one brand", () => {
 
 for (const slug of slugs) {
   describe(`brand ${slug}`, () => {
-    const brand = JSON.parse(fs.readFileSync(path.join(BRANDS_DIR, slug, "brand.json"), "utf8"));
+    const brand = resolveBrand(BRANDS_DIR, slug) as any; // follows "extends"
 
     it("has the slug of its folder and the required fields", () => {
       expect(brand.slug).toBe(slug);

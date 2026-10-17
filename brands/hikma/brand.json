@@ -1,58 +1,12 @@
 {
+  "extends": "assistivan",
   "slug": "hikma",
   "name": "Hikma",
   "title": "Hikma Demo",
   "enabledFlows": [
     "Fax_QS_PA_Approved",
     "Fax_PAP_Audit",
-    "CoA_DTP",
-    "CoA_Copay",
-    "CoA_DME",
     "iAssist_PA_Approved",
-    "iAssist_PAP",
-    "PrES_PAP"
-  ],
-  "manufacturer": {
-    "name": "CoAssist",
-    "tagline": "Patient assistance & medication access program",
-    "logo": {
-      "colors": "https://assistrxcoassist.my.site.com/sfsites/c/cms/delivery/media/MCWTFQTGIVD5A3XFI6PW6BBNPJOA?version=1.1&channelId=0apUP00000004A5",
-      "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5",
-      "requiresFilter": true
-    },
-    "support": {
-      "label": "Technical Help",
-      "phone": "877-450-4412"
-    },
-    "copyright": "©{{YEAR}} AssistRx. All Rights Reserved. Intended for US residents only.",
-    "legal": {
-      "privacyUrl": "#",
-      "termsUrl": "#",
-      "safetyUrl": "#",
-      "prescribingUrl": "#"
-    }
-  },
-  "program": {
-    "name": "Assistivan",
-    "drugDisplayName": "Assistivan",
-    "description": "0.8 mg · 30-day supply",
-    "dosageForm": "0.8 mg/0.5 mL Prefilled Pen for Subcutaneous Injection",
-    "logo": {
-      "colors": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
-      "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
-    },
-    "colors": {
-      "primary": "#007178",
-      "primaryDark": "#005a5f",
-      "primaryLight": "#338D93",
-      "primaryWash": "#B1D5D8"
-    },
-    "educationVideo": {
-      "title": "",
-      "description": "",
-      "thumbnail": "",
-      "embedUrl": ""
-    }
-  },
-  "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da"
+    "iAssist_PAP"
+  ]
 }

@@ -9,6 +9,22 @@ One brand per client. Each client has one Netlify site that builds from `main`.
 3. Set `title` (the browser tab title) and `enabledFlows`. The first entry is the flow a new session starts on.
 4. Run `pnpm test`. The brand test checks required fields, real flow ids, and that every local image exists.
 
+## Start from another brand
+
+A brand that looks like the default but shows different flows needs only a short file:
+
+```json
+{
+  "extends": "assistivan",
+  "slug": "hikma",
+  "name": "Hikma",
+  "title": "Hikma Demo",
+  "enabledFlows": ["Fax_QS_PA_Approved", "iAssist_PA_Approved"]
+}
+```
+
+The build merges it over the parent. Objects merge field by field. Arrays and values replace the parent's, so a child's `enabledFlows` replaces the whole list. Change only what differs. A change to the parent reaches every child. The brand test checks the merged result.
+
 ## Pick a brand
 
 Set `BRAND=<slug>` in the Netlify site settings. The default is `assistivan`. The build fails when the slug has no `brands/<slug>/brand.json`.

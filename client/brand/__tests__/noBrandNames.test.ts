@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { listBrandSlugs, resolveBrand } from "@/brand/resolve";
 
 /**
  * CLAUDE.md: brand and drug names never appear in source code. They come from
@@ -13,8 +14,8 @@ const CLIENT = path.join(ROOT, "client");
 const BRANDS = path.join(ROOT, "brands");
 
 const FIXED = ["Assistivan", "Jascayd", "Briumvi", "TG Therapeutics", "Dexcom", "Boehringer", "Wegovy"];
-const fromBrands = fs.readdirSync(BRANDS).filter((d) => !d.startsWith("_")).flatMap((slug) => {
-  const b = JSON.parse(fs.readFileSync(path.join(BRANDS, slug, "brand.json"), "utf8"));
+const fromBrands = listBrandSlugs(BRANDS).flatMap((slug) => {
+  const b = resolveBrand(BRANDS, slug) as any;
   return [b.name, b.program.name, b.program.drugDisplayName] as string[];
 });
 const NAMES = [...new Set([...FIXED, ...fromBrands])].filter(Boolean);
