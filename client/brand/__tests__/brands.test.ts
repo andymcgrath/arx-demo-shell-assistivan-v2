@@ -11,16 +11,9 @@ const ROOT = process.cwd(); // vitest runs from the repo root
 const BRANDS_DIR = path.join(ROOT, "brands");
 const FLOW_IDS = SCENARIOS.map((s) => s.flowType as string);
 
-// Images that live only in a deployed site's Netlify Blobs and were never committed.
-// Export them into public/brands/<slug>/ and delete the entry. Do not add new entries.
-const KNOWN_MISSING_ASSETS = new Set([
-  "/brands/dexcom/1790804267399-dexcom_logo_green_137d00.png",
-  "/brands/dexcom/1790804275341-dexcom_logo_white.png",
-  "/brands/dexcom/1790807458690-dexcom_g7_color_transparent.png",
-  "/brands/dexcom/1790807467112-dexcom_g7_white_transparent.png",
-  "/brands/dexcom/1790804332397-482GS01.svg",
-  "/brands/dexcom/1790804320440-favicon-196x196.io_v1_static_favicon-196x196.png",
-]);
+// Images a brand points at that are not committed yet. Add the file, then delete the entry.
+// Do not add new entries.
+const KNOWN_MISSING_ASSETS = new Set<string>([]);
 
 function localAssets(value: unknown): string[] {
   if (typeof value === "string") return value.startsWith("/brands/") ? [value] : [];

@@ -8,8 +8,8 @@
     "name": "Dexcom",
     "tagline": "Your self-start journey with Dexcom G7",
     "logo": {
-      "colors": "/brands/dexcom/1790804267399-dexcom_logo_green_137d00.png",
-      "white": "/brands/dexcom/1790804275341-dexcom_logo_white.png",
+      "colors": "/brands/dexcom/dexcom_logo_green_137d00.png",
+      "white": "/brands/dexcom/dexcom_logo_white.png",
       "requiresFilter": false
     },
     "support": {
@@ -30,8 +30,8 @@
     "description": "15 Day",
     "dosageForm": "",
     "logo": {
-      "colors": "/brands/dexcom/1790807458690-dexcom_g7_color_transparent.png",
-      "white": "/brands/dexcom/1790807467112-dexcom_g7_white_transparent.png",
+      "colors": "/brands/dexcom/dexcom_g7_color_transparent.png",
+      "white": "/brands/dexcom/dexcom_g7_white_transparent.png",
       "requiresFilter": false
     },
     "colors": {
@@ -47,6 +47,6 @@
       "embedUrl": ""
     }
   },
-  "chatbotIcon": "/brands/dexcom/1790804332397-482GS01.svg",
-  "favicon": "/brands/dexcom/1790804320440-favicon-196x196.io_v1_static_favicon-196x196.png"
+  "chatbotIcon": "/brands/dexcom/1786424090136-482GS01.svg",
+  "favicon": "/brands/dexcom/favicon.png"
 }
