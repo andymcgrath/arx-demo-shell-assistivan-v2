@@ -39,6 +39,9 @@ const dmeNeitherCovered = (d: WorkflowData) =>
 
 const DTP_COPAY = ["CoA_DTP", "CoA_Copay"] as const;
 
+/** How long the CRM shows a stage as "working" before the result lands. */
+const REVEAL_MS = 3000;
+
 export const COASSIST_RULES: CoaRule[] = [
   // ── Enrollment and patient onboarding ──────────────────────────────
   {
@@ -46,6 +49,8 @@ export const COASSIST_RULES: CoaRule[] = [
     when: (d) => d.enrollmentStatus === "none",
     set: () => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
     emit: { portal: "crm", step: 1 },
+    // BI runs off the eRx alone. It does not wait for the patient.
+    then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },
   {
     on: "VERIFY_SMS",
@@ -83,8 +88,10 @@ export const COASSIST_RULES: CoaRule[] = [
     on: "COMPLETE_BI",
     scenarios: [...DTP_COPAY],
     when: (d) => d.biStatus === "running",
-    set: () => ({ biStatus: "complete" }),
+    set: (_d, e, s) => ({ biStatus: "complete", biResult: e.result ?? s.content.biResult }),
     emit: { portal: "analytics", step: 7 },
+    // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA checks the BI result.
+    then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
   {
     // DME: one BI resolves to one of three coverage outcomes.
@@ -103,13 +110,66 @@ export const COASSIST_RULES: CoaRule[] = [
       { portal: "analytics", step: 7 },
       { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: dmeNeitherCovered },
     ],
+    // Only "pharmacy covered, medical not" needs a PA. SUBMIT_PA ignores the other outcomes.
+    then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
+
+  // ── Agent-driven reveals ───────────────────────────────────────────
+  // The CRM reports "the agent is looking at this stage" (VIEW_STAGE) and "left it" (LEAVE_STAGE).
+  // The machine owns the delay and the outcome. Leaving the stage cancels a pending reveal.
+  {
+    on: "VIEW_STAGE",
+    scenarios: [...DTP_COPAY],
+    when: (d, e) => e.stage === "BI" && d.biStatus === "running",
+    then: {
+      trigger: "agent",
+      id: "bi-reveal",
+      after: REVEAL_MS,
+      send: (_d, _e, s) => ({ type: "COMPLETE_BI", result: s.content.biResult }),
+    },
+  },
+  {
+    // DME: the presenter picks the BI outcome on the CRM and the stage view carries it.
+    on: "VIEW_STAGE",
+    scenarios: ["CoA_DME"],
+    when: (d, e) => e.stage === "BI" && d.biStatus === "running",
+    then: {
+      trigger: "agent",
+      id: "bi-reveal",
+      after: REVEAL_MS,
+      send: (_d, e) => ({
+        type: "COMPLETE_BI",
+        pharmacyBenefitStatus: e.pharmacyBenefitStatus,
+        medicalBenefitStatus: e.medicalBenefitStatus,
+      }),
+    },
+  },
+  {
+    on: "VIEW_STAGE",
+    when: (d, e) => e.stage === "PA" && d.paStatus === "submitted",
+    then: {
+      trigger: "agent",
+      id: "pa-decision",
+      after: REVEAL_MS,
+      send: (_d, _e, s) => ({ type: s.content.paOutcome === "denied" ? "DENY_PA" : "APPROVE_PA" }),
+    },
+  },
+  {
+    on: "VIEW_STAGE",
+    scenarios: ["CoA_DME"],
+    when: (d, e) => e.stage === "DME_TRANSFER" && d.biStatus === "complete" && d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus === "none",
+    then: { trigger: "agent", id: "dme-transfer", after: REVEAL_MS, send: () => ({ type: "NOTIFY_PROVIDER_TRANSFER" }) },
+  },
+  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
+  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
+  { on: "LEAVE_STAGE", when: (_d, e) => e.stage === "DME_TRANSFER", cancel: ["dme-transfer"] },
 
   // ── Prior Authorization ────────────────────────────────────────────
   {
     on: "SUBMIT_PA",
     scenarios: [...DTP_COPAY],
-    when: (d) => d.biStatus === "complete" && d.paStatus === "none",
+    // A PA needs a completed BI whose result says one is required.
+    when: (d) => d.biStatus === "complete" && d.biResult === "coverage_found" && d.paStatus === "none",
     set: () => ({ paStatus: "submitted", paSubmittedAt: nowIso() }),
     emit: { portal: "provider", step: 8 },
   },

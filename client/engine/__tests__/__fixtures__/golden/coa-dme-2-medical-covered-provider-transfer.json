@@ -7,13 +7,19 @@
       "route": "/sms-message",
       "changed": {
         "enrollmentStatus": "enrolled",
-        "enrollmentInviteSent": true
+        "enrollmentInviteSent": true,
+        "biStatus": "running"
       },
       "newEvents": [
         {
           "eventType": "ENROLL",
           "portal": "crm",
           "workflowStep": 1
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
         }
       ]
     },
@@ -59,21 +65,6 @@
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "RUN_BI",
-      "accepted": true,
-      "route": "/",
-      "changed": {
-        "biStatus": "running"
-      },
-      "newEvents": [
-        {
-          "eventType": "RUN_BI",
-          "portal": "analytics",
-          "workflowStep": 6
         }
       ]
     },

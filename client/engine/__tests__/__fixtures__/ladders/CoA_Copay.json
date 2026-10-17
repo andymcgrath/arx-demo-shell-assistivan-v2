@@ -3,7 +3,7 @@
     "stage": 2,
     "ignored": [],
     "route": "/enrollment-complete",
-    "biStatus": "none",
+    "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
     "dispatchStatus": "none",

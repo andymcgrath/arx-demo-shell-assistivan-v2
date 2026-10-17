@@ -49,10 +49,31 @@ New tests (`coassist.screens.test.ts`): every screen a rule can pick is in the m
 The menu changed on purpose. DME now lists its PA, pharmacy, cash-pay and order screens. Copay lists Pharmacy Selection. DTP and Copay list Copay Enrollment and the PA-denied cash path.
 
 Not done yet:
-- `DELIVERY_FLOW_PATHS` and the hard-coded `navigate()` calls still exist. They go when the guard can read the catalog.
+- `DELIVERY_FLOW_PATHS` and the hard-coded `navigate()` calls still exist. Step 06 moved the CoAssist guard to the catalog (see below). The `navigate()` calls remain.
 - The CRM stage list is still hand-written.
 - Fax, PAP, PrES and iAssist still use the old chain and menu in `Header.tsx`.
 - The Header change was not run in a browser.
+
+### Step 06: CoAssist stay-put screens and automation live in the workflow (tag `refactor/06-coassist-automation`)
+
+**Stay-put screens.** The global `DELIVERY_FLOW_PATHS` list no longer applies to CoAssist. Screens the patient may sit on while the data catches up are marked `sticky` in the catalog (`workflows/coassist/screens.ts`). `StateDrivenNav` reads them through `workflows/screenMaps.ts`. The list stays for Fax, PAP, PrES and iAssist. Behavior is the same as before, plus `/phone-verification` (which CoAssist visits after the SMS tap) is now in the catalog and the menu.
+
+**Automation.** A rule can carry `then` (fire another event now or after a delay, marked `system` or `agent`) and `cancel`. Three things moved out of `portals/crm/pages/Index.tsx` into `coassist/rules.ts`:
+- ENROLL starts BI (system).
+- COMPLETE_BI submits the PA (system). For DTP and Copay the PA now needs `biResult === "coverage_found"`; DME still needs pharmacy covered and medical not. A BI that says no PA is required leaves the PA at `none`.
+- The 3 second reveals for BI, PA and the DME provider transfer (agent). The CRM now sends `VIEW_STAGE` when the agent opens the tab and `LEAVE_STAGE` when they leave. The machine owns the delay and the outcome. Leaving the stage or a reset cancels the pending step. The PA outcome (approve or deny) comes from scenario content, not a React branch.
+
+DTP and Copay COMPLETE_BI now sets `biResult` (it was null).
+
+Fixtures changed on purpose. BI is running right after ENROLL, so the explicit RUN_BI and SUBMIT_PA steps are gone from the golden paths and the stage ladders. COMPLETE_BI now records `paStatus: submitted`. Field emails list the RUN_BI notice before the consent notice because that is the order it happens. Ladder stage 3 equals stage 2. Ladder stage 4 for DME now shows the PA submitted.
+
+New tests (`coassist.automation.test.ts`) use a simulated clock: BI start, PA gating on the BI result, reveal timing at 2999 and 3000 ms, cancel on leave, cancel on reset, a late reveal after a manual completion, and a stage with nothing to reveal.
+
+Not done yet:
+- The DME BI outcome still comes from the CRM toggle buttons and rides on `VIEW_STAGE`. It belongs in workflow data.
+- The appeal timers and the iAssist, Fax, PAP and PrES timers are still CRM effects. `machineOwnsAutomation` (`workflows/factoryFlows.ts`) switches a flow over.
+- The manual "Complete BI" button in the CRM still sends COMPLETE_BI directly.
+- None of the CRM or patient portal changes were run in a browser.
 
 ## Short answers
 

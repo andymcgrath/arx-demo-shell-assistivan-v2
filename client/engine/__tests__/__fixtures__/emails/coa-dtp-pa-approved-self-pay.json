@@ -12,18 +12,6 @@
     "linkedItemLabel": "View Task: Missing Information"
   },
   {
-    "eventType": "CONFIRM_CONSENT",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Consent Confirmed - Test Patient",
-    "bodyParagraphs": [
-      "Test Patient confirmed enrollment consent.",
-      "The Missing Information task for this patient is now closed."
-    ],
-    "linkedItemId": "LIVE-MISSING-INFORMATION",
-    "linkedItemLabel": "View Task: Missing Information"
-  },
-  {
     "eventType": "RUN_BI",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
@@ -34,6 +22,18 @@
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
   },
   {
     "eventType": "COMPLETE_BI",

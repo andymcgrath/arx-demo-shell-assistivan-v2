@@ -52,22 +52,23 @@ describe("CoAssist ordering rules", () => {
         });
       });
 
-      it("blocks the PA until BI has completed", () => {
+      it("starts BI when ENROLL lands, and blocks the PA until BI has completed", () => {
         withFrozenClock(() => {
           const actor = startFlow(flow);
           runSteps(actor, [{ type: "ENROLL" }]);
-          expect(accepts(actor, { type: "SUBMIT_PA" })).toBe(false);
-          expect(accepts(actor, bi(flow))).toBe(false); // BI cannot complete before it runs
-          runSteps(actor, [{ type: "RUN_BI" }]);
+          expect(ctx(actor).workflowData.biStatus).toBe("running"); // BI starts on its own
+          expect(accepts(actor, { type: "RUN_BI" })).toBe(false); // and only once
           expect(accepts(actor, { type: "SUBMIT_PA" })).toBe(false); // still running
+          expect(ctx(actor).workflowData.paStatus).toBe("none");
+          expect(accepts(actor, { type: "APPROVE_PA" })).toBe(false); // nothing to approve yet
         });
       });
 
       it("blocks approval, pricing, payment, and fulfillment before their prerequisites", () => {
         withFrozenClock(() => {
           const actor = startFlow(flow);
-          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow)]);
-          const blocked = ["APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "SELECT_PRICING_OPTION", "PATIENT_PAYS", "VERIFY_PAYMENT", "PATIENT_SETS_ADDRESS", "FILL_RX", "READY_RX", "SHIP_RX", "DELIVER_RX"];
+          runSteps(actor, [{ type: "ENROLL" }, bi(flow)]);
+          const blocked = ["VERIFY_PA_APPROVED_SMS", "SELECT_PRICING_OPTION", "PATIENT_PAYS", "VERIFY_PAYMENT", "PATIENT_SETS_ADDRESS", "FILL_RX", "READY_RX", "SHIP_RX", "DELIVER_RX"];
           expect(everyEvent.filter((s) => blocked.includes(s.type) && accepts(actor, s)).map((s) => s.type)).toEqual([]);
         });
       });
@@ -77,8 +78,8 @@ describe("CoAssist ordering rules", () => {
           const actor = startFlow(flow);
           const path: Step[] =
             flow === "CoA_DME"
-              ? [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
-              : [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
+              ? [{ type: "ENROLL" }, bi(flow), { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
+              : [{ type: "ENROLL" }, bi(flow), { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
           runSteps(actor, path);
           expect(accepts(actor, { type: "READY_RX" })).toBe(false);
           expect(accepts(actor, { type: "SHIP_RX" })).toBe(false);
@@ -101,7 +102,7 @@ describe("CoAssist ordering rules", () => {
       withFrozenClock(() => {
         for (const flow of COA) {
           const actor = startFlow(flow);
-          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }]);
+          runSteps(actor, [{ type: "ENROLL" }, bi(flow)]);
           expect(accepts(actor, { type: "DENY_PA" })).toBe(flow !== "CoA_DME");
         }
       });
@@ -117,8 +118,9 @@ describe("CoAssist ordering rules", () => {
         ];
         for (const [label, pharmacy, medical, paAllowed] of cases) {
           const actor = startFlow("CoA_DME");
-          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", pharmacy, medical)]);
-          expect([label, accepts(actor, { type: "SUBMIT_PA" })]).toEqual([label, paAllowed]);
+          runSteps(actor, [{ type: "ENROLL" }, bi("CoA_DME", pharmacy, medical)]);
+          // SUBMIT_PA fires on its own after BI. It only lands for "pharmacy only".
+          expect([label, ctx(actor).workflowData.paStatus === "submitted"]).toEqual([label, paAllowed]);
         }
       });
     });
@@ -126,12 +128,12 @@ describe("CoAssist ordering rules", () => {
     it("DME: provider transfer needs medical coverage. The cash-offer SMS needs neither covered.", () => {
       withFrozenClock(() => {
         const medical = startFlow("CoA_DME");
-        runSteps(medical, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", "covered", "covered")]);
+        runSteps(medical, [{ type: "ENROLL" }, bi("CoA_DME", "covered", "covered")]);
         expect(accepts(medical, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(true);
         expect(accepts(medical, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(false);
 
         const neither = startFlow("CoA_DME");
-        runSteps(neither, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi("CoA_DME", "not_covered", "not_covered")]);
+        runSteps(neither, [{ type: "ENROLL" }, bi("CoA_DME", "not_covered", "not_covered")]);
         expect(accepts(neither, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(false);
         expect(accepts(neither, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(true);
         expect(accepts(neither, { type: "SELECT_SELF_PAY" })).toBe(false); // SMS tap-through comes first
@@ -141,7 +143,7 @@ describe("CoAssist ordering rules", () => {
     it("Copay: enrolling in the copay program is one-time, and the patient still picks Retail or Mail Order", () => {
       withFrozenClock(() => {
         const actor = startFlow("CoA_Copay");
-        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_SELF_PAY" }]);
+        runSteps(actor, [{ type: "ENROLL" }, BI_DTP, { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_SELF_PAY" }]);
         expect(ctx(actor).workflowData.copayEnrolled).toBe(true);
         expect(ctx(actor).workflowData.pricingOption).toBeNull();
         expect(accepts(actor, { type: "SELECT_SELF_PAY" })).toBe(false);
@@ -154,7 +156,7 @@ describe("CoAssist ordering rules", () => {
       withFrozenClock(() => {
         for (const flow of COA) {
           const actor = startFlow(flow);
-          runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }]);
+          runSteps(actor, [{ type: "ENROLL" }, bi(flow), { type: "APPROVE_PA" }]);
           expect(ctx(actor).workflowData.paStatus).toBe("approved");
           // Still enrolling: the pricing SMS cannot go out.
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]);
@@ -174,7 +176,7 @@ describe("CoAssist ordering rules", () => {
       withFrozenClock(() => {
         for (const flow of COA) {
           const actor = startFlow(flow);
-          runSteps(actor, [{ type: "ENROLL" }, ...ENROLLED, { type: "RUN_BI" }, bi(flow), { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }]);
+          runSteps(actor, [{ type: "ENROLL" }, ...ENROLLED, bi(flow), { type: "APPROVE_PA" }]);
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, true]);
           if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/pa-approved-sms");
         }
@@ -184,7 +186,7 @@ describe("CoAssist ordering rules", () => {
     it("Payment can only be verified once", () => {
       withFrozenClock(() => {
         const actor = startFlow("CoA_DTP");
-        runSteps(actor, [{ type: "ENROLL" }, { type: "RUN_BI" }, BI_DTP, { type: "SUBMIT_PA" }, { type: "DENY_PA" }, { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" }]);
+        runSteps(actor, [{ type: "ENROLL" }, BI_DTP, { type: "DENY_PA" }, { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" }]);
         expect(accepts(actor, { type: "VERIFY_PAYMENT" })).toBe(false);
         expect(accepts(actor, { type: "PATIENT_PAYS" })).toBe(false);
       });

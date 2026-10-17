@@ -1,5 +1,6 @@
 import type { FlowType } from "@/engine/types";
 import type { ScreenMap } from "@/engine/workflow/screens";
+import { COASSIST_FLOWS } from "./scenarios";
 
 /**
  * CoAssist patient screens: the order the patient sees them, and the hamburger menu.
@@ -21,7 +22,7 @@ const PA_FLOWS = [DTP, COPAY];
 const ORDER_FLOWS = [DTP, COPAY, DME];
 
 export const COASSIST_SCREENS: ScreenMap = {
-  flows: [DTP, COPAY, DME],
+  flows: COASSIST_FLOWS,
   fallback: "/lock-screen",
   hidden: ["/lock-screen"],
 

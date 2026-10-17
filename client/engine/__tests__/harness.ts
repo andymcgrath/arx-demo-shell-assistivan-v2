@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect } from "vitest";
-import { createActor } from "xstate";
+import { createActor, SimulatedClock } from "xstate";
 import { workflowRegistry } from "@/engine/WorkflowRegistry";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import type { FlowType, MachineContext } from "@/engine/types";
@@ -39,6 +39,8 @@ export function machineIdForFlow(flowType: FlowType): string {
       return "enrollment";
   }
 }
+
+export { SimulatedClock };
 
 export interface Step {
   type: string;
@@ -68,11 +70,15 @@ export function withFrozenClock<T>(fn: () => T): T {
   }
 }
 
-export function startFlow(flowType: FlowType) {
+/**
+ * Starts a flow. Pass `clock` to control delayed automations (the agent-driven
+ * reveals). Advance it with `clock.increment(ms)`.
+ */
+export function startFlow(flowType: FlowType, options: { clock?: SimulatedClock } = {}) {
   const machine = workflowRegistry.getWorkflow(machineIdForFlow(flowType));
   if (!machine) throw new Error(`No machine registered for ${flowType}`);
   // Same input actorSingleton passes. Machines that take no input ignore it.
-  const actor = createActor(machine, { input: { flowType } } as any);
+  const actor = createActor(machine, { input: { flowType }, ...(options.clock ? { clock: options.clock } : {}) } as any);
   actor.start();
   // Same correction actorSingleton sends for the shared "enrollment" machine.
   if (machineIdForFlow(flowType) === "enrollment") {

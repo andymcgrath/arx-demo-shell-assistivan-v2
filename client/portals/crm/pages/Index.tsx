@@ -16,6 +16,7 @@ import {
 } from "@/shell/resetToStage";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
+import { machineOwnsAutomation } from "@/workflows/factoryFlows";
 import { FileText } from "lucide-react";
 import {
   ChevronDown,
@@ -816,6 +817,7 @@ export default function Index() {
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
   const isDmeFlow = flowType === "CoA_DME";
+  const ownsAutomation = machineOwnsAutomation(flowType);
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -980,43 +982,9 @@ export default function Index() {
     dispatch('RUN_BI', { portal: 'crm' });
   }, [isCoaFlow, isDmeFlow, consentStatus, biStatus, dispatch]);
 
-  // CoA_DTP/CoA_Copay (WF3/WF4) only — business rule change: Benefits
-  // Investigation no longer waits on patient consent, it can run off the
-  // referral/eRx alone. Fires the instant ENROLL lands (enrollmentStatus
-  // leaves "none"), which can be well before the patient has opened their
-  // SMS link, let alone confirmed consent. coaDtp.ts/coaCopay.ts's RUN_BI
-  // handler is now reachable from enrolled/smsVerified/otpVerified/
-  // consentConfirmed — whichever the patient's own progress happens to be
-  // sitting in at this moment — so this doesn't need to track which of
-  // those states is active, just that BI hasn't started yet. CoA_DME
-  // (isDmeFlow) gets this exact same treatment — coaDme.ts's RUN_BI handler
-  // is reachable the same way, off the same fields.
-  useEffect(() => {
-    if (!isCoaFlow && !isDmeFlow) return;
-    if (enrollmentStatus === "none") return;
-    if (biStatus !== "none") return;
-    dispatch('RUN_BI', { portal: 'crm' });
-  }, [isCoaFlow, isDmeFlow, enrollmentStatus, biStatus, dispatch]);
-
-  // CoA_DTP/CoA_Copay (WF3/WF4) only — business rule change: PA submission
-  // no longer waits on patient consent either, mirroring the same change
-  // just made for BI above. Fires the instant biStatus reaches "complete",
-  // regardless of where the patient's own SMS/OTP/consent progress is — see
-  // coaDtp.ts/coaCopay.ts's SUBMIT_PA handlers, now reachable from
-  // enrolled/smsVerified/otpVerified/consentConfirmed (not just the old
-  // "biComplete" named state), and their paSubmitted/paApproved/paDenied
-  // targets, which now also carry VERIFY_SMS/VERIFY_OTP/CONFIRM_CONSENT
-  // handlers so the patient's own progress isn't stranded once PA races
-  // ahead of it. This removes the "Start Prior Auth" manual click from the
-  // live demo path entirely — PrescriptionsIdlePanel's button (see
-  // provider/index.tsx) is now effectively unreachable for CoA, since
-  // paStatus never sits at "none" long enough once biStatus is complete.
-  useEffect(() => {
-    if (!isCoaFlow) return;
-    if (biStatus !== "complete") return;
-    if (paStatus !== "none") return;
-    dispatch('SUBMIT_PA', { portal: 'crm' });
-  }, [isCoaFlow, biStatus, paStatus, dispatch]);
+  // CoAssist (DTP, Copay, DME): BI starts when ENROLL lands, and the PA starts
+  // when BI completes with a result that requires one. Both are automations in
+  // workflows/coassist/rules.ts (`then`), not effects here.
 
   // Auto-complete BI when agent opens the BI stage tab. This is what makes
   // CoA_DTP/CoA_Copay "remain in this state" (BI running, quietly, in the
@@ -1031,6 +999,13 @@ export default function Index() {
   useEffect(() => {
     if (activeTopTab !== 'BI-14273') return;
     if (biStatus !== 'running') return;
+
+    // The machine owns the delay and the outcome for the flows it automates.
+    // The CRM only reports that the agent is looking at this stage.
+    if (ownsAutomation) {
+      dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
+      return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'BI' });
+    }
 
     const timer = setTimeout(() => {
       // CoA_DME resolves to whichever scenario the operator last picked via
@@ -1048,7 +1023,7 @@ export default function Index() {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [activeTopTab, biStatus, dispatch, isPapFlow, isDmeFlow, dmeSelectedScenario]);
+  }, [activeTopTab, biStatus, dispatch, isPapFlow, isDmeFlow, dmeSelectedScenario, ownsAutomation]);
 
   // Auto-approve PA when agent opens the PA stage tab. iAssist_PAP (WF5) is
   // the one flow whose demo path resolves to Denied instead — without this
@@ -1061,13 +1036,18 @@ export default function Index() {
     if (activeTopTab !== 'PA-14274') return;
     if (paStatus !== 'submitted') return;
 
+    if (ownsAutomation) {
+      dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PA' });
+      return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PA' });
+    }
+
     const eventType = flowType === 'iAssist_PAP' ? 'DENY_PA' : 'APPROVE_PA';
     const timer = setTimeout(() => {
       dispatch(eventType, { portal: 'crm' });
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [activeTopTab, paStatus, dispatch, flowType]);
+  }, [activeTopTab, paStatus, dispatch, flowType, ownsAutomation]);
 
   // CoA_DTP's PA always approves (CoAssist is an insurance-covered flow, not
   // a denial → cash-pay one) — the generic auto-approve effect above already
@@ -1115,41 +1095,15 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [activeTopTab, appealStatus, dispatch]);
 
-  // CoA_DME only — auto-notify the DME provider transfer when the agent
-  // opens the DME Provider Transfer stage tab, same "watch it happen"
-  // pattern as the BI/PA/Appeal auto-resolve effects above.
+  // CoA_DME: the provider transfer notice follows the agent opening the DME
+  // Provider Transfer stage. The machine owns the delay (rules.ts, VIEW_STAGE).
   useEffect(() => {
     if (activeTopTab !== 'DME-14282') return;
-    // medicalBenefitStatus === 'covered' is the precise guard now that the
-    // two granular BI fields exist — biResult === 'dme_covered' is derived
-    // from the same condition (see workflows/coaDme.ts's deriveBiResult),
-    // but checking the field directly avoids any drift between the two.
     if (biStatus !== 'complete' || medicalBenefitStatus !== 'covered') return;
     if (dmeProviderTransferStatus !== 'none') return;
-
-    const timer = setTimeout(() => {
-      dispatch('NOTIFY_PROVIDER_TRANSFER', { portal: 'crm' });
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'DME_TRANSFER' });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'DME_TRANSFER' });
   }, [activeTopTab, biStatus, medicalBenefitStatus, dmeProviderTransferStatus, dispatch]);
-
-  // CoA_DME Scenario 1 — auto-submit a real Prior Authorization the instant
-  // BI resolves to this combo, mirroring the isCoaFlow-scoped SUBMIT_PA
-  // effect above almost exactly (see that effect's own comment) — just
-  // rooted at this scenario's own pharmacyBenefitStatus/medicalBenefitStatus
-  // guard instead of being flow-wide. PA-14274's own tab-open auto-approve
-  // effect (further up, not flow-restricted) picks this up from here with no
-  // DME-specific change needed. Replaces this scenario's old automatic
-  // single tap-through SMS (pharmacyCoverageSmsSent), which has been removed
-  // entirely per Andy's request to introduce a real PA flow instead.
-  useEffect(() => {
-    if (!isDmeFlow) return;
-    if (biStatus !== "complete") return;
-    if (pharmacyBenefitStatus !== "covered" || medicalBenefitStatus === "covered") return;
-    if (paStatus !== "none") return;
-    dispatch('SUBMIT_PA', { portal: 'crm' });
-  }, [isDmeFlow, biStatus, pharmacyBenefitStatus, medicalBenefitStatus, paStatus, dispatch]);
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.

@@ -8,7 +8,7 @@
  * test that mirrored a copy of this code is how the DME "stage 7 never
  * advances" bug stayed hidden: it sent SHIP_RX without READY_RX.
  *
- * Stages: 2 enrolled and verified, 3 BI running, 4 BI complete (and for
+ * Stages: 2 enrolled and verified (BI is already running), 3 same as 2, 4 BI complete (and for
  * DTP/Copay, PA approved and re-verified), 5 pricing and delivery chosen,
  * 6 filling, 7 shipped, 8 delivered.
  *
@@ -61,7 +61,8 @@ const DME_DEFAULT_PHARMACY = { name: "CVS Pharmacy #3795", address: "210 N Orang
 
 /** ENROLL through COMPLETE_BI for a DME scenario, on an already-RESET actor. */
 export function dmeBiCompleteEvents(scenario: DmeBiScenario = DME_SCENARIO_1_PHARMACY_COVERAGE): LadderEvent[] {
-  return [...IDENTITY, ev("RUN_BI", "crm"), dmeCompleteBi(scenario)];
+  // BI starts on its own when ENROLL lands (workflows/coassist/rules.ts), so there is no RUN_BI.
+  return [...IDENTITY, dmeCompleteBi(scenario)];
 }
 
 function dmeCompleteBi(scenario: DmeBiScenario): LadderEvent {
@@ -77,13 +78,12 @@ export function coassistStageEvents(flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME
   const upTo = (n: number) => stage >= n;
 
   if (upTo(2)) out.push(...IDENTITY);
-  if (upTo(3)) out.push(ev("RUN_BI", "crm"));
+  // Stage 3 (BI running) needs no event: ENROLL starts BI, and COMPLETE_BI submits the PA when one is required.
 
   if (flowType === "CoA_DME") {
     if (upTo(4)) out.push(dmeCompleteBi(DME_SCENARIO_1_PHARMACY_COVERAGE));
     if (upTo(5)) {
       out.push(
-        ev("SUBMIT_PA", "crm"),
         ev("APPROVE_PA", "crm"),
         ev("VERIFY_PA_APPROVED_SMS", "patient"),
         ev("VERIFY_PA_APPROVED_OTP", "patient"),
@@ -94,7 +94,6 @@ export function coassistStageEvents(flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME
     if (upTo(4)) {
       out.push(
         ev("COMPLETE_BI", "crm", { result: "coverage_found" }),
-        ev("SUBMIT_PA", "provider"),
         ev("APPROVE_PA", "crm"),
         ev("VERIFY_PA_APPROVED_SMS", "patient"),
         ev("VERIFY_PA_APPROVED_OTP", "patient"),

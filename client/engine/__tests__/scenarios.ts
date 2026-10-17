@@ -76,8 +76,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DTP",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...addressAndDate, ...fulfillment,
@@ -91,8 +91,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DTP",
     steps: [
       { type: "ENROLL" },
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" },
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "APPROVE_PA" },
       ...verifyIdentity,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
@@ -104,8 +104,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DTP",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_SELF_PAY" },
       ...addressAndDate, ...fulfillment,
     ],
@@ -115,8 +115,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DTP",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "DENY_PA" },
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "DENY_PA" },
       { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
       ...addressAndDate, ...fulfillment,
     ],
@@ -128,8 +128,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_Copay",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_SELF_PAY" },
       { type: "SELECT_PRICING_OPTION", option: "mail_order" },
       ...addressAndDate, ...fulfillment,
@@ -140,8 +140,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_Copay",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" }, { type: "COMPLETE_BI", result: "coverage_found" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "retail" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...addressAndDate, ...fulfillment,
@@ -154,9 +154,8 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DME",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" },
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
-      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
     ],
@@ -166,7 +165,6 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DME",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" },
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
       { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_DME_TRANSFER_SMS" },
     ],
@@ -176,7 +174,6 @@ export const SCENARIOS: Scenario[] = [
     flowType: "CoA_DME",
     steps: [
       { type: "ENROLL" }, ...verifyIdentity,
-      { type: "RUN_BI" },
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },
       { type: "VERIFY_CASH_OFFER_SMS" }, { type: "SELECT_SELF_PAY" },
       { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },

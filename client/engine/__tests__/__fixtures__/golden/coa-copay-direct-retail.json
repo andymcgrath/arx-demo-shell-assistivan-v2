@@ -7,13 +7,19 @@
       "route": "/sms-message",
       "changed": {
         "enrollmentStatus": "enrolled",
-        "enrollmentInviteSent": true
+        "enrollmentInviteSent": true,
+        "biStatus": "running"
       },
       "newEvents": [
         {
           "eventType": "ENROLL",
           "portal": "crm",
           "workflowStep": 1
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
         }
       ]
     },
@@ -63,21 +69,6 @@
       ]
     },
     {
-      "event": "RUN_BI",
-      "accepted": true,
-      "route": "/enrollment-complete",
-      "changed": {
-        "biStatus": "running"
-      },
-      "newEvents": [
-        {
-          "eventType": "RUN_BI",
-          "portal": "analytics",
-          "workflowStep": 6
-        }
-      ]
-    },
-    {
       "event": "COMPLETE_BI",
       "payload": {
         "result": "coverage_found"
@@ -85,25 +76,17 @@
       "accepted": true,
       "route": "/enrollment-complete",
       "changed": {
-        "biStatus": "complete"
+        "paStatus": "submitted",
+        "biStatus": "complete",
+        "biResult": "coverage_found",
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
       },
       "newEvents": [
         {
           "eventType": "COMPLETE_BI",
           "portal": "analytics",
           "workflowStep": 7
-        }
-      ]
-    },
-    {
-      "event": "SUBMIT_PA",
-      "accepted": true,
-      "route": "/enrollment-complete",
-      "changed": {
-        "paStatus": "submitted",
-        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
-      },
-      "newEvents": [
+        },
         {
           "eventType": "SUBMIT_PA",
           "portal": "provider",

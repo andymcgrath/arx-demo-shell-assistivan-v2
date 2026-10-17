@@ -10,7 +10,7 @@
  * The scenario arrives as XState `input` ({ flowType }) and lives on in
  * workflowData.flowType, so persisted snapshots restore with it.
  */
-import { assign, setup } from "xstate";
+import { assign, enqueueActions, setup } from "xstate";
 import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
 import { createInitialWorkflowData } from "./baseData";
 import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
@@ -45,6 +45,16 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
   const byEvent = new Map<string, Rule<any, C>[]>();
   for (const rule of def.rules) byEvent.set(rule.on, [...(byEvent.get(rule.on) ?? []), rule]);
 
+  // Every id a delayed automation uses, so RESET can cancel them all.
+  const automationIds = new Set<string>();
+  for (const rule of def.rules) {
+    for (const a of toArray(rule.then)) {
+      if (a.after && !a.id) throw new Error(`Workflow "${def.id}": a delayed automation on ${rule.on} needs an id`);
+      if (a.id) automationIds.add(a.id);
+    }
+    for (const id of rule.cancel ?? []) automationIds.add(id);
+  }
+
   const appliesTo = (rule: Rule<any, C>, flowType: FlowType) => !rule.scenarios || rule.scenarios.includes(flowType);
 
   const on: Record<string, any[]> = {};
@@ -54,14 +64,32 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
         const data = context.workflowData;
         return appliesTo(rule, data.flowType) && (rule.when ? rule.when(data, event, scenarioFor(data.flowType)) : true);
       },
-      actions: assign(({ context, event }: any) => {
-        const scenario = scenarioFor(context.workflowData.flowType);
-        const data = { ...context.workflowData, ...(rule.set ? rule.set(context.workflowData, event, scenario) : {}) };
-        const emitted = toArray(rule.emit)
-          .filter((e) => (e.when ? e.when(data, event, scenario) : true))
-          .map((e) => createEvent(context, e.type ?? event.type, e.portal, e.step));
-        return { workflowData: data, events: [...context.events, ...emitted] };
-      }),
+      actions: [
+        assign(({ context, event }: any) => {
+          const scenario = scenarioFor(context.workflowData.flowType);
+          const data = { ...context.workflowData, ...(rule.set ? rule.set(context.workflowData, event, scenario) : {}) };
+          const emitted = toArray(rule.emit)
+            .filter((e) => (e.when ? e.when(data, event, scenario) : true))
+            .map((e) => createEvent(context, e.type ?? event.type, e.portal, e.step));
+          return { workflowData: data, events: [...context.events, ...emitted] };
+        }),
+        // Runs after the assign above, so `context` already holds the new data.
+        ...(rule.then || rule.cancel
+          ? [
+              enqueueActions(({ context, event, enqueue }: any) => {
+                for (const id of rule.cancel ?? []) enqueue.cancel(id);
+                const data = context.workflowData;
+                const scenario = scenarioFor(data.flowType);
+                for (const a of toArray(rule.then)) {
+                  if (a.when && !a.when(data, event, scenario)) continue;
+                  const next = a.send(data, event, scenario);
+                  if (a.after) enqueue.raise(next, { delay: a.after, id: a.id });
+                  else enqueue.raise(next);
+                }
+              }),
+            ]
+          : []),
+      ],
     }));
   }
 
@@ -85,11 +113,17 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
           ...on,
           // RESET keeps the running scenario.
           RESET: {
-            actions: assign(({ context }: any) => ({
-              workflowData: startingData(context.workflowData.flowType),
-              events: [],
-              _snapshots: [],
-            })),
+            actions: [
+              // A reset must not let a pending delayed automation fire into the fresh run.
+              enqueueActions(({ enqueue }: any) => {
+                for (const id of automationIds) enqueue.cancel(id);
+              }),
+              assign(({ context }: any) => ({
+                workflowData: startingData(context.workflowData.flowType),
+                events: [],
+                _snapshots: [],
+              })),
+            ],
           },
         },
       },

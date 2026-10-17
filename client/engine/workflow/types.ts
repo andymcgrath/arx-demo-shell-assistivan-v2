@@ -22,6 +22,25 @@ export interface Emit<E = any, C = any> {
 }
 
 /**
+ * Fires another event after a rule runs. This is how ordering lives in the
+ * workflow definition and not in a UI effect (CLAUDE.md rules 10 and 11).
+ *
+ * The event it sends must pass its own precondition, or it is ignored. So a
+ * trigger never needs to repeat the condition: SUBMIT_PA after COMPLETE_BI is
+ * ignored when the BI result says no PA is required.
+ */
+export interface Automation<E = any, C = any> {
+  /** Who starts this step. `system` fires on its own. `agent` waits for a person (for example, opening a tab). */
+  trigger: "system" | "agent";
+  /** The event to send. Evaluated against the data AFTER `set` ran. */
+  send: (data: WorkflowData, event: E, scenario: ScenarioDefinition<C>) => { type: string; [field: string]: unknown };
+  /** Delay in ms. Omit to fire in the same step. A delayed automation needs an `id` so it can be cancelled. */
+  after?: number;
+  id?: string;
+  when?: (data: WorkflowData, event: E, scenario: ScenarioDefinition<C>) => boolean;
+}
+
+/**
  * One transition rule. A workflow is an ordered list of these.
  *
  * The factory groups rules by `on` and keeps their order, so for one event
@@ -38,6 +57,10 @@ export interface Rule<E = any, C = any> {
   set?: (data: WorkflowData, event: E, scenario: ScenarioDefinition<C>) => Partial<WorkflowData>;
   /** Event-log entries to append, in order. */
   emit?: Emit<E, C> | Emit<E, C>[];
+  /** Events to fire after this rule runs, now or after a delay. */
+  then?: Automation<E, C> | Automation<E, C>[];
+  /** Ids of delayed automations to cancel when this rule runs. */
+  cancel?: string[];
 }
 
 export interface WorkflowDefinition<C = any> {

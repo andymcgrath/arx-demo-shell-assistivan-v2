@@ -3,7 +3,7 @@
     "stage": 2,
     "ignored": [],
     "route": "/",
-    "biStatus": "none",
+    "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
     "dispatchStatus": "none",
@@ -24,7 +24,7 @@
     "ignored": [],
     "route": "/",
     "biStatus": "complete",
-    "paStatus": "none",
+    "paStatus": "submitted",
     "pricingOption": null,
     "dispatchStatus": "none",
     "pharmacyStatus": "none"
