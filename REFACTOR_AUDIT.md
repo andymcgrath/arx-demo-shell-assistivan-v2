@@ -127,6 +127,16 @@ The Rules app takes part in one scenario only. Model it as a scenario property, 
 - Two headless tests: no rule means the case stays at PA Denied; rule activated means the appeal files and is approved.
 - The "new rule" form stays inline in the Rules app. Per rule 6, make it a step module only if a second scenario needs it.
 
+### Screen order
+
+The workflow definition owns screen order for every app. Today the patient route comes from one long `if` chain in `derivePatientRoute` (`WorkflowEngine.ts`).
+
+- Order is state-driven, not a wizard. The route is recomputed from state on every change, which is what makes reset-to-stage and undo land on the right screen. Express it as an ordered list of rules: a screen plus the condition that selects it. The first match wins.
+- Step modules contribute their screens per app (for example the patient payment page and the CRM payment card). The workflow's step order sets priority. Generate the route function from that list.
+- A scenario can add, skip, or replace entries. PrES (`esign` intake) swaps the opening screens. CoAssist Copay with mail order skips the pharmacy pick. DME scenario 2 ends on the provider-transfer screens.
+- The same list drives the CRM stage cards and stage bar, the Provider screens, and the patient routes.
+- The golden-path fixtures record the patient route at every step. The generated function must reproduce them exactly, except for the intentional iAssist change.
+
 ### Step modules
 
 Scenarios share steps, such as payment, pharmacy selection, address and ship date, and enrollment with SMS and OTP. Make each shared step a **step module**. A scenario adds modules to a workflow in order.
