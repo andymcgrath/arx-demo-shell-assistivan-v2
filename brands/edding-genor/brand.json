@@ -1,0 +1,59 @@
+{
+  "slug": "edding-genor",
+  "name": "Edding Genor",
+  "title": "Mulpleta Demo",
+  "enabledFlows": [
+    "Fax_QS_PA_Approved",
+    "Fax_PAP_Audit",
+    "CoA_DTP",
+    "CoA_Copay",
+    "CoA_DME",
+    "iAssist_PA_Approved",
+    "iAssist_PAP",
+    "PrES_PAP"
+  ],
+  "manufacturer": {
+    "name": "Edding Genor",
+    "tagline": "",
+    "logo": {
+      "colors": "/brands/edding-genor/1789072751993-edding_color_final.png",
+      "white": "/brands/edding-genor/1789071748256-edding_transparent.png",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "",
+      "phone": ""
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": "©2026 Edding Genor Group. All Rights Reserved. Intended for US residents only."
+  },
+  "program": {
+    "name": "Mulpleta",
+    "drugDisplayName": "Mulpleta (lusutrombopag)",
+    "description": "3 mg tablet",
+    "dosageForm": "",
+    "logo": {
+      "colors": "/brands/edding-genor/1789072131117-imgi_1_Mulpleta-US-logo.svg",
+      "white": "/brands/edding-genor/1789072738157-Mulpleta-US-logo-white.png",
+      "requiresFilter": false
+    },
+    "colors": {
+      "primary": "#1aae42",
+      "primaryDark": "#128203",
+      "primaryLight": "#ffffff",
+      "primaryWash": "#e8e8e8"
+    },
+    "educationVideo": {
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": ""
+    }
+  },
+  "chatbotIcon": "/brands/edding-genor/1789072797093-482GS01.svg"
+}

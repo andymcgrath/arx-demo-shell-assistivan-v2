@@ -1,0 +1,60 @@
+{
+  "slug": "moonlake",
+  "name": "Moon Lake",
+  "title": "Sonelokimab Demo",
+  "enabledFlows": [
+    "Fax_QS_PA_Approved",
+    "Fax_PAP_Audit",
+    "CoA_DTP",
+    "CoA_Copay",
+    "CoA_DME",
+    "iAssist_PA_Approved",
+    "iAssist_PAP",
+    "PrES_PAP"
+  ],
+  "manufacturer": {
+    "name": "Moon Lake",
+    "tagline": "",
+    "logo": {
+      "colors": "/brands/moonlake/1788900248303-imgi_36_logo.png",
+      "white": "/brands/moonlake/1788900253633-imgi_69_FooterLogo.png",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "",
+      "phone": ""
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": "©2026 Moon Lake. All Rights Reserved. Intended for US residents only."
+  },
+  "program": {
+    "name": "Sonelokimab",
+    "drugDisplayName": "Sonelokimab",
+    "description": "120 mg Injectable",
+    "dosageForm": "",
+    "logo": {
+      "colors": "/brands/moonlake/1788902259114-Rx_recolored_reversed.png",
+      "white": "/brands/moonlake/1788900857273-Rx_grayscale.png",
+      "requiresFilter": false
+    },
+    "colors": {
+      "primary": "#24324c",
+      "primaryDark": "#020817",
+      "primaryLight": "#dddbda",
+      "primaryWash": "#e2e8f0"
+    },
+    "educationVideo": {
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": ""
+    }
+  },
+  "chatbotIcon": "",
+  "favicon": "/brands/moonlake/1788900309954-imgi_6_moonlake-tx-blue-cirlce.png"
+}

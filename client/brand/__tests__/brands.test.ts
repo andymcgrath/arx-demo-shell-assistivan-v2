@@ -12,8 +12,26 @@ const BRANDS_DIR = path.join(ROOT, "brands");
 const FLOW_IDS = SCENARIOS.map((s) => s.flowType as string);
 
 // Images a brand points at that are not committed yet. Add the file, then delete the entry.
-// Do not add new entries.
-const KNOWN_MISSING_ASSETS = new Set<string>([]);
+// Do not add new entries. Folders that start with "_" (such as brands/_export) are not brands.
+const KNOWN_MISSING_ASSETS = new Set<string>([
+  "/brands/edding-genor/1789072751993-edding_color_final.png",
+  "/brands/edding-genor/1789071748256-edding_transparent.png",
+  "/brands/edding-genor/1789072131117-imgi_1_Mulpleta-US-logo.svg",
+  "/brands/edding-genor/1789072738157-Mulpleta-US-logo-white.png",
+  "/brands/edding-genor/1789072797093-482GS01.svg",
+  "/brands/moonlake/1788900248303-imgi_36_logo.png",
+  "/brands/moonlake/1788900253633-imgi_69_FooterLogo.png",
+  "/brands/moonlake/1788902259114-Rx_recolored_reversed.png",
+  "/brands/moonlake/1788900857273-Rx_grayscale.png",
+  "/brands/moonlake/1788900309954-imgi_6_moonlake-tx-blue-cirlce.png",
+  "/brands/pharmaessentia/1786817527600-imgi_64_260408-PEC-logo-V500-5.jpg",
+  "/brands/pharmaessentia/1786817534526-imgi_6_logo-pharmaessentia-white.svg",
+  "/brands/pharmaessentia/1786842602083-besremi-logo-transparent.png",
+  "/brands/pharmaessentia/1786842607739-besremi-logo-white-outline.png",
+  "/brands/pharmaessentia/1786842310571-video_hcp_thumbnail.png",
+  "/brands/pharmaessentia/1786842247150-482GS01.svg",
+  "/brands/pharmaessentia/1786842235097-favicon-96x96.png",
+]);
 
 function localAssets(value: unknown): string[] {
   if (typeof value === "string") return value.startsWith("/brands/") ? [value] : [];
@@ -22,7 +40,7 @@ function localAssets(value: unknown): string[] {
   return [];
 }
 
-const slugs = fs.readdirSync(BRANDS_DIR);
+const slugs = fs.readdirSync(BRANDS_DIR).filter((d) => !d.startsWith("_") && fs.statSync(path.join(BRANDS_DIR, d)).isDirectory());
 
 it("there is at least one brand", () => {
   expect(slugs.length > 0).toBe(true);

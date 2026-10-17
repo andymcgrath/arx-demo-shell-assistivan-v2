@@ -13,7 +13,7 @@ const CLIENT = path.join(ROOT, "client");
 const BRANDS = path.join(ROOT, "brands");
 
 const FIXED = ["Assistivan", "Jascayd", "Briumvi", "TG Therapeutics", "Dexcom", "Boehringer", "Wegovy"];
-const fromBrands = fs.readdirSync(BRANDS).flatMap((slug) => {
+const fromBrands = fs.readdirSync(BRANDS).filter((d) => !d.startsWith("_")).flatMap((slug) => {
   const b = JSON.parse(fs.readFileSync(path.join(BRANDS, slug, "brand.json"), "utf8"));
   return [b.name, b.program.name, b.program.drugDisplayName] as string[];
 });

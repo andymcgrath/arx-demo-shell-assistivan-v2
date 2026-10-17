@@ -1,0 +1,60 @@
+{
+  "slug": "pharmaessentia",
+  "name": "PharmaEssentia",
+  "title": "BESREMi Demo",
+  "enabledFlows": [
+    "Fax_QS_PA_Approved",
+    "Fax_PAP_Audit",
+    "CoA_DTP",
+    "CoA_Copay",
+    "CoA_DME",
+    "iAssist_PA_Approved",
+    "iAssist_PAP",
+    "PrES_PAP"
+  ],
+  "manufacturer": {
+    "name": "PharmaEssentia",
+    "tagline": "",
+    "logo": {
+      "colors": "/brands/pharmaessentia/1786817527600-imgi_64_260408-PEC-logo-V500-5.jpg",
+      "white": "/brands/pharmaessentia/1786817534526-imgi_6_logo-pharmaessentia-white.svg",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "",
+      "phone": "800-700-5053"
+    },
+    "copyright": "©2026 PharmaEssentia. All Rights Reserved. Intended for US residents only.",
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    }
+  },
+  "program": {
+    "name": "BESREMi®",
+    "drugDisplayName": "BESREMi® (ropeginterferon alfa-2b-njft) injection",
+    "description": "COUNT ON BESREMi to change the course of PV",
+    "dosageForm": "500 mcg/0.5 mL Injection",
+    "logo": {
+      "colors": "/brands/pharmaessentia/1786842602083-besremi-logo-transparent.png",
+      "white": "/brands/pharmaessentia/1786842607739-besremi-logo-white-outline.png",
+      "requiresFilter": false
+    },
+    "colors": {
+      "primary": "#337AB7",
+      "primaryDark": "#2E4B58",
+      "primaryLight": "#198945",
+      "primaryWash": "#eaf3ec"
+    },
+    "educationVideo": {
+      "title": "BESREMi Pen™",
+      "description": " Watch the BESREMi Pen Instructions for Use video to see how to give yourself a BESREMi injection.",
+      "thumbnail": "/brands/pharmaessentia/1786842310571-video_hcp_thumbnail.png",
+      "embedUrl": "https://www.youtube.com/watch?v=XiMcT0Wt3KA"
+    }
+  },
+  "chatbotIcon": "/brands/pharmaessentia/1786842247150-482GS01.svg",
+  "favicon": "/brands/pharmaessentia/1786842235097-favicon-96x96.png"
+}
