@@ -140,7 +140,7 @@ export default function DeliveryDate() {
             <button
               onClick={handleSave}
               disabled={!selected}
-              className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${selected ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
+              className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${selected ? "bg-arx-action text-arx-on-action hover:bg-arx-action-hover" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
             >
               <span>Save</span>
               <Check className="w-5 h-5" />

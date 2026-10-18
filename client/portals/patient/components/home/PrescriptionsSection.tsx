@@ -44,7 +44,7 @@ export default function PrescriptionsSection() {
             {/* Logo switches to white on hover */}
             <ProgramLogo
               variant={hoveredIndex === index ? "white" : "colors"}
-              className="h-8 w-auto max-w-[160px] object-contain flex-shrink-0"
+              size="row" className="flex-shrink-0"
             />
             <div className="flex-1 text-left">
               <p className={`text-xs transition-colors ${hoveredIndex === index ? "text-white" : "text-arx-slate"}`}>{rx.status}</p>

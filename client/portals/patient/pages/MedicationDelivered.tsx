@@ -93,7 +93,7 @@ export default function MedicationDelivered() {
           {/* Arrived card */}
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+              <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{DELIVERY_DATE}</span>
             </div>
 
@@ -121,7 +121,7 @@ export default function MedicationDelivered() {
               </>
             )}
 
-            <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">
+            <button className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors">
               <span>Review guide</span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -196,7 +196,7 @@ export default function MedicationDelivered() {
               </button>
             </div>
             <button className="w-full flex items-center gap-4 text-white rounded-xl px-4 py-3.5 bg-arx-primary hover:bg-arx-primary-dark transition-colors">
-              <ProgramLogo variant="white" className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0" />
+              <ProgramLogo variant="white" className="flex-shrink-0" />
               <div className="flex-1 text-left">
                 <p className="text-xs text-white/80">Review prescribing information</p>
               </div>

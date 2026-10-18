@@ -126,7 +126,7 @@ export default function PesConsent() {
             onClick={handleContinue}
             disabled={!canContinue}
             className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-              canContinue ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"
+              canContinue ? "bg-arx-action text-arx-on-action hover:bg-arx-action-hover" : "bg-arx-borders text-arx-inactive cursor-not-allowed"
             }`}
           >
             <span>Continue</span>

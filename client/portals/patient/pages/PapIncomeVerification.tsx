@@ -134,7 +134,7 @@ export default function PapIncomeVerification() {
             <button
               type="submit"
               disabled={calculating}
-              className="w-full bg-arx-primary text-white font-semibold py-4 rounded-full flex items-center justify-center gap-2 transition-colors hover:bg-arx-primary-dark disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-arx-action text-arx-on-action font-semibold py-4 rounded-full flex items-center justify-center gap-2 transition-colors hover:bg-arx-action-hover disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {calculating ? (
                 <>

@@ -50,7 +50,7 @@ export default function PADenied() {
           {isDmeFlow ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
-                <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+                <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
               </div>
 
@@ -67,7 +67,7 @@ export default function PADenied() {
                   dispatch("SELECT_SELF_PAY", { portal: "patient" });
                   navigate("/delivery-address");
                 }}
-                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors"
+                className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors"
               >
                 <span>View cash pay offer</span>
                 <ArrowRight className="w-4 h-4" />
@@ -76,14 +76,14 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.primary) }} />
+                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
           ) : isCoA ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
-                <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+                <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
               </div>
 
@@ -97,7 +97,7 @@ export default function PADenied() {
 
               <button
                 onClick={() => navigate("/delivery-payment")}
-                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors"
+                className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors"
               >
                 <span>View cash pay offer</span>
                 <ArrowRight className="w-4 h-4" />
@@ -106,14 +106,14 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.primary) }} />
+                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
-                <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+                <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
               </div>
 
@@ -138,7 +138,7 @@ export default function PADenied() {
                   : `Your insurance company denied payment for ${PROGRAM.drugDisplayName}, but we submitted an appeal. We'll let you know when we have an update. It could take up to 10 days.`}
               </p>
 
-              <button className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors">
+              <button className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors">
                 <span>Learn what to expect</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -146,7 +146,7 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.primary) }} />
+                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
@@ -191,7 +191,7 @@ export default function PADenied() {
                 </button>
               </div>
               <button className="w-full flex items-center gap-4 text-arx-slate rounded-xl px-4 py-3.5 border-2 border-arx-borders hover:bg-arx-background transition-colors">
-                <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0" />
+                <ProgramLogo variant="colors" className="flex-shrink-0" />
                 <div className="flex-1 text-left">
                   <p className="text-xs text-arx-body-copy">
                     {isIAssistPap ? (appealFiled ? "Appeal submitted" : "Reviewing your options") : "Appeal submitted"}
@@ -211,7 +211,7 @@ export default function PADenied() {
               </div>
               <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
                 <div className="flex items-center justify-between mb-3">
-                  <img src={PROGRAM.logo.colors} alt={PROGRAM.name} className="h-6 w-auto max-w-[100px] object-contain" />
+                  <ProgramLogo variant="colors" size="small" />
                   <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
                 </div>
                 <div className="flex items-start justify-between gap-3 mb-3">

@@ -72,7 +72,7 @@ export default function UploadInsurance() {
               disabled={!bothUploaded}
               className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                 bothUploaded
-                  ? "bg-arx-primary text-white hover:bg-arx-primary-dark"
+                  ? "bg-arx-action text-arx-on-action hover:bg-arx-action-hover"
                   : "bg-arx-borders text-arx-inactive cursor-not-allowed"
               }`}
             >

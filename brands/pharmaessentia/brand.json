@@ -37,16 +37,12 @@
     "drugDisplayName": "BESREMi® (ropeginterferon alfa-2b-njft) injection",
     "description": "COUNT ON BESREMi to change the course of PV",
     "dosageForm": "500 mcg/0.5 mL Injection",
-    "logo": {
-      "colors": "/brands/pharmaessentia/besremi-logo-transparent.png",
-      "white": "/brands/pharmaessentia/besremi-logo-white-outline.png",
-      "requiresFilter": false
+    "assets": {
+      "logoColor": "/brands/pharmaessentia/besremi-logo-transparent.png",
+      "logoWhite": "/brands/pharmaessentia/besremi-logo-white-outline.png"
     },
     "colors": {
-      "primary": "#337AB7",
-      "primaryDark": "#2E4B58",
-      "primaryLight": "#198945",
-      "primaryWash": "#eaf3ec"
+      "brand": "#337AB7"
     },
     "educationVideo": {
       "title": "BESREMi Pen™",

@@ -119,10 +119,10 @@ export default function PapUpdateOtp() {
             disabled={otpInput.length < 6 || isVerifying}
             className={`w-full font-semibold py-4 px-6 rounded-lg transition-all shadow-sm relative overflow-hidden ${
               isVerifying
-                ? "bg-arx-primary text-white cursor-not-allowed animate-pulse"
+                ? "bg-arx-action text-arx-on-action cursor-not-allowed animate-pulse"
                 : otpInput.length < 6
-                ? "bg-arx-inactive text-white cursor-not-allowed opacity-50"
-                : "bg-arx-primary text-white hover:bg-arx-primary-dark"
+                ? "bg-arx-inactive text-arx-on-action cursor-not-allowed opacity-50"
+                : "bg-arx-action text-arx-on-action hover:bg-arx-action-hover"
             }`}
           >
             {isVerifying ? (

@@ -1,0 +1,36 @@
+{
+  "extends": "assistivan",
+  "slug": "celldex",
+  "name": "Celldex",
+  "title": "Celldex Barzolvolimab Demo",
+  "enabledFlows": [
+    "iAssist_PA_Approved",
+    "iAssist_PAP"
+  ],
+  "manufacturer": {
+    "name": "Celldex",
+    "logo": {
+      "colors": "/brands/celldex/imgi_1_logo-celldex.png",
+      "white": "/brands/celldex/imgi_6_logo-celldex-footer.png",
+      "requiresFilter": false
+    },
+    "copyright": "©{{YEAR}} Celldex. All Rights Reserved. Intended for US residents only."
+  },
+  "program": {
+    "name": "Barzolvolimab",
+    "drugDisplayName": "Barzolvolimab",
+    "description": "150 mg every 4 weeks",
+    "dosageForm": "Subcutaneous injection",
+    "assets": {
+      "logoColor": null,
+      "logoWhite": null
+    },
+    "colors": {
+      "brand": "#15355E",
+      "accent": "#59B47D",
+      "action": "#EF4162",
+      "source": "https://celldex.com/"
+    }
+  },
+  "favicon": "/brands/celldex/cropped-CelldexFavicon-32x32.png"
+}

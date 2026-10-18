@@ -69,6 +69,10 @@
     --arx-primary-dark: 184 100% 18%;
     --arx-primary-80: 183 48% 39%;
     --arx-primary-30: 184 33% 77%;
+    --arx-action: 183 100% 22%;
+    --arx-action-hover: 184 100% 18%;
+    --arx-on-action: 0 0% 100%;
+    --arx-brand: 183 100% 22%;
     --arx-secondary: 197 51% 38%;
     --arx-sky: 181 57% 87%;
 
@@ -127,6 +131,10 @@
     --arx-primary-dark: 191 44% 25%;  /* #24525C */
     --arx-primary-80: 36 90% 69%;     /* #f7be69 */
     --arx-primary-30: 30 100% 99%;    /* #fffdfb */
+    --arx-action: 184 100% 33%;
+    --arx-action-hover: 191 44% 25%;
+    --arx-on-action: 0 0% 100%;
+    --arx-brand: 184 100% 33%;
   }
 }
 
@@ -230,6 +238,10 @@
     --arx-primary-dark: 184 100% 18%;
     --arx-primary-80: 183 48% 39%;
     --arx-primary-30: 184 33% 77%;
+    --arx-action: 183 100% 22%;
+    --arx-action-hover: 184 100% 18%;
+    --arx-on-action: 0 0% 100%;
+    --arx-brand: 183 100% 22%;
     --arx-secondary: 197 51% 38%;
     --arx-sky: 181 57% 87%;
     --arx-orange: 33 87% 51%;

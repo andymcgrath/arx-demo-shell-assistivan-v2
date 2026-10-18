@@ -37,16 +37,12 @@
     "drugDisplayName": "Mulpleta (lusutrombopag)",
     "description": "3 mg tablet",
     "dosageForm": "",
-    "logo": {
-      "colors": "/brands/edding-genor/imgi_1_Mulpleta-US-logo.svg",
-      "white": "/brands/edding-genor/Mulpleta-US-logo-white.png",
-      "requiresFilter": false
+    "assets": {
+      "logoColor": "/brands/edding-genor/imgi_1_Mulpleta-US-logo.svg",
+      "logoWhite": "/brands/edding-genor/Mulpleta-US-logo-white.png"
     },
     "colors": {
-      "primary": "#1aae42",
-      "primaryDark": "#128203",
-      "primaryLight": "#ffffff",
-      "primaryWash": "#e8e8e8"
+      "brand": "#1aae42"
     },
     "educationVideo": {
       "title": "",

@@ -224,7 +224,7 @@ export default function PesPatientInfo() {
             onClick={handleContinue}
             disabled={!valid}
             className={`w-full font-semibold py-4 rounded-lg flex items-center justify-center gap-2 mt-2 transition-colors ${
-              valid ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"
+              valid ? "bg-arx-action text-arx-on-action hover:bg-arx-action-hover" : "bg-arx-borders text-arx-inactive cursor-not-allowed"
             }`}
           >
             <span>Continue</span>

@@ -37,15 +37,12 @@
     "drugDisplayName": "Assistivan",
     "description": "0.8 mg · 30-day supply",
     "dosageForm": "0.8 mg/0.5 mL Prefilled Pen for Subcutaneous Injection",
-    "logo": {
-      "colors": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
-      "white": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
+    "assets": {
+      "logoColor": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Ffa54f2bf868e40c1a1aa8351cb5b8cd4",
+      "logoWhite": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fd4102262e0444fd382b915ea166760c5"
     },
     "colors": {
-      "primary": "#007178",
-      "primaryDark": "#005a5f",
-      "primaryLight": "#338D93",
-      "primaryWash": "#B1D5D8"
+      "brand": "#007178"
     }
   },
   "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da"

@@ -30,7 +30,7 @@ export default function PAApproved() {
           {/* PA Approved card */}
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+              <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
             </div>
 
@@ -53,7 +53,7 @@ export default function PAApproved() {
               onClick={() => {
                 navigate(isIAssistPap ? "/infusion-date" : isCoA ? "/benefit-pricing" : "/delivery-address");
               }}
-              className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-primary-dark transition-colors"
+              className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors"
             >
               <span>{isIAssistPap ? "Schedule infusion" : "Schedule delivery now"}</span>
               <ArrowRight className="w-4 h-4" />
@@ -103,7 +103,7 @@ export default function PAApproved() {
               </button>
             </div>
             <button className="w-full flex items-center gap-4 text-arx-slate rounded-xl px-4 py-3.5 border-2 border-arx-borders hover:bg-arx-background transition-colors">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0" />
+              <ProgramLogo variant="colors" className="flex-shrink-0" />
               <div className="flex-1 text-left">
                 <p className="text-xs text-arx-body-copy">Pending delivery</p>
               </div>

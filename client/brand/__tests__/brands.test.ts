@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { SCENARIOS } from "@/engine/__tests__/scenarios";
 import { brandChain, listBrandSlugs, resolveBrand } from "@/brand/resolve";
+import { AA_CONTRAST, buildTheme, contrastRatio, normalizeHex } from "@/brand/theme";
 
 /**
  * Every folder under brands/ must resolve to a complete, self-consistent brand
@@ -16,6 +17,14 @@ const FLOW_IDS = SCENARIOS.map((s) => s.flowType as string);
 // Do not add new entries. Folders that start with "_" (such as brands/_export) are not brands.
 const KNOWN_MISSING_ASSETS = new Set<string>([
 ]);
+
+// Brands whose manufacturer logo still needs the CSS recolor filter (no transparent asset yet).
+// Add the real asset, drop `requiresFilter`, then delete the entry. Do not add new entries.
+const LEGACY_FILTER_BRANDS = new Set<string>(["assistivan"]);
+
+// Brands whose action color fails WCAG AA with every text color. Fix the color, then delete the entry.
+// Do not add new entries.
+const KNOWN_LOW_CONTRAST = new Set<string>([]);
 
 function localAssets(value: unknown): string[] {
   if (typeof value === "string") return value.startsWith("/brands/") ? [value] : [];
@@ -40,8 +49,43 @@ for (const slug of slugs) {
         expect(field in brand).toBe(true);
       }
       expect(typeof brand.program.drugDisplayName).toBe("string");
-      expect(typeof brand.program.colors.primary).toBe("string");
       expect(typeof brand.manufacturer.legal.privacyUrl).toBe("string");
+    });
+
+    it("sets showClientTab only as a boolean", () => {
+      expect(brand.showClientTab === undefined || typeof brand.showClientTab === "boolean").toBe(true);
+    });
+
+    it("has valid color tokens", () => {
+      const { colors } = brand.program;
+      expect(typeof colors.brand).toBe("string");
+      for (const key of ["brand", "accent", "action"]) {
+        if (colors[key] !== undefined) expect(() => normalizeHex(colors[key])).not.toThrow();
+      }
+      for (const key of Object.keys(colors)) {
+        expect(["brand", "accent", "action", "source"].includes(key)).toBe(true);
+      }
+    });
+
+    it("has readable button text (WCAG AA)", () => {
+      if (KNOWN_LOW_CONTRAST.has(slug)) return;
+      const theme = buildTheme(brand.program.colors);
+      expect(contrastRatio(theme.onAction, theme.action)).toBeGreaterThanOrEqual(AA_CONTRAST);
+    });
+
+    it("has transparent-asset logos with no CSS filter", () => {
+      // Each variant is a file path or empty. An empty one shows the program name as text.
+      const { logoColor, logoWhite } = brand.program.assets;
+      for (const logo of [logoColor, logoWhite]) {
+        expect(logo === undefined || logo === null || typeof logo === "string").toBe(true);
+      }
+      expect("logo" in brand.program).toBe(false);
+      expect("requiresFilter" in brand.program.assets).toBe(false);
+      // A brand that extends a legacy brand inherits its filter until it sets its own logo.
+      const inheritsLegacy = brandChain(BRANDS_DIR, slug).some((s) => LEGACY_FILTER_BRANDS.has(s));
+      if (!inheritsLegacy) {
+        expect(brand.manufacturer.logo.requiresFilter ?? false).toBe(false);
+      }
     });
 
     it("enables at least one flow, and only real flows", () => {

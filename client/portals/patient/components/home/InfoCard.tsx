@@ -4,16 +4,13 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 export default function InfoCard() {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-xl font-bold leading-snug text-arx-slate">
-          Everything you need to know about {PROGRAM.name}.
-        </h2>
-        {/* Color logo on white background */}
-        <ProgramLogo
-          variant="colors"
-          className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0"
-        />
-      </div>
+      {/* Drug logo above the heading. A drug with no logo file shows no logo here,
+          because the heading already names it. */}
+      {PROGRAM.assets.logoColor && <ProgramLogo variant="colors" className="mb-3" />}
+
+      <h2 className="text-xl font-bold leading-snug text-arx-slate">
+        Everything you need to know about {PROGRAM.name}.
+      </h2>
 
       <p className="mt-4 text-sm leading-relaxed text-arx-body-copy">
         From identifying financial assistance programs to providing education on your medication, we

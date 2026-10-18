@@ -30,16 +30,12 @@
     "drugDisplayName": "",
     "description": "15 Day",
     "dosageForm": "",
-    "logo": {
-      "colors": "/brands/dexcom/dexcom_g7_color_transparent.png",
-      "white": "/brands/dexcom/dexcom_g7_white_transparent.png",
-      "requiresFilter": false
+    "assets": {
+      "logoColor": "/brands/dexcom/dexcom_g7_color_transparent.png",
+      "logoWhite": "/brands/dexcom/dexcom_g7_white_transparent.png"
     },
     "colors": {
-      "primary": "#137d00",
-      "primaryDark": "#000000",
-      "primaryLight": "#71B166",
-      "primaryWash": "#f5f5f5"
+      "brand": "#137d00"
     },
     "educationVideo": {
       "title": "",

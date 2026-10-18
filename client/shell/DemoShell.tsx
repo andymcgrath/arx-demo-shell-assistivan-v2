@@ -41,6 +41,7 @@ import { faxStageEvents } from "./faxLadders";
 
 import CrmPortal      from "@/portals/crm/index";
 import ClientPortal   from "@/portals/client/index";
+import { BRAND } from "@/brand";
 import PatientPortal  from "@/portals/patient/index";
 import AnalyticsPortal from "@/portals/analytics/index";
 import InsightsPortal from "@/portals/insights/index";
@@ -165,11 +166,11 @@ function getPortals(flowType: string) {
     if (p.id === "provider" && (isIAssistFlow || isPapFlow)) return false;
     // Show iAssist only for workflow 4
     if (p.id === "iassist" && !isIAssistFlow) return false;
-    // "Client" tab — scoped to the iAssist workflows only (5. iAssist and
-    // 6. iAssist Appeal, see FLOW_OPTIONS in flowOptions.ts), per request.
-    // Hidden everywhere else, same isIAssistFlow flag the "iassist" tab
-    // above already uses.
-    if (p.id === "client" && !isIAssistFlow) return false;
+    // "Client" tab — a one-off built for a single client. It shows only when the
+    // brand opts in (`showClientTab` in brand.json, off by default) and only in the
+    // iAssist workflows (5. iAssist and 6. iAssist Appeal, see FLOW_OPTIONS in
+    // flowOptions.ts), the same isIAssistFlow flag the "iassist" tab uses.
+    if (p.id === "client" && !(BRAND.showClientTab === true && isIAssistFlow)) return false;
     return true;
   }).map(p => {
     if (p.id === "provider") {

@@ -91,8 +91,8 @@ export default function CopayEnroll() {
             <button
               onClick={enrollInCopay}
               disabled={isVerifying}
-              className={`w-full text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                isVerifying ? "bg-arx-primary cursor-not-allowed opacity-90" : "bg-arx-primary hover:bg-arx-primary-dark"
+              className={`w-full text-arx-on-action font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                isVerifying ? "bg-arx-action cursor-not-allowed opacity-90" : "bg-arx-action hover:bg-arx-action-hover"
               }`}
             >
               {isVerifying ? (
@@ -151,7 +151,7 @@ export default function CopayEnroll() {
                   </li>
                 ))}
               </ul>
-              <button className="w-full bg-arx-primary text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-primary-dark transition-colors">
+              <button className="w-full bg-arx-action text-arx-on-action font-semibold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors">
                 <span>Enroll in Savings Card</span>
                 <ArrowRight className="w-4 h-4" />
               </button>

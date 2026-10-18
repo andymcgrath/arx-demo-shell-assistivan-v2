@@ -29,7 +29,7 @@ export default function ConfirmDetails() {
           <div className="mt-8">
             <button
               onClick={() => navigate("/consent")}
-              className="w-full bg-arx-primary text-white font-semibold py-4 rounded-lg flex items-center justify-center gap-3 hover:bg-arx-primary-dark transition-colors"
+              className="w-full bg-arx-action text-arx-on-action font-semibold py-4 rounded-lg flex items-center justify-center gap-3 hover:bg-arx-action-hover transition-colors"
             >
               <span>Confirm</span>
               <Check className="w-5 h-5" />

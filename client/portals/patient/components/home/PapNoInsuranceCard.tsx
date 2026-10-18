@@ -48,7 +48,7 @@ export default function PapNoInsuranceCard() {
           dispatch("START_INCOME_QUALIFICATION", { portal: "patient" });
           navigate("/income-qualification");
         }}
-        className="mt-5 w-full text-white font-semibold py-3.5 rounded-lg transition-colors bg-arx-primary hover:bg-arx-primary-dark"
+        className="mt-5 w-full text-arx-on-action font-semibold py-3.5 rounded-lg transition-colors bg-arx-action hover:bg-arx-action-hover"
       >
         Get Started
       </button>

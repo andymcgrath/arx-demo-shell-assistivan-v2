@@ -133,7 +133,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isTyping}
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity bg-arx-primary hover:bg-arx-primary-dark disabled:opacity-40"
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity bg-arx-action hover:bg-arx-action-hover disabled:opacity-40"
                 aria-label="Send"
               >
                 <Send className="w-4 h-4 text-white" />

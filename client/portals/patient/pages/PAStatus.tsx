@@ -19,7 +19,7 @@ export default function PAStatus() {
           {/* PA Submitted card */}
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+              <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
             </div>
 
@@ -43,7 +43,7 @@ export default function PAStatus() {
 
             <button
               onClick={openChat}
-              className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-primary-dark transition-colors"
+              className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors"
             >
               <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
               <span>Have questions? Start a chat</span>
@@ -66,7 +66,7 @@ export default function PAStatus() {
               </button>
             </div>
             <button className="w-full flex items-center gap-4 text-arx-slate rounded-xl px-4 py-3.5 border-2 border-arx-borders hover:bg-arx-background transition-colors">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain flex-shrink-0" />
+              <ProgramLogo variant="colors" className="flex-shrink-0" />
               <div className="flex-1 text-left">
                 <p className="text-xs text-arx-body-copy">PA submitted</p>
               </div>
@@ -97,7 +97,7 @@ export default function PAStatus() {
               </p>
               <button
                 onClick={() => navigate("/")}
-                className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg hover:bg-arx-primary-dark transition-colors"
+                className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg hover:bg-arx-action-hover transition-colors"
               >
                 Read more
               </button>

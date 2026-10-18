@@ -95,7 +95,7 @@ export default function DeliveryAddress() {
             <button
               onClick={handleContinue}
               disabled={!valid}
-              className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mt-2 transition-colors ${valid ? "bg-arx-primary text-white hover:bg-arx-primary-dark" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
+              className={`w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mt-2 transition-colors ${valid ? "bg-arx-action text-arx-on-action hover:bg-arx-action-hover" : "bg-arx-borders text-arx-inactive cursor-not-allowed"}`}
             >
               <span>Continue</span>
               <ChevronRight className="w-5 h-5" />

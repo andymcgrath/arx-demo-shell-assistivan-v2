@@ -122,8 +122,8 @@ export default function PhoneVerification() {
           disabled={isDisabled}
           className={`w-full font-semibold py-4 px-6 rounded-lg transition-all shadow-sm mb-6 ${
             isDisabled
-              ? "bg-arx-primary/40 text-white cursor-not-allowed"
-              : "bg-arx-primary text-white hover:bg-arx-primary-dark"
+              ? "bg-arx-action/40 text-arx-on-action cursor-not-allowed"
+              : "bg-arx-action text-arx-on-action hover:bg-arx-action-hover"
           }`}
         >
           Send code

@@ -51,7 +51,7 @@ export default function Header() {
 
           {/* Logo */}
           <div className="flex-1 flex justify-center">
-            <ManufacturerLogo className="h-14 w-auto max-w-[250px] object-contain" />
+            <ManufacturerLogo size="header" />
           </div>
 
           {/* Chat / Technical Help */}

@@ -1,96 +1,38 @@
 /**
- * Applies a brand's colors to a portal's CSS custom properties (see
- * `.portal-patient` in global.css).
+ * Applies a brand's colors to a portal's CSS custom properties (see `.portal-patient` in
+ * global.css).
  *
- * Rather than rewriting global.css on every rebrand (fragile — text-patching
- * a stylesheet), this injects a small <style> override tag at runtime. It's
- * called once from branding.ts on module load.
+ * The shades are derived in `@/brand/theme` from the brand tokens. This file only injects the
+ * result as a small <style> tag, so global.css never needs rewriting on a rebrand.
  *
- * Mapping (matches the original hand-authored global.css comment) — all four
- * are plain hex-to-HSL conversions of explicit admin fields. Nothing here is
- * derived/guessed; --arx-primary-30 used to be computed from a heuristic
- * formula, but that was replaced with a real `primaryWash` field so every
- * shade is something an admin actually chose.
- *   colors.primary      -> --arx-primary
- *   colors.primaryDark  -> --arx-primary-dark
- *   colors.primaryLight -> --arx-primary-80
- *   colors.primaryWash  -> --arx-primary-30
+ *   brand        -> --arx-primary, --arx-brand
+ *   dark         -> --arx-primary-dark
+ *   light        -> --arx-primary-80
+ *   wash         -> --arx-primary-30
+ *   accent       -> --arx-accent
+ *   action       -> --arx-action
+ *   actionHover  -> --arx-action-hover
+ *   onAction     -> --arx-on-action
+ *   gradient     -> --arx-gradient
  *
- * `selector`/`styleTagId` default to the Patient Portal's own values so every
- * existing call site (branding.ts) is unaffected. The Client tab reuses this
- * same function with `.portal-client`/"client-brand-css-vars" instead — see
- * client/portals/client/branding.ts — rather than duplicating the hex->HSL
- * math for a second portal.
+ * `selector` and `styleTagId` default to the patient portal. The client tab passes its own.
  */
+import { buildTheme, themeToCssVars, type BrandColors } from "@/brand/theme";
 
 const STYLE_TAG_ID = "brand-css-vars";
 
-interface ProgramColors {
-  primary: string;
-  primaryDark: string;
-  primaryLight: string;
-  primaryWash: string;
-}
-
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-  const clean = hex.replace("#", "").trim();
-  const full =
-    clean.length === 3
-      ? clean.split("").map(c => c + c).join("")
-      : clean.padEnd(6, "0").slice(0, 6);
-
-  const r = parseInt(full.slice(0, 2), 16) / 255;
-  const g = parseInt(full.slice(2, 4), 16) / 255;
-  const b = parseInt(full.slice(4, 6), 16) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-
-  if (max === min) {
-    return { h: 0, s: 0, l: Math.round(l * 100) };
-  }
-
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h: number;
-  switch (max) {
-    case r:
-      h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-      break;
-    case g:
-      h = ((b - r) / d + 2) * 60;
-      break;
-    default:
-      h = ((r - g) / d + 4) * 60;
-  }
-
-  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
-function hslString({ h, s, l }: { h: number; s: number; l: number }): string {
-  return `${h} ${s}% ${l}%`;
-}
-
 export function applyBrandCssVars(
-  colors: ProgramColors,
+  colors: BrandColors,
   selector: string = ".portal-patient",
   styleTagId: string = STYLE_TAG_ID,
 ) {
   if (typeof document === "undefined") return;
 
   try {
-    const primary = hexToHsl(colors.primary);
-    const dark = hexToHsl(colors.primaryDark);
-    const light = hexToHsl(colors.primaryLight);
-    const wash = hexToHsl(colors.primaryWash);
-
-    const css = `${selector} {
-  --arx-primary: ${hslString(primary)};
-  --arx-primary-dark: ${hslString(dark)};
-  --arx-primary-80: ${hslString(light)};
-  --arx-primary-30: ${hslString(wash)};
-}`;
+    const vars = themeToCssVars(buildTheme(colors));
+    const body = Object.entries(vars)
+      .map(([name, value]) => `  ${name}: ${value};`)
+      .join("\n");
 
     let tag = document.getElementById(styleTagId) as HTMLStyleElement | null;
     if (!tag) {
@@ -98,7 +40,7 @@ export function applyBrandCssVars(
       tag.id = styleTagId;
       document.head.appendChild(tag);
     }
-    tag.textContent = css;
+    tag.textContent = `${selector} {\n${body}\n}`;
   } catch (err) {
     console.error("Failed to apply brand CSS variables:", err);
   }

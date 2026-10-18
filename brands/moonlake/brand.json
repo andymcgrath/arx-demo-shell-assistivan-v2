@@ -37,16 +37,12 @@
     "drugDisplayName": "Sonelokimab",
     "description": "120 mg Injectable",
     "dosageForm": "",
-    "logo": {
-      "colors": "/brands/moonlake/Rx_recolored_reversed.png",
-      "white": "/brands/moonlake/Rx_grayscale.png",
-      "requiresFilter": false
+    "assets": {
+      "logoColor": "/brands/moonlake/Rx_recolored_reversed.png",
+      "logoWhite": "/brands/moonlake/Rx_grayscale.png"
     },
     "colors": {
-      "primary": "#24324c",
-      "primaryDark": "#020817",
-      "primaryLight": "#dddbda",
-      "primaryWash": "#e2e8f0"
+      "brand": "#24324c"
     },
     "educationVideo": {
       "title": "",

@@ -36,15 +36,13 @@
     "drugDisplayName": "Jascayd",
     "description": "Add product details here",
     "dosageForm": "150 mg Oral Capsule",
-    "logo": {
-      "colors": "/brands/boehringer-ingelheim/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
-      "white": "/brands/boehringer-ingelheim/1786385297021-jascayd-logo-white.svg"
+    "assets": {
+      "logoColor": "/brands/boehringer-ingelheim/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
+      "logoWhite": "/brands/boehringer-ingelheim/1786385297021-jascayd-logo-white.svg"
     },
     "colors": {
-      "primary": "#08312A",
-      "primaryDark": "#051F1A",
-      "primaryLight": "#00E47C",
-      "primaryWash": "#B6D2CE"
+      "brand": "#08312A",
+      "accent": "#00E47C"
     },
     "educationVideo": {
       "title": "What's a healthy lung vs. a lung with inflammation and fibrosis?",

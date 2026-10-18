@@ -53,7 +53,7 @@ export default function IncomeQualification() {
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+              <ProgramLogo variant="colors" />
             </div>
             <div className="flex items-center gap-3 mb-3">
               <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "#16a34a" }} />
@@ -70,7 +70,7 @@ export default function IncomeQualification() {
               onClick={openChat}
               className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
             >
-              <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.primary) }} />
+              <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
               <span>Have questions? Start a chat</span>
             </button>
           </div>
@@ -85,7 +85,7 @@ export default function IncomeQualification() {
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
-              <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+              <ProgramLogo variant="colors" />
             </div>
 
             <div className="flex items-center gap-3 mb-3">
@@ -114,7 +114,7 @@ export default function IncomeQualification() {
 
             <button
               onClick={handleConfirm}
-              className="w-full bg-arx-primary text-white font-semibold py-3.5 rounded-lg hover:bg-arx-primary-dark transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg hover:bg-arx-action-hover transition-colors flex items-center justify-center gap-2"
             >
               Submit application
               <ChevronRight className="w-4 h-4" />
@@ -131,7 +131,7 @@ export default function IncomeQualification() {
         {/* Intro card */}
         <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
           <div className="flex items-center justify-between mb-4">
-            <ProgramLogo variant="colors" className="h-10 w-auto max-w-[120px] object-contain" />
+            <ProgramLogo variant="colors" />
           </div>
           <h2 className="text-xl font-bold leading-snug text-arx-slate mb-2">Check your eligibility</h2>
           <p className="text-sm leading-relaxed text-arx-body-copy">
@@ -187,9 +187,9 @@ export default function IncomeQualification() {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || checkingEligibility}
-            className="w-full text-white font-semibold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full text-arx-on-action font-semibold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             style={{
-              backgroundColor: canSubmit ? "hsl(var(--arx-primary))" : "#c4c4c4",
+              backgroundColor: canSubmit ? "hsl(var(--arx-action))" : "#c4c4c4",
               cursor: canSubmit && !checkingEligibility ? "pointer" : "not-allowed",
             }}
           >

@@ -21,7 +21,7 @@ export default function EnrollmentComplete() {
     workflowData.flowType === "CoA_Copay" && workflowData.pricingOption === "mail_order";
 
   return (
-    <main className="flex-grow flex items-center justify-center px-6 py-12 bg-arx-primary">
+    <main className="flex-grow flex items-center justify-center px-6 py-12 bg-arx-brand">
         <div className="text-center max-w-sm mx-auto">
           {/* Animated checkmark with radiating dashes */}
           <div className="relative flex items-center justify-center w-32 h-32 mx-auto mb-8">
@@ -69,7 +69,7 @@ export default function EnrollmentComplete() {
               dispatch('REFERRAL_RECEIVED', { portal: 'patient' });
               navigate(isCopayMailOrder ? "/order-tracker" : "/");
             }}
-            className="w-full bg-white text-arx-primary font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"
+            className="w-full bg-white text-arx-brand font-semibold py-4 rounded-lg hover:bg-arx-primary-30 transition-colors"
           >
             Got it
           </button>

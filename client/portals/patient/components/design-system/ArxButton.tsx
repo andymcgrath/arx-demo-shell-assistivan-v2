@@ -47,7 +47,7 @@ export function ArxButton({
 
   const variantClasses = {
     primary:
-      "bg-arx-primary text-white hover:bg-arx-primary-dark active:bg-arx-primary",
+      "bg-arx-action text-arx-on-action hover:bg-arx-action-hover active:bg-arx-action",
     outline:
       "border-2 border-arx-primary text-arx-primary bg-transparent hover:bg-arx-primary hover:text-white active:bg-arx-primary active:text-white",
     ghost:

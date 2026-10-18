@@ -8,7 +8,7 @@ export default function Footer() {
 
         {/* Row 1: Logo + tagline inline */}
         <div className="flex items-center gap-3 mb-1.5">
-          <ManufacturerLogo className="h-7 w-auto max-w-[150px] object-contain flex-shrink-0" />
+          <ManufacturerLogo size="footer" className="flex-shrink-0" />
           <p className="text-[10px] text-arx-body-copy leading-tight">
             {MANUFACTURER.tagline}
           </p>
