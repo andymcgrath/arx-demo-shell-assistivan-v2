@@ -3,9 +3,19 @@
   "slug": "celldex",
   "name": "Celldex",
   "title": "Celldex Barzolvolimab Demo",
-  "enabledFlows": [
-    "iAssist_PA_Approved",
-    "iAssist_PAP"
+  "demos": [
+    {
+      "id": "iassist-pa-approved",
+      "flow": "iAssist_PA_Approved",
+      "label": "6. iAssist",
+      "description": "Internal iAssist platform workflow with prior authorization approval"
+    },
+    {
+      "id": "iassist-pap",
+      "flow": "iAssist_PAP",
+      "label": "7. iAssist Appeal",
+      "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    }
   ],
   "manufacturer": {
     "name": "Celldex",

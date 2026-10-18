@@ -30,9 +30,42 @@ export interface PatientPersona {
   healthConditions: string;
 }
 
+/** One branch of a fork. */
+export interface ForkExit {
+  id: string;
+  /** Presenter-facing name, for the CRM buttons and the demo list. */
+  label: string;
+  description?: string;
+  /** Fields this branch sets on `WorkflowData` when the fork resolves. */
+  data: Partial<WorkflowData>;
+}
+
+/**
+ * A point where a scenario has a default branch and named alternatives. A workflow declares its
+ * forks. The pick lives in `workflowData.choices[id]`, so it survives reset, undo, and reload.
+ */
+export interface ForkDefinition {
+  id: string;
+  label: string;
+  /** Who picks. `story`: the scenario fixes it. `presenter`: picked live. `patient`: picked in the app. */
+  chooser: "story" | "presenter" | "patient";
+  /** Apply to these scenarios only. Omit for every scenario of the workflow. */
+  scenarios?: FlowType[];
+  exits: ForkExit[];
+  /**
+   * Events that take a fresh run to the point where this fork is about to resolve. The presenter's
+   * "switch branch" control resets, applies the choice, then sends these. It is the story up to the fork.
+   */
+  leadIn?: { type: string; portal: string; [field: string]: unknown }[];
+  /** True once the fork has resolved. A choice can change only before that. After it, reset and replay. */
+  resolved: (data: WorkflowData) => boolean;
+}
+
 /** A scenario is data: starting values plus content (pharmacies, prices, labels). */
 export interface ScenarioDefinition<Content = unknown> {
   flowType: FlowType;
+  /** The story's default branch at each fork, keyed by fork id. Every id and exit must be declared. */
+  choices?: Record<string, string>;
   /**
    * How the referral reaches the platform. `erx` holds everything the PA needs, so a PA starts on its own once
    * BI says one is required. `fax` needs a manual PA: an email asks the provider and their submission starts it.
@@ -107,6 +140,8 @@ export interface WorkflowDefinition<C = any> {
   /** XState machine id. */
   id: string;
   rules: Rule<any, C>[];
+  /** The forks this workflow declares. */
+  forks?: ForkDefinition[];
   scenarios: Partial<Record<FlowType, ScenarioDefinition<C>>>;
   /** Scenario used when the machine starts without an input. */
   defaultFlowType: FlowType;

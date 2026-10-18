@@ -10,6 +10,8 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 - **Scenario:** a variant that runs on a workflow. Different outcomes and content, same apps and spine. Example: CoAssist DTP, Copay, DME.
 - **Step module:** a reusable step shared by scenarios. Example: payment, pharmacy selection, address and ship date, enrollment with SMS and OTP.
 - **Legacy scenario:** a scenario marked `legacy: true` (for example PrES). Keep it working and tested. Add no new features to it.
+- **Fork:** a point where a scenario has a default branch and named alternatives. A workflow declares it (`workflows/<name>/forks.ts`) with its exits and who chooses (story, presenter, or patient). The pick lives in `workflowData.choices`.
+- **Demo:** an entry in the brand file's `demos` list. A flow plus the fork choices it starts with. It is what the client selects in the dropdown.
 - **Brand:** client identity (names, logos, colors, copy). Separate from workflow and scenario.
 
 ## Workflow rules
@@ -28,6 +30,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
     Intake channel (`erx`, `fax`, or `esign`) defaults from the workflow and a scenario may override it. `erx` workflows (CoAssist, iAssist) already hold everything the PA needs, so a PA starts automatically once BI completes and says a PA is required. `fax` workflows need a manual PA: an email asks the provider, and the provider's submission starts the PA.
 12. One invariant test runs over every scenario and checks that each precondition rejects its event wherever it does not hold.
 13. The workflow definition owns screen order for every app. It has two lists in one file (`workflows/<name>/screens.ts`): a catalog of screens in menu order, and an ordered list of route rules (screen plus the condition that selects it, first match wins). Step modules contribute their screens. A scenario may add, skip, or replace entries. Generate `derivePatientRoute`, the CRM stage list, and the patient hamburger menu from it. Do not hand-edit a shared `if` chain or a per-flow menu list. A test checks that every screen a scenario visits appears in its menu.
+14. A scenario's path changes at forks, not in `scenarios: [...]` filters or `flowType ===` checks. Declare the fork, give each exit the data it sets, and let the rule that resolves the fork read `choices`. The brand file picks branches through `demos`. It cannot invent a path: the brand test rejects any choice that names no declared exit. The presenter's branch buttons are drawn from the declaration. Do not hand-build them per workflow.
 
 ## Test rules
 
@@ -41,7 +44,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 ## Brand and deploy rules
 
 - Brand lives in committed JSON at `brands/<slug>/brand.json`, with images in `public/brands/<slug>/`. See `BRANDS.md`. Brand and drug names never appear in source code.
-- Each client has one Netlify site pointing at `main`. The `BRAND` environment variable selects the brand at build time. Per-client screens come from `enabledFlows` in config.
+- Each client has one Netlify site pointing at `main`. The `BRAND` environment variable selects the brand at build time. Per-client demos come from `demos` in the brand file.
 - Do not create long-lived client branches. Feature branches are short-lived and merge back.
 - No runtime brand fetch and no Netlify Blobs for brand config.
 - `/admin` and admin functions must not ship in client-facing builds.

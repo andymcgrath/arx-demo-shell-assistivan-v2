@@ -13,6 +13,7 @@
 import { assign, enqueueActions, setup } from "xstate";
 import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
 import { createInitialWorkflowData } from "./baseData";
+import { choiceProblems, forkApplies } from "./forks";
 import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
 
 function createEvent(context: MachineContext, eventType: string, portal: Portal, step: number): DemoEvent {
@@ -44,9 +45,35 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
     return scenario;
   };
 
-  const startingData = (flowType: FlowType | undefined) => {
+  const forks = def.forks ?? [];
+  for (const fork of forks) {
+    if (forks.filter((f) => f.id === fork.id && (!f.scenarios || !fork.scenarios || f.scenarios.some((s) => fork.scenarios!.includes(s)))).length > 1) {
+      throw new Error(`Workflow "${def.id}": fork "${fork.id}" is declared twice for the same scenario`);
+    }
+    if (fork.exits.length < 2) throw new Error(`Workflow "${def.id}": fork "${fork.id}" needs at least two exits`);
+    if (new Set(fork.exits.map((e) => e.id)).size !== fork.exits.length) {
+      throw new Error(`Workflow "${def.id}": fork "${fork.id}" has two exits with the same id`);
+    }
+  }
+  for (const scenario of Object.values(def.scenarios)) {
+    if (!scenario) continue;
+    const problems = choiceProblems(forks, scenario.flowType, scenario.choices);
+    if (problems.length) throw new Error(`Workflow "${def.id}", scenario ${scenario.flowType}: ${problems.join("; ")}`);
+  }
+
+  /** Drops choices that name no real fork or exit, so a stale event cannot corrupt the data. */
+  const validChoices = (flowType: FlowType, choices: Record<string, string> | undefined) =>
+    Object.fromEntries(
+      Object.entries(choices ?? {}).filter(([forkId, exitId]) => choiceProblems(forks, flowType, { [forkId]: exitId }).length === 0),
+    );
+
+  const startingData = (flowType: FlowType | undefined, choices?: Record<string, string>) => {
     const scenario = scenarioFor(flowType);
-    return createInitialWorkflowData(scenario.flowType, scenario.initialData);
+    return createInitialWorkflowData(scenario.flowType, {
+      ...scenario.initialData,
+      // The story's defaults, then whatever the caller picked.
+      choices: { ...scenario.choices, ...validChoices(scenario.flowType, choices) },
+    });
   };
 
   // Group rules by event, keeping declaration order (first match wins).
@@ -112,13 +139,13 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
   return setup({
     types: {
       context: {} as MachineContext,
-      input: {} as { flowType?: FlowType } | undefined,
+      input: {} as { flowType?: FlowType; choices?: Record<string, string> } | undefined,
       events: {} as { type: string; [key: string]: unknown },
     },
   }).createMachine({
     id: def.id,
     context: ({ input }) => ({
-      workflowData: startingData(input?.flowType),
+      workflowData: startingData(input?.flowType, input?.choices),
       events: [],
       _snapshots: [],
     }),
@@ -127,6 +154,25 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
       active: {
         on: {
           ...on,
+          // CHOOSE { fork, exit }: the presenter picks a branch before the fork resolves. Not an UNDO step and
+          // not an event-log entry. After the fork resolves, the caller resets (RESET carries `choices`) and replays.
+          ...(forks.length
+            ? {
+                CHOOSE: {
+                  guard: ({ context, event }: any) => {
+                    const data = context.workflowData;
+                    const fork = forks.find((f) => f.id === event.fork && forkApplies(f, data.flowType));
+                    return !!fork && fork.exits.some((e) => e.id === event.exit) && !fork.resolved(data);
+                  },
+                  actions: assign(({ context, event }: any) => ({
+                    workflowData: {
+                      ...context.workflowData,
+                      choices: { ...(context.workflowData.choices ?? {}), [event.fork]: event.exit },
+                    },
+                  })),
+                },
+              }
+            : {}),
           // UNDO restores the context from before the last step and drops any pending delayed automation.
           UNDO: {
             guard: ({ context }: any) => context._snapshots.length > 0,
@@ -140,15 +186,18 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
               }),
             ],
           },
-          // RESET keeps the running scenario.
+          // RESET keeps the running scenario and its fork choices. `choices` on the event changes some of them.
           RESET: {
             actions: [
               // A reset must not let a pending delayed automation fire into the fresh run.
               enqueueActions(({ enqueue }: any) => {
                 for (const id of automationIds) enqueue.cancel(id);
               }),
-              assign(({ context }: any) => ({
-                workflowData: startingData(context.workflowData.flowType),
+              assign(({ context, event }: any) => ({
+                workflowData: startingData(context.workflowData.flowType, {
+                  ...(context.workflowData.choices ?? {}),
+                  ...(event.choices ?? {}),
+                }),
                 events: [],
                 _snapshots: [],
               })),

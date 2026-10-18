@@ -335,6 +335,63 @@ Tradeoff: a workflow machine with many scenarios has more states than any one of
 
 Migration order: CoAssist first (three files into one, and the strongest evidence), then iAssist (two files), then Fax intake. Do not drop XState. The parallel regions, delayed transitions and undo are the reasons to have it.
 
+### Journeys: components, forks, and demos (design, 18 Oct 2026)
+
+Branch `feature/journeys`. This extends the step modules above with exits, and adds forks and a brand-level list of demos.
+
+**The need.** A demo is a scripted story. Sales also needs to show a different branch of that story without leaving the demo. The CoA_DME coverage outcomes started the refactor, and they are the proof the pattern works. Today it is built by hand and only for DME: three CRM buttons (`dmeSelectedScenario` in React state), a replay (`resetDmeToBiRunning`), and an array of stage cards per outcome in `crm/pages/Index.tsx`. The iAssist and Fax flows have separate hand-written ladders (`coassistLadders.ts`, `iassistLadders.ts`, `faxLadders.ts`) and a stage list per flow in `DemoShell.tsx`. The "scenario" lists in `coassist/rules.ts` (17 of 38 rules) and `coassist/screens.ts` (most entries) are `flowType ===` in data form.
+
+**Vocabulary.**
+
+- **Component:** a step module (rules 3 to 6 in CLAUDE.md) that also declares named **exits**, such as `covered`, `no_coverage`, `approved`, `transferred`.
+- **Journey:** a scenario seen as a chain of components. Each exit names the component that follows.
+- **Fork:** a point where a journey has a default branch and named alternatives. Each fork declares who chooses: `story` (the scenario fixes it), `presenter` (picked live, like the DME BI buttons), or `patient` (picked in the app, like the pricing option).
+- **Demo:** an entry in the brand file's `demos` list. It names a flow, a label, a description, and the fork choices to start with. It is what the client selects in the dropdown.
+
+**Component contract.** Screens per app, rules (the existing `Rule` type), `needs` and `sets` over `WorkflowData`, and exits. A component is active when its `needs` hold and its exit is not reached. The route stays a function of the data. Do not add a "current node" pointer: undo, reset, and persistence depend on state being derived, and the CoAssist rules say onboarding, BI, and PA are independent timelines. Components therefore belong to a lane (patient journey, case), and join conditions are `needs`.
+
+**Forks.**
+
+- A workflow declares its forks: id, label, chooser, and exits (id, label, and the data the exit sets). A scenario sets a default choice per fork (the story).
+- The choice is stored in `workflowData.choices[forkId]`. It survives undo, reset, and reload. The rule that resolves the fork reads the choice. The UI no longer puts it on an event.
+- `RESET` keeps the current choices and may carry new ones. The machine input accepts choices.
+- Declaring a fork validates it: every scenario default and every demo choice must name a real fork and exit.
+
+**Replay.** "Jump to stage" and "switch branch" are one operation: reset, replay the scenario's golden path up to a point, apply a choice. Rule 8 already requires an event list per scenario. That list should become the story, the ladder, and the test. Today the three ladder files and the stage lists in `DemoShell.tsx` duplicate it, and one has already drifted (a ladder sent `SHIP_RX` without `READY_RX`).
+
+**Demos in the brand file.**
+
+```json
+"demos": [
+  { "id": "pharmacy-covered", "flow": "CoA_DME",
+    "label": "Pharmacy coverage, PA approved",
+    "description": "Benefits investigation finds pharmacy coverage and a PA.",
+    "choices": { "bi": "pharmacy_covered" } }
+]
+```
+
+- `demos` replaces `enabledFlows`. There is no shim for a plain string. The first entry is where a new session starts.
+- A demo can only select declared fork exits. It cannot build a path, so a bad edit cannot produce an illegal journey. The brand test checks each flow and each choice.
+- Labels move from `flowOptions.ts` to the brand file, so each client sees its own wording.
+- Selecting a demo switches to its flow. If the running flow's choices differ from the demo's, it resets with the demo's choices. Otherwise it keeps the progress, as the flow dropdown does today.
+
+**The Reset menu** in the shell toolbar holds "Reset All" and the stage-jump list. Reset All must restart the selected demo with its choices, not the scenario default.
+
+**What this replaces over time:** the DME replay functions in `resetToStage.ts`, the per-flow ladder files, the stage lists in `DemoShell.tsx`, the CRM scenario buttons and per-outcome stage arrays, and the scenario-id lists in rules and screens.
+
+**Spike scope (this branch).**
+
+1. Declared forks and `choices` in the engine, with the DME BI fork as the first one. Golden-path fixtures unchanged.
+2. `demos` in every brand file. Dexcom lists the three coverage outcomes. The dropdown reads `demos`.
+3. The CRM BI buttons write the choice to the machine, and `dmeSelectedScenario` goes away.
+
+Not in the spike: extracting components, generating ladders, other forks (DTP and Copay BI result, iAssist PA outcome), or hiding presenter controls.
+
+**Open questions.**
+
+- Should Reset All and the stage-jump list be hidden or reduced when a brand lists demos?
+- Do the DTP and Copay BI result and the iAssist PA outcome become forks next?
+
 ## 3. Portals are vendored copies glued with a regex
 
 The portals began as separate repos and were copied in.

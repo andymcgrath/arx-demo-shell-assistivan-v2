@@ -168,6 +168,12 @@ export interface WorkflowData {
    *  taps through the SMS (VERIFY_DME_TRANSFER_SMS), which unlocks
    *  /dme-provider-transfer. Stays false for every other flow. */
   dmeTransferSmsVerified: boolean;
+  /**
+   * The branch picked at each declared fork, keyed by fork id (for example `{ bi: "no_coverage" }`).
+   * The scenario sets the story's default. A demo in the brand file or the presenter can change it.
+   * Survives reset, undo, and reload. See `ForkDefinition` in engine/workflow/types.ts.
+   */
+  choices: Record<string, string>;
 }
 
 export interface DemoEvent {

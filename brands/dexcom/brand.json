@@ -2,8 +2,34 @@
   "slug": "dexcom",
   "name": "Dexcom",
   "title": "Dexcom G7 Demo",
-  "enabledFlows": [
-    "CoA_DME"
+  "demos": [
+    {
+      "id": "coa-dme-pharmacy-covered",
+      "flow": "CoA_DME",
+      "label": "DME: Pharmacy Coverage",
+      "description": "The pharmacy benefit covers it and needs a PA. The patient picks a network pharmacy.",
+      "choices": {
+        "bi": "pharmacy_covered"
+      }
+    },
+    {
+      "id": "coa-dme-covered-by-both",
+      "flow": "CoA_DME",
+      "label": "DME: Covered by Both",
+      "description": "The medical benefit covers it. The case transfers to an outside DME provider.",
+      "choices": {
+        "bi": "covered_by_both"
+      }
+    },
+    {
+      "id": "coa-dme-no-coverage",
+      "flow": "CoA_DME",
+      "label": "DME: No Coverage (Cash)",
+      "description": "Neither benefit covers it. The patient gets a cash offer.",
+      "choices": {
+        "bi": "no_coverage"
+      }
+    }
   ],
   "manufacturer": {
     "name": "Dexcom",

@@ -21,6 +21,8 @@
  * the pharmacy pick and stage 6 goes straight to FILL_RX.
  */
 
+import { ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
+
 export interface DmeBiScenario {
   pharmacyBenefitStatus: "covered" | "not_covered";
   medicalBenefitStatus: "covered" | "not_covered";
@@ -50,12 +52,8 @@ export interface LadderEvent {
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
-const IDENTITY: LadderEvent[] = [
-  ev("REFERRAL_RECEIVED", "crm"),
-  ev("VERIFY_SMS", "patient"),
-  ev("VERIFY_OTP", "patient"),
-  ev("CONFIRM_CONSENT", "patient"),
-];
+// One list, shared with the DME benefits-investigation fork's lead-in (workflows/coassist/forks.ts).
+const IDENTITY: LadderEvent[] = ENROLL_AND_VERIFY;
 
 const DME_DEFAULT_PHARMACY = { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" };
 

@@ -14,6 +14,8 @@
  */
 import type { WorkflowData } from "@/engine/types";
 import type { Rule } from "@/engine/workflow/types";
+import { exitFor } from "@/engine/workflow/forks";
+import { DME_BI_FORK } from "./forks";
 import type { CoassistContent } from "./scenarios";
 
 type CoaRule = Rule<any, CoassistContent>;
@@ -94,18 +96,24 @@ export const COASSIST_RULES: CoaRule[] = [
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
   {
-    // DME: one BI resolves to one of three coverage outcomes.
+    // DME: one BI resolves to one of three coverage outcomes. The `bi` fork's choice sets the outcome.
+    // An event that carries the two statuses still wins, so a replay or a test can force one.
     on: "COMPLETE_BI",
     scenarios: ["CoA_DME"],
     when: (d) => d.biStatus === "running",
-    set: (_d, e) => ({
-      biStatus: "complete",
-      pharmacyBenefitStatus: e.pharmacyBenefitStatus,
-      medicalBenefitStatus: e.medicalBenefitStatus,
-      biResult: deriveBiResult(e.pharmacyBenefitStatus, e.medicalBenefitStatus),
-      // Neither covered: the cash-offer SMS goes out automatically.
-      cashOfferSmsSent: e.pharmacyBenefitStatus === "not_covered" && e.medicalBenefitStatus === "not_covered",
-    }),
+    set: (d, e) => {
+      const chosen = exitFor(DME_BI_FORK, d).data;
+      const pharmacy = e.pharmacyBenefitStatus ?? chosen.pharmacyBenefitStatus;
+      const medical = e.medicalBenefitStatus ?? chosen.medicalBenefitStatus;
+      return {
+        biStatus: "complete",
+        pharmacyBenefitStatus: pharmacy,
+        medicalBenefitStatus: medical,
+        biResult: deriveBiResult(pharmacy, medical),
+        // Neither covered: the cash-offer SMS goes out automatically.
+        cashOfferSmsSent: pharmacy === "not_covered" && medical === "not_covered",
+      };
+    },
     emit: [
       { portal: "analytics", step: 7 },
       { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: dmeNeitherCovered },

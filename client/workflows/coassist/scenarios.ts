@@ -51,6 +51,8 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
 export const COA_DME: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DME",
   intake: "erx",
+  // The story: pharmacy coverage. A demo in the brand file or the presenter can pick another branch.
+  choices: { bi: "pharmacy_covered" },
   content: {
     biResult: "coverage_found",
     paOutcome: "approved",

@@ -2,14 +2,49 @@
   "slug": "boehringer-ingelheim",
   "name": "Boehringer Ingelheim",
   "title": "Jascayd Demo",
-  "enabledFlows": [
-    "Fax_QS_PA_Approved",
-    "Fax_PAP_Audit",
-    "CoA_DTP",
-    "CoA_Copay",
-    "iAssist_PA_Approved",
-    "iAssist_PAP",
-    "PrES_PAP"
+  "demos": [
+    {
+      "id": "fax-qs-pa-approved",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "1. Standard",
+      "description": "Standard enrollment with fax quick-start and PA approval"
+    },
+    {
+      "id": "fax-pap-audit",
+      "flow": "Fax_PAP_Audit",
+      "label": "2. PAP",
+      "description": "Patient assistance program workflow with income-qualification audit"
+    },
+    {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "3. CoAssist DTP",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+    },
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "4. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    },
+    {
+      "id": "iassist-pa-approved",
+      "flow": "iAssist_PA_Approved",
+      "label": "6. iAssist",
+      "description": "Internal iAssist platform workflow with prior authorization approval"
+    },
+    {
+      "id": "iassist-pap",
+      "flow": "iAssist_PAP",
+      "label": "7. iAssist Appeal",
+      "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    },
+    {
+      "id": "pres-pap",
+      "flow": "PrES_PAP",
+      "label": "8. PrES PAP",
+      "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
+    }
   ],
   "manufacturer": {
     "name": "Boehringer Ingelheim",

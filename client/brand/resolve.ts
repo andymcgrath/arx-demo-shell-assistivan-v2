@@ -4,7 +4,7 @@
  * A brand may start from another one:
  *
  *   { "extends": "assistivan", "slug": "hikma", "name": "Hikma", "title": "Hikma Demo",
- *     "enabledFlows": ["Fax_QS_PA_Approved", "iAssist_PA_Approved"] }
+ *     "demos": [{ "id": "standard", "flow": "Fax_QS_PA_Approved", "label": "Standard" }] }
  *
  * Objects merge field by field. Arrays and values replace the parent's. Build tooling only: this
  * file reads the disk, so app code never imports it (vite.config.ts and the brand tests do).

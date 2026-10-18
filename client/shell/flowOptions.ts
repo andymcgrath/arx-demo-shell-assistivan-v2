@@ -1,72 +1,13 @@
 /**
- * FLOW_OPTIONS — the single source of truth for the 8 demo workflows
+ * The demo dropdown. Each entry is a demo from the active brand's `demos` list in
+ * `brands/<BRAND>/brand.json`: a label, a description, the flow it runs on, and the
+ * fork choices it starts with. See client/brand/schema.ts (BrandDemo).
  *
- * Every FlowType (client/engine/types.ts) needs exactly one entry here.
- * DemoShell's flow dropdown renders from this list.
- *
- * CoA_DME sits at position 5, right after CoA_Copay — grouping all three
- * CoAssist flows (DTP, Copay, DME) together instead of tacking DME onto the
- * end of the list.
- *
- * This list stays separate from client/engine/WorkflowRegistry.ts. Several flows share one
- * machine (the three CoAssist flows, the two iAssist flows, Fax PAP and PrES), and the picker
- * needs one entry per flow, with its label and description.
+ * The labels used to live here, one per flow. They moved to the brand files so each client
+ * sees its own wording, and so one flow can appear several times with different choices.
  */
-import type { FlowType } from "@/engine/types";
+import type { BrandDemo } from "@/brand/schema";
 import { BRAND } from "@/brand";
 
-export interface FlowOption {
-  value: FlowType;
-  label: string;
-  description: string;
-}
-
-export const ALL_FLOW_OPTIONS: FlowOption[] = [
-  {
-    value: "Fax_QS_PA_Approved",
-    label: "1. Standard",
-    description: "Standard enrollment with fax quick-start and PA approval",
-  },
-  {
-    value: "Fax_PAP_Audit",
-    label: "2. PAP",
-    description: "Patient assistance program workflow with income-qualification audit",
-  },
-  {
-    value: "CoA_DTP",
-    label: "3. CoAssist DTP",
-    description: "Cash-pay direct-to-patient workflow via CoAssist",
-  },
-  {
-    value: "CoA_Copay",
-    label: "4. CoAssist Copay",
-    description: "CoAssist Copay Program variation — currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior",
-  },
-  {
-    value: "CoA_DME",
-    label: "5. CoAssist DME",
-    description: "Medical-benefit DME (CGM sensor) coverage — three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)",
-  },
-  {
-    value: "iAssist_PA_Approved",
-    label: "6. iAssist",
-    description: "Internal iAssist platform workflow with prior authorization approval",
-  },
-  {
-    value: "iAssist_PAP",
-    label: "7. iAssist Appeal",
-    description: "Structural clone of iAssist (WF4), but the PA is denied instead of approved — sets up the Action Factory appeal-rule demo",
-  },
-  {
-    value: "PrES_PAP",
-    label: "8. PrES PAP",
-    description: "Provider e-signature intake with PAP income-qualification (foundation placeholder — capture screens pending)",
-  },
-];
-
-/** The flows this client sees, in the order the brand lists them. */
-export const FLOW_OPTIONS: FlowOption[] = BRAND.enabledFlows.map((flow) => {
-  const option = ALL_FLOW_OPTIONS.find((o) => o.value === flow);
-  if (!option) throw new Error(`brands/${BRAND.slug}: enabledFlows lists unknown flow "${flow}"`);
-  return option;
-});
+/** The demos this client sees, in the order the brand lists them. */
+export const DEMO_OPTIONS: BrandDemo[] = BRAND.demos;

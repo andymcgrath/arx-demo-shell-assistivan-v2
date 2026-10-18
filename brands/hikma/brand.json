@@ -3,10 +3,30 @@
   "slug": "hikma",
   "name": "Hikma",
   "title": "Hikma Demo",
-  "enabledFlows": [
-    "Fax_QS_PA_Approved",
-    "Fax_PAP_Audit",
-    "iAssist_PA_Approved",
-    "iAssist_PAP"
+  "demos": [
+    {
+      "id": "fax-qs-pa-approved",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "1. Standard",
+      "description": "Standard enrollment with fax quick-start and PA approval"
+    },
+    {
+      "id": "fax-pap-audit",
+      "flow": "Fax_PAP_Audit",
+      "label": "2. PAP",
+      "description": "Patient assistance program workflow with income-qualification audit"
+    },
+    {
+      "id": "iassist-pa-approved",
+      "flow": "iAssist_PA_Approved",
+      "label": "6. iAssist",
+      "description": "Internal iAssist platform workflow with prior authorization approval"
+    },
+    {
+      "id": "iassist-pap",
+      "flow": "iAssist_PAP",
+      "label": "7. iAssist Appeal",
+      "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    }
   ]
 }

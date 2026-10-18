@@ -71,7 +71,8 @@ const actorSnapshots = new Map<FlowType, unknown>();
 
 // v2: the CoAssist machines were rebuilt (refactor step 01), so snapshots saved by the old
 // state-graph machines cannot restore. Bump this whenever a machine's shape changes.
-const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v3";
+// v4: workflowData gained `choices` (fork picks), so older snapshots lack it.
+const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v4";
 
 function readSnapshotStore(): Partial<Record<FlowType, unknown>> {
   try {

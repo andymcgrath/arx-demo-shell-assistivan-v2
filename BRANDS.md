@@ -6,7 +6,7 @@ One brand per client. Each client has one Netlify site that builds from `main`.
 
 1. Create `brands/<slug>/brand.json`. Copy an existing one. The type is `BrandConfig` in `client/brand/schema.ts`.
 2. Put images in `public/brands/<slug>/` and refer to them as `/brands/<slug>/<file>`.
-3. Set `title` (the browser tab title) and `enabledFlows`. The first entry is the flow a new session starts on.
+3. Set `title` (the browser tab title) and `demos`. The first demo is where a new session starts.
 4. Run `pnpm test`. The brand test checks required fields, real flow ids, and that every local image exists.
 
 ## Colors
@@ -41,11 +41,36 @@ A brand that looks like the default but shows different flows needs only a short
   "slug": "hikma",
   "name": "Hikma",
   "title": "Hikma Demo",
-  "enabledFlows": ["Fax_QS_PA_Approved", "iAssist_PA_Approved"]
+  "demos": [
+    { "id": "fax-qs-pa-approved", "flow": "Fax_QS_PA_Approved", "label": "Standard" },
+    { "id": "iassist-pa-approved", "flow": "iAssist_PA_Approved", "label": "iAssist" }
+  ]
 }
 ```
 
-The build merges it over the parent. Objects merge field by field. Arrays and values replace the parent's, so a child's `enabledFlows` replaces the whole list. Change only what differs. A change to the parent reaches every child. The brand test checks the merged result.
+The build merges it over the parent. Objects merge field by field. Arrays and values replace the parent's, so a child's `demos` replaces the whole list. Change only what differs. A change to the parent reaches every child. The brand test checks the merged result.
+
+## Demos
+
+`demos` is the dropdown a client uses. Each entry is a story: a flow plus the branch to take at each fork.
+
+```json
+"demos": [
+  { "id": "coa-dme-pharmacy-covered", "flow": "CoA_DME",
+    "label": "DME: Pharmacy Coverage",
+    "description": "The pharmacy benefit covers it and needs a PA.",
+    "choices": { "bi": "pharmacy_covered" } },
+  { "id": "coa-dme-no-coverage", "flow": "CoA_DME",
+    "label": "DME: No Coverage (Cash)",
+    "choices": { "bi": "no_coverage" } }
+]
+```
+
+- `id` is unique in the brand. `flow` is a real flow id. `label` is what the client sees.
+- `choices` maps a fork id to an exit id. Forks are declared in `client/workflows/<workflow>/forks.ts`. A demo can only pick declared exits, so a typo fails the brand test instead of building a bad path. Leave out a fork to take the scenario's default.
+- Selecting a demo switches to its flow. If the running flow is on different branches, it restarts with the demo's. Otherwise it keeps its progress. Reset restarts the selected demo.
+- The CRM also shows branch buttons for any presenter fork, so a presenter can switch branch mid-demo.
+- To show one flow several ways, list it more than once with different `choices`. The brand test rejects two demos with the same flow and choices.
 
 ## Images stay with their client
 

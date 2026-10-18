@@ -7,13 +7,7 @@ import { getLiveWorkItems, KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEng
 import { dateFromToday, daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
-import {
-  resetDmeToBiRunning,
-  DME_SCENARIO_1_PHARMACY_COVERAGE,
-  DME_SCENARIO_2_COVERED_BY_BOTH,
-  DME_SCENARIO_3_NO_COVERAGE,
-  type DmeBiScenario,
-} from "@/shell/resetToStage";
+import ForkButtons from "@/portals/crm/components/ForkButtons";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
@@ -860,15 +854,6 @@ export default function Index() {
   // explicit "selected" status.
   const canDispatchToPharmacy = !!selectedPharmacy && pharmacyStatus === "none" && dispatchStatus !== "dispatched" &&
     (isCoaFlow || isDmeFlow || dispatchStatus === "selected");
-  // CoA_DME only — which scenario the operator last picked via the BIR-0431
-  // toggle buttons below. Clicking a button resets the demo back to
-  // "Benefits Investigation running" (resetDmeToBiRunning) rather than
-  // jumping straight to a resolved result, matching every other flow's own
-  // reset-to-stage-3 resting state — this is what the BI-14273 tab-open
-  // auto-complete effect and the "Check Status" button actually resolve
-  // BI to once the operator lets/asks it finish. Defaults to Scenario 1,
-  // same as the natural (no-toggle-click) demo path.
-  const [dmeSelectedScenario, setDmeSelectedScenario] = useState<DmeBiScenario>(DME_SCENARIO_1_PHARMACY_COVERAGE);
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
@@ -968,14 +953,14 @@ export default function Index() {
   // looking at. The machine owns the 3 second delay and the outcome. Leaving a stage
   // cancels a pending reveal.
   //
-  // BI: opening the stage while BI runs. CoA_DME carries the outcome the presenter picked
-  // with the BIR-0431 toggle buttons (dmeSelectedScenario) because that choice lives here.
+  // BI: opening the stage while BI runs. The branch the BI takes (CoA_DME's coverage outcome) is the
+  // `bi` fork's choice, which lives in the machine, so the event carries nothing extra.
   useEffect(() => {
     if (activeTopTab !== 'BI-14273') return;
     if (biStatus !== 'running') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI' });
     return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'BI' });
-  }, [activeTopTab, biStatus, dispatch, dmeSelectedScenario]);
+  }, [activeTopTab, biStatus, dispatch]);
 
   // PA: opening the stage while the PA is submitted. The scenario decides approve or deny.
   useEffect(() => {
@@ -1706,44 +1691,12 @@ export default function Index() {
                 )}
               </button>
             )}
-            {/* CoA_DME only — lets an operator switch between this flow's 3
-                coverage scenarios live during a demo, from the main
-                Onboarding case view (not buried inside the BI-14273 detail
-                tab). Each button resets straight back to the same
-                "Enrollment Assistance complete, Benefits Investigation
-                running" resting state every flow's own reset lands on (see
-                resetDmeToBiRunning in shell/resetToStage.ts) — it does NOT
-                jump straight to a resolved BIR. The chosen scenario is
-                remembered in dmeSelectedScenario above and picked up once BI
-                actually resolves (the BI-14273 tab-open auto-complete
-                effect, or that tab's "Check Status" button). */}
-            {isDmeFlow && (
-              <div className="ml-auto flex items-center gap-2 self-center pr-2">
-                {([
-                  ["Pharmacy Coverage", DME_SCENARIO_1_PHARMACY_COVERAGE],
-                  ["Covered by Both", DME_SCENARIO_2_COVERED_BY_BOTH],
-                  ["No Coverage (Cash)", DME_SCENARIO_3_NO_COVERAGE],
-                ] as const).map(([label, scenario]) => {
-                  // Selected scenario is solid-filled; the other two are just
-                  // an outline in the same color until clicked.
-                  const active = dmeSelectedScenario === scenario;
-                  return (
-                    <button
-                      key={label}
-                      onClick={() => { setDmeSelectedScenario(scenario); resetDmeToBiRunning(); }}
-                      className="px-3 py-1.5 rounded text-[12px] font-semibold transition-colors"
-                      style={
-                        active
-                          ? { background: FC_BLUE, color: "#ffffff", border: `1px solid ${FC_BLUE}` }
-                          : { background: "transparent", color: FC_BLUE, border: `1px solid ${FC_BLUE}` }
-                      }
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {/* Branch buttons for the running scenario, drawn from the fork declarations
+                (workflows/forks.ts). For CoA_DME they are the three coverage outcomes. Each button
+                resets to the "Benefits Investigation running" resting state with that choice made
+                (restartAtFork in shell/demos.ts). The machine holds the choice, so the tab-open
+                auto-complete and "Check Status" resolve BI to it. A flow with no forks shows nothing. */}
+            <ForkButtons flowType={flowType} choices={workflowData.choices} color={FC_BLUE} />
           </div>
 
           {/* Sub-tab content */}
@@ -3432,11 +3385,8 @@ export default function Index() {
                 <button
                   onClick={() => {
                     if (isDmeFlow) {
-                      // Same scenario the operator picked via the BIR-0431
-                      // toggle buttons (dmeSelectedScenario) — not a
-                      // hardcoded value. See the tab-open auto-complete
-                      // effect above for the same reasoning.
-                      dispatch('COMPLETE_BI', { portal: 'crm', pharmacyBenefitStatus: dmeSelectedScenario.pharmacyBenefitStatus, medicalBenefitStatus: dmeSelectedScenario.medicalBenefitStatus });
+                      // The branch comes from the `bi` fork's choice in the machine (see ForkButtons).
+                      dispatch('COMPLETE_BI', { portal: 'crm' });
                     } else {
                       dispatch('COMPLETE_BI', { portal: 'crm', result: isPapFlow ? "no_insurance" : "coverage_found" });
                     }

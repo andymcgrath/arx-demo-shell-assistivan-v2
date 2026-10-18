@@ -6,8 +6,9 @@
  * events log, undo snapshots. Components read workflow state via
  * usePersonaState() or useSelector(actor, ...).
  *
- * This store holds only three things:
+ * This store holds only four things:
  *   flowType  — which workflow is active (drives which XState machine to use)
+ *   demoId    — which brand demo is selected in the dropdown (a flow plus its fork choices)
  *   enrollmentFormTabOpen — CRM UI tab state
  *   resetNonce — bumped on every resetDemo() call. Portals with their own
  *     internal navigation guards (e.g. the patient portal's StateDrivenNav)
@@ -21,7 +22,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { resetCurrentWorkflowActor } from "../engine/actorSingleton";
-import { DEFAULT_FLOW, isFlowEnabled } from "@/brand";
+import { BRAND, DEFAULT_DEMO, DEFAULT_FLOW, findDemo, isFlowEnabled } from "@/brand";
+import type { BrandDemo } from "@/brand/schema";
 
 // ── Re-exports so existing portal imports keep working ────────────────────────
 
@@ -141,6 +143,8 @@ import type { FlowType } from '../engine/types';
 
 export interface DemoState {
   flowType: FlowType;
+  /** The brand demo selected in the dropdown (`BrandDemo.id`). Its `flow` equals `flowType`. */
+  demoId: string;
   enrollmentFormTabOpen: boolean;
   /** Bumped on every resetDemo() call — see file header comment. */
   resetNonce: number;
@@ -149,6 +153,8 @@ export interface DemoState {
 export interface DemoActions {
   changeFlow: (flow: FlowType) => void;
   switchFlow: (newFlow: FlowType) => void;
+  /** Remembers the selected demo and its flow. Does not touch the machine (see shell/demos.ts). */
+  selectDemo: (demo: BrandDemo) => void;
   resetDemo: (flow?: FlowType) => void;
   closeEnrollmentFormTab: () => void;
   openEnrollmentFormTab: () => void;
@@ -158,6 +164,7 @@ export type DemoStore = DemoState & DemoActions;
 
 export const SEED: DemoState = {
   flowType: DEFAULT_FLOW,
+  demoId: DEFAULT_DEMO.id,
   enrollmentFormTabOpen: false,
   resetNonce: 0,
 };
@@ -184,12 +191,19 @@ export const useDemoStore = create<DemoStore>()(
       switchFlow(newFlow): void {
         // Actor snapshot save/restore is handled by actorSingleton.switchWorkflow —
         // we only need to track the active flow name here for bootstrapping.
-        set({ flowType: newFlow });
+        // The first demo on that flow becomes the selected one, so the dropdown stays in step.
+        const demo = BRAND.demos.find((d) => d.flow === newFlow);
+        set({ flowType: newFlow, ...(demo ? { demoId: demo.id } : {}) });
+      },
+
+      selectDemo(demo): void {
+        set({ flowType: demo.flow, demoId: demo.id });
       },
 
       resetDemo(flow): void {
         const targetFlow = flow ?? get().flowType;
-        set({ ...SEED, flowType: targetFlow, resetNonce: get().resetNonce + 1 });
+        // A reset restarts the selected demo, so it keeps `demoId`.
+        set({ ...SEED, flowType: targetFlow, demoId: get().demoId, resetNonce: get().resetNonce + 1 });
         resetCurrentWorkflowActor();
       },
     }),
@@ -200,6 +214,11 @@ export const useDemoStore = create<DemoStore>()(
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as Partial<DemoStore>) };
         if (!isFlowEnabled(merged.flowType)) merged.flowType = DEFAULT_FLOW;
+        // The stored demo must exist and run on the stored flow. Otherwise take the first demo on that flow.
+        const demo = findDemo(merged.demoId);
+        if (!demo || demo.flow !== merged.flowType) {
+          merged.demoId = (BRAND.demos.find((d) => d.flow === merged.flowType) ?? DEFAULT_DEMO).id;
+        }
         return merged;
       },
     }

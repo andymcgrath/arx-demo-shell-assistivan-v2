@@ -49,6 +49,7 @@ export function createInitialWorkflowData(
     cashOfferSmsVerified: false,
     dmeTransferSmsSent: false,
     dmeTransferSmsVerified: false,
+    choices: {},
     ...overrides,
   };
 }

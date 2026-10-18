@@ -62,11 +62,17 @@ export function withFrozenClock<T>(fn: () => T): T {
  * Starts a flow. Pass `clock` to control delayed automations (the agent-driven
  * reveals). Advance it with `clock.increment(ms)`.
  */
-export function startFlow(flowType: FlowType, options: { clock?: SimulatedClock } = {}) {
+export function startFlow(
+  flowType: FlowType,
+  options: { clock?: SimulatedClock; choices?: Record<string, string> } = {},
+) {
   const machine = workflowRegistry.getWorkflow(machineIdForFlow(flowType));
   if (!machine) throw new Error(`No machine registered for ${flowType}`);
-  // Same input actorSingleton passes. Machines that take no input ignore it.
-  const actor = createActor(machine, { input: { flowType }, ...(options.clock ? { clock: options.clock } : {}) } as any);
+  // Same input actorSingleton passes, plus the fork choices a demo starts with.
+  const actor = createActor(machine, {
+    input: { flowType, ...(options.choices ? { choices: options.choices } : {}) },
+    ...(options.clock ? { clock: options.clock } : {}),
+  } as any);
   actor.start();
   return actor;
 }

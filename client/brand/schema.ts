@@ -32,6 +32,22 @@ export interface BrandAssets {
   background?: string;
 }
 
+/**
+ * One entry in the demo dropdown: a flow plus the branch to take at each fork. The client picks a
+ * story, not a workflow. A demo can only select declared fork exits (see workflows/forks.ts), so a
+ * bad edit cannot build an illegal path. The brand test checks every flow and choice.
+ */
+export interface BrandDemo {
+  /** Unique within the brand. Stored in the session to remember the selection. */
+  id: string;
+  flow: FlowType;
+  /** What the dropdown shows. */
+  label: string;
+  description?: string;
+  /** Fork id to exit id, for example `{ "bi": "no_coverage" }`. Omitted forks take the scenario's default. */
+  choices?: Record<string, string>;
+}
+
 export interface BrandConfig {
   /** Folder name under `brands/`. Equals the `BRAND` env value. */
   slug: string;
@@ -39,8 +55,8 @@ export interface BrandConfig {
   name: string;
   /** Browser tab title. Written into the HTML at build time. */
   title: string;
-  /** Flows this client sees. The first entry is the starting flow. */
-  enabledFlows: FlowType[];
+  /** The demos this client sees, in dropdown order. The first entry is where a new session starts. */
+  demos: BrandDemo[];
   /** Shows the one-off "Client" tab in iAssist workflows. Off unless set to `true`. */
   showClientTab?: boolean;
   manufacturer: {

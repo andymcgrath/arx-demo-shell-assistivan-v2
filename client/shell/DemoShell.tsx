@@ -31,7 +31,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FLOW_OPTIONS } from "./flowOptions";
+import { DEMO_OPTIONS } from "./flowOptions";
+import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
 import { iassistStageEvents } from "./iassistLadders";
@@ -41,7 +42,7 @@ import { faxStageEvents } from "./faxLadders";
 
 import CrmPortal      from "@/portals/crm/index";
 import ClientPortal   from "@/portals/client/index";
-import { BRAND } from "@/brand";
+import { BRAND, findDemo } from "@/brand";
 import PatientPortal  from "@/portals/patient/index";
 import AnalyticsPortal from "@/portals/analytics/index";
 import InsightsPortal from "@/portals/insights/index";
@@ -985,7 +986,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
 // ── DemoShell ─────────────────────────────────────────────────────────────────
 
 export default function DemoShell() {
-  const { flowType, resetDemo, changeFlow, switchFlow } = useDemoStore();
+  const { flowType, demoId, resetDemo, changeFlow } = useDemoStore();
   // Covers WF4 and WF5 — see getPortals/StepBar above. Only used below for
   // tab-visibility-adjacent behavior; the reset ladder and stage-button
   // labels branch on isIAssistPapFlow specifically where WF5's denied-PA
@@ -1227,27 +1228,28 @@ export default function DemoShell() {
               ))}
             </div>
 
-            {/* Flow selector */}
+            {/* Demo selector: the brand's `demos` list. A demo is a flow plus its fork choices. */}
             <div className="relative">
               <select
-                value={flowType}
+                value={demoId}
                 onChange={(e) => {
-                  const newFlow = e.target.value as FlowType;
-                  // 1. Save current demoStore state, restore (or reset) for newFlow
-                  switchFlow(newFlow);
-                  // 2. Switch the XState actor, saving its snapshot for the old workflow
-                  switchWorkflow(newFlow);
-                  // 3. Navigate to this flow's canonical opening screen
+                  const demo = DEMO_OPTIONS.find((d) => d.id === e.target.value);
+                  if (!demo) return;
+                  // Remembers the demo, switches the XState actor to its flow (saving the old
+                  // flow's snapshot), and applies the demo's fork choices.
+                  startDemo(demo);
+                  // Navigate to this flow's canonical opening screen
                   setLayout("1up");
-                  const startPortal = FLOW_START_PORTAL[newFlow];
+                  const startPortal = FLOW_START_PORTAL[demo.flow];
                   setPanels([{ portal: startPortal }]);
                   navigate(`/${PORTAL_SLUG[startPortal]}`);
                 }}
+                title={DEMO_OPTIONS.find((d) => d.id === demoId)?.description}
                 className="appearance-none text-[11px] bg-white/10 border border-white/20 text-white rounded px-2 py-1.5 pr-6 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-400"
               >
-                {FLOW_OPTIONS.map((f) => (
-                  <option key={f.value} value={f.value} className="bg-[#0f172a]">
-                    {f.label}
+                {DEMO_OPTIONS.map((d) => (
+                  <option key={d.id} value={d.id} title={d.description} className="bg-[#0f172a]">
+                    {d.label}
                   </option>
                 ))}
               </select>
@@ -1287,6 +1289,10 @@ export default function DemoShell() {
                       // it, looking like the demo had reverted.
                       resetAllWorkflowSnapshots();
                       switchWorkflow(flowType);
+                      // The fresh machine starts on the scenario's default branch. Restart the
+                      // selected demo on its own branch.
+                      const selectedDemo = findDemo(demoId);
+                      if (selectedDemo) applyDemoChoices(selectedDemo);
                       // WF5-only: undo the "Initiate Appeal — Upon PA
                       // Denial" rule's live activation (see
                       // rulesPortalStore.ts) so the "no rule exists; build

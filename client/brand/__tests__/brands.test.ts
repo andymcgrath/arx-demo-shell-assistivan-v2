@@ -4,6 +4,8 @@ import path from "node:path";
 import { SCENARIOS } from "@/engine/__tests__/scenarios";
 import { brandChain, listBrandSlugs, resolveBrand } from "@/brand/resolve";
 import { AA_CONTRAST, buildTheme, contrastRatio, normalizeHex } from "@/brand/theme";
+import { choiceProblems } from "@/engine/workflow/forks";
+import { ALL_FORKS } from "@/workflows/forks";
 
 /**
  * Every folder under brands/ must resolve to a complete, self-consistent brand
@@ -45,7 +47,7 @@ for (const slug of slugs) {
 
     it("has the slug of its folder and the required fields", () => {
       expect(brand.slug).toBe(slug);
-      for (const field of ["name", "title", "enabledFlows", "manufacturer", "program", "chatbotIcon"]) {
+      for (const field of ["name", "title", "demos", "manufacturer", "program", "chatbotIcon"]) {
         expect(field in brand).toBe(true);
       }
       expect(typeof brand.program.drugDisplayName).toBe("string");
@@ -88,10 +90,30 @@ for (const slug of slugs) {
       }
     });
 
-    it("enables at least one flow, and only real flows", () => {
-      expect(brand.enabledFlows.length > 0).toBe(true);
-      for (const flow of brand.enabledFlows) expect(FLOW_IDS.includes(flow)).toBe(true);
-      expect(new Set(brand.enabledFlows).size).toBe(brand.enabledFlows.length);
+    it("lists at least one demo, and every demo runs on a real flow", () => {
+      expect("enabledFlows" in brand).toBe(false); // replaced by `demos`
+      expect(brand.demos.length > 0).toBe(true);
+      for (const demo of brand.demos) {
+        expect(FLOW_IDS.includes(demo.flow)).toBe(true);
+        expect(typeof demo.label === "string" && demo.label.trim().length > 0).toBe(true);
+      }
+    });
+
+    it("gives every demo a unique id", () => {
+      const ids = brand.demos.map((d: { id: string }) => d.id);
+      for (const id of ids) expect(typeof id === "string" && id.length > 0).toBe(true);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it("lets a demo choose only branches that exist", () => {
+      for (const demo of brand.demos) {
+        expect(choiceProblems(ALL_FORKS, demo.flow, demo.choices)).toEqual([]);
+      }
+    });
+
+    it("does not repeat the same flow and choices under two demos", () => {
+      const keys = brand.demos.map((d: any) => JSON.stringify([d.flow, Object.entries(d.choices ?? {}).sort()]));
+      expect(new Set(keys).size).toBe(keys.length);
     });
 
     it("only uses images from its own folder or a parent's, so isolation keeps them", () => {
