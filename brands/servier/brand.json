@@ -43,10 +43,11 @@
     },
     "transferPartner": {
       "name": "Servier SP",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zip": ""
+      "address": "4800 Specialty Pointe Blvd, Suite 120",
+      "city": "Orlando",
+      "state": "FL",
+      "zip": "32822",
+      "phone": "(407) 555-0164"
     }
   },
   "chatbotIcon": "/brands/servier/servier-logo-color.svg",
