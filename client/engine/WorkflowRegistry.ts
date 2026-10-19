@@ -77,6 +77,11 @@ workflowRegistry.registerWorkflow("iAssist_PAP", iassistMachine, {
   description: "iAssist scenario with the PA denied, an appeal started by a Rules portal automation, then the infusion scheduled",
 });
 
+workflowRegistry.registerWorkflow("iAssist_Medical_Transfer", iassistMachine, {
+  label: "iAssist Medical Transfer",
+  description: "iAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned pharmacy with no payment or scheduling",
+});
+
 workflowRegistry.registerWorkflow("PrES_PAP", papMachine, {
   label: "PrES / PAP",
   description: "Provider e-signature intake workflow with PAP income-qualification (foundation placeholder)",

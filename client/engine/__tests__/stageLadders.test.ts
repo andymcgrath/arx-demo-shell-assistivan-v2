@@ -27,6 +27,7 @@ const LADDERS = [
   { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
   { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
   { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
+  { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => iassistStageEvents("iAssist_Medical_Transfer", stage) },
   { flowType: "Fax_QS_PA_Approved", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("standard", stage) },
   { flowType: "Fax_PAP_Audit", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
   { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },

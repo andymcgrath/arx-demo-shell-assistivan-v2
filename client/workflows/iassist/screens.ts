@@ -1,6 +1,6 @@
 import type { ScreenMap } from "@/engine/workflow/screens";
 import { IASSIST_FORKS } from "./forks";
-import { IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IASSIST_FLOWS } from "./scenarios";
+import { IA_MEDICAL_TRANSFER, IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IASSIST_FLOWS } from "./scenarios";
 import { APPEAL_ROUTES, APPEAL_SCREENS } from "./modules/screens/appeal";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
 import { PA_NOTIFICATION_ROUTES, PA_NOTIFICATION_SCREENS } from "./modules/screens/pa_notification";
@@ -27,7 +27,7 @@ export const IASSIST_SCREENS: ScreenMap = {
   hidden: ["/lock-screen"],
   slots: IASSIST_SLOTS,
   groups: IASSIST_GROUPS,
-  scenarioDefs: [IA_PA_APPROVED, IA_PA_DENIED_APPEAL],
+  scenarioDefs: [IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IA_MEDICAL_TRANSFER],
   forks: IASSIST_FORKS,
 
   screens: [

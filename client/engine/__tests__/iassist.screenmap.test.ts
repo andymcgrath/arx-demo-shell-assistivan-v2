@@ -16,7 +16,7 @@ import { expectMatchesFixture } from "./harness";
  *
  * An intentional change? Run `RECORD=1 pnpm test`, read the fixture diff, and commit it with the change.
  */
-const FLOWS = ["iAssist_PA_Approved", "iAssist_PAP"] as const;
+const FLOWS = ["iAssist_PA_Approved", "iAssist_PAP", "iAssist_Medical_Transfer"] as const;
 
 describe("iAssist screen map", () => {
   it("has no screen map problems, and every route rule has a unique id", () => {

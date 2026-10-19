@@ -37,6 +37,8 @@ export const END_STATES = {
   pa_denied: (d: WorkflowData) => d.paStatus === "denied" && d.pharmacyStatus === "none",
   /** The Rx went to the provider, and the patient verified the transfer SMS. */
   provider_transferred: (d: WorkflowData) => d.providerTransferStatus === "notified" && d.providerTransferSmsVerified,
+  /** The PA was approved, the patient verified it, and the Rx went to the assigned pharmacy. No fulfillment follows. */
+  pharmacy_transferred: (d: WorkflowData) => d.pharmacyAssigned && d.paApprovedOtpVerified && d.selectedPharmacy !== null && d.pharmacyStatus === "none",
 } as const;
 
 export type EndState = keyof typeof END_STATES;
@@ -284,6 +286,18 @@ export const SCENARIOS: Scenario[] = [
       { type: "PATIENT_SELECTS_INFUSION_DATE" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
+    ],
+  },
+
+  {
+    // The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Rx transfers to an
+    // assigned pharmacy once the PA-approved OTP verifies. No pricing, scheduling, payment, or fulfillment.
+    name: "iassist-medical-transfer",
+    endsAt: "pharmacy_transferred",
+    flowType: "iAssist_Medical_Transfer",
+    steps: [
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
     ],
   },
 

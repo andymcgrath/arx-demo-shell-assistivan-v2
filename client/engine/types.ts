@@ -33,7 +33,7 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 //      ships through the same pipeline as outcome 1.
 // None of the three outcomes ever go through Prior Authorization — that
 // detour is CoA_DTP-only.
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage";
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer";
 
 export interface Pharmacy {
   name: string;

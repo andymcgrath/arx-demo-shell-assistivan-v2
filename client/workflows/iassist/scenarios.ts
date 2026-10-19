@@ -1,7 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { IA_PA_APPROVED_RECIPE, IA_PA_DENIED_APPEAL_RECIPE } from "./recipes";
+import { IA_MEDICAL_TRANSFER_RECIPE, IA_PA_APPROVED_RECIPE, IA_PA_DENIED_APPEAL_RECIPE } from "./recipes";
 
 /**
  * iAssist scenarios. Each is data: the fork picks (forks.ts) and the content its rules read.
@@ -40,5 +40,17 @@ export const IA_PA_DENIED_APPEAL: ScenarioDefinition<IassistContent> = {
   content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY, transferPharmacy: TRANSFER_PHARMACY },
 };
 
+/**
+ * The medical benefit covers it and a PA is required. The Rx transfers to an assigned pharmacy, and the order ends
+ * there: no pricing, delivery, or payment.
+ */
+export const IA_MEDICAL_TRANSFER: ScenarioDefinition<IassistContent> = {
+  flowType: "iAssist_Medical_Transfer",
+  intake: "erx",
+  choices: { bi: "medical_pa_required", pa: "approved" },
+  recipe: IA_MEDICAL_TRANSFER_RECIPE,
+  content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY, transferPharmacy: TRANSFER_PHARMACY },
+};
+
 /** The scenarios of the iAssist workflow. */
-export const IASSIST_FLOWS: FlowType[] = ["iAssist_PA_Approved", "iAssist_PAP"];
+export const IASSIST_FLOWS: FlowType[] = ["iAssist_PA_Approved", "iAssist_PAP", "iAssist_Medical_Transfer"];

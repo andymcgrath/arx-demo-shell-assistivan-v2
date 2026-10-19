@@ -14,6 +14,12 @@
       "flow": "iAssist_PAP",
       "label": "7. iAssist Appeal",
       "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    },
+    {
+      "id": "iassist-medical-transfer",
+      "flow": "iAssist_Medical_Transfer",
+      "label": "8. iAssist Medical Transfer",
+      "description": "The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Rx transfers to an assigned pharmacy with no payment or scheduling"
     }
   ],
   "manufacturer": {

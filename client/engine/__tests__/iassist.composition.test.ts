@@ -1,49 +1,30 @@
 import { describe, it, expect } from "vitest";
 import { createActor } from "xstate";
-import { createWorkflowMachine } from "@/engine/workflow/createWorkflowMachine";
 import { forksForScenario } from "@/engine/workflow/forks";
-import type { ScenarioRecipe } from "@/engine/workflow/components";
 import { recipeProblems } from "@/engine/workflow/recipe";
+import { menuPaths, routeFor, routedPaths } from "@/engine/workflow/screens";
 import { ruleAppliesTo } from "@/engine/workflow/scope";
-import { menuPaths, routeFor, routedPaths, type ScreenMap } from "@/engine/workflow/screens";
+import { iassistMachine } from "@/workflows/iassist";
 import { IASSIST_FORKS } from "@/workflows/iassist/forks";
 import { IASSIST_RULES } from "@/workflows/iassist/rules";
-import { IA_PA_APPROVED, IA_PA_DENIED_APPEAL } from "@/workflows/iassist/scenarios";
+import { IA_MEDICAL_TRANSFER } from "@/workflows/iassist/scenarios";
 import { IASSIST_SCREENS } from "@/workflows/iassist/screens";
-import { expectMatchesFixture } from "./harness";
 
 /**
- * The medical transfer composition: an iAssist source, a medical benefit that covers it with a PA, the Triage
- * `transfer` exit (HCP administered, no payment, no scheduling), and an assigned pharmacy. The recipe is the only
- * thing that makes it. No rule, route, or screen is specific to it. It runs on the approved scenario's id until it has its own.
+ * The medical transfer scenario, proven from its recipe: an iAssist source, a medical benefit that covers it with a PA,
+ * the Triage `transfer` exit (HCP administered, no payment, no scheduling), and an assigned pharmacy. The recipe is the
+ * only thing that makes it. No rule, route, or screen is specific to it. The golden path records the full event list.
  *
  * Three things must hold:
  * 1. The recipe is valid, including the Triage `transfer` rules.
  * 2. The patient never sees a pricing, scheduling, or payment screen, in the menu or on the route.
  * 3. The machine rejects those events and the fulfillment events, and the patient ends on the transfer screen.
  */
-const RECIPE: ScenarioRecipe = {
-  source: "iassist",
-  forks: ["bi", "pa"],
-  choices: { bi: "medical_pa_required", pa: "approved" },
-  triage: "transfer",
-  modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "pharmacy_selection", props: { variant: "assigned" } }, { id: "tracking" }],
-};
-const SCENARIO = { ...IA_PA_APPROVED, choices: RECIPE.choices, recipe: RECIPE };
-
-// The build-time scope check wants every module a rule names to appear in some scenario. iAssist has two flow types, so
-// the table keeps the rules that apply to this recipe or to the appeal scenario. The next test names the ones it drops.
-const rulesFor = (rule: (typeof IASSIST_RULES)[number]) =>
-  ruleAppliesTo(rule, SCENARIO, IASSIST_FORKS) || ruleAppliesTo(rule, IA_PA_DENIED_APPEAL, IASSIST_FORKS);
-
-const machine = createWorkflowMachine({
-  id: "iassist-composition",
-  defaultFlowType: "iAssist_PA_Approved",
-  rules: IASSIST_RULES.filter(rulesFor),
-  forks: IASSIST_FORKS,
-  scenarios: { iAssist_PA_Approved: SCENARIO, iAssist_PAP: IA_PA_DENIED_APPEAL },
-});
-const screens: ScreenMap = { ...IASSIST_SCREENS, scenarioDefs: [SCENARIO, IA_PA_DENIED_APPEAL] };
+const FLOW = "iAssist_Medical_Transfer" as const;
+const RECIPE = IA_MEDICAL_TRANSFER.recipe!;
+const SCENARIO = IA_MEDICAL_TRANSFER;
+const screens = IASSIST_SCREENS;
+const machine = iassistMachine;
 
 const OFF_LIMITS = ["/benefit-pricing", "/delivery-address", "/delivery-date", "/delivery-payment", "/delivery-confirmation"];
 
@@ -65,7 +46,7 @@ const STEPS: { type: string; [k: string]: unknown }[] = [
 ];
 
 function walk() {
-  const actor = createActor(machine, { input: { flowType: "iAssist_PA_Approved" } } as any);
+  const actor = createActor(machine, { input: { flowType: FLOW } } as any);
   actor.start();
   const steps = STEPS.map((step) => {
     const accepted = actor.getSnapshot().can(step as any);
@@ -88,13 +69,13 @@ function walk() {
 
 describe("iAssist composition proof: medical benefit with a PA, Triage transfer, assigned pharmacy", () => {
   it("is a valid recipe", () => {
-    expect(recipeProblems(RECIPE, forksForScenario(IASSIST_FORKS, "iAssist_PA_Approved"))).toEqual([]);
+    expect(recipeProblems(RECIPE, forksForScenario(IASSIST_FORKS, FLOW))).toEqual([]);
   });
 
   it("shows no pricing, scheduling, or payment screen in the menu or on any route", () => {
-    expect(menuPaths(screens, "iAssist_PA_Approved").filter((p) => OFF_LIMITS.includes(p))).toEqual([]);
-    expect(routedPaths(screens, "iAssist_PA_Approved").filter((p) => OFF_LIMITS.includes(p))).toEqual([]);
-    expect(menuPaths(screens, "iAssist_PA_Approved")).toContain("/pharmacy-transfer");
+    expect(menuPaths(screens, FLOW).filter((p) => OFF_LIMITS.includes(p))).toEqual([]);
+    expect(routedPaths(screens, FLOW).filter((p) => OFF_LIMITS.includes(p))).toEqual([]);
+    expect(menuPaths(screens, FLOW)).toContain("/pharmacy-transfer");
   });
 
   it("applies no pricing, payment, delivery scheduling, or fulfillment rule to the recipe", () => {
@@ -125,9 +106,5 @@ describe("iAssist composition proof: medical benefit with a PA, Triage transfer,
     expect(last).toMatchObject({ route: "/pharmacy-transfer", paRequired: true, medicalBenefitStatus: "covered", pharmacyAssigned: true, pharmacyStatus: "none" });
     expect(last.pharmacy).toBeTruthy();
     expect(steps.filter((s) => OFF_LIMITS.includes(s.route))).toEqual([]);
-  });
-
-  it("matches the recorded path", () => {
-    expectMatchesFixture("golden/iassist-medical-transfer-composition", { recipe: RECIPE, steps: walk() });
   });
 });

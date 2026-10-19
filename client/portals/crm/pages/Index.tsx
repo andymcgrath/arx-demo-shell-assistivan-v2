@@ -10,6 +10,8 @@ import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
+import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
+import type { FlowType } from "@/engine/types";
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
@@ -817,7 +819,7 @@ export default function Index() {
   // comment). Only affects the eaStage "Welcome message sent" copy below;
   // everything else (paStage, appealStage, STAGES fallback) already handles
   // paStatus === 'denied' generically with no flow-specific branching needed.
-  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
+  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).

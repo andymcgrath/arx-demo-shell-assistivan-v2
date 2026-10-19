@@ -41,7 +41,27 @@ export const IA_PA_DENIED_APPEAL_RECIPE: ScenarioRecipe = {
   ],
 };
 
+/**
+ * The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Triage `transfer` exit, so no
+ * payment and no scheduling. The BI exit assigns the pharmacy, so the patient sees its contact details and nothing
+ * else. Copay is data in the CRM, not a patient step.
+ */
+export const IA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
+  source: "iassist",
+  forks: ["bi", "pa"],
+  choices: { bi: "medical_pa_required", pa: "approved" },
+  triage: "transfer",
+  panels: ["benefits"],
+  modules: [
+    { id: "enrollment" },
+    { id: "pa_notification" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "tracking" },
+  ],
+};
+
 export const IASSIST_RECIPES = {
   iAssist_PA_Approved: IA_PA_APPROVED_RECIPE,
   iAssist_PAP: IA_PA_DENIED_APPEAL_RECIPE,
+  iAssist_Medical_Transfer: IA_MEDICAL_TRANSFER_RECIPE,
 } as const;

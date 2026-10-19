@@ -122,29 +122,36 @@
       "iAssist_PAP"
     ],
     "enrollment.confirm_consent.approved": [
-      "iAssist_PA_Approved"
+      "iAssist_PA_Approved",
+      "iAssist_Medical_Transfer"
     ],
     "enrollment.dismiss_welcome": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "enrollment.referral_received": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "enrollment.verify_otp": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "enrollment.verify_sms": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "pa_notification.verify_otp": [
-      "iAssist_PA_Approved"
+      "iAssist_PA_Approved",
+      "iAssist_Medical_Transfer"
     ],
     "pa_notification.verify_sms": [
-      "iAssist_PA_Approved"
+      "iAssist_PA_Approved",
+      "iAssist_Medical_Transfer"
     ],
     "payment.patient_pays": [
       "iAssist_PA_Approved"
@@ -174,47 +181,58 @@
       "iAssist_PA_Approved"
     ],
     "spine.approve_pa": [
-      "iAssist_PA_Approved"
+      "iAssist_PA_Approved",
+      "iAssist_Medical_Transfer"
     ],
     "spine.complete_bi": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.complete_provider_pa": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.deny_pa": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.leave_stage.bi": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.leave_stage.pa": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.run_bi": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.submit_pa": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.view_stage.bi": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "spine.view_stage.pa": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "tracking.deliver_rx": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "tracking.fill_rx.delivery": [
       "iAssist_PA_Approved"
@@ -224,11 +242,13 @@
     ],
     "tracking.ready_rx": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ],
     "tracking.ship_rx": [
       "iAssist_PA_Approved",
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Medical_Transfer"
     ]
   }
 }

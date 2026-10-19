@@ -12,6 +12,8 @@
  * iAssist_PA_Approved: 2 referral received (BI running), 3 patient enrolled,
  * 4 BI complete and PA approved, 5 pricing, delivery and payment done and the
  * Rx filling, 6 shipped, 7 delivered.
+ * iAssist_Medical_Transfer: 2 referral received, 3 patient enrolled, 4 BI complete and PA approved, 5 patient verified
+ * and the Rx transferred to the assigned pharmacy (the terminal stage).
  * iAssist_PAP (appeal): 2 referral received, 3 patient enrolled, 4 BI complete
  * and PA denied, 5 appeal filed, 6 appeal approved, site of care picked and
  * infusion scheduled (the terminal stage).
@@ -22,12 +24,30 @@ import type { LadderEvent } from "./coassistLadders";
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
 /** The same CoAssist Pharmacy the Benefit Pricing card shows for Copay Program self-pay. */
-export function iassistStageEvents(flowType: "iAssist_PA_Approved" | "iAssist_PAP", stage: number): LadderEvent[] {
+export type IassistLadderFlow = "iAssist_PA_Approved" | "iAssist_PAP" | "iAssist_Medical_Transfer";
+
+/** The stage-jump labels for the medical transfer flow. The other iAssist flows keep theirs in DemoShell. */
+export const IASSIST_TRANSFER_STAGES = [
+  "Referral Received",
+  "eRx Submitted (BI Complete, PA Submitted)",
+  "Patient Enrolled",
+  "PA Approved",
+  "Patient Verified, Rx Transferred",
+];
+
+export function iassistStageEvents(flowType: IassistLadderFlow, stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;
 
   if (upTo(2)) out.push(ev("REFERRAL_RECEIVED", "provider"));
   if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
+
+  if (flowType === "iAssist_Medical_Transfer") {
+    // 2 referral received (BI runs), 3 enrolled, 4 BI complete and PA approved, 5 verified and the Rx transferred.
+    if (upTo(4)) out.push(ev("COMPLETE_BI", "crm"), ev("APPROVE_PA", "crm"));
+    if (upTo(5)) out.push(ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient"));
+    return out;
+  }
 
   if (flowType === "iAssist_PAP") {
     if (upTo(4)) out.push(ev("COMPLETE_BI", "crm", { result: "coverage_found" }), ev("DENY_PA", "crm"));

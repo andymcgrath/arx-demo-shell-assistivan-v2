@@ -37,7 +37,8 @@ import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
-import { iassistStageEvents } from "./iassistLadders";
+import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
+import { iassistStageEvents, IASSIST_TRANSFER_STAGES, type IassistLadderFlow } from "./iassistLadders";
 import { faxStageEvents } from "./faxLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   iAssist_PA_Approved: "iassist",
   // iAssist_PAP (WF5) is a structural clone of WF4 — same starting portal.
   iAssist_PAP: "iassist",
+  iAssist_Medical_Transfer: "iassist",
   // WF6's shared patient/provider web experience starts on the provider
   // portal's own home screen (PesHome) — the provider is the one who starts
   // a referral, and the role-selection home screen routes from there.
@@ -153,7 +155,7 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
+  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
@@ -580,7 +582,7 @@ function StepBar() {
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4). WF5 uses
   // its own computeIAssistPapStepDone (extra "Appeal" step) below instead
   // of WF4's — see isIAssistPapFlow.
-  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
+  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
   const isIAssistPapFlow = flowType === "iAssist_PAP";
   // CoA_Coverage (one Benefits Investigation, three coverage outcomes) — see
   // STEP_LABELS_COVERAGE/STEP_LABELS_COVERAGE_MEDICAL/computeCoverageStepDone above.
@@ -993,7 +995,7 @@ export default function DemoShell() {
   // tab-visibility-adjacent behavior; the reset ladder and stage-button
   // labels branch on isIAssistPapFlow specifically where WF5's denied-PA
   // path actually diverges from WF4's approved-PA path.
-  const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
+  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
   // WF5 (iAssist_PAP) — structural clone of WF4, but the demo's PA resolves
   // to Denied instead of Approved (see engine/types.ts's FlowType comment),
   // so its reset ladder and stage-button labels need their own short list
@@ -1146,7 +1148,7 @@ export default function DemoShell() {
     // iAssist flows (iAssist_PA_Approved and the iAssist_PAP appeal): the ladders live in
     // iassistLadders.ts so the headless tests run the same event lists.
     if (isIAssistPapFlow || isIAssistFlow) {
-      for (const event of iassistStageEvents(isIAssistPapFlow ? 'iAssist_PAP' : 'iAssist_PA_Approved', stage)) {
+      for (const event of iassistStageEvents(flowType as IassistLadderFlow, stage)) {
         actor.send(event as any);
       }
       return;
@@ -1356,6 +1358,8 @@ export default function DemoShell() {
                       { stage: 5, label: "Appeal Filed" },
                       { stage: 6, label: "Dispatch to Triage (Keanu to Facility)" },
                     ]
+                    : flowType === "iAssist_Medical_Transfer"
+                    ? IASSIST_TRANSFER_STAGES.map((label, i) => ({ stage: i + 1, label }))
                     : isIAssistFlow
                     ? [
                       { stage: 1, label: "Referral Received" },

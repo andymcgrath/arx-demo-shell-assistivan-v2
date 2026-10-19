@@ -9,7 +9,7 @@ import { biFork } from "../shared/bi";
  * Each exit lists the modules a recipe must include to pick it (see `recipeProblems`). A branch that no module
  * handles fails a test, not a demo.
  */
-const IASSIST: FlowType[] = ["iAssist_PA_Approved", "iAssist_PAP"];
+const IASSIST: FlowType[] = ["iAssist_PA_Approved", "iAssist_PAP", "iAssist_Medical_Transfer"];
 
 /**
  * What BI finds, from the shared BI catalog (workflows/shared/bi.ts). A PA starts only when the exit requires one.

@@ -214,6 +214,94 @@
         "/appointment-confirmation",
         "/medication-delivered"
       ]
+    },
+    "iAssist_Medical_Transfer": {
+      "route": [
+        "enrollment.sms.approved -> /sms-message",
+        "enrollment.lock_screen.approved -> /lock-screen",
+        "enrollment.otp.approved -> /otp-verification",
+        "enrollment.confirm_details.approved -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "spine.pa_denied -> /pa-denied",
+        "spine.waiting -> /",
+        "pa_notification.sms -> /pa-approved-sms",
+        "pa_notification.otp -> /pa-approved-otp",
+        "pharmacy_selection.assigned_transfer -> /pharmacy-transfer"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            },
+            {
+              "label": "PA Denied",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "Pharmacy transfer",
+          "items": [
+            {
+              "label": "Pharmacy Transfer",
+              "path": "/pharmacy-transfer"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/pharmacy-transfer",
+        "/medication-delivered"
+      ]
     }
   }
 }

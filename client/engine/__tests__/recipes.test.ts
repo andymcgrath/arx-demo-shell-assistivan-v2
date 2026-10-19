@@ -107,11 +107,13 @@ describe("iAssist recipes", () => {
 });
 
 describe("CRM panels", () => {
-  it("only Coverage shows the benefits panel", () => {
+  it("only Coverage and the iAssist medical transfer show the benefits panel", () => {
     expect(COASSIST_RECIPES.CoA_Coverage.panels).toEqual(["benefits"]);
+    expect(IASSIST_RECIPES.iAssist_Medical_Transfer.panels).toEqual(["benefits"]);
     expect(COASSIST_RECIPES.CoA_DTP.panels).toBeUndefined();
     expect(COASSIST_RECIPES.CoA_Copay.panels).toBeUndefined();
-    for (const r of Object.values(IASSIST_RECIPES)) expect(r.panels).toBeUndefined();
+    expect(IASSIST_RECIPES.iAssist_PA_Approved.panels).toBeUndefined();
+    expect(IASSIST_RECIPES.iAssist_PAP.panels).toBeUndefined();
   });
 });
 
