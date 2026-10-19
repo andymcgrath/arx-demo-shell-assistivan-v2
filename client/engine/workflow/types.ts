@@ -157,6 +157,11 @@ export interface Automation<E = any, C = any> {
  * ignored: no data change and no log entry.
  */
 export interface Rule<E = any, C = any> {
+  /**
+   * A stable name, for example `payment.patient_pays`. Tests record the rule order and where each rule applies
+   * by id, so a refactor cannot move or re-scope a rule without a fixture diff. Unique within a workflow.
+   */
+  id?: string;
   on: string;
   /** Apply only to these scenarios. Omit to apply to every scenario of the workflow. */
   scenarios?: FlowType[];

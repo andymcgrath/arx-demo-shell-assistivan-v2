@@ -82,6 +82,7 @@ const REVEAL_MS = 3000;
 export const COASSIST_RULES: CoaRule[] = [
   // ── Enrollment and patient onboarding ──────────────────────────────
   {
+    id: "enrollment.referral_received",
     on: "REFERRAL_RECEIVED",
     when: (d) => d.enrollmentStatus === "none",
     set: () => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
@@ -90,12 +91,14 @@ export const COASSIST_RULES: CoaRule[] = [
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },
   {
+    id: "enrollment.verify_sms",
     on: "VERIFY_SMS",
     when: (d) => d.enrollmentStatus === "enrolled" && !d.smsVerified,
     set: () => ({ smsVerified: true }),
     emit: { portal: "patient", step: 3 },
   },
   {
+    id: "enrollment.verify_otp",
     on: "VERIFY_OTP",
     when: (d) => d.smsVerified && !d.otpVerified,
     set: () => ({ otpVerified: true }),
@@ -105,6 +108,7 @@ export const COASSIST_RULES: CoaRule[] = [
     // If the PA was approved while the patient was still enrolling, they are already in the app
     // (and already verified), so they go straight to pricing. The PA-approved SMS and one-time code
     // exist for a patient who is away when the decision lands.
+    id: "enrollment.confirm_consent",
     on: "CONFIRM_CONSENT",
     when: (d) => d.otpVerified && d.consentStatus === "pending",
     set: (d, _e, s) => ({
@@ -118,6 +122,7 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── Benefits Investigation ─────────────────────────────────────────
   {
+    id: "spine.run_bi",
     on: "RUN_BI",
     when: (d) => d.enrollmentStatus === "enrolled" && d.biStatus === "none",
     set: () => ({ biStatus: "running" }),
@@ -126,6 +131,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // One BI resolves to the exit the scenario's `bi` fork picked (forks.ts). An event that carries a result (DTP and
     // Copay) or the two benefit statuses (DME) still wins, so a replay or a test can force one.
+    id: "spine.complete_bi",
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
     set: (d, e) => {
@@ -161,6 +167,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // The BI result lands after a delay once the agent opens the BI stage. The `bi` fork's exit decides it. DME's stage
     // event may also carry the statuses the presenter picked on the CRM, which COMPLETE_BI prefers.
+    id: "spine.view_stage.bi",
     on: "VIEW_STAGE",
     snapshot: false,
     when: (d, e) => e.stage === "BI" && d.biStatus === "running",
@@ -177,6 +184,7 @@ export const COASSIST_RULES: CoaRule[] = [
     },
   },
   {
+    id: "spine.view_stage.pa",
     on: "VIEW_STAGE",
     snapshot: false,
     when: (d, e) => e.stage === "PA" && d.paStatus === "submitted",
@@ -189,18 +197,20 @@ export const COASSIST_RULES: CoaRule[] = [
     },
   },
   {
+    id: "provider_transfer.view_stage",
     on: "VIEW_STAGE",
     snapshot: false,
     scenarios: ["CoA_DME"],
     when: (d, e) => e.stage === "DME_TRANSFER" && d.biStatus === "complete" && d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus === "none",
     then: { trigger: "agent", id: "dme-transfer", after: REVEAL_MS, send: () => ({ type: "NOTIFY_PROVIDER_TRANSFER" }) },
   },
-  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
-  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
-  { on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "DME_TRANSFER", cancel: ["dme-transfer"] },
+  { id: "spine.leave_stage.bi", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
+  { id: "spine.leave_stage.pa", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
+  { id: "provider_transfer.leave_stage", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "DME_TRANSFER", cancel: ["dme-transfer"] },
 
   // ── Prior Authorization ────────────────────────────────────────────
   {
+    id: "spine.submit_pa.standard",
     on: "SUBMIT_PA",
     scenarios: [...DTP_COPAY],
     // A PA needs a completed BI whose result says one is required.
@@ -210,6 +220,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     // DME: a PA is needed only when the pharmacy benefit covers and the medical benefit does not.
+    id: "spine.submit_pa.dme",
     on: "SUBMIT_PA",
     scenarios: ["CoA_DME"],
     when: (d) =>
@@ -221,6 +232,7 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "provider", step: 8 },
   },
   {
+    id: "spine.approve_pa",
     on: "APPROVE_PA",
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "approved", paApprovedAt: nowIso() }),
@@ -228,6 +240,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     // DME has no denial branch: the PA is a formality.
+    id: "cash_offer.deny_pa",
     on: "DENY_PA",
     scenarios: [...DTP_COPAY],
     when: (d) => d.paStatus === "submitted",
@@ -237,12 +250,14 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // Pricing options go to the patient only after enrollment is complete. The PA can be approved
     // earlier (BI and PA run off the eRx alone), but the patient hears about it after they consent.
+    id: "pa_notification.verify_sms",
     on: "VERIFY_PA_APPROVED_SMS",
     when: (d) => d.paStatus === "approved" && d.consentStatus === "confirmed" && !d.paApprovedSmsVerified,
     set: () => ({ paApprovedSmsVerified: true }),
     emit: { portal: "patient", step: 9 },
   },
   {
+    id: "pa_notification.verify_otp",
     on: "VERIFY_PA_APPROVED_OTP",
     when: (d) => d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
     set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignment(d, s), ...prePicked(d, s) }),
@@ -251,6 +266,7 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── DME: provider transfer (medical benefit covered) ───────────────
   {
+    id: "provider_transfer.notify",
     on: "NOTIFY_PROVIDER_TRANSFER",
     scenarios: ["CoA_DME"],
     when: (d) => d.biStatus === "complete" && d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus === "none",
@@ -258,6 +274,7 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "crm", step: 9 },
   },
   {
+    id: "provider_transfer.verify_sms",
     on: "VERIFY_DME_TRANSFER_SMS",
     scenarios: ["CoA_DME"],
     when: (d) => d.dmeTransferSmsSent && !d.dmeTransferSmsVerified,
@@ -267,6 +284,7 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── DME: cash offer by SMS (neither benefit covered) ───────────────
   {
+    id: "cash_offer.verify_sms",
     on: "VERIFY_CASH_OFFER_SMS",
     scenarios: ["CoA_DME"],
     when: (d) => d.cashOfferSmsSent && !d.cashOfferSmsVerified,
@@ -278,6 +296,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // The patient picks an exit of the scenario's `pricing` fork (forks.ts). An option that is not one of its
     // exits is ignored: Copay has no self-pay exit, because enrolling in the copay program is its own fork.
+    id: "payment.select_pricing_option",
     on: "SELECT_PRICING_OPTION",
     scenarios: [...DTP_COPAY],
     when: (d, e) => d.paApprovedOtpVerified && d.pricingOption === null && !!pricingExit(d, e.option),
@@ -286,6 +305,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     // DTP: cash pay through CoAssist's own pharmacy. It is the `self_pay` exit of the `pricing` fork.
+    id: "payment.select_self_pay.dtp",
     on: "SELECT_SELF_PAY",
     scenarios: ["CoA_DTP"],
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,
@@ -295,6 +315,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     // Copay: this is the `enroll` exit of the `copay` fork. Enrolling only unlocks the reduced price.
     // The patient still picks Retail or Mail Order next.
+    id: "financial_assistance.select_self_pay.copay",
     on: "SELECT_SELF_PAY",
     scenarios: ["CoA_Copay"],
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null && !d.copayEnrolled,
@@ -303,6 +324,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     // DME: cash pay after the cash-offer SMS.
+    id: "cash_offer.select_self_pay.dme",
     on: "SELECT_SELF_PAY",
     scenarios: ["CoA_DME"],
     when: (d) => d.cashOfferSmsVerified && d.pricingOption === null,
@@ -311,6 +333,7 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     // DME: one tap picks a network pharmacy and sets pricing in the same action. Must come before the generic SELECT_PHARMACY.
+    id: "pharmacy_selection.select_pharmacy.dme",
     on: "SELECT_PHARMACY",
     scenarios: ["CoA_DME"],
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,
@@ -318,6 +341,7 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "patient", step: 9 },
   },
   {
+    id: "pharmacy_selection.select_pharmacy",
     on: "SELECT_PHARMACY",
     // An assigned pharmacy (transfer branch) is not the patient's to change.
     when: (d) => !d.pharmacyAssigned && inFulfillmentTail(d),
@@ -327,6 +351,7 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── Cash offer and payment (representative only, no real payment) ──
   {
+    id: "cash_offer.send_cash_offer",
     on: "SEND_CASH_OFFER",
     scenarios: [...DTP_COPAY],
     when: (d) => d.paStatus === "denied" && d.cashOfferStatus === "none",
@@ -334,12 +359,14 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "crm", step: 9 },
   },
   {
+    id: "payment.patient_pays",
     on: "PATIENT_PAYS",
     when: (d) => d.cashOfferStatus !== "paid" && (d.cashOfferStatus === "sent" || inFulfillmentTail(d)),
     set: () => ({ cashOfferStatus: "paid" }),
     emit: { portal: "patient", step: 9 },
   },
   {
+    id: "payment.verify_payment",
     on: "VERIFY_PAYMENT",
     when: (d) => !d.paymentVerified && d.pharmacyStatus === "none" && (d.cashOfferStatus === "paid" || inFulfillmentTail(d)),
     set: () => ({ paymentVerified: true }),
@@ -348,12 +375,14 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── Delivery details ───────────────────────────────────────────────
   {
+    id: "scheduling.patient_sets_address",
     on: "PATIENT_SETS_ADDRESS",
     when: (d) => d.dispatchStatus === "none" && inFulfillmentTail(d),
     set: () => ({ dispatchStatus: "selected" }),
     emit: { portal: "patient", step: 9 },
   },
   {
+    id: "scheduling.patient_selects_ship_date",
     on: "PATIENT_SELECTS_SHIP_DATE",
     when: (d) => d.dispatchStatus === "selected" && d.patientShipDate === null && d.pharmacyStatus === "none",
     set: () => ({ patientShipDate: nowIso() }),
@@ -362,24 +391,28 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── Fulfillment ────────────────────────────────────────────────────
   {
+    id: "tracking.fill_rx",
     on: "FILL_RX",
     when: inFulfillmentTail,
     set: () => ({ pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
     emit: { portal: "field", step: 10 },
   },
   {
+    id: "tracking.ready_rx",
     on: "READY_RX",
     when: (d) => d.pharmacyStatus === "processing",
     set: () => ({ pharmacyStatus: "ready" }),
     emit: { portal: "field", step: 10 },
   },
   {
+    id: "tracking.ship_rx",
     on: "SHIP_RX",
     when: (d) => d.pharmacyStatus === "ready",
     set: () => ({ pharmacyStatus: "shipped" }),
     emit: { portal: "field", step: 11 },
   },
   {
+    id: "tracking.deliver_rx",
     on: "DELIVER_RX",
     when: (d) => d.pharmacyStatus === "shipped",
     set: () => ({ pharmacyStatus: "delivered" }),

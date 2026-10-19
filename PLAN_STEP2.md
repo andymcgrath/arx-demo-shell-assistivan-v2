@@ -60,7 +60,7 @@ Browser testing changed one rule. A pinned self-pay lands on the self-pay offer 
 
 The one UI change: `/benefit-pricing` is a sticky screen and `PaApprovedOtp` navigates there by hand, so `BenefitPricing.tsx` redirects to the route the data says comes next, but only when the pricing pick is pinned. Opening the screen from the menu after a live pick still shows the menu. Menu generation from the recipe (2.5) will later hide screens a pin skips.
 
-**2.4 Rules per module.** Split `rules.ts` into one fragment per module. The factory assembles them from the recipe, in spine order. A test checks that the assembled order for each event matches today's order. DME's `SELECT_PHARMACY` must stay ahead of the generic one.
+**2.4 Rules per module.** See "2.4 design" below. Three sub-steps: 2.4a records today's rule order and applicability as a fixture, 2.4b moves the rules into module files, 2.4c replaces the `scenarios:` filters with derived scope.
 
 **2.5 Screens per module.** Each module contributes its screens and route rules. The route list and the menu derive from the recipe. Delete every `scenarios:` filter in `screens.ts`. `screens.test.ts` already checks that every visited screen is in the menu.
 
@@ -89,6 +89,42 @@ All three use `chooser: "patient"`. Exit ids match today's `pricingOption` value
 - Three rules plus the shared one become two. DME's `SELECT_SELF_PAY` and `SELECT_PHARMACY` rules stay as they are.
 
 **Unchanged.** Route rules, patient pages, CRM text, stage ladders, and fixtures. No `WorkflowData` shape change, so no snapshot key bump.
+
+## 2.4 design
+
+**Where the risk is.** `rules.ts` has 36 rules. XState takes the first matching rule per event, but almost every event has one rule, or rules that are mutually exclusive by their own guard (the three `VIEW_STAGE` reveals each check `e.stage`). Only `SELECT_PHARMACY` depends on order: DME's one-tap rule must stay ahead of the generic one. The real risk is applicability. 13 rules carry a `scenarios:` filter, and a wrong derivation silently gives a scenario an event it never had.
+
+**Proof, recorded before anything moves.** Give every rule an `id`. Record a fixture of two things: the rule ids per event in order, and an applicability matrix (rule id by scenario: applies or not). Each sub-step must leave the fixture unchanged. 2.4c is allowed to change the filters but not the matrix.
+
+**Rule to module map.**
+
+| Module | Rules |
+|---|---|
+| spine (no module, every scenario) | `RUN_BI`, `COMPLETE_BI`, `SUBMIT_PA` (2), `APPROVE_PA`, BI and PA `VIEW_STAGE` reveals, BI and PA `LEAVE_STAGE` |
+| `enrollment` | `REFERRAL_RECEIVED`, `VERIFY_SMS`, `VERIFY_OTP`, `CONFIRM_CONSENT` |
+| `pa_notification` | `VERIFY_PA_APPROVED_SMS`, `VERIFY_PA_APPROVED_OTP` |
+| `cash_offer` | `DENY_PA`, `SEND_CASH_OFFER` (variant `pa_denied`); `VERIFY_CASH_OFFER_SMS`, DME `SELECT_SELF_PAY` (variant `sms`) |
+| `provider_transfer` | `NOTIFY_PROVIDER_TRANSFER`, `VERIFY_DME_TRANSFER_SMS`, DME_TRANSFER `VIEW_STAGE` and `LEAVE_STAGE` |
+| `financial_assistance` | Copay `SELECT_SELF_PAY` (the `enroll` exit) |
+| `payment` | `SELECT_PRICING_OPTION`, DTP `SELECT_SELF_PAY`, `PATIENT_PAYS`, `VERIFY_PAYMENT` |
+| `pharmacy_selection` | DME one-tap `SELECT_PHARMACY`, generic `SELECT_PHARMACY` (in that order) |
+| `scheduling` | `PATIENT_SETS_ADDRESS`, `PATIENT_SELECTS_SHIP_DATE` |
+| `tracking` | `FILL_RX`, `READY_RX`, `SHIP_RX`, `DELIVER_RX` |
+
+Shared helpers (`inFulfillmentTail`, `assignment`, `prePicked`, `pricingExit`) move to one `shared.ts`, because `CONFIRM_CONSENT` and `VERIFY_PA_APPROVED_OTP` both use them.
+
+**2.4a Ids and the fixture.** Add `id` to each rule and record the order and matrix fixture. No behavior change.
+
+**2.4b Move.** One file per module under `workflows/coassist/modules/`. `rules.ts` becomes the assembly: concatenate in a fixed spine order. Filters stay as they are. The fixture must not change.
+
+**2.4c Derive the scope.** A rule declares where it applies instead of listing scenarios. Two forms:
+
+- `{ module, props? }`: applies to a scenario whose recipe includes that module (with those props). `provider_transfer` is DME only because only the DME recipe lists it.
+- `{ fork, exit? }`: applies where that fork applies (and has that exit). `SELECT_PRICING_OPTION` follows the `pricing` fork, so DME never gets it. The two `SUBMIT_PA` rules follow the two `bi` forks.
+
+`cash_offer` needs a `variant` prop so DME keeps its SMS rules and DTP and Copay keep `DENY_PA` and `SEND_CASH_OFFER`. All 13 filters can be derived this way. The recipes gain `variant` on `cash_offer`.
+
+**Decision for 2.4c.** DME has `cash_offer` in its recipe, because the no-coverage path uses it. If the `pa_denied` variant were not separate, DME would gain `DENY_PA`, the known gap from 2.2. Splitting by variant keeps DME as it is today. Giving DME a real denial is a separate step with its own screens and fixture.
 
 ## Risks
 

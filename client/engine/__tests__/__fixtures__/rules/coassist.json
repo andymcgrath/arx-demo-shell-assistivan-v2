@@ -1,0 +1,256 @@
+{
+  "order": {
+    "REFERRAL_RECEIVED": [
+      "enrollment.referral_received"
+    ],
+    "VERIFY_SMS": [
+      "enrollment.verify_sms"
+    ],
+    "VERIFY_OTP": [
+      "enrollment.verify_otp"
+    ],
+    "CONFIRM_CONSENT": [
+      "enrollment.confirm_consent"
+    ],
+    "RUN_BI": [
+      "spine.run_bi"
+    ],
+    "COMPLETE_BI": [
+      "spine.complete_bi"
+    ],
+    "VIEW_STAGE": [
+      "spine.view_stage.bi",
+      "spine.view_stage.pa",
+      "provider_transfer.view_stage"
+    ],
+    "LEAVE_STAGE": [
+      "spine.leave_stage.bi",
+      "spine.leave_stage.pa",
+      "provider_transfer.leave_stage"
+    ],
+    "SUBMIT_PA": [
+      "spine.submit_pa.standard",
+      "spine.submit_pa.dme"
+    ],
+    "APPROVE_PA": [
+      "spine.approve_pa"
+    ],
+    "DENY_PA": [
+      "cash_offer.deny_pa"
+    ],
+    "VERIFY_PA_APPROVED_SMS": [
+      "pa_notification.verify_sms"
+    ],
+    "VERIFY_PA_APPROVED_OTP": [
+      "pa_notification.verify_otp"
+    ],
+    "NOTIFY_PROVIDER_TRANSFER": [
+      "provider_transfer.notify"
+    ],
+    "VERIFY_DME_TRANSFER_SMS": [
+      "provider_transfer.verify_sms"
+    ],
+    "VERIFY_CASH_OFFER_SMS": [
+      "cash_offer.verify_sms"
+    ],
+    "SELECT_PRICING_OPTION": [
+      "payment.select_pricing_option"
+    ],
+    "SELECT_SELF_PAY": [
+      "payment.select_self_pay.dtp",
+      "financial_assistance.select_self_pay.copay",
+      "cash_offer.select_self_pay.dme"
+    ],
+    "SELECT_PHARMACY": [
+      "pharmacy_selection.select_pharmacy.dme",
+      "pharmacy_selection.select_pharmacy"
+    ],
+    "SEND_CASH_OFFER": [
+      "cash_offer.send_cash_offer"
+    ],
+    "PATIENT_PAYS": [
+      "payment.patient_pays"
+    ],
+    "VERIFY_PAYMENT": [
+      "payment.verify_payment"
+    ],
+    "PATIENT_SETS_ADDRESS": [
+      "scheduling.patient_sets_address"
+    ],
+    "PATIENT_SELECTS_SHIP_DATE": [
+      "scheduling.patient_selects_ship_date"
+    ],
+    "FILL_RX": [
+      "tracking.fill_rx"
+    ],
+    "READY_RX": [
+      "tracking.ready_rx"
+    ],
+    "SHIP_RX": [
+      "tracking.ship_rx"
+    ],
+    "DELIVER_RX": [
+      "tracking.deliver_rx"
+    ]
+  },
+  "applies": {
+    "enrollment.referral_received": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "enrollment.verify_sms": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "enrollment.verify_otp": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "enrollment.confirm_consent": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.run_bi": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.complete_bi": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.view_stage.bi": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.view_stage.pa": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "provider_transfer.view_stage": [
+      "CoA_DME"
+    ],
+    "spine.leave_stage.bi": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.leave_stage.pa": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "provider_transfer.leave_stage": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "spine.submit_pa.standard": [
+      "CoA_DTP",
+      "CoA_Copay"
+    ],
+    "spine.submit_pa.dme": [
+      "CoA_DME"
+    ],
+    "spine.approve_pa": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "cash_offer.deny_pa": [
+      "CoA_DTP",
+      "CoA_Copay"
+    ],
+    "pa_notification.verify_sms": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "pa_notification.verify_otp": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "provider_transfer.notify": [
+      "CoA_DME"
+    ],
+    "provider_transfer.verify_sms": [
+      "CoA_DME"
+    ],
+    "cash_offer.verify_sms": [
+      "CoA_DME"
+    ],
+    "payment.select_pricing_option": [
+      "CoA_DTP",
+      "CoA_Copay"
+    ],
+    "payment.select_self_pay.dtp": [
+      "CoA_DTP"
+    ],
+    "financial_assistance.select_self_pay.copay": [
+      "CoA_Copay"
+    ],
+    "cash_offer.select_self_pay.dme": [
+      "CoA_DME"
+    ],
+    "pharmacy_selection.select_pharmacy.dme": [
+      "CoA_DME"
+    ],
+    "pharmacy_selection.select_pharmacy": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "cash_offer.send_cash_offer": [
+      "CoA_DTP",
+      "CoA_Copay"
+    ],
+    "payment.patient_pays": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "payment.verify_payment": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "scheduling.patient_sets_address": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "scheduling.patient_selects_ship_date": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "tracking.fill_rx": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "tracking.ready_rx": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "tracking.ship_rx": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ],
+    "tracking.deliver_rx": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_DME"
+    ]
+  }
+}
