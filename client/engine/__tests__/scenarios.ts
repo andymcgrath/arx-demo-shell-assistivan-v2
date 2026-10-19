@@ -301,6 +301,18 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 
+  {
+    // The same outcome as iassist-medical-transfer, from a CoAssist start. The medical benefit covers it and a PA is
+    // required. The Rx transfers to the assigned site of care once the PA-approved OTP verifies.
+    name: "coa-medical-transfer",
+    endsAt: "pharmacy_transferred",
+    flowType: "CoA_Medical_Transfer",
+    steps: [
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+    ],
+  },
+
   // ── Provider e-sign (placeholder, reuses PAP shape) ─────────────────
   {
     name: "pres-pap",

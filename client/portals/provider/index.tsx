@@ -14,7 +14,8 @@ import {
   Camera, Check,
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
-import type { WorkflowData } from "@/engine/types";
+import type { FlowType, WorkflowData } from "@/engine/types";
+import { COASSIST_FLOWS } from "@/workflows/coassist/scenarios";
 // WF4's own dashboard — reused as-is for CoA_DTP's post-PA screen (see the
 // isCoA branch in ProviderPortal below). Not a copy; if WF4's Dashboard
 // changes, this picks it up automatically.
@@ -2898,7 +2899,7 @@ export default function ProviderPortal() {
   // same way once the provider is past this starting screen).
   const [step, setStep] = useState<Step>(() => {
     const initialFlowType = useDemoStore.getState().flowType;
-    if (initialFlowType === 'CoA_DTP' || initialFlowType === 'CoA_Copay' || initialFlowType === 'CoA_Coverage') return 'coa-dashboard';
+    if (COASSIST_FLOWS.includes(initialFlowType as FlowType)) return 'coa-dashboard';
     if (initialFlowType === 'PrES_PAP') return computeInitialPresProviderStep(workflowData);
     return 'login';
   });
@@ -2915,7 +2916,7 @@ export default function ProviderPortal() {
   // (paStatus stays 'none' forever for CoA_Coverage, see workflows/coassist/),
   // and deriveKeanuStatus below has its own coverage-specific branch so this
   // flow's Prescriptions panel never mislabels itself "PA Required".
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_Coverage";
+  const isCoA = COASSIST_FLOWS.includes(flowType as FlowType);
   // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed
   // multi-step enrollment flow — instead of falling into the generic
   // WF1/WF2 "Recent Submissions" chain below. See PresPapProviderExperience.

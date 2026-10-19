@@ -56,8 +56,8 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage"],
-  exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "no_coverage" }],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
+  exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }],
 });
 
 /**
@@ -119,7 +119,7 @@ export const PA_FORK: ForkDefinition = {
   label: "Prior authorization decision",
   chooser: "story",
   // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },
@@ -217,6 +217,7 @@ export const biForkFor = (flowType: FlowType): ForkDefinition => {
   return (BI_FORKS[flowType] ??= {
     ...BI_FORK,
     stagesBefore: stages.before,
-    exits: BI_FORK.exits.map((e) => ({ ...e, stages: stages.exits[e.id] })),
+    // Only the exits this scenario has rungs for. The others cannot be picked by its recipe.
+    exits: BI_FORK.exits.filter((e) => stages.exits[e.id]).map((e) => ({ ...e, stages: stages.exits[e.id] })),
   });
 };

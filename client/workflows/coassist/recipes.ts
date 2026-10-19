@@ -69,6 +69,25 @@ export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Triage `transfer` exit, so no
+ * payment and no scheduling. The BI exit assigns the site of care, so the patient sees its contact details and nothing
+ * else. The same outcome as the iAssist medical transfer, from a CoAssist start.
+ */
+export const COA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
+  source: "coassist",
+  forks: ["bi", "pa"],
+  choices: { bi: "medical_pa_required", pa: "approved" },
+  triage: "transfer",
+  panels: ["benefits"],
+  modules: [
+    { id: "enrollment" },
+    { id: "pa_notification" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * The composition proof (step 2.6). Commercial coverage, PA approved, the patient's Retail pick, a pharmacy the
  * patient selects, and the Rx handed over: the order tracker shows it. No `scheduling` and no `payment`.
  *
@@ -92,4 +111,5 @@ export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,
   CoA_Coverage: COA_COVERAGE_RECIPE,
+  CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
 } as const;

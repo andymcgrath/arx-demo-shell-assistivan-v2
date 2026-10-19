@@ -38,7 +38,8 @@ import { coassistStageEvents } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
 import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
-import { iassistStageEvents, IASSIST_TRANSFER_STAGES, type IassistLadderFlow } from "./iassistLadders";
+import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
+import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
 import { faxStageEvents } from "./faxLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
@@ -109,6 +110,7 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
+  CoA_Medical_Transfer: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist
@@ -1145,6 +1147,12 @@ export default function DemoShell() {
     // Always start with a full reset
     actor.send({ type: 'RESET' });
 
+    // A scenario whose recipe ends in the Triage transfer exit: one ladder, whatever the source.
+    if (isTransferScenario(flowType)) {
+      for (const event of transferStageEvents(stage)) actor.send(event as any);
+      return;
+    }
+
     // iAssist flows (iAssist_PA_Approved and the iAssist_PAP appeal): the ladders live in
     // iassistLadders.ts so the headless tests run the same event lists.
     if (isIAssistPapFlow || isIAssistFlow) {
@@ -1169,7 +1177,7 @@ export default function DemoShell() {
     for (const event of faxStageEvents(isPapFlow ? 'pap' : 'standard', stage)) {
       actor.send(event as any);
     }
-  }, [resetDemo, isIAssistFlow, isIAssistPapFlow, isPapFlow, isCoverageFlow, isCoaFlow, forkChoices]);
+  }, [resetDemo, flowType, isIAssistFlow, isIAssistPapFlow, isPapFlow, isCoverageFlow, isCoaFlow, forkChoices]);
 
   return (
     <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -1358,8 +1366,8 @@ export default function DemoShell() {
                       { stage: 5, label: "Appeal Filed" },
                       { stage: 6, label: "Dispatch to Triage (Keanu to Facility)" },
                     ]
-                    : flowType === "iAssist_Medical_Transfer"
-                    ? IASSIST_TRANSFER_STAGES.map((label, i) => ({ stage: i + 1, label }))
+                    : isTransferScenario(flowType)
+                    ? TRANSFER_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
                     : isIAssistFlow
                     ? [
                       { stage: 1, label: "Referral Received" },

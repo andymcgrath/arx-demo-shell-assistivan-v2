@@ -67,6 +67,11 @@ workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, {
   description: "Commercial medical-benefit coverage — transfers to an outside provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
 });
 
+workflowRegistry.registerWorkflow("CoA_Medical_Transfer", coassistMachine, {
+  label: "CoAssist Medical Transfer",
+  description: "CoAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned site of care with no payment or scheduling",
+});
+
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iassistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",

@@ -22,7 +22,14 @@ export const neitherCovered = (d: WorkflowData) =>
 
 /** A scenario that assigns the pharmacy hands the Rx over as soon as the PA approval is verified. No patient choice. */
 export const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
-  d.pharmacyAssigned ? { pricingOption: "retail" as const, ...assignedPharmacy(d, s) } : {};
+  d.pharmacyAssigned
+    ? {
+        // A pharmacy fills the Rx, so pricing is set and fulfillment follows. When the medical benefit covers it, the HCP
+        // administers it (Buy & Bill) and the order ends at the transfer: no pricing, no fulfillment.
+        ...(d.medicalBenefitStatus === "covered" ? {} : { pricingOption: "retail" as const }),
+        ...assignedPharmacy(d, s),
+      }
+    : {};
 
 /** The scenario content that names the pharmacy for each `pricing` exit. Exit data is static, so content supplies it. */
 const PRICING_PHARMACY: Record<string, "retail" | "mailOrder" | "selfPay"> = {

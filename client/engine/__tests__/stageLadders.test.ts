@@ -7,6 +7,7 @@ import { forksForScenario } from "@/engine/workflow/forks";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COASSIST_RECIPES } from "@/workflows/coassist/recipes";
 import type { FlowType } from "@/engine/types";
+import { isTransferScenario, TRANSFER_LADDER_EXITS } from "@/shell/transferLadders";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
@@ -25,6 +26,7 @@ const LADDERS = [
   { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DTP", stage) },
   { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
   { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
+  { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => coassistStageEvents("CoA_Medical_Transfer", stage) },
   { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
   { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
   { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => iassistStageEvents("iAssist_Medical_Transfer", stage) },
@@ -76,7 +78,13 @@ describe("Coverage stage jump follows the selected branch", () => {
  * yet, so no demo uses it. The test pins the list: a new gap fails it (for example a recipe gains `provider_transfer`),
  * and so does closing one, so the list stays honest. Fix a gap by adding rungs to BI_STAGES, not by editing this list.
  */
-const KNOWN_GAPS: Record<string, string[]> = { CoA_DTP: ["no_coverage"], CoA_Copay: ["no_coverage"], CoA_Coverage: [] };
+const KNOWN_GAPS: Record<string, string[]> = {
+  CoA_DTP: ["no_coverage"],
+  CoA_Copay: ["no_coverage"],
+  CoA_Coverage: [],
+  // `pharmacy_covered` needs no module, so the recipe can pick it, but the scenario has no pricing screens for it.
+  CoA_Medical_Transfer: ["pharmacy_covered"],
+};
 
 describe("stage ladder coverage of the bi fork", () => {
   for (const [flowType, recipe] of Object.entries(COASSIST_RECIPES)) {
@@ -85,7 +93,11 @@ describe("stage ladder coverage of the bi fork", () => {
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
       const hasRungs = (id: string) =>
-        flowType === "CoA_Coverage" ? !!fork.exits.find((e) => e.id === id)?.stages?.length : HAND_BUILT_LADDER_EXITS.includes(id);
+        flowType === "CoA_Coverage"
+          ? !!fork.exits.find((e) => e.id === id)?.stages?.length
+          : isTransferScenario(flowType)
+          ? TRANSFER_LADDER_EXITS.includes(id)
+          : HAND_BUILT_LADDER_EXITS.includes(id);
       expect(pickable.filter((e) => !hasRungs(e.id)).map((e) => e.id)).toEqual(KNOWN_GAPS[flowType]);
     });
   }

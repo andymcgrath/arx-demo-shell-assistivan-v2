@@ -21,6 +21,7 @@
 
 import { biForkFor, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
 import { forkStageEvents } from "@/engine/workflow/forks";
+import { transferStageEvents } from "./transferLadders";
 
 export interface LadderEvent {
   type: string;
@@ -45,10 +46,11 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 export function coassistStageEvents(
-  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage",
+  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer",
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
+  if (flowType === "CoA_Medical_Transfer") return transferStageEvents(stage);
   if (flowType === "CoA_Coverage") return forkStageEvents(biForkFor("CoA_Coverage"), { choices }, stage);
 
   const out: LadderEvent[] = [];

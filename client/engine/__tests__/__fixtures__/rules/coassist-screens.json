@@ -439,6 +439,98 @@
         "/order-shipped",
         "/medication-delivered"
       ]
+    },
+    "CoA_Medical_Transfer": {
+      "route": [
+        "enrollment.lock_screen -> /lock-screen",
+        "enrollment.sms -> /sms-message",
+        "enrollment.otp -> /otp-verification",
+        "enrollment.confirm_details -> /confirm-details",
+        "pharmacy_selection.assigned_waiting -> /",
+        "pharmacy_selection.assigned_sms -> /pa-approved-sms",
+        "pharmacy_selection.assigned_otp -> /pa-approved-otp",
+        "pharmacy_selection.assigned_transfer -> /pharmacy-transfer"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            }
+          ]
+        },
+        {
+          "group": "Provider transfer",
+          "items": [
+            {
+              "label": "Pharmacy Transfer",
+              "path": "/pharmacy-transfer"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/pharmacy-transfer",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
     }
   }
 }

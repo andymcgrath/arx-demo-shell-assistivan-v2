@@ -1,0 +1,42 @@
+[
+  {
+    "stage": 2,
+    "ignored": [],
+    "route": "/sms-message",
+    "biStatus": "running",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 3,
+    "ignored": [],
+    "route": "/",
+    "biStatus": "running",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 4,
+    "ignored": [],
+    "route": "/pa-approved-sms",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 5,
+    "ignored": [],
+    "route": "/pharmacy-transfer",
+    "biStatus": "complete",
+    "paStatus": "approved",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  }
+]

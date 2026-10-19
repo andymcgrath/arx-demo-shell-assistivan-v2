@@ -110,22 +110,26 @@
     "enrollment.confirm_consent": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "enrollment.referral_received": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "enrollment.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "enrollment.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "financial_assistance.select_self_pay.copay": [
       "CoA_Copay"
@@ -133,12 +137,14 @@
     "pa_notification.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "pa_notification.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "payment.patient_pays": [
       "CoA_DTP",
@@ -160,7 +166,8 @@
     "pharmacy_selection.select_pharmacy": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "pharmacy_selection.select_pharmacy.coverage": [
       "CoA_Coverage"
@@ -168,7 +175,8 @@
     "provider_transfer.leave_stage": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "provider_transfer.notify": [
       "CoA_Coverage"
@@ -192,62 +200,74 @@
     "spine.approve_pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.complete_bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.leave_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.leave_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.run_bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.submit_pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.view_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "spine.view_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "tracking.deliver_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "tracking.fill_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "tracking.ready_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "tracking.ship_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_Coverage"
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ]
   }
 }

@@ -20,20 +20,12 @@
  */
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import type { LadderEvent } from "./coassistLadders";
+import { transferStageEvents } from "./transferLadders";
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
 /** The same CoAssist Pharmacy the Benefit Pricing card shows for Copay Program self-pay. */
 export type IassistLadderFlow = "iAssist_PA_Approved" | "iAssist_PAP" | "iAssist_Medical_Transfer";
-
-/** The stage-jump labels for the medical transfer flow. The other iAssist flows keep theirs in DemoShell. */
-export const IASSIST_TRANSFER_STAGES = [
-  "Referral Received",
-  "eRx Submitted (BI Complete, PA Submitted)",
-  "Patient Enrolled",
-  "PA Approved",
-  "Patient Verified, Rx Transferred",
-];
 
 export function iassistStageEvents(flowType: IassistLadderFlow, stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
@@ -42,12 +34,8 @@ export function iassistStageEvents(flowType: IassistLadderFlow, stage: number): 
   if (upTo(2)) out.push(ev("REFERRAL_RECEIVED", "provider"));
   if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
 
-  if (flowType === "iAssist_Medical_Transfer") {
-    // 2 referral received (BI runs), 3 enrolled, 4 BI complete and PA approved, 5 verified and the Rx transferred.
-    if (upTo(4)) out.push(ev("COMPLETE_BI", "crm"), ev("APPROVE_PA", "crm"));
-    if (upTo(5)) out.push(ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient"));
-    return out;
-  }
+  // The transfer scenario shares one ladder with every source that ends in the Triage transfer exit.
+  if (flowType === "iAssist_Medical_Transfer") return transferStageEvents(stage);
 
   if (flowType === "iAssist_PAP") {
     if (upTo(4)) out.push(ev("COMPLETE_BI", "crm", { result: "coverage_found" }), ev("DENY_PA", "crm"));

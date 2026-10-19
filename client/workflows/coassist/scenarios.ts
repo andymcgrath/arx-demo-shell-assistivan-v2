@@ -1,7 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -65,5 +65,22 @@ export const COA_COVERAGE: ScenarioDefinition<CoassistContent> = {
   },
 };
 
+/**
+ * The medical benefit covers it and a PA is required. The Rx transfers to an assigned site of care, and the order ends
+ * there: no pricing, delivery, or payment.
+ */
+export const COA_MEDICAL_TRANSFER: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_Medical_Transfer",
+  intake: "erx",
+  choices: { bi: "medical_pa_required", pa: "approved" },
+  recipe: COA_MEDICAL_TRANSFER_RECIPE,
+  content: {
+    retail: COA_DTP.content.retail,
+    mailOrder: MAIL_ORDER,
+    selfPay: SELF_PAY,
+    transferPharmacy: TRANSFER_PHARMACY,
+  },
+};
+
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"];
