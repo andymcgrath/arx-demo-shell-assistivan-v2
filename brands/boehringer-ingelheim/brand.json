@@ -69,8 +69,8 @@
   "program": {
     "name": "Jascayd",
     "drugDisplayName": "Jascayd",
-    "description": "Add product details here",
-    "dosageForm": "150 mg Oral Capsule",
+    "description": "18 mg by mouth twice daily",
+    "dosageForm": "Tablet",
     "assets": {
       "logoColor": "/brands/boehringer-ingelheim/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
       "logoWhite": "/brands/boehringer-ingelheim/1786385297021-jascayd-logo-white.svg"
