@@ -4,6 +4,7 @@
  */
 import type { WorkflowData } from "@/engine/types";
 import type { ForkExit, Rule } from "@/engine/workflow/types";
+import { assignedPharmacy } from "../../shared/assignment";
 import { forkApplies } from "@/engine/workflow/forks";
 import { COPAY_FORK, pricingForkFor } from "../forks";
 import type { CoassistContent } from "../scenarios";
@@ -21,7 +22,7 @@ export const neitherCovered = (d: WorkflowData) =>
 
 /** A scenario that assigns the pharmacy hands the Rx over as soon as the PA approval is verified. No patient choice. */
 export const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
-  d.pharmacyAssigned ? { pricingOption: "retail" as const, selectedPharmacy: s.content.transferPharmacy } : {};
+  d.pharmacyAssigned ? { pricingOption: "retail" as const, ...assignedPharmacy(d, s) } : {};
 
 /** The scenario content that names the pharmacy for each `pricing` exit. Exit data is static, so content supplies it. */
 const PRICING_PHARMACY: Record<string, "retail" | "mailOrder" | "selfPay"> = {

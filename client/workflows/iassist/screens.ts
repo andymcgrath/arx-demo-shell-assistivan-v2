@@ -4,6 +4,7 @@ import { IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IASSIST_FLOWS } from "./scenarios"
 import { APPEAL_ROUTES, APPEAL_SCREENS } from "./modules/screens/appeal";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
 import { PA_NOTIFICATION_ROUTES, PA_NOTIFICATION_SCREENS } from "./modules/screens/pa_notification";
+import { PHARMACY_SELECTION_ROUTES, PHARMACY_SELECTION_SCREENS } from "./modules/screens/pharmacy_selection";
 import { PAYMENT_ROUTES, PAYMENT_SCREENS } from "./modules/screens/payment";
 import { SCHEDULING_ROUTES, SCHEDULING_SCREENS } from "./modules/screens/scheduling";
 import { SPINE_ROUTES, SPINE_SCREENS } from "./modules/screens/spine";
@@ -34,6 +35,7 @@ export const IASSIST_SCREENS: ScreenMap = {
     ...PA_NOTIFICATION_SCREENS,
     ...SPINE_SCREENS,
     ...APPEAL_SCREENS,
+    ...PHARMACY_SELECTION_SCREENS,
     ...SCHEDULING_SCREENS,
     ...PAYMENT_SCREENS,
     ...TRACKING_SCREENS,
@@ -44,6 +46,7 @@ export const IASSIST_SCREENS: ScreenMap = {
     ...APPEAL_ROUTES,
     ...SPINE_ROUTES,
     ...PA_NOTIFICATION_ROUTES,
+    ...PHARMACY_SELECTION_ROUTES,
     ...PAYMENT_ROUTES,
     ...SCHEDULING_ROUTES,
     ...TRACKING_ROUTES,

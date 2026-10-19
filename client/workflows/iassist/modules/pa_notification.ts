@@ -1,6 +1,7 @@
 /**
  * PA notification: the patient hears the PA is approved (SMS, then OTP). Only the approved scenario has it.
  */
+import { assignedPharmacy } from "../../shared/assignment";
 import type { IaRule } from "./shared";
 
 export const PA_NOTIFICATION_RULES: IaRule[] = [
@@ -18,7 +19,7 @@ export const PA_NOTIFICATION_RULES: IaRule[] = [
     on: "VERIFY_PA_APPROVED_OTP",
     scope: { module: "pa_notification" },
     when: (d) => d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
-    set: () => ({ paApprovedOtpVerified: true }),
+    set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignedPharmacy(d, s) }),
     emit: { portal: "patient", step: 9 },
   },
 ];

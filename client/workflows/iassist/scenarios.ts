@@ -1,5 +1,6 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
+import { TRANSFER_PHARMACY } from "../shared/assignment";
 import { IA_PA_APPROVED_RECIPE, IA_PA_DENIED_APPEAL_RECIPE } from "./recipes";
 
 /**
@@ -12,6 +13,8 @@ export interface IassistContent {
   retail: Pharmacy;
   mailOrder: Pharmacy;
   selfPay: Pharmacy;
+  /** The pharmacy a scenario hands the Rx to when the BI exit assigns one. */
+  transferPharmacy: Pharmacy;
 }
 
 // The same pharmacies the CoAssist DTP Benefit Pricing card shows. The card is a shared component.
@@ -25,7 +28,7 @@ export const IA_PA_APPROVED: ScenarioDefinition<IassistContent> = {
   intake: "erx",
   choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: IA_PA_APPROVED_RECIPE,
-  content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
+  content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY, transferPharmacy: TRANSFER_PHARMACY },
 };
 
 /** The PA is denied. An appeal (started by an automation rule built in the Rules portal) is approved, then the infusion is scheduled. */
@@ -34,7 +37,7 @@ export const IA_PA_DENIED_APPEAL: ScenarioDefinition<IassistContent> = {
   intake: "erx",
   choices: { bi: "pharmacy_covered", pa: "denied" },
   recipe: IA_PA_DENIED_APPEAL_RECIPE,
-  content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
+  content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY, transferPharmacy: TRANSFER_PHARMACY },
 };
 
 /** The scenarios of the iAssist workflow. */
