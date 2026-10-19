@@ -13,7 +13,9 @@
  * or after BI and the PA.
  */
 import type { WorkflowData } from "@/engine/types";
+import { exitFor } from "@/engine/workflow/forks";
 import type { Rule } from "@/engine/workflow/types";
+import { IASSIST_BI_FORK, IASSIST_PA_FORK } from "./forks";
 import type { IassistContent } from "./scenarios";
 
 type IaRule = Rule<any, IassistContent>;
@@ -96,7 +98,7 @@ export const IASSIST_RULES: IaRule[] = [
   {
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
-    set: (_d, e, s) => ({ biStatus: "complete", biResult: e.result ?? s.content.biResult }),
+    set: (d, e) => ({ biStatus: "complete", biResult: e.result ?? exitFor(IASSIST_BI_FORK, d).data.biResult }),
     emit: { portal: "analytics", step: 7 },
     // The PA starts when BI returns. SUBMIT_PA checks that the result requires one.
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
@@ -206,7 +208,7 @@ export const IASSIST_RULES: IaRule[] = [
       trigger: "agent",
       id: "bi-reveal",
       after: REVEAL_MS,
-      send: (_d, _e, s) => ({ type: "COMPLETE_BI", result: s.content.biResult }),
+      send: (d) => ({ type: "COMPLETE_BI", result: exitFor(IASSIST_BI_FORK, d).data.biResult }),
     },
   },
   {
@@ -217,7 +219,7 @@ export const IASSIST_RULES: IaRule[] = [
       trigger: "agent",
       id: "pa-decision",
       after: REVEAL_MS,
-      send: (_d, _e, s) => ({ type: s.content.paOutcome === "denied" ? "DENY_PA" : "APPROVE_PA" }),
+      send: (d) => ({ type: exitFor(IASSIST_PA_FORK, d).id === "denied" ? "DENY_PA" : "APPROVE_PA" }),
     },
   },
   {

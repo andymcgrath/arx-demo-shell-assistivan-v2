@@ -178,6 +178,42 @@ describe("iAssist ordering rules", () => {
   });
 });
 
+describe("iAssist forks", () => {
+  it("each scenario starts on its story's picks", () => {
+    withFrozenClock(() => {
+      expect(start(APPROVED).data().choices).toEqual({ bi: "coverage_found", pa: "approved" });
+      expect(start(APPEAL).data().choices).toEqual({ bi: "coverage_found", pa: "denied" });
+    });
+  });
+
+  it("the pa pick decides what opening the PA stage does", () => {
+    withFrozenClock(() => {
+      const clock = new SimulatedClock();
+      const actor = startFlow(APPROVED, { clock, choices: { pa: "denied" } });
+      runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VIEW_STAGE", stage: "BI" }]);
+      clock.increment(3000);
+      runSteps(actor, [{ type: "VIEW_STAGE", stage: "PA" }]);
+      clock.increment(3000);
+      expect(ctx(actor).workflowData.paStatus).toBe("denied");
+    });
+  });
+
+  it("a pick survives RESET", () => {
+    withFrozenClock(() => {
+      const actor = startFlow(APPROVED, { choices: { pa: "denied" } });
+      actor.send({ type: "RESET" } as any);
+      expect(ctx(actor).workflowData.choices.pa).toBe("denied");
+    });
+  });
+
+  it("a pick that names no exit is dropped", () => {
+    withFrozenClock(() => {
+      const actor = startFlow(APPROVED, { choices: { pa: "maybe" } });
+      expect(ctx(actor).workflowData.choices.pa).toBe("approved");
+    });
+  });
+});
+
 describe("iAssist automation", () => {
   it("opening BI reveals the result after 3 seconds and the PA starts. Opening the PA decides it per scenario.", () => {
     withFrozenClock(() => {

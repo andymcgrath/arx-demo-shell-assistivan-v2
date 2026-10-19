@@ -3,6 +3,7 @@ import { MODULE_CONTRACTS, type ScenarioRecipe } from "@/engine/workflow/compone
 import { recipeProblems } from "@/engine/workflow/recipe";
 import { COASSIST_RECIPES } from "@/workflows/coassist/recipes";
 import { IASSIST_RECIPES } from "@/workflows/iassist/recipes";
+import { ALL_FORKS } from "@/workflows/forks";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { forksForScenario } from "@/engine/workflow/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
@@ -58,17 +59,34 @@ describe("CoAssist recipes", () => {
 
 describe("iAssist recipes", () => {
   for (const [flowType, r] of Object.entries(IASSIST_RECIPES)) {
-    it(`${flowType} is a valid recipe`, () => {
-      expect(recipeProblems(r)).toEqual([]);
+    it(`${flowType} is a valid recipe, and its choices name declared exits`, () => {
+      expect(recipeProblems(r, forksForScenario(ALL_FORKS, flowType as FlowType))).toEqual([]);
     });
 
-    it(`${flowType}: the recipe's picks match what the scenario's content does today`, () => {
-      // Step 4.2 moves these picks into forks. Until then the content decides, so the recipe must agree.
+    it(`${flowType}: the recipe's choices match the scenario's defaults`, () => {
       const scenario = ALL_SCENARIOS.find((s) => s.flowType === flowType)!;
-      const content = scenario.content as { biResult: string; paOutcome: string };
-      expect(r.choices).toEqual({ bi: content.biResult, pa: content.paOutcome });
+      expect(r.choices).toEqual(scenario.choices);
     });
   }
+
+  it("rejects the pick of a branch no module in the recipe handles", () => {
+    const forks = forksForScenario(ALL_FORKS, "iAssist_PA_Approved");
+    // Denied needs the appeal, approved needs the PA notification, and no coverage needs financial assistance.
+    const denied = { ...IASSIST_RECIPES.iAssist_PA_Approved, choices: { bi: "coverage_found", pa: "denied" } };
+    expect(recipeProblems(denied, forks)).toContain('fork "pa" exit "denied" requires appeal in the recipe');
+    const approvedOnAppeal = { ...IASSIST_RECIPES.iAssist_PAP, choices: { bi: "coverage_found", pa: "approved" } };
+    expect(recipeProblems(approvedOnAppeal, forksForScenario(ALL_FORKS, "iAssist_PAP"))).toContain(
+      'fork "pa" exit "approved" requires pa_notification in the recipe',
+    );
+    const noCoverage = { ...IASSIST_RECIPES.iAssist_PA_Approved, choices: { bi: "no_coverage", pa: "approved" } };
+    expect(recipeProblems(noCoverage, forks)).toContain('fork "bi" exit "no_coverage" requires financial_assistance in the recipe');
+  });
+
+  it("CoAssist's pa fork no longer applies to iAssist, and the reverse", () => {
+    const ids = (flow: string) => forksForScenario(ALL_FORKS, flow as FlowType).filter((f) => f.id === "pa").map((f) => f.exits.find((e) => e.id === "denied")!.requires);
+    expect(ids("CoA_DTP")).toEqual([["cash_offer"]]);
+    expect(ids("iAssist_PAP")).toEqual([["appeal"]]);
+  });
 
   it("the appeal scenario passes through the appeal module and not through pricing, scheduling a delivery, or payment", () => {
     const ids = IASSIST_RECIPES.iAssist_PAP.modules.map((m) => m.id);

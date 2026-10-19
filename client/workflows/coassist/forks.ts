@@ -162,6 +162,8 @@ export const PA_FORK: ForkDefinition = {
   id: "pa",
   label: "Prior authorization decision",
   chooser: "story",
+  // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_DME"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },

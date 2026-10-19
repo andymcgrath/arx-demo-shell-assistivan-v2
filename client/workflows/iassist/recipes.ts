@@ -2,10 +2,9 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
 
 /**
  * iAssist scenarios as recipes. Each lists the modules that scenario reaches today, in journey order.
- * This describes the current behavior. The machine does not read it yet (step 4.3 does).
+ * The machine reads the picks (forks.ts) and does not read the module list yet (step 4.3 does).
  *
- * Both scenarios pass through the `bi` and `pa` forks. Step 4.2 declares them. Until then `choices` names the
- * picks that `content.biResult` and `content.paOutcome` make today.
+ * Both scenarios pass through the `bi` and `pa` forks, and `choices` names the story's picks.
  *
  * Variants (read by a rule's `scope`, see engine/workflow/scope.ts):
  * - `scheduling` has `delivery` (address and ship date) and `infusion` (the infusion date after an appeal).

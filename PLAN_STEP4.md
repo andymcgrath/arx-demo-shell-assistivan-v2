@@ -35,6 +35,8 @@ iAssist owns its module files under `workflows/iassist/modules/`. The two source
 
 **4.6 Invariants and end states.** Extend the precondition invariant test to iAssist. Golden paths already name end states.
 
+**4.2 (done).** `workflows/iassist/forks.ts` declares `bi` and `pa`, both story forks, in `ALL_FORKS`. `content.biResult` and `content.paOutcome` are gone. Scenarios carry `choices` and a `recipe`, and the rules and both reveals read the pick through `exitFor`. Exits name the modules a recipe needs: `approved` requires `pa_notification`, `denied` requires `appeal`, and `no_coverage` requires `financial_assistance` (no module handles it yet, so no iAssist recipe can pick it). CoAssist's `pa` fork was global, so it now lists its three scenarios. Otherwise iAssist would have two `pa` forks. The `appeal` fork in the original plan is not needed: no behavior reads one. Existing iAssist golden paths and the automation test are the behavior proof, and they did not change.
+
 ## Risks
 
 - **Module names that do not fit.** `scheduling` covers an address and ship date. The PAP infusion date is a different screen and event. A `variant` prop separates them, as `cash_offer` does.
