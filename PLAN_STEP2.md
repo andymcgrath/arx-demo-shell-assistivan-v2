@@ -115,7 +115,7 @@ Shared helpers (`inFulfillmentTail`, `assignment`, `prePicked`, `pricingExit`) m
 
 **2.4a Ids and the fixture.** Add `id` to each rule and record the order and matrix fixture. No behavior change.
 
-**2.4b Move.** One file per module under `workflows/coassist/modules/`. `rules.ts` becomes the assembly: concatenate in a fixed spine order. Filters stay as they are. The fixture must not change.
+**2.4b Move.** One file per module under `workflows/coassist/modules/`. `rules.ts` becomes the assembly: concatenate in a fixed order (spine before `provider_transfer`, and `payment` before `financial_assistance` before `cash_offer`). Filters stay as they are. The rule order per event and each rule's applicability must not change. The fixture's event keys are now sorted, so moving a rule never reshuffles the file.
 
 **2.4c Derive the scope.** A rule declares where it applies instead of listing scenarios. Two forms:
 

@@ -15,6 +15,9 @@ import { expectMatchesFixture } from "./harness";
  */
 const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
 
+const sortKeys = <T,>(o: Record<string, T>): Record<string, T> =>
+  Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+
 describe("CoAssist rule table", () => {
   it("gives every rule a unique id", () => {
     const ids = COASSIST_RULES.map((r) => r.id);
@@ -31,6 +34,8 @@ describe("CoAssist rule table", () => {
       applies[rule.id!] = FLOWS.filter((flow) => !rule.scenarios || rule.scenarios.includes(flow));
     }
 
-    expectMatchesFixture("rules/coassist", { order, applies });
+    // Sort the keys, so moving a rule between module files does not reshuffle the fixture. Only the ids inside
+    // each event's list keep their order: that order is what the machine tries.
+    expectMatchesFixture("rules/coassist", { order: sortKeys(order), applies: sortKeys(applies) });
   });
 });
