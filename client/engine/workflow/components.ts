@@ -23,6 +23,7 @@ export type ModuleId =
   | "pharmacy_selection"
   | "scheduling"
   | "payment"
+  | "appeal"
   | "tracking";
 
 /** The four modules that live inside the Triage stage. */
@@ -130,6 +131,7 @@ export interface ScenarioRecipe {
 /** Sources defined so far. The rest arrive as each source moves onto the recipe (steps 4 and later). */
 export const SOURCES: Partial<Record<SourceId, SourceDef>> = {
   coassist: { id: "coassist", intake: "erx", provides: ["referralReceived"] },
+  iassist: { id: "iassist", intake: "erx", provides: ["referralReceived"] },
 };
 
 /** Triage rules per exit. Tracking is always required. Transfer forbids scheduling and payment. */
@@ -197,6 +199,13 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     requiresModulesWhen: [{ props: { method: "mail_order" }, modules: ["scheduling"] }],
     sets: ["paymentVerified"],
     trackerSteps: ["Payment received"],
+  },
+  appeal: {
+    id: "appeal",
+    lane: "system",
+    needs: ["consentVerified", "fork:pa"],
+    sets: ["appealResolved"],
+    trackerSteps: ["Appeal filed", "Appeal decided"],
   },
   tracking: {
     id: "tracking",

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { MODULE_CONTRACTS, type ScenarioRecipe } from "@/engine/workflow/components";
 import { recipeProblems } from "@/engine/workflow/recipe";
 import { COASSIST_RECIPES } from "@/workflows/coassist/recipes";
+import { IASSIST_RECIPES } from "@/workflows/iassist/recipes";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { forksForScenario } from "@/engine/workflow/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
@@ -52,6 +53,38 @@ describe("CoAssist recipes", () => {
 
   it("DME pins the PA to approved", () => {
     expect(COASSIST_RECIPES.CoA_DME.choices.pa).toBe("approved");
+  });
+});
+
+describe("iAssist recipes", () => {
+  for (const [flowType, r] of Object.entries(IASSIST_RECIPES)) {
+    it(`${flowType} is a valid recipe`, () => {
+      expect(recipeProblems(r)).toEqual([]);
+    });
+
+    it(`${flowType}: the recipe's picks match what the scenario's content does today`, () => {
+      // Step 4.2 moves these picks into forks. Until then the content decides, so the recipe must agree.
+      const scenario = ALL_SCENARIOS.find((s) => s.flowType === flowType)!;
+      const content = scenario.content as { biResult: string; paOutcome: string };
+      expect(r.choices).toEqual({ bi: content.biResult, pa: content.paOutcome });
+    });
+  }
+
+  it("the appeal scenario passes through the appeal module and not through pricing, scheduling a delivery, or payment", () => {
+    const ids = IASSIST_RECIPES.iAssist_PAP.modules.map((m) => m.id);
+    expect(ids).toContain("appeal");
+    expect(ids).not.toContain("payment");
+    expect(ids).not.toContain("pa_notification");
+    expect(IASSIST_RECIPES.iAssist_PAP.modules.find((m) => m.id === "scheduling")?.props).toEqual({ variant: "infusion" });
+  });
+
+  it("the approved scenario has no appeal", () => {
+    expect(IASSIST_RECIPES.iAssist_PA_Approved.modules.map((m) => m.id)).not.toContain("appeal");
+  });
+
+  it("rejects an appeal that runs before the patient has enrolled", () => {
+    const problems = recipeProblems({ ...IASSIST_RECIPES.iAssist_PAP, modules: [{ id: "appeal" }, { id: "enrollment" }, { id: "tracking" }] });
+    expect(problems).toContain('appeal needs "consentVerified", and nothing before it provides it');
   });
 });
 
