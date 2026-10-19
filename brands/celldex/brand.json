@@ -59,6 +59,14 @@
         "confirmation": "brand"
       },
       "source": "https://celldex.com/"
+    },
+    "transferPartner": {
+      "name": "Orlando Site of Care (Dr. Sarah Chen)",
+      "address": "1414 Kuhl Ave",
+      "city": "Orlando",
+      "state": "FL",
+      "zip": "32806",
+      "phone": "(407) 555-3006"
     }
   },
   "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da",
