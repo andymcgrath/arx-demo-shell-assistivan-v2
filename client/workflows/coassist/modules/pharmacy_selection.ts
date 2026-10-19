@@ -9,7 +9,7 @@ export const PHARMACY_SELECTION_RULES: CoaRule[] = [
     // DME: one tap picks a network pharmacy and sets pricing in the same action. Must come before the generic SELECT_PHARMACY.
     id: "pharmacy_selection.select_pharmacy.dme",
     on: "SELECT_PHARMACY",
-    scenarios: ["CoA_DME"],
+    scope: { module: "pharmacy_selection", props: { variant: "network" } },
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,
     set: (_d, e) => ({ pricingOption: "retail", selectedPharmacy: e.pharmacy }),
     emit: { portal: "patient", step: 9 },

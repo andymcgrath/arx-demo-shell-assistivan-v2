@@ -14,6 +14,7 @@ import { assign, enqueueActions, setup } from "xstate";
 import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
 import { createInitialWorkflowData } from "./baseData";
 import { choiceProblems, forkApplies } from "./forks";
+import { ruleAppliesTo, scopeProblems } from "./scope";
 import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
 
 function createEvent(context: MachineContext, eventType: string, portal: Portal, step: number): DemoEvent {
@@ -90,7 +91,11 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
     for (const id of rule.cancel ?? []) automationIds.add(id);
   }
 
-  const appliesTo = (rule: Rule<any, C>, flowType: FlowType) => !rule.scenarios || rule.scenarios.includes(flowType);
+  // A scope that names nothing real can never apply, so fail when the machine is built and not in a demo.
+  const scopeErrors = scopeProblems(def.rules, Object.values(def.scenarios).filter(Boolean) as ScenarioDefinition<C>[], forks);
+  if (scopeErrors.length) throw new Error(`Workflow "${def.id}": ${scopeErrors.join("; ")}`);
+
+  const appliesTo = (rule: Rule<any, C>, flowType: FlowType) => ruleAppliesTo(rule, scenarioFor(flowType), forks);
 
   const on: Record<string, any[]> = {};
   for (const [eventType, rules] of byEvent) {

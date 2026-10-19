@@ -10,7 +10,7 @@ export const FINANCIAL_ASSISTANCE_RULES: CoaRule[] = [
     // The patient still picks Retail or Mail Order next.
     id: "financial_assistance.select_self_pay.copay",
     on: "SELECT_SELF_PAY",
-    scenarios: ["CoA_Copay"],
+    scope: { fork: "copay" },
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null && !d.copayEnrolled,
     set: () => COPAY_FORK.exits.find((e) => e.id === "enroll")!.data,
     emit: { portal: "patient", step: 9 },

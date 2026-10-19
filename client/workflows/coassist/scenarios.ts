@@ -1,6 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { BRAND } from "@/brand";
+import { COA_COPAY_RECIPE, COA_DME_RECIPE, COA_DTP_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -40,6 +41,7 @@ export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
   intake: "erx",
   choices: { bi: "coverage_found", pa: "approved" },
+  recipe: COA_DTP_RECIPE,
   content: {
     retail: { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" },
     mailOrder: MAIL_ORDER,
@@ -52,6 +54,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Copay",
   intake: "erx",
   choices: { bi: "coverage_found", pa: "approved" },
+  recipe: COA_COPAY_RECIPE,
   content: {
     retail: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
     mailOrder: MAIL_ORDER,
@@ -66,6 +69,7 @@ export const COA_DME: ScenarioDefinition<CoassistContent> = {
   intake: "erx",
   // The story: pharmacy coverage. A demo in the brand file or the presenter can pick another branch.
   choices: { bi: "pharmacy_covered", pa: "approved" },
+  recipe: COA_DME_RECIPE,
   content: {
     retail: COA_DTP.content.retail,
     mailOrder: MAIL_ORDER,

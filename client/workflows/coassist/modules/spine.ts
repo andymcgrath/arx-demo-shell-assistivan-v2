@@ -5,7 +5,7 @@
  * the delay and the outcome. Leaving the stage cancels a pending reveal. The `bi` and `pa` forks decide the outcomes.
  */
 import type { CoaRule } from "./shared";
-import { nowIso, deriveBiResult, dmeNeitherCovered, DTP_COPAY, REVEAL_MS } from "./shared";
+import { nowIso, deriveBiResult, dmeNeitherCovered, REVEAL_MS } from "./shared";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 
@@ -86,7 +86,7 @@ export const SPINE_RULES: CoaRule[] = [
   {
     id: "spine.submit_pa.standard",
     on: "SUBMIT_PA",
-    scenarios: [...DTP_COPAY],
+    scope: { fork: "bi", exit: "coverage_found" },
     // A PA needs a completed BI whose result says one is required.
     when: (d) => d.biStatus === "complete" && d.biResult === "coverage_found" && d.paStatus === "none",
     set: () => ({ paStatus: "submitted", paSubmittedAt: nowIso() }),
@@ -96,7 +96,7 @@ export const SPINE_RULES: CoaRule[] = [
     // DME: a PA is needed only when the pharmacy benefit covers and the medical benefit does not.
     id: "spine.submit_pa.dme",
     on: "SUBMIT_PA",
-    scenarios: ["CoA_DME"],
+    scope: { fork: "bi", exit: "pharmacy_covered" },
     when: (d) =>
       d.biStatus === "complete" &&
       d.paStatus === "none" &&

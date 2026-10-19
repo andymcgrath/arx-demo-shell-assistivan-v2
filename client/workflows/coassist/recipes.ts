@@ -12,6 +12,12 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
  * so `choices` does not pin them.
  * `choices` pins the branch the story walks. DME pins `pa` to `approved`: its rules do not handle a denial yet.
  * `payment.method` is left out where the patient picks live (DTP and Copay today).
+ *
+ * Rules read these props to decide where they apply (a rule's `scope`, see engine/workflow/scope.ts):
+ * - `cash_offer` has two variants. `pa_denied` is the cash offer after a denied PA (DTP and Copay). `sms` is the
+ *   cash-offer SMS when neither benefit covers (DME).
+ * - `pharmacy_selection` has two variants. `store` is the patient's retail store pick (Copay). `network` is DME's
+ *   one-tap network pharmacy pick.
  */
 
 export const COA_DTP_RECIPE: ScenarioRecipe = {
@@ -21,7 +27,7 @@ export const COA_DTP_RECIPE: ScenarioRecipe = {
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },
-    { id: "cash_offer" },
+    { id: "cash_offer", props: { variant: "pa_denied" } },
     { id: "payment" },
     { id: "scheduling" },
     { id: "tracking" },
@@ -35,10 +41,10 @@ export const COA_COPAY_RECIPE: ScenarioRecipe = {
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },
-    { id: "cash_offer" },
+    { id: "cash_offer", props: { variant: "pa_denied" } },
     { id: "payment" },
     { id: "financial_assistance", props: { variant: "copay" } },
-    { id: "pharmacy_selection" },
+    { id: "pharmacy_selection", props: { variant: "store" } },
     { id: "scheduling" },
     { id: "tracking" },
   ],
@@ -53,8 +59,8 @@ export const COA_DME_RECIPE: ScenarioRecipe = {
     { id: "enrollment" },
     { id: "pa_notification" },
     { id: "provider_transfer" },
-    { id: "cash_offer" },
-    { id: "pharmacy_selection" },
+    { id: "cash_offer", props: { variant: "sms" } },
+    { id: "pharmacy_selection", props: { variant: "network" } },
     { id: "scheduling" },
     { id: "payment" },
     { id: "tracking" },

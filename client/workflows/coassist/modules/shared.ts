@@ -33,8 +33,6 @@ export const dmeNeitherCovered = (d: WorkflowData) =>
 export const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
   d.pharmacyAssigned ? { pricingOption: "retail" as const, selectedPharmacy: s.content.transferPharmacy } : {};
 
-export const DTP_COPAY = ["CoA_DTP", "CoA_Copay"] as const;
-
 /** The scenario content that names the pharmacy for each `pricing` exit. Exit data is static, so content supplies it. */
 const PRICING_PHARMACY: Record<string, "retail" | "mailOrder" | "selfPay"> = {
   retail: "retail",

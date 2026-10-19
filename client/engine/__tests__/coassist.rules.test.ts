@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
+import { COASSIST_FORKS } from "@/workflows/coassist/forks";
+import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import { ruleAppliesTo, scopeProblems } from "@/engine/workflow/scope";
 import { expectMatchesFixture } from "./harness";
 
 /**
@@ -15,6 +18,8 @@ import { expectMatchesFixture } from "./harness";
  */
 const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
 
+const scenarioFor = (flow: (typeof FLOWS)[number]) => ALL_SCENARIOS.find((s) => s.flowType === flow)!;
+
 const sortKeys = <T,>(o: Record<string, T>): Record<string, T> =>
   Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 
@@ -25,13 +30,21 @@ describe("CoAssist rule table", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("derives where each rule applies and lists no scenarios by hand", () => {
+    expect(COASSIST_RULES.filter((r) => r.scenarios !== undefined).map((r) => r.id)).toEqual([]);
+  });
+
+  it("scopes every rule to a fork, exit, or module that exists", () => {
+    expect(scopeProblems(COASSIST_RULES, FLOWS.map(scenarioFor), COASSIST_FORKS)).toEqual([]);
+  });
+
   it("keeps the rule order for each event, and where each rule applies", () => {
     const order: Record<string, string[]> = {};
     for (const rule of COASSIST_RULES) (order[rule.on] ??= []).push(rule.id!);
 
     const applies: Record<string, string[]> = {};
     for (const rule of COASSIST_RULES) {
-      applies[rule.id!] = FLOWS.filter((flow) => !rule.scenarios || rule.scenarios.includes(flow));
+      applies[rule.id!] = FLOWS.filter((flow) => ruleAppliesTo(rule, scenarioFor(flow), COASSIST_FORKS));
     }
 
     // Sort the keys, so moving a rule between module files does not reshuffle the fixture. Only the ids inside

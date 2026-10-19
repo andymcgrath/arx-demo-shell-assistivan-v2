@@ -1,4 +1,5 @@
 import type { FlowType, WorkflowData } from "@/engine/types";
+import type { ScenarioRecipe } from "./components";
 
 export type Portal = "crm" | "patient" | "provider" | "analytics" | "field";
 
@@ -118,7 +119,19 @@ export interface ScenarioDefinition<Content = unknown> {
   patient?: Partial<PatientPersona>;
   /** Scenario-specific content that rules read. */
   content: Content;
+  /**
+   * The modules this scenario runs, in order (see components.ts). Rules with a `module` scope apply only to a
+   * scenario whose recipe includes that module. Optional: a workflow with no recipes uses `scenarios` filters.
+   */
+  recipe?: ScenarioRecipe;
 }
+
+/**
+ * Where a rule applies, derived from the scenario instead of a hand-written list.
+ * - `{ module, props? }`: scenarios whose recipe includes the module, with matching props.
+ * - `{ fork, exit? }`: scenarios where that fork applies, and has that exit when one is named.
+ */
+export type RuleScope = { module: string; props?: Record<string, unknown> } | { fork: string; exit?: string };
 
 /** One entry appended to the event log when a rule fires. */
 export interface Emit<E = any, C = any> {
@@ -163,8 +176,10 @@ export interface Rule<E = any, C = any> {
    */
   id?: string;
   on: string;
-  /** Apply only to these scenarios. Omit to apply to every scenario of the workflow. */
+  /** Apply only to these scenarios. Omit to apply to every scenario of the workflow. Prefer `scope`. */
   scenarios?: FlowType[];
+  /** Apply only where the scenario's recipe or forks say so. Both `scenarios` and `scope` must pass when both are set. */
+  scope?: RuleScope;
   /** Precondition on the data. Omit for "always allowed". */
   when?: (data: WorkflowData, event: E, scenario: ScenarioDefinition<C>) => boolean;
   /** Fields to change. */
