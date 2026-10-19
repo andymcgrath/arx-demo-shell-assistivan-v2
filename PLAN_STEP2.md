@@ -52,13 +52,39 @@ DTP and Copay stage ladders stay hard-coded in `coassistLadders.ts` for now. Onl
 
 Because no DME behavior is added, there is no separate DME denial sub-step. Once modules own their screens (2.5), a DME recipe with `cash_offer` gets the denial routing without a new rule.
 
-**2.3 The patient-chosen fork.** Declare a `pricing` fork with `chooser: "patient"`. DTP exits are `retail`, `mail_order`, and `self_pay`. Copay exits are `copay_then_retail`, `copay_then_mail_order`, and `retail`. The fork replaces the three `SELECT_SELF_PAY` rules and the pricing rule.
+**2.3 The patient-chosen forks.** See "2.3 design" below. DTP and Copay only. DME is out: its pricing is set by the BI exit and the cash-offer path, so there is no patient pick to model.
+
+**2.3b Pre-picked pricing (optional, new behavior).** A recipe or demo that pins `pricing` skips the menu and applies the pick when the PA approval OTP verifies. DME's pharmacy transfer already works this way through `pharmacyAssigned`. One new fixture, reviewed. This is what lets a sales rep ask for "skip the pricing screen."
 
 **2.4 Rules per module.** Split `rules.ts` into one fragment per module. The factory assembles them from the recipe, in spine order. A test checks that the assembled order for each event matches today's order. DME's `SELECT_PHARMACY` must stay ahead of the generic one.
 
 **2.5 Screens per module.** Each module contributes its screens and route rules. The route list and the menu derive from the recipe. Delete every `scenarios:` filter in `screens.ts`. `screens.test.ts` already checks that every visited screen is in the menu.
 
 **2.6 Proof recipe.** Compose one new scenario with no new code: commercial coverage, PA approved, patient selects a pharmacy, Rx transferred, no scheduling or payment. Add its golden path. This is the one sub-step that records a new fixture, and it must be reviewed.
+
+## 2.3 design
+
+**Today.** `pricingOption` (`retail`, `mail_order`, `self_pay`, or null) is the patient's pick. About 35 places read it: the route rules, seven patient pages, the CRM status text, and the shell. The patient app sends `SELECT_PRICING_OPTION { option }` for Retail and Mail Order. `SELECT_SELF_PAY` means two things: in DTP it picks cash pay, and in Copay it enrolls in the copay program (`copayEnrolled`). Copay is two decisions: enroll or not, then Retail or Mail Order.
+
+**Forks.**
+
+| Scenario | Fork | Exits | Reads from |
+|---|---|---|---|
+| DTP | `pricing` | `retail`, `mail_order`, `self_pay` | `pricingOption` |
+| Copay | `copay` | `enroll`, `decline` | `copayEnrolled`, then `pricingOption` |
+| Copay | `pricing` | `retail`, `mail_order` | `pricingOption` |
+
+All three use `chooser: "patient"`. Exit ids match today's `pricingOption` values, so no read site changes.
+
+**The patient's pick lives in the data, not in `choices`.** `choices` survives RESET by design, because it holds the story's and presenter's pre-picks. A patient's live pick written there would leak into the next run. `pricingOption` already records the pick. A patient fork declares how to read its pick from the data (`picked`), so BrandLab and the validator can show it.
+
+**Events stay.** The patient app and every test keep sending `SELECT_PRICING_OPTION` and `SELECT_SELF_PAY`. The rules change underneath:
+
+- One `SELECT_PRICING_OPTION` rule covers DTP and Copay. It accepts only an option that is a declared exit of the scenario's `pricing` fork, and it sets that exit's data. The pharmacy still comes from scenario content, keyed by exit id.
+- `SELECT_SELF_PAY` on DTP picks the `self_pay` exit. On Copay it picks `copay.enroll`.
+- Three rules plus the shared one become two. DME's `SELECT_SELF_PAY` and `SELECT_PHARMACY` rules stay as they are.
+
+**Unchanged.** Route rules, patient pages, CRM text, stage ladders, and fixtures. No `WorkflowData` shape change, so no snapshot key bump.
 
 ## Risks
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { SimulatedClock, ctx, startFlow } from "./harness";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ALL_FORKS } from "@/workflows/forks";
-import { choiceProblems, exitFor } from "@/engine/workflow/forks";
+import { choiceProblems, exitFor, forksForScenario, pickedExit } from "@/engine/workflow/forks";
 import { DME_BI_FORK } from "@/workflows/coassist/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
 
@@ -180,7 +180,86 @@ describe("BI and PA forks on DTP and Copay", () => {
   });
 });
 
+describe("patient-chosen pricing forks on DTP and Copay", () => {
+  const forkOf = (flow: "CoA_DTP" | "CoA_Copay", id: string) => forksForScenario(ALL_FORKS, flow).find((f) => f.id === id)!;
+  const reachPricing = (actor: ReturnType<typeof startFlow>) => {
+    enrollThroughBiRunning(actor);
+    for (const type of ["COMPLETE_BI", "APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP"]) actor.send({ type } as any);
+  };
+  const pick = (flow: "CoA_DTP" | "CoA_Copay", id: string, actor: ReturnType<typeof startFlow>) => pickedExit(forkOf(flow, id), data(actor))?.id;
+
+  it("DTP: reads the patient's pick from the data, and not before they pick", () => {
+    const actor = startFlow("CoA_DTP");
+    reachPricing(actor);
+    expect(pick("CoA_DTP", "pricing", actor)).toBeUndefined();
+
+    actor.send({ type: "SELECT_PRICING_OPTION", option: "mail_order" } as any);
+    expect(pick("CoA_DTP", "pricing", actor)).toBe("mail_order");
+    expect(data(actor)).toMatchObject({ pricingOption: "mail_order", selectedPharmacy: { name: "FutureScripts Home Delivery" } });
+  });
+
+  it("DTP: self-pay is the self_pay exit and names CoAssist's own pharmacy", () => {
+    const actor = startFlow("CoA_DTP");
+    reachPricing(actor);
+    actor.send({ type: "SELECT_SELF_PAY" } as any);
+    expect(pick("CoA_DTP", "pricing", actor)).toBe("self_pay");
+    expect(data(actor).selectedPharmacy.name).toBe("CoAssist Pharmacy");
+  });
+
+  it("Copay: enrolling and picking are two forks", () => {
+    const actor = startFlow("CoA_Copay");
+    reachPricing(actor);
+    expect(pick("CoA_Copay", "copay", actor)).toBeUndefined();
+
+    actor.send({ type: "SELECT_SELF_PAY" } as any);
+    expect(pick("CoA_Copay", "copay", actor)).toBe("enroll");
+    expect(pick("CoA_Copay", "pricing", actor)).toBeUndefined();
+    expect(data(actor).pricingOption).toBeNull();
+
+    actor.send({ type: "SELECT_PRICING_OPTION", option: "mail_order" } as any);
+    expect(pick("CoA_Copay", "pricing", actor)).toBe("mail_order");
+    expect(pick("CoA_Copay", "copay", actor)).toBe("enroll");
+  });
+
+  it("Copay: picking Retail without enrolling is the decline exit", () => {
+    const actor = startFlow("CoA_Copay");
+    reachPricing(actor);
+    actor.send({ type: "SELECT_PRICING_OPTION", option: "retail" } as any);
+    expect(pick("CoA_Copay", "copay", actor)).toBe("decline");
+    expect(pick("CoA_Copay", "pricing", actor)).toBe("retail");
+  });
+
+  it("ignores an option that is not an exit of the scenario's pricing fork", () => {
+    for (const [flow, option] of [["CoA_DTP", "nonsense"], ["CoA_Copay", "self_pay"], ["CoA_Copay", "nonsense"]] as const) {
+      const actor = startFlow(flow);
+      reachPricing(actor);
+      expect(actor.getSnapshot().can({ type: "SELECT_PRICING_OPTION", option } as any), `${flow} ${option}`).toBe(false);
+    }
+  });
+
+  it("does not write a patient's pick to choices, so a reset cannot carry it into the next run", () => {
+    const actor = startFlow("CoA_DTP");
+    reachPricing(actor);
+    actor.send({ type: "SELECT_PRICING_OPTION", option: "retail" } as any);
+    expect(data(actor).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+
+    actor.send({ type: "RESET" } as any);
+    expect(data(actor).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+    expect(data(actor).pricingOption).toBeNull();
+  });
+
+  it("gives DME no pricing fork", () => {
+    expect(forksForScenario(ALL_FORKS, "CoA_DME").some((f) => f.id === "pricing")).toBe(false);
+  });
+});
+
 describe("fork declarations", () => {
+  it("say how to read the pick for every patient-chosen fork", () => {
+    for (const fork of ALL_FORKS.filter((f) => f.chooser === "patient")) {
+      expect(typeof fork.picked, fork.id).toBe("function");
+    }
+  });
+
   it("resolve a choice to an exit, and fall back to the first exit", () => {
     expect(exitFor(DME_BI_FORK, { choices: { bi: "no_coverage" } }).id).toBe("no_coverage");
     expect(exitFor(DME_BI_FORK, { choices: {} }).id).toBe("pharmacy_covered");

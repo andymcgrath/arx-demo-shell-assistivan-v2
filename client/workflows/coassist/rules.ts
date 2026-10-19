@@ -13,9 +13,9 @@
  * patient's own onboarding without stranding it.
  */
 import type { WorkflowData } from "@/engine/types";
-import type { Rule } from "@/engine/workflow/types";
+import type { ForkExit, Rule } from "@/engine/workflow/types";
 import { exitFor } from "@/engine/workflow/forks";
-import { PA_FORK, biForkFor } from "./forks";
+import { COPAY_FORK, PA_FORK, biForkFor, pricingForkFor } from "./forks";
 import type { CoassistContent } from "./scenarios";
 
 type CoaRule = Rule<any, CoassistContent>;
@@ -44,6 +44,23 @@ const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
   d.pharmacyAssigned ? { pricingOption: "retail" as const, selectedPharmacy: s.content.transferPharmacy } : {};
 
 const DTP_COPAY = ["CoA_DTP", "CoA_Copay"] as const;
+
+/** The scenario content that names the pharmacy for each `pricing` exit. Exit data is static, so content supplies it. */
+const PRICING_PHARMACY: Record<string, "retail" | "mailOrder" | "selfPay"> = {
+  retail: "retail",
+  mail_order: "mailOrder",
+  self_pay: "selfPay",
+};
+
+/** The scenario's own `pricing` exit for what the patient picked, or undefined when it has no such exit. */
+const pricingExit = (d: WorkflowData, option: unknown): ForkExit | undefined =>
+  pricingForkFor(d.flowType)?.exits.find((e) => e.id === option);
+
+/** What a pricing pick sets: the exit's data, plus the pharmacy that exit names in the scenario's content. */
+const pricingPick = (exit: ForkExit, s: { content: CoassistContent }) => ({
+  ...exit.data,
+  selectedPharmacy: s.content[PRICING_PHARMACY[exit.id]],
+});
 
 /** How long the CRM shows a stage as "working" before the result lands. */
 const REVEAL_MS = 3000;
@@ -243,29 +260,29 @@ export const COASSIST_RULES: CoaRule[] = [
 
   // ── Pricing and pharmacy choice ────────────────────────────────────
   {
+    // The patient picks an exit of the scenario's `pricing` fork (forks.ts). An option that is not one of its
+    // exits is ignored: Copay has no self-pay exit, because enrolling in the copay program is its own fork.
     on: "SELECT_PRICING_OPTION",
     scenarios: [...DTP_COPAY],
-    when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,
-    set: (_d, e, s) => ({
-      pricingOption: e.option,
-      selectedPharmacy: e.option === "retail" ? s.content.retail : s.content.mailOrder,
-    }),
+    when: (d, e) => d.paApprovedOtpVerified && d.pricingOption === null && !!pricingExit(d, e.option),
+    set: (d, e, s) => pricingPick(pricingExit(d, e.option)!, s),
     emit: { portal: "patient", step: 9 },
   },
   {
-    // DTP: cash pay through CoAssist's own pharmacy.
+    // DTP: cash pay through CoAssist's own pharmacy. It is the `self_pay` exit of the `pricing` fork.
     on: "SELECT_SELF_PAY",
     scenarios: ["CoA_DTP"],
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,
-    set: (_d, _e, s) => ({ pricingOption: "self_pay", selectedPharmacy: s.content.selfPay }),
+    set: (d, _e, s) => pricingPick(pricingExit(d, "self_pay")!, s),
     emit: { portal: "patient", step: 9 },
   },
   {
-    // Copay: enrolling only unlocks the reduced price. The patient still picks Retail or Mail Order next.
+    // Copay: this is the `enroll` exit of the `copay` fork. Enrolling only unlocks the reduced price.
+    // The patient still picks Retail or Mail Order next.
     on: "SELECT_SELF_PAY",
     scenarios: ["CoA_Copay"],
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null && !d.copayEnrolled,
-    set: () => ({ copayEnrolled: true }),
+    set: () => COPAY_FORK.exits.find((e) => e.id === "enroll")!.data,
     emit: { portal: "patient", step: 9 },
   },
   {

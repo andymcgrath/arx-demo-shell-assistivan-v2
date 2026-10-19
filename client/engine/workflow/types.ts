@@ -85,6 +85,12 @@ export interface ForkDefinition {
   stagesBefore?: ForkStage[];
   /** True once the fork has resolved. A choice can change only before that. After it, reset and replay. */
   resolved: (data: WorkflowData) => boolean;
+  /**
+   * For a `patient` fork: reads the patient's live pick from the data and returns an exit id, or null before the pick.
+   * A patient's pick is not written to `choices`, because `choices` survives RESET and would leak into the next run.
+   * The data already records it (for example `pricingOption`), so the fork says how to read it.
+   */
+  picked?: (data: WorkflowData) => string | null;
 }
 
 /** A scenario is data: starting values plus content (pharmacies, prices, labels). */

@@ -8,13 +8,15 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
  * pass depends on the fork picks: PA denied reaches `cash_offer`, PA approved reaches `pa_notification`.
  *
  * `forks` names the forks the scenario passes through. Every CoAssist scenario passes through `bi` and `pa`.
+ * DTP and Copay add the patient's `pricing` pick, and Copay adds the `copay` enrollment. The patient picks those live,
+ * so `choices` does not pin them.
  * `choices` pins the branch the story walks. DME pins `pa` to `approved`: its rules do not handle a denial yet.
  * `payment.method` is left out where the patient picks live (DTP and Copay today).
  */
 
 export const COA_DTP_RECIPE: ScenarioRecipe = {
   source: "coassist",
-  forks: ["bi", "pa"],
+  forks: ["bi", "pa", "pricing"],
   choices: { bi: "coverage_found", pa: "approved" },
   modules: [
     { id: "enrollment" },
@@ -28,7 +30,7 @@ export const COA_DTP_RECIPE: ScenarioRecipe = {
 
 export const COA_COPAY_RECIPE: ScenarioRecipe = {
   source: "coassist",
-  forks: ["bi", "pa"],
+  forks: ["bi", "pa", "copay", "pricing"],
   choices: { bi: "coverage_found", pa: "approved" },
   modules: [
     { id: "enrollment" },

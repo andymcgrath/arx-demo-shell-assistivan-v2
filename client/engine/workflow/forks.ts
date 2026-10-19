@@ -19,6 +19,15 @@ export function exitFor(fork: ForkDefinition, data: Pick<WorkflowData, "choices"
   return fork.exits.find((e) => e.id === picked) ?? fork.exits[0];
 }
 
+/**
+ * The exit a patient has picked, read from the data through the fork's `picked`. Undefined before the pick,
+ * or for a fork with no `picked`. Unlike `exitFor`, it never falls back to the first exit.
+ */
+export function pickedExit(fork: ForkDefinition, data: WorkflowData): ForkExit | undefined {
+  const id = fork.picked?.(data);
+  return id ? fork.exits.find((e) => e.id === id) : undefined;
+}
+
 export interface StageItem {
   /** 1-based. Stage 1 is the reset itself. */
   stage: number;

@@ -175,7 +175,68 @@ export const PA_FORK: ForkDefinition = {
   ],
 };
 
-export const COASSIST_FORKS: ForkDefinition[] = [DME_BI_FORK, STANDARD_BI_FORK, PA_FORK];
+/**
+ * What the patient picks on the pricing screens. Exit ids match `pricingOption`, so no read site changes.
+ * The patient's pick is read from the data (`picked`), not stored in `choices`: `choices` survives RESET.
+ * The pharmacy each exit names comes from scenario content (rules.ts), because exit data is static.
+ * DME has no patient pick here. Its pricing follows the BI exit.
+ */
+export const DTP_PRICING_FORK: ForkDefinition = {
+  id: "pricing",
+  label: "Pricing option",
+  chooser: "patient",
+  scenarios: ["CoA_DTP"],
+  resolved: (d) => d.pricingOption !== null,
+  picked: (d) => d.pricingOption,
+  exits: [
+    { id: "retail", label: "Retail", description: "Fill at a retail pharmacy.", data: { pricingOption: "retail" } },
+    { id: "mail_order", label: "Mail Order", description: "Ship from the mail-order pharmacy.", data: { pricingOption: "mail_order" } },
+    { id: "self_pay", label: "Self-pay", description: "Cash pay through CoAssist's own pharmacy.", data: { pricingOption: "self_pay" } },
+  ],
+};
+
+/**
+ * Copay is two decisions. First the patient enrolls in the copay program or does not. `enroll` only unlocks the
+ * reduced price. The patient still picks Retail or Mail Order next. `decline` means they went straight to a pick.
+ */
+export const COPAY_FORK: ForkDefinition = {
+  id: "copay",
+  label: "Copay program",
+  chooser: "patient",
+  scenarios: ["CoA_Copay"],
+  resolved: (d) => d.copayEnrolled || d.pricingOption !== null,
+  picked: (d) => (d.copayEnrolled ? "enroll" : d.pricingOption !== null ? "decline" : null),
+  exits: [
+    { id: "enroll", label: "Enroll", description: "Enroll for the reduced price.", data: { copayEnrolled: true } },
+    { id: "decline", label: "Decline", description: "Pay the full price.", data: {} },
+  ],
+};
+
+export const COPAY_PRICING_FORK: ForkDefinition = {
+  id: "pricing",
+  label: "Pricing option",
+  chooser: "patient",
+  scenarios: ["CoA_Copay"],
+  resolved: (d) => d.pricingOption !== null,
+  picked: (d) => d.pricingOption,
+  exits: [
+    { id: "retail", label: "Retail", description: "Fill at a retail pharmacy. No address or ship date.", data: { pricingOption: "retail" } },
+    { id: "mail_order", label: "Mail Order", description: "Ship from the mail-order pharmacy.", data: { pricingOption: "mail_order" } },
+  ],
+};
+
+export const COASSIST_FORKS: ForkDefinition[] = [
+  DME_BI_FORK,
+  STANDARD_BI_FORK,
+  PA_FORK,
+  DTP_PRICING_FORK,
+  COPAY_FORK,
+  COPAY_PRICING_FORK,
+];
+
+/** The pricing fork that applies to a scenario, or undefined when it has none (DME). */
+export const pricingForkFor = (flowType: FlowType): ForkDefinition | undefined =>
+  COASSIST_FORKS.find((f) => f.id === "pricing" && forkApplies(f, flowType));
 
 /** The BI fork that applies to a scenario. DME has its own, so this reads the declarations and not the flow type. */
 export const biForkFor = (flowType: FlowType): ForkDefinition =>

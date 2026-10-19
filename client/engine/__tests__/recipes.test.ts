@@ -41,7 +41,13 @@ describe("CoAssist recipes", () => {
   });
 
   it("every recipe passes through the bi and pa forks", () => {
-    for (const r of Object.values(COASSIST_RECIPES)) expect(r.forks).toEqual(["bi", "pa"]);
+    for (const r of Object.values(COASSIST_RECIPES)) expect(r.forks).toEqual(expect.arrayContaining(["bi", "pa"]));
+  });
+
+  it("DTP and Copay pass through the patient's pricing pick, and Copay through the copay enrollment", () => {
+    expect(COASSIST_RECIPES.CoA_DTP.forks).toContain("pricing");
+    expect(COASSIST_RECIPES.CoA_Copay.forks).toEqual(expect.arrayContaining(["copay", "pricing"]));
+    expect(COASSIST_RECIPES.CoA_DME.forks).not.toContain("pricing");
   });
 
   it("DME pins the PA to approved", () => {
