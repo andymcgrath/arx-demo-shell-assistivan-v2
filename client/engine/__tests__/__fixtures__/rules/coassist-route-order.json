@@ -44,7 +44,7 @@
       "tracking.shipped",
       "tracking.delivered"
     ],
-    "CoA_DME": [
+    "CoA_Coverage": [
       "enrollment.lock_screen",
       "enrollment.sms",
       "enrollment.otp",

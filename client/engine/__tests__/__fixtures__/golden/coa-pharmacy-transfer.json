@@ -1,5 +1,5 @@
 {
-  "flowType": "CoA_DME",
+  "flowType": "CoA_Coverage",
   "steps": [
     {
       "event": "REFERRAL_RECEIVED",

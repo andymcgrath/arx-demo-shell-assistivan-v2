@@ -45,10 +45,10 @@ export default function DeliveryAddress() {
   const isCoA = workflowData.flowType === "CoA_DTP" || workflowData.flowType === "CoA_Copay";
   const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
   const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
-  // CoA_DME reaches this screen for both its fulfillment scenarios (Scenario
+  // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 and Scenario 3 — see workflows/coaDme.ts) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
-  const isDmeFlow = workflowData.flowType === "CoA_DME";
+  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));

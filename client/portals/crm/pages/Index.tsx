@@ -702,7 +702,7 @@ export default function Index() {
     if (enrollmentStatus === 'none') {
       navigate('/');
       const currentFlowType = useDemoStore.getState().flowType;
-      if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay" || currentFlowType === "CoA_DME") {
+      if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay" || currentFlowType === "CoA_Coverage") {
         setHubView("detail");
       }
     }
@@ -715,7 +715,7 @@ export default function Index() {
   // (otherwise clicking "Back to Cases" afterward would just get overridden).
   const autoOpenedOnConsentRef = useRef(false);
   useEffect(() => {
-    if (workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay" && workflowData.flowType !== "CoA_DME") return;
+    if (workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay" && workflowData.flowType !== "CoA_Coverage") return;
     if (workflowData.consentStatus === "confirmed") {
       if (!autoOpenedOnConsentRef.current) {
         autoOpenedOnConsentRef.current = true;
@@ -804,11 +804,11 @@ export default function Index() {
   const isIAssistPapFlow = flowType === "iAssist_PAP";
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  // CoA_DME (medical-benefit DME, no PA/pricing/fulfillment — see
+  // CoA_Coverage (medical-benefit DME, no PA/pricing/fulfillment — see
   // workflows/coaDme.ts) is deliberately its own flag, not folded into
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
-  const isDmeFlow = flowType === "CoA_DME";
+  const isDmeFlow = flowType === "CoA_Coverage";
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -822,7 +822,7 @@ export default function Index() {
   // dispense. Named for its original Retail-only scope; kept short rather
   // than renamed everywhere now that Mail Order shares it.
   const isCopayRetailFlow = flowType === "CoA_Copay" && (pricingOption === "retail" || pricingOption === "mail_order");
-  // CoA_DME Scenario 1 (pharmacy covered, medical not) — same "filled
+  // CoA_Coverage Scenario 1 (pharmacy covered, medical not) — same "filled
   // outside AssistRx's own pipeline" reasoning isCopayRetailFlow already
   // uses, now that Scenario 1 no longer goes through Retail-vs-Mail-Order
   // pricing/address/date at all: the patient just picks a network pharmacy
@@ -952,7 +952,7 @@ export default function Index() {
   // looking at. The machine owns the 3 second delay and the outcome. Leaving a stage
   // cancels a pending reveal.
   //
-  // BI: opening the stage while BI runs. The branch the BI takes (CoA_DME's coverage outcome) is the
+  // BI: opening the stage while BI runs. The branch the BI takes (CoA_Coverage's coverage outcome) is the
   // `bi` fork's choice, which lives in the machine, so the event carries nothing extra.
   useEffect(() => {
     if (activeTopTab !== 'BI-14273') return;
@@ -996,7 +996,7 @@ export default function Index() {
     return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'APPEAL' });
   }, [activeTopTab, appealStatus, dispatch]);
 
-  // CoA_DME: the provider transfer notice follows the agent opening the DME
+  // CoA_Coverage: the provider transfer notice follows the agent opening the DME
   // Provider Transfer stage. The machine owns the delay (rules.ts, VIEW_STAGE).
   useEffect(() => {
     if (activeTopTab !== 'DME-14282') return;
@@ -1067,16 +1067,16 @@ export default function Index() {
     ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
       ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
-    // CoA_Copay Retail/Mail Order, and now CoA_DME Scenario 1 too
+    // CoA_Copay Retail/Mail Order, and now CoA_Coverage Scenario 1 too
     // (isDmeRetailFlow — see that flag's own comment above) — see
     // isCopayRetailFlow above. Keyed off selectedPharmacy/dispatchStatus ===
     // "dispatched" rather than dispatchStatus === "selected" like the
-    // generic branch below does. Retail (CoA_Copay and CoA_DME alike) jumps
+    // generic branch below does. Retail (CoA_Copay and CoA_Coverage alike) jumps
     // straight from "none" to "dispatched" (address collection is skipped
     // entirely — see PharmacySelection.tsx/NetworkPharmacySelection.tsx);
     // CoA_Copay's Mail Order still passes through "selected" via
     // PATIENT_SETS_ADDRESS on /delivery-address (see DeliveryAddress.tsx —
-    // that step stays for Mail Order, only /delivery-date is skipped; CoA_DME
+    // that step stays for Mail Order, only /delivery-date is skipped; CoA_Coverage
     // has no Mail Order option at all). Either way this completes the
     // moment dispatchStatus hits "dispatched," rather than waiting on
     // pharmacyStatus to reach "shipped" like the generic branch does —
@@ -1138,7 +1138,7 @@ export default function Index() {
     ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "Not needed", statusDetail: "Commercial Insurance", isComplete: true, isNotStarted: false, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Effective Date", value: null }, { label: "Program Approval Date", value: null }, { label: "Expiration Date", value: null }, { label: "Program Denial Reason", value: null }], lastUpdated: null, lastUpdatedAgo: null };
 
-  // CoA_DME's Benefits Investigation stage's own outcome-aware statusDetail —
+  // CoA_Coverage's Benefits Investigation stage's own outcome-aware statusDetail —
   // used both by the inline BI stage below and (via biStage further down)
   // nowhere else, since isDmeFlow never reads the shared biStage constant.
   const dmeBiOutcomeDetail = medicalBenefitStatus === "covered"
@@ -1924,11 +1924,11 @@ export default function Index() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 items-center">
-                  {/* CoA_DME (Scenario 3) never submits a PA, so this
+                  {/* CoA_Coverage (Scenario 3) never submits a PA, so this
                       button's original "Send Cash Offer" gate — which
                       requires paStatus === "denied" — can never pass;
                       that's a CoA_DTP/Copay-only precondition (cash offer
-                      there only exists after a PA denial). CoA_DME's price
+                      there only exists after a PA denial). CoA_Coverage's price
                       is shown straight to the patient in-app (PADenied.tsx's
                       isDmeFlow branch) with no CRM "send" action at all —
                       there's no SEND_CASH_OFFER handler in coaDme.ts for
@@ -2545,7 +2545,7 @@ export default function Index() {
             </div>
 
             {isDmeFlow ? (
-              /* ── CoA_DME's own layout: Information + Pharmacy/Medical
+              /* ── CoA_Coverage's own layout: Information + Pharmacy/Medical
                   Benefits split out (instead of one shared Information
                   section), and two stacked Product Coverage cards on the
                   right instead of one. Every other flow keeps the untouched
@@ -3004,7 +3004,7 @@ export default function Index() {
                         </span>
                       </div>
                     ) : isDmeRetailFlow ? (
-                      // CoA_DME Scenario 1 — the patient picks their own
+                      // CoA_Coverage Scenario 1 — the patient picks their own
                       // network pharmacy on NetworkPharmacySelection.tsx
                       // (SELECT_PHARMACY, only valid once the PA chain
                       // reaches paApprovedOtpVerified — see coaDme.ts), not
@@ -3430,7 +3430,7 @@ export default function Index() {
                   Dispatched
                 </span>
               )}
-              {/* CoA_Copay Retail/Mail Order (isCopayRetailFlow) and CoA_DME
+              {/* CoA_Copay Retail/Mail Order (isCopayRetailFlow) and CoA_Coverage
                   Scenario 1 (isDmeRetailFlow) — dispatchStatus "dispatched"
                   is this path's completion signal (see tpStage above);
                   pharmacyStatus stays "processing" forever after that since

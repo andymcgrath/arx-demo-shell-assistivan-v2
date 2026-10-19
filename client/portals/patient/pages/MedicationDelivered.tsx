@@ -36,7 +36,7 @@ export default function MedicationDelivered() {
   const isIAssistPap = workflowData.flowType === 'iAssist_PAP';
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
-  // CoA_DME Scenario 1 only (pharmacy covered, medical not) — this is the
+  // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
   // same condition as crm/pages/Index.tsx's isDmeRetailFlow. The Rx never
   // ships to the patient at all in this outcome — it's picked up at
   // whichever network pharmacy the patient chose on
@@ -47,7 +47,7 @@ export default function MedicationDelivered() {
   // Dexcom G7 sensor itself, not on a package that was never shipped to
   // them.
   const isDmeNetworkPharmacyFlow =
-    workflowData.flowType === 'CoA_DME' &&
+    workflowData.flowType === 'CoA_Coverage' &&
     workflowData.pharmacyBenefitStatus === 'covered' &&
     workflowData.medicalBenefitStatus !== 'covered';
   const drugName = PROGRAM.drugDisplayName || PROGRAM.name;

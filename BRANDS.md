@@ -83,12 +83,12 @@ The build merges it over the parent. Objects merge field by field. Arrays and va
 
 ```json
 "demos": [
-  { "id": "coa-dme-pharmacy-covered", "flow": "CoA_DME",
-    "label": "DME: Pharmacy Coverage",
+  { "id": "coa-coverage-pharmacy-covered", "flow": "CoA_Coverage",
+    "label": "Coverage: Pharmacy Coverage",
     "description": "The pharmacy benefit covers it and needs a PA.",
     "choices": { "bi": "pharmacy_covered" } },
-  { "id": "coa-dme-no-coverage", "flow": "CoA_DME",
-    "label": "DME: No Coverage (Cash)",
+  { "id": "coa-coverage-no-coverage", "flow": "CoA_Coverage",
+    "label": "Coverage: No Coverage (Cash)",
     "choices": { "bi": "no_coverage" } }
 ]
 ```
@@ -120,7 +120,7 @@ Some brand and drug names still sit in source (patient copy, sample patients, th
 
 ## Pharmacy transfer and the Brand Lab Demos tab
 
-`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to the `pharmacy_transfer` exit of the CoA_DME `bi` fork. The patient does not pick a pharmacy on that branch. When the brand names no partner, a placeholder pharmacy shows.
+`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to the `pharmacy_transfer` exit of the CoA_Coverage `bi` fork. The patient does not pick a pharmacy on that branch. When the brand names no partner, a placeholder pharmacy shows.
 
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 

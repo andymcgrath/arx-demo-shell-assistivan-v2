@@ -17,7 +17,7 @@ import { ctx, expectMatchesFixture, startFlow } from "./harness";
  *
  * An intentional change? Run `RECORD=1 pnpm test`, read the fixture diff, and commit it with the change.
  */
-const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
+const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"] as const;
 
 describe("CoAssist screen map", () => {
   it("gives every route rule a unique id", () => {

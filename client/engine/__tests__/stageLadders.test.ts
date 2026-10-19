@@ -19,7 +19,7 @@ import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from 
 const LADDERS = [
   { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DTP", stage) },
   { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
-  { flowType: "CoA_DME", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DME", stage) },
+  { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
   { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
   { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
   { flowType: "Fax_QS_PA_Approved", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("standard", stage) },
@@ -27,7 +27,7 @@ const LADDERS = [
   { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
 ] as const;
 
-const DME_BI_FORK = biForkFor("CoA_DME");
+const DME_BI_FORK = biForkFor("CoA_Coverage");
 
 describe("DME stage jump follows the selected branch", () => {
   for (const exit of DME_BI_FORK.exits) {
@@ -41,8 +41,8 @@ describe("DME stage jump follows the selected branch", () => {
           ...exit.stages!.map((s) => s.label),
         ]);
         for (const { stage } of list) {
-          const actor = startFlow("CoA_DME", { choices });
-          const records = runSteps(actor, coassistStageEvents("CoA_DME", stage, choices));
+          const actor = startFlow("CoA_Coverage", { choices });
+          const records = runSteps(actor, coassistStageEvents("CoA_Coverage", stage, choices));
           expect(records.filter((r) => !r.accepted).map((r) => r.event)).toEqual([]);
           if (stage === list.length) {
             const { workflowData: d } = ctx(actor);

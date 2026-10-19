@@ -28,9 +28,9 @@
       "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
     },
     {
-      "id": "coa-dme",
-      "flow": "CoA_DME",
-      "label": "5. CoAssist DME",
+      "id": "coa-coverage",
+      "flow": "CoA_Coverage",
+      "label": "5. CoAssist Coverage",
       "description": "Medical-benefit DME (CGM sensor) coverage, three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)"
     },
     {

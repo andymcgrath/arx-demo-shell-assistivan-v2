@@ -7,7 +7,7 @@ import { PROGRAM } from "@/portals/patient/config/branding";
  * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
  * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
  * iAssist.ts's updatePaApprovedSmsVerified). WF1 (Fax_QS_PA_Approved) never
- * routes here. CoA_DME Scenario 1 also routes here now — see this flow's own
+ * routes here. CoA_Coverage Scenario 1 also routes here now — see this flow's own
  * header comment below and coaDme.ts's paApproved state — reusing this
  * screen (rather than a DME-specific clone) replaces that scenario's old
  * single tap-through SMS entirely, per the confirmed PA design.
@@ -16,17 +16,17 @@ import { PROGRAM } from "@/portals/patient/config/branding";
  * (SMSMessage.tsx, untouched — this is a new dedicated screen so WF1's
  * onboarding text can't be affected by anything here). Sent once PA is
  * approved, letting the patient know it's time to schedule delivery (or, for
- * CoA_DME, pick a network pharmacy — there's no "delivery" framing yet at
+ * CoA_Coverage, pick a network pharmacy — there's no "delivery" framing yet at
  * this point in that flow). Tapping the link dispatches
  * VERIFY_PA_APPROVED_SMS and continues to a second OTP check
  * (PaApprovedOtp.tsx) before Benefit Pricing (CoA_DTP/iAssist) or Network
- * Pharmacy Selection (CoA_DME).
+ * Pharmacy Selection (CoA_Coverage).
  */
 export default function PaApprovedSms() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isDmeFlow = workflowData.flowType === "CoA_DME";
+  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
 
   const handleTapMessage = () => {
     dispatch("VERIFY_PA_APPROVED_SMS", { portal: "patient" });

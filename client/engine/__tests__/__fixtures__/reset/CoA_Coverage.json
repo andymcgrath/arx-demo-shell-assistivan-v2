@@ -1,6 +1,6 @@
 {
   "workflowDataEqualsFresh": true,
-  "flowTypeAfterReset": "CoA_DME",
+  "flowTypeAfterReset": "CoA_Coverage",
   "eventCount": 0,
   "snapshotCount": 0
 }

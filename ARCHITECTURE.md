@@ -10,7 +10,7 @@ This document reflects the current architecture. An earlier revision described a
 
 **Where:** `client/engine/workflowMachine.ts`, plus one module per newer workflow in `client/workflows/`:
 
-- `coassist/` (CoA_DTP, CoA_Copay, CoA_DME) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `coaDme.ts` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
+- `coassist/` (CoA_DTP, CoA_Copay, CoA_Coverage) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `coaDme.ts` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
 - `iAssist.ts` — iAssist_PA_Approved
 - `iAssistPap.ts` — iAssist_PAP
 - `presPap.ts` — PrES_PAP
@@ -45,7 +45,7 @@ interface MachineContext {
 
 There are 51 `setTimeout` calls across the portals in total. The refactor moves the scenario-relevant ones into the machines so scenarios can be tested headless.
 
-**Undo:** `UNDO` is handled by `Fax_*`, `iAssist_*`, and `PrES_PAP`. `CoA_DTP`, `CoA_Copay`, and `CoA_DME` do not handle it (pinned by `client/engine/__tests__/__fixtures__/undo/`).
+**Undo:** `UNDO` is handled by `Fax_*`, `iAssist_*`, and `PrES_PAP`. `CoA_DTP`, `CoA_Copay`, and `CoA_Coverage` do not handle it (pinned by `client/engine/__tests__/__fixtures__/undo/`).
 
 ---
 
@@ -72,7 +72,7 @@ Registers every machine directly at module load, keyed by a registry id:
 workflowRegistry.registerWorkflow("enrollment", workflowMachine, { ... });
 workflowRegistry.registerWorkflow("CoA_DTP", coassistMachine, { ... });   // one machine, three scenarios
 workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, { ... });
-workflowRegistry.registerWorkflow("CoA_DME", coassistMachine, { ... });
+workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, { ... });
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, { ... });
 workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, { ... });
 workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, { ... });

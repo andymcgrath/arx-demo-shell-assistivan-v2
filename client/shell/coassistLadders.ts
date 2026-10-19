@@ -1,6 +1,6 @@
 /**
  * coassistLadders.ts: the event lists behind the presenter's "jump to stage"
- * menu for the CoAssist flows (CoA_DTP, CoA_Copay, CoA_DME).
+ * menu for the CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage).
  *
  * DemoShell's resetActorToStage RESETs the actor, then sends these events to
  * land on a stage. This module is pure (no store, no actor, no React) so the
@@ -13,7 +13,7 @@
  * 6 filling, 7 shipped, 8 delivered.
  *
  * DTP and Copay: pricing defaults to Retail, a quick jump rather than a
- * scenario picker. CoA_DME reads its stages from the BI fork
+ * scenario picker. CoA_Coverage reads its stages from the BI fork
  * (workflows/coassist/forks.ts), so the list and the events follow the
  * selected branch. The branch's stage count differs: covered by both stops
  * at the provider transfer.
@@ -35,15 +35,15 @@ const IDENTITY: LadderEvent[] = ENROLL_AND_VERIFY;
 
 /**
  * Every event to send, in order, to land a RESET actor on `stage`. Stage 1 is the reset itself.
- * CoA_DME reads its stages from the BI fork (workflows/coassist/forks.ts), so `choices` selects the branch.
+ * CoA_Coverage reads its stages from the BI fork (workflows/coassist/forks.ts), so `choices` selects the branch.
  * Without `choices`, it takes the scenario's default branch.
  */
 export function coassistStageEvents(
-  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME",
+  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage",
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
-  if (flowType === "CoA_DME") return forkStageEvents(biForkFor("CoA_DME"), { choices }, stage);
+  if (flowType === "CoA_Coverage") return forkStageEvents(biForkFor("CoA_Coverage"), { choices }, stage);
 
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;

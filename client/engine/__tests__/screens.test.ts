@@ -11,7 +11,7 @@ import { SCENARIOS } from "./scenarios";
  * menu (CLAUDE.md rule 13). These tests check the two stay in step, for every
  * workflow that has a screen list.
  */
-const COA_FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
+const COA_FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"] as const;
 const MAPS: { name: string; map: ScreenMap }[] = [
   { name: "CoAssist", map: COASSIST_SCREENS },
   { name: "iAssist", map: IASSIST_SCREENS },
@@ -75,7 +75,7 @@ describe("CoAssist stay-put screens", () => {
       expect(isSticky(COASSIST_SCREENS, flowType, "/lock-screen")).toBe(false);
     }
     // Scenario-specific: only DME has the network pharmacy screen.
-    expect(isSticky(COASSIST_SCREENS, "CoA_DME", "/network-pharmacy-selection")).toBe(true);
+    expect(isSticky(COASSIST_SCREENS, "CoA_Coverage", "/network-pharmacy-selection")).toBe(true);
     expect(isSticky(COASSIST_SCREENS, "CoA_DTP", "/network-pharmacy-selection")).toBe(false);
   });
 });

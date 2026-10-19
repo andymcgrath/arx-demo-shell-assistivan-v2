@@ -60,7 +60,7 @@ export const BI_FORK: ForkDefinition = {
   label: "Benefits investigation result",
   chooser: "story",
   // CoAssist only. iAssist and the standard workflow declare their own `bi` fork.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_DME"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage"],
   resolved: (d) => d.biStatus === "complete",
   exits: [
     {
@@ -99,7 +99,7 @@ export const BI_FORK: ForkDefinition = {
  * here has no rungs for the fork (DTP and Copay keep their hand-built ladder in shell/coassistLadders.ts).
  */
 const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<string, ForkStage[]> }>> = {
-  CoA_DME: {
+  CoA_Coverage: {
     before: [
       { label: "Referral Received", events: [] },
       { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
@@ -153,7 +153,7 @@ export const PA_FORK: ForkDefinition = {
   label: "Prior authorization decision",
   chooser: "story",
   // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_DME"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },

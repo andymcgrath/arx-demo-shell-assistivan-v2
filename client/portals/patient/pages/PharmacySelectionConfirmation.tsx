@@ -1,7 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
-// CoA_DME Scenario 1 only — pharmacy covered, medical not. Adapts
+// CoA_Coverage Scenario 1 only — pharmacy covered, medical not. Adapts
 // DeliveryConfirmation.tsx's/AppointmentConfirmation.tsx's visual pattern
 // (checkmark banner, "Got it" button) but with copy about the pharmacy
 // pick, not a delivery/ship date — there's no delivery-address/delivery-date

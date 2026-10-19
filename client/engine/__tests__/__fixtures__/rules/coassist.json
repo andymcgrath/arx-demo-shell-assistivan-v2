@@ -98,34 +98,34 @@
       "CoA_Copay"
     ],
     "cash_offer.select_self_pay.dme": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "cash_offer.send_cash_offer": [
       "CoA_DTP",
       "CoA_Copay"
     ],
     "cash_offer.verify_sms": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "enrollment.confirm_consent": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "enrollment.referral_received": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "enrollment.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "enrollment.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "financial_assistance.select_self_pay.copay": [
       "CoA_Copay"
@@ -133,17 +133,17 @@
     "pa_notification.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "pa_notification.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "payment.patient_pays": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "payment.select_pricing_option": [
       "CoA_DTP",
@@ -155,99 +155,99 @@
     "payment.verify_payment": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "pharmacy_selection.select_pharmacy": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "pharmacy_selection.select_pharmacy.dme": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "provider_transfer.leave_stage": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "provider_transfer.notify": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "provider_transfer.verify_sms": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "provider_transfer.view_stage": [
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "scheduling.patient_selects_ship_date": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "scheduling.patient_sets_address": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.approve_pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.complete_bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.leave_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.leave_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.run_bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.submit_pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.view_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "spine.view_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "tracking.deliver_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "tracking.fill_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "tracking.ready_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ],
     "tracking.ship_rx": [
       "CoA_DTP",
       "CoA_Copay",
-      "CoA_DME"
+      "CoA_Coverage"
     ]
   }
 }

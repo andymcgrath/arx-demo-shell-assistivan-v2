@@ -2,7 +2,7 @@ import { CheckCircle, Phone } from "lucide-react";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 
-// CoA_DME, `pharmacy_transfer` branch. The terminal screen: the PA is approved and the scenario has already
+// CoA_Coverage, `pharmacy_transfer` branch. The terminal screen: the PA is approved and the scenario has already
 // assigned the pharmacy, so the patient has nothing to choose. It shows the pharmacy's contact details.
 // The pharmacy is `workflowData.selectedPharmacy`, set by the rules from `program.transferPartner` in the brand file.
 export default function PharmacyTransfer() {

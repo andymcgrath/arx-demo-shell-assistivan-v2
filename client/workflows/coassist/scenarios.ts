@@ -65,7 +65,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
 
 /** DME never offers Retail or Mail Order. The patient picks a network pharmacy, or pays cash through CoAssist's own. */
 export const COA_DME: ScenarioDefinition<CoassistContent> = {
-  flowType: "CoA_DME",
+  flowType: "CoA_Coverage",
   intake: "erx",
   // The story: pharmacy coverage. A demo in the brand file can pick another branch.
   choices: { bi: "pharmacy_covered", pa: "approved" },
@@ -79,4 +79,4 @@ export const COA_DME: ScenarioDefinition<CoassistContent> = {
 };
 
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_DME"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"];

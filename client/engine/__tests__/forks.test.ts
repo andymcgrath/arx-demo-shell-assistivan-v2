@@ -19,7 +19,7 @@ const enrollThroughBiRunning = (actor: ReturnType<typeof startFlow>) => {
 
 describe("DME pharmacy transfer branch", () => {
   const start = () => {
-    const actor = startFlow("CoA_DME", { choices: { bi: "pharmacy_transfer" } });
+    const actor = startFlow("CoA_Coverage", { choices: { bi: "pharmacy_transfer" } });
     enrollThroughBiRunning(actor);
     return actor;
   };
@@ -47,7 +47,7 @@ describe("DME pharmacy transfer branch", () => {
   });
 
   it("leaves the default branch with a patient choice", () => {
-    const actor = startFlow("CoA_DME");
+    const actor = startFlow("CoA_Coverage");
     enrollThroughBiRunning(actor);
     actor.send({ type: "COMPLETE_BI" } as any);
     expect(data(actor).pharmacyAssigned).toBe(false);
@@ -56,7 +56,7 @@ describe("DME pharmacy transfer branch", () => {
 
 describe("DME benefits investigation fork", () => {
   it("starts on the story's default branch", () => {
-    const actor = startFlow("CoA_DME");
+    const actor = startFlow("CoA_Coverage");
     expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
     enrollThroughBiRunning(actor);
     expect(data(actor).biStatus).toBe("running");
@@ -69,7 +69,7 @@ describe("DME benefits investigation fork", () => {
   });
 
   it("takes the branch a demo starts with", () => {
-    const actor = startFlow("CoA_DME", { choices: { bi: "no_coverage" } });
+    const actor = startFlow("CoA_Coverage", { choices: { bi: "no_coverage" } });
     enrollThroughBiRunning(actor);
     actor.send({ type: "COMPLETE_BI" } as any);
     expect(data(actor)).toMatchObject({
@@ -81,7 +81,7 @@ describe("DME benefits investigation fork", () => {
   });
 
   it("keeps the choice through RESET, and RESET can change it", () => {
-    const actor = startFlow("CoA_DME", { choices: { bi: "medical_covered" } });
+    const actor = startFlow("CoA_Coverage", { choices: { bi: "medical_covered" } });
     enrollThroughBiRunning(actor);
     actor.send({ type: "RESET" } as any);
     expect(data(actor).choices.bi).toBe("medical_covered");
@@ -92,7 +92,7 @@ describe("DME benefits investigation fork", () => {
   });
 
   it("lets an event that carries the statuses force an outcome (ladders and golden paths)", () => {
-    const actor = startFlow("CoA_DME", { choices: { bi: "no_coverage" } });
+    const actor = startFlow("CoA_Coverage", { choices: { bi: "no_coverage" } });
     enrollThroughBiRunning(actor);
     actor.send({ type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" } as any);
     expect(data(actor)).toMatchObject({ pharmacyBenefitStatus: "covered", paStatus: "submitted" });
@@ -148,9 +148,9 @@ describe("BI and PA forks on DTP and Copay", () => {
     });
   }
 
-  it("CoA_DME: the pa fork is declared and pinned to approved", () => {
+  it("CoA_Coverage: the pa fork is declared and pinned to approved", () => {
     const clock = new SimulatedClock();
-    const actor = startFlow("CoA_DME", { clock });
+    const actor = startFlow("CoA_Coverage", { clock });
     expect(data(actor).choices.pa).toBe("approved");
     enrollThroughBiRunning(actor);
     actor.send({ type: "COMPLETE_BI" } as any);
@@ -229,7 +229,7 @@ describe("patient-chosen pricing forks on DTP and Copay", () => {
   });
 
   it("gives DME no pricing fork", () => {
-    expect(forksForScenario(ALL_FORKS, "CoA_DME").some((f) => f.id === "pricing")).toBe(false);
+    expect(forksForScenario(ALL_FORKS, "CoA_Coverage").some((f) => f.id === "pricing")).toBe(false);
   });
 });
 
@@ -322,14 +322,14 @@ describe("pinned patient picks", () => {
 
   it("drops a pin that names no exit of the scenario's fork", () => {
     expect(data(startFlow("CoA_Copay", { choices: { pricing: "self_pay" } })).choices.pricing).toBeUndefined();
-    expect(data(startFlow("CoA_DME", { choices: { pricing: "retail", copay: "enroll" } })).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
+    expect(data(startFlow("CoA_Coverage", { choices: { pricing: "retail", copay: "enroll" } })).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
   });
 
   it("lets a brand demo pin the picks through its choices", () => {
     expect(choiceProblems(ALL_FORKS, "CoA_DTP", { pricing: "retail" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_Copay", { copay: "enroll", pricing: "mail_order" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_Copay", { pricing: "self_pay" })).toHaveLength(1);
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { pricing: "retail" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { pricing: "retail" })).toHaveLength(1);
   });
 });
 
@@ -341,21 +341,21 @@ describe("fork declarations", () => {
   });
 
   it("resolve a choice to an exit, and fall back to the first exit", () => {
-    expect(exitFor(biForkFor("CoA_DME"), { choices: { bi: "no_coverage" } }).id).toBe("no_coverage");
-    expect(exitFor(biForkFor("CoA_DME"), { choices: {} }).id).toBe("pharmacy_covered");
-    expect(exitFor(biForkFor("CoA_DME"), {} as any).id).toBe("pharmacy_covered");
+    expect(exitFor(biForkFor("CoA_Coverage"), { choices: { bi: "no_coverage" } }).id).toBe("no_coverage");
+    expect(exitFor(biForkFor("CoA_Coverage"), { choices: {} }).id).toBe("pharmacy_covered");
+    expect(exitFor(biForkFor("CoA_Coverage"), {} as any).id).toBe("pharmacy_covered");
   });
 
   it("report choices that name no real fork or exit", () => {
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "no_coverage" })).toEqual([]);
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "nonsense" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { bi: "no_coverage" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { bi: "nonsense" })).toHaveLength(1);
     // Every CoAssist scenario shares one BI fork. The old exit ids are gone.
     expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "no_coverage" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "pharmacy_covered" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "coverage_found" })).toHaveLength(1);
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "coverage_found" })).toHaveLength(1);
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "covered_by_both" })).toHaveLength(1);
-    expect(choiceProblems(ALL_FORKS, "CoA_DME", { pa: "denied" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { bi: "coverage_found" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { bi: "covered_by_both" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_Coverage", { pa: "denied" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "Fax_QS_PA_Approved", { bi: "no_coverage" })).toHaveLength(1);
   });
 

@@ -105,9 +105,9 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // CoA_Copay (WF4) is currently a direct copy of CoA_DTP (WF3) — same
   // starting portal, see coaCopay.ts.
   CoA_Copay: "provider",
-  // CoA_DME (medical-benefit DME, no PA/pricing/fulfillment) — same starting
+  // CoA_Coverage (medical-benefit DME, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see coaDme.ts.
-  CoA_DME: "provider",
+  CoA_Coverage: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist
@@ -315,7 +315,7 @@ const STEP_LABELS_COA_COPAY_RETAIL = [
   "Dispatch to Triage",
 ];
 
-// CoA_DME (one Benefits Investigation, three coverage outcomes — see
+// CoA_Coverage (one Benefits Investigation, three coverage outcomes — see
 // workflows/coaDme.ts's header comment) — mirrors CoA_DTP's own
 // STEP_LABELS_COA bar (same "eRx Received"/"Consent" naming, same
 // eRx-to-fulfillment shape), just without a Prior Authorization step at all
@@ -339,7 +339,7 @@ const STEP_LABELS_DME = [
   "Medication Delivered",
 ];
 
-// CoA_DME Scenario 1 only (pharmacyBenefitStatus === "covered",
+// CoA_Coverage Scenario 1 only (pharmacyBenefitStatus === "covered",
 // medicalBenefitStatus !== "covered") — this outcome now requires a real
 // Prior Authorization (mirroring CoA_DTP's own submit/auto-approve/SMS+OTP
 // re-verify pattern, no denial branch — see coaDme.ts's header comment and
@@ -359,7 +359,7 @@ const STEP_LABELS_DME_PHARMACY = [
   "Dispatch to Triage",
 ];
 
-// CoA_DME Scenario 2 only (medicalBenefitStatus === "covered", medical
+// CoA_Coverage Scenario 2 only (medicalBenefitStatus === "covered", medical
 // benefit always wins — see workflows/coaDme.ts) — this outcome ends the
 // moment CoAssist notifies the outside DME provider (Advanced Diabetes
 // Supply) of the transfer, so it never reaches Payment/Dispatch/fulfillment
@@ -451,8 +451,8 @@ function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
   ];
 }
 
-// CoA_DME (medical-benefit DME) per-step completion — same "BI can race
-// ahead of consent" reasoning as computeCoaStepDone above (CoA_DME's own
+// CoA_Coverage (medical-benefit DME) per-step completion — same "BI can race
+// ahead of consent" reasoning as computeCoaStepDone above (CoA_Coverage's own
 // RUN_BI fires off enrollment alone, see crm/pages/Index.tsx's isDmeFlow-
 // scoped effect), applied to this flow's own 3-step bar (STEP_LABELS_DME)
 // instead of CoA_DTP's 9-step one. Step 1 (Enrollment) is judged on real
@@ -582,9 +582,9 @@ function StepBar() {
   // of WF4's — see isIAssistPapFlow.
   const isIAssistFlow = flowType === "iAssist_PA_Approved" || flowType === "iAssist_PAP";
   const isIAssistPapFlow = flowType === "iAssist_PAP";
-  // CoA_DME (one Benefits Investigation, three coverage outcomes) — see
+  // CoA_Coverage (one Benefits Investigation, three coverage outcomes) — see
   // STEP_LABELS_DME/STEP_LABELS_DME_MEDICAL/computeDmeStepDone above.
-  const isDmeFlow = flowType === "CoA_DME";
+  const isDmeFlow = flowType === "CoA_Coverage";
   // Scenario 2 only — swaps in the short, terminal STEP_LABELS_DME_MEDICAL
   // bar once medicalBenefitStatus resolves to "covered" (medical always
   // wins — see workflows/coaDme.ts). Before BI resolves, and for the other
@@ -686,7 +686,7 @@ function StepBar() {
   const rxProcessingStepN = isCoaFlow ? 7 : 6;
   const rxShippedStepN    = isCoaFlow ? 8 : 7;
   // Benefits Investigation sits at n=3 for every flow's bar now, including
-  // both of CoA_DME's own bars (STEP_LABELS_DME/STEP_LABELS_DME_MEDICAL both
+  // both of CoA_Coverage's own bars (STEP_LABELS_DME/STEP_LABELS_DME_MEDICAL both
   // put "eRx Received"/"Consent" ahead of it, same as CoA_DTP's bar) — no
   // per-flow adjustment needed.
   const biRunningStepN    = 3;
@@ -1005,9 +1005,9 @@ export default function DemoShell() {
   // where WF5 intentionally does NOT follow WF2 (its provider tab stays
   // visible).
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
-  // CoA_DME — its own resetActorToStage branch below (this file's StepBar()
+  // CoA_Coverage — its own resetActorToStage branch below (this file's StepBar()
   // component above has its own separate isDmeFlow local, unrelated scope).
-  const isDmeFlow = flowType === "CoA_DME";
+  const isDmeFlow = flowType === "CoA_Coverage";
   // CoA_DTP/CoA_Copay — own resetActorToStage branch below too (see the
   // generic block's header comment for why this used to silently break past
   // Prior Authorization for both flows). Same isCoaFlow local StepBar()
@@ -1152,11 +1152,11 @@ export default function DemoShell() {
       return;
     }
 
-    // CoAssist flows (CoA_DTP, CoA_Copay, CoA_DME): the ladders live in
+    // CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage): the ladders live in
     // coassistLadders.ts so the headless tests run the same event lists.
     if (isDmeFlow || isCoaFlow) {
       // RESET keeps the current choices, so the jump lands on the selected branch.
-      for (const event of coassistStageEvents(isDmeFlow ? 'CoA_DME' : (flowType as 'CoA_DTP' | 'CoA_Copay'), stage, forkChoices)) {
+      for (const event of coassistStageEvents(isDmeFlow ? 'CoA_Coverage' : (flowType as 'CoA_DTP' | 'CoA_Copay'), stage, forkChoices)) {
         actor.send(event as any);
       }
       return;
@@ -1366,11 +1366,11 @@ export default function DemoShell() {
                       { stage: 6, label: "Rx Shipped" },
                       { stage: 7, label: "Medication Delivered" },
                     ]
-                    // CoA_DME: the list comes from the BI fork, so it follows the
+                    // CoA_Coverage: the list comes from the BI fork, so it follows the
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
                     : isDmeFlow
-                    ? forkStageList(biForkFor("CoA_DME"), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor("CoA_Coverage"), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic

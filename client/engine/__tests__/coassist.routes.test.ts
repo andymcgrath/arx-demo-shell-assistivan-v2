@@ -21,7 +21,7 @@ import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
  * Each walk picks only events the machine accepts, so it gets deep. Fork pins are random per walk. The walk is
  * seeded, so a failure replays.
  */
-const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_DME"] as const;
+const FLOWS = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"] as const;
 const WALKS = 150;
 const STEPS = 90;
 const REVEAL_MS = 3000;

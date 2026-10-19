@@ -188,10 +188,10 @@ export const SCENARIOS: Scenario[] = [
 
   // ── CoAssist: DME (three BI outcomes) ───────────────────────────────
   {
-    name: "coa-dme-1-pharmacy-covered",
+    name: "coa-coverage-1-pharmacy-covered",
 
     endsAt: "delivered",
-    flowType: "CoA_DME",
+    flowType: "CoA_Coverage",
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
@@ -205,7 +205,7 @@ export const SCENARIOS: Scenario[] = [
     // the pharmacy, so the patient never picks one: after the PA-approved OTP the Rx is handed over and fulfillment follows.
     name: "coa-pharmacy-transfer",
     endsAt: "delivered",
-    flowType: "CoA_DME",
+    flowType: "CoA_Coverage",
     choices: { bi: "pharmacy_transfer", pa: "approved" },
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
@@ -215,10 +215,10 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
   {
-    name: "coa-dme-2-medical-covered-provider-transfer",
+    name: "coa-coverage-2-medical-covered-provider-transfer",
 
     endsAt: "provider_transferred",
-    flowType: "CoA_DME",
+    flowType: "CoA_Coverage",
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
@@ -226,10 +226,10 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
   {
-    name: "coa-dme-3-no-coverage-cash-pay",
+    name: "coa-coverage-3-no-coverage-cash-pay",
 
     endsAt: "delivered",
-    flowType: "CoA_DME",
+    flowType: "CoA_Coverage",
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },

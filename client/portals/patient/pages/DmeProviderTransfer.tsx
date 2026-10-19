@@ -2,7 +2,7 @@ import { CheckCircle, Phone } from "lucide-react";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
 
-// CoA_DME's terminal screen — mirrors PapEnrollmentComplete.tsx's structure
+// CoA_Coverage's terminal screen — mirrors PapEnrollmentComplete.tsx's structure
 // (full-bleed primary-color card, checkmark banner), but has nothing left to
 // dispatch: this flow ends here, with CoAssist having already handed the
 // case to Advanced Diabetes Supply for fulfillment, so there's no "Got it"

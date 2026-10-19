@@ -49,11 +49,11 @@ describe("CoAssist recipes", () => {
   it("DTP and Copay pass through the patient's pricing pick, and Copay through the copay enrollment", () => {
     expect(COASSIST_RECIPES.CoA_DTP.forks).toContain("pricing");
     expect(COASSIST_RECIPES.CoA_Copay.forks).toEqual(expect.arrayContaining(["copay", "pricing"]));
-    expect(COASSIST_RECIPES.CoA_DME.forks).not.toContain("pricing");
+    expect(COASSIST_RECIPES.CoA_Coverage.forks).not.toContain("pricing");
   });
 
   it("DME pins the PA to approved", () => {
-    expect(COASSIST_RECIPES.CoA_DME.choices.pa).toBe("approved");
+    expect(COASSIST_RECIPES.CoA_Coverage.choices.pa).toBe("approved");
   });
 });
 
@@ -148,7 +148,7 @@ describe("recipeProblems and forks", () => {
     const noCoverage = recipe({ ...passthrough, choices: { bi: "no_coverage", pa: "approved" }, modules });
     expect(recipeProblems(noCoverage, dtpForks)).toContain('fork "bi" exit "no_coverage" requires cash_offer in the recipe');
     // The old exit ids no longer exist on any CoAssist scenario.
-    expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "coverage_found" } }), forksFor("CoA_DME"))).toContain(
+    expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "coverage_found" } }), forksFor("CoA_Coverage"))).toContain(
       'fork "bi" has no exit "coverage_found"',
     );
   });

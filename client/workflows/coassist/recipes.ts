@@ -90,5 +90,5 @@ export const COA_COMMERCIAL_TRANSFER_RECIPE: ScenarioRecipe = {
 export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,
-  CoA_DME: COA_DME_RECIPE,
+  CoA_Coverage: COA_DME_RECIPE,
 } as const;

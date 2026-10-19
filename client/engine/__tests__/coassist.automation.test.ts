@@ -46,13 +46,13 @@ describe("CoAssist automation", () => {
       });
     }
 
-    it("CoA_DME: only pharmacy-covered BI submits a PA", () => {
+    it("CoA_Coverage: only pharmacy-covered BI submits a PA", () => {
       withFrozenClock(() => {
-        const covered = start("CoA_DME");
+        const covered = start("CoA_Coverage");
         runSteps(covered.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", ...DME_PHARMACY_ONLY }]);
         expect(covered.data().paStatus).toBe("submitted");
 
-        const noCoverage = start("CoA_DME");
+        const noCoverage = start("CoA_Coverage");
         runSteps(noCoverage.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" }]);
         expect(noCoverage.data().paStatus).toBe("none");
       });
@@ -80,9 +80,9 @@ describe("CoAssist automation", () => {
       });
     }
 
-    it("CoA_DME: the BI outcome comes from the stage view", () => {
+    it("CoA_Coverage: the BI outcome comes from the stage view", () => {
       withFrozenClock(() => {
-        const { actor, clock, data } = start("CoA_DME");
+        const { actor, clock, data } = start("CoA_Coverage");
         runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VIEW_STAGE", stage: "BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" }]);
         clock.increment(3000);
         expect(data().biResult).toBe("dme_covered");

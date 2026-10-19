@@ -13,7 +13,7 @@ export default function PADenied() {
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
   const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
-  // CoA_DME Scenario 3 only (neither pharmacy nor medical benefit covered —
+  // CoA_Coverage Scenario 3 only (neither pharmacy nor medical benefit covered —
   // see workflows/coaDme.ts and WorkflowEngine.ts's derivePatientRoute).
   // This flow never submits a Prior Authorization at all, so it gets its own
   // copy below instead of isCoA's "insurance denied coverage" messaging,
@@ -21,9 +21,9 @@ export default function PADenied() {
   // CTA dispatches SELECT_SELF_PAY (added to coaDme.ts's biComplete state)
   // instead of navigating straight to /delivery-payment — SELECT_SELF_PAY
   // joins the same pricingSelected state Scenario 1 uses, which needs an
-  // address before payment (see derivePatientRoute's CoA_DME branch), so
+  // address before payment (see derivePatientRoute's CoA_Coverage branch), so
   // this navigates to /delivery-address, not /delivery-payment.
-  const isDmeFlow = flowType === 'CoA_DME';
+  const isDmeFlow = flowType === 'CoA_Coverage';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
   // workflows/iassist/rules.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other
@@ -178,7 +178,7 @@ export default function PADenied() {
             <p className="text-xs text-center text-arx-body-copy">Standard call or carrier rates may apply.</p>
           </div>
 
-          {/* Prescriptions section - hidden for CoA and CoA_DME */}
+          {/* Prescriptions section - hidden for CoA and CoA_Coverage */}
           {!isCoA && !isDmeFlow && (
             <section>
               <div className="flex items-center justify-between mb-3">
@@ -202,7 +202,7 @@ export default function PADenied() {
             </section>
           )}
 
-          {/* Suggested section - hidden for CoA and CoA_DME */}
+          {/* Suggested section - hidden for CoA and CoA_Coverage */}
           {!isCoA && !isDmeFlow && (
             <section>
               <div className="flex items-center gap-2 mb-3">

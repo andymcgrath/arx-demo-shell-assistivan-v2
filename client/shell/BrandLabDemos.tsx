@@ -15,7 +15,7 @@ const FLOWS: { id: FlowType; label: string }[] = [
   { id: "Fax_PAP_Audit", label: "Fax PAP (audit)" },
   { id: "CoA_DTP", label: "CoAssist DTP" },
   { id: "CoA_Copay", label: "CoAssist Copay" },
-  { id: "CoA_DME", label: "CoAssist DME and transfer" },
+  { id: "CoA_Coverage", label: "CoAssist DME and transfer" },
   { id: "iAssist_PA_Approved", label: "iAssist (PA approved)" },
   { id: "iAssist_PAP", label: "iAssist appeal" },
   { id: "PrES_PAP", label: "PrES PAP (legacy)" },

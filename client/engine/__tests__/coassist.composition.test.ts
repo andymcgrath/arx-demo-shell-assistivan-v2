@@ -31,7 +31,7 @@ const machine = createWorkflowMachine({
   rules: COASSIST_RULES,
   forks: COASSIST_FORKS,
   // DTP and DME stay, so the build-time scope check still finds every module some recipe lists.
-  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_DME: COA_DME },
+  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_Coverage: COA_DME },
 });
 const screens: ScreenMap = { ...COASSIST_SCREENS, scenarioDefs: [COA_DTP, SCENARIO, COA_DME] };
 

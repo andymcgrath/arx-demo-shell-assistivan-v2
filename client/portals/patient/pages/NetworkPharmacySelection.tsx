@@ -4,7 +4,7 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import type { Pharmacy } from "@/engine/types";
 
 /**
- * Network Pharmacy Selection — CoA_DME Scenario 1 only (pharmacy covered,
+ * Network Pharmacy Selection — CoA_Coverage Scenario 1 only (pharmacy covered,
  * medical not).
  *
  * Reached from PharmacyCoverageSms.tsx once the patient taps through the

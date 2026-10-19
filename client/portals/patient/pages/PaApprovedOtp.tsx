@@ -6,7 +6,7 @@ import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider"
  * PA Approved OTP — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
  * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
  * iAssist.ts's updatePaApprovedOtpVerified). WF1 (Fax_QS_PA_Approved) never
- * routes here. CoA_DME Scenario 1 also routes here now (see PaApprovedSms.tsx
+ * routes here. CoA_Coverage Scenario 1 also routes here now (see PaApprovedSms.tsx
  * and coaDme.ts's paApprovedSmsVerified state) — fully generic UI, no
  * drug-specific copy, so the only DME-specific wrinkle is where "Continue"
  * sends the patient next (see validateAndSubmit below).
@@ -15,13 +15,13 @@ import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider"
  * enrollment OTP (OTPVerification.tsx, untouched — this is a dedicated
  * screen so WF1's onboarding OTP can't be affected by anything here).
  * Dispatches VERIFY_PA_APPROVED_OTP and continues to Benefit Pricing
- * (CoA_DTP/iAssist) or Network Pharmacy Selection (CoA_DME).
+ * (CoA_DTP/iAssist) or Network Pharmacy Selection (CoA_Coverage).
  */
 export default function PaApprovedOtp() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isDmeFlow = workflowData.flowType === "CoA_DME";
+  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
 
   const [otpInput, setOtpInput] = useState("");
   const [error, setError] = useState("");

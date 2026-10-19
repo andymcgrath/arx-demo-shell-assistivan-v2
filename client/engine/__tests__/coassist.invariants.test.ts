@@ -9,14 +9,14 @@ import { ctx, runSteps, startFlow, withFrozenClock, type Step } from "./harness"
  * precondition. These tests send events at the wrong time and expect them
  * to be ignored.
  */
-const COA: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_DME"];
+const COA: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Coverage"];
 const PHARMACY = { name: "Test Pharmacy" };
 /** Patient finishes onboarding. Pricing options reach the patient only after this. */
 const ENROLLED: Step[] = [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }];
 
 const BI_DTP: Step = { type: "COMPLETE_BI", result: "coverage_found" };
 const bi = (flowType: FlowType, pharmacy: "covered" | "not_covered" = "covered", medical: "covered" | "not_covered" = "not_covered"): Step =>
-  flowType === "CoA_DME"
+  flowType === "CoA_Coverage"
     ? { type: "COMPLETE_BI", pharmacyBenefitStatus: pharmacy, medicalBenefitStatus: medical }
     : BI_DTP;
 
@@ -77,7 +77,7 @@ describe("CoAssist ordering rules", () => {
         withFrozenClock(() => {
           const actor = startFlow(flow);
           const path: Step[] =
-            flow === "CoA_DME"
+            flow === "CoA_Coverage"
               ? [{ type: "REFERRAL_RECEIVED" }, bi(flow), { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PHARMACY", pharmacy: PHARMACY }]
               : [{ type: "REFERRAL_RECEIVED" }, bi(flow), { type: "APPROVE_PA" }, ...ENROLLED, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }, { type: "SELECT_PRICING_OPTION", option: "retail" }];
           runSteps(actor, path);
@@ -103,7 +103,7 @@ describe("CoAssist ordering rules", () => {
         for (const flow of COA) {
           const actor = startFlow(flow);
           runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, bi(flow)]);
-          expect(accepts(actor, { type: "DENY_PA" })).toBe(flow !== "CoA_DME");
+          expect(accepts(actor, { type: "DENY_PA" })).toBe(flow !== "CoA_Coverage");
         }
       });
     });
@@ -117,8 +117,8 @@ describe("CoAssist ordering rules", () => {
           ["neither", "not_covered", "not_covered", false],
         ];
         for (const [label, pharmacy, medical, paAllowed] of cases) {
-          const actor = startFlow("CoA_DME");
-          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_DME", pharmacy, medical)]);
+          const actor = startFlow("CoA_Coverage");
+          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_Coverage", pharmacy, medical)]);
           // SUBMIT_PA fires on its own after BI. It only lands for "pharmacy only".
           expect([label, ctx(actor).workflowData.paStatus === "submitted"]).toEqual([label, paAllowed]);
         }
@@ -127,13 +127,13 @@ describe("CoAssist ordering rules", () => {
 
     it("DME: provider transfer needs medical coverage. The cash-offer SMS needs neither covered.", () => {
       withFrozenClock(() => {
-        const medical = startFlow("CoA_DME");
-        runSteps(medical, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_DME", "covered", "covered")]);
+        const medical = startFlow("CoA_Coverage");
+        runSteps(medical, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_Coverage", "covered", "covered")]);
         expect(accepts(medical, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(true);
         expect(accepts(medical, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(false);
 
-        const neither = startFlow("CoA_DME");
-        runSteps(neither, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_DME", "not_covered", "not_covered")]);
+        const neither = startFlow("CoA_Coverage");
+        runSteps(neither, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_Coverage", "not_covered", "not_covered")]);
         expect(accepts(neither, { type: "NOTIFY_PROVIDER_TRANSFER" })).toBe(false);
         expect(accepts(neither, { type: "VERIFY_CASH_OFFER_SMS" })).toBe(true);
         expect(accepts(neither, { type: "SELECT_SELF_PAY" })).toBe(false); // SMS tap-through comes first
@@ -167,7 +167,7 @@ describe("CoAssist ordering rules", () => {
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, false]);
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_OTP" })]).toEqual([flow, false]);
           expect(ctx(actor).workflowData.paApprovedOtpVerified).toBe(true);
-          if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/benefit-pricing");
+          if (flow !== "CoA_Coverage") expect(derivePatientRoute(ctx(actor))).toBe("/benefit-pricing");
         }
       });
     });
@@ -178,7 +178,7 @@ describe("CoAssist ordering rules", () => {
           const actor = startFlow(flow);
           runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, ...ENROLLED, bi(flow), { type: "APPROVE_PA" }]);
           expect([flow, accepts(actor, { type: "VERIFY_PA_APPROVED_SMS" })]).toEqual([flow, true]);
-          if (flow !== "CoA_DME") expect(derivePatientRoute(ctx(actor))).toBe("/pa-approved-sms");
+          if (flow !== "CoA_Coverage") expect(derivePatientRoute(ctx(actor))).toBe("/pa-approved-sms");
         }
       });
     });

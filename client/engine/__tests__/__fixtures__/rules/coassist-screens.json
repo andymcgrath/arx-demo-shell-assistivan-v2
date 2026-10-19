@@ -274,7 +274,7 @@
         "/medication-delivered"
       ]
     },
-    "CoA_DME": {
+    "CoA_Coverage": {
       "route": [
         "enrollment.lock_screen -> /lock-screen",
         "enrollment.sms -> /sms-message",

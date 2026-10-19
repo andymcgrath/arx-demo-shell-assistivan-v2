@@ -294,7 +294,7 @@ export const KEANU_SITE_OF_CARE_FACTS = {
 };
 
 /**
- * Advanced Diabetes Supply's contact facts — CoA_DME only. Mirrors
+ * Advanced Diabetes Supply's contact facts — CoA_Coverage only. Mirrors
  * KEANU_SITE_OF_CARE_FACTS's shape/style above: shared raw facts (not a full
  * Pharmacy/FieldSOC record, since this is a fulfillment hand-off to a
  * third-party DME provider, not a pharmacy dispatch or a site-of-care visit)
@@ -338,7 +338,7 @@ export interface GeneratedEmailInputs {
   patientName: string;
   prescriberName: string;
   frmName: string;
-  // 'dme_covered' — CoA_DME only: BI confirmed the DME is covered under the
+  // 'dme_covered' — CoA_Coverage only: BI confirmed the DME is covered under the
   // patient's commercial medical benefit (see workflows/coaDme.ts's
   // COMPLETE_BI).
   biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | 'dme_covered' | null;
@@ -348,7 +348,7 @@ export interface GeneratedEmailInputs {
   // alone can't say WHICH date got picked, just that the event fired. Null
   // for every other flow.
   infusionDate: string | null;
-  // CoA_DME only — biResult alone can't tell "coverage_found" (Scenario 1:
+  // CoA_Coverage only — biResult alone can't tell "coverage_found" (Scenario 1:
   // pharmacy covered, no PA) and "no_coverage" (Scenario 3: cash pay, no PA)
   // apart from the same two values used by every other flow (where they DO
   // imply a Prior Authorization step). The COMPLETE_BI email case below
@@ -366,11 +366,11 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   'VERIFY_OTP',
   'VERIFY_PAP_SMS',
   'VERIFY_PAP_OTP',
-  // CoA_DME Scenario 3 only — same reasoning, mirrored for the cash-offer
+  // CoA_Coverage Scenario 3 only — same reasoning, mirrored for the cash-offer
   // SMS's own tap-through (CashOfferSms.tsx). SEND_CASH_OFFER_SMS still
   // falls through to the default case below.
   'VERIFY_CASH_OFFER_SMS',
-  // CoA_DME Scenario 2 only — same reasoning, mirrored for the DME transfer
+  // CoA_Coverage Scenario 2 only — same reasoning, mirrored for the DME transfer
   // SMS's own tap-through (DmeTransferSms.tsx). NOTIFY_PROVIDER_TRANSFER
   // (the CRM action that sends it) still falls through to the default case
   // below, where its existing email case already lives.
@@ -399,7 +399,7 @@ function friendlyEventLabel(eventType: string): string {
  */
 export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[] {
   const { events, patientName, prescriberName, frmName, biResult, infusionDate, flowType } = input;
-  const isDmeFlow = flowType === 'CoA_DME';
+  const isDmeFlow = flowType === 'CoA_Coverage';
   const emails: GeneratedEmail[] = [];
 
   for (const event of events) {
@@ -478,7 +478,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Case',
           });
         } else if (isDmeFlow && biResult === 'coverage_found') {
-          // CoA_DME Scenario 1 — pharmacy benefit covered, medical not. This
+          // CoA_Coverage Scenario 1 — pharmacy benefit covered, medical not. This
           // outcome now requires a real Prior Authorization, mirroring
           // CoA_DTP's own PA flow exactly (see workflows/coaDme.ts's header
           // comment and its SUBMIT_PA handlers) — it's submitted
@@ -498,7 +498,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Case',
           });
         } else if (isDmeFlow && biResult === 'no_coverage') {
-          // CoA_DME Scenario 3 — neither benefit covered. The generic
+          // CoA_Coverage Scenario 3 — neither benefit covered. The generic
           // 'no_coverage' copy below assumes a non-formulary Prior
           // Authorization submission, which doesn't apply here either.
           emails.push({
@@ -539,7 +539,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         }
         break;
 
-      // CoA_DME only — CoAssist hands the case to Advanced Diabetes Supply,
+      // CoA_Coverage only — CoAssist hands the case to Advanced Diabetes Supply,
       // the outside DME provider, once medical-benefit coverage is
       // confirmed. This flow's terminal event (see workflows/coaDme.ts).
       case 'NOTIFY_PROVIDER_TRANSFER':
@@ -555,8 +555,8 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         });
         break;
 
-      // CoA_DME Scenario 3 only — the cash-offer SMS beat (see
-      // engine/types.ts's cashOfferSmsSent). CoA_DME Scenario 1 no longer has
+      // CoA_Coverage Scenario 3 only — the cash-offer SMS beat (see
+      // engine/types.ts's cashOfferSmsSent). CoA_Coverage Scenario 1 no longer has
       // an equivalent automatic SMS of its own — it now submits a real PA
       // instead (see coaDme.ts's header comment and the COMPLETE_BI case
       // above), so there's no SEND_PHARMACY_SMS sibling here anymore.

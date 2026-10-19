@@ -3,7 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { PROGRAM } from "@/portals/patient/config/branding";
 
-// CoA_DME Scenario 2 only — both benefits covered (medical always wins).
+// CoA_Coverage Scenario 2 only — both benefits covered (medical always wins).
 // Mirrors PharmacyCoverageSms.tsx/CashOfferSms.tsx's exact shape (same
 // second, later SMS milestone pattern — dmeTransferSmsSent/
 // dmeTransferSmsVerified in engine/types.ts), except this one is sent as

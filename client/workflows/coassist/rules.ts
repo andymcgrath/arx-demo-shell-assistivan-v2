@@ -1,5 +1,5 @@
 /**
- * CoAssist rules: the transition table shared by CoA_DTP, CoA_Copay, and CoA_DME. Replaces three copied 700-line
+ * CoAssist rules: the transition table shared by CoA_DTP, CoA_Copay, and CoA_Coverage. Replaces three copied 700-line
  * machines (coaDtp, coaCopay, coaDme). Each module under ./modules owns its own rules. This file assembles them.
  *
  * Reading a rule: `when` is the precondition on workflowData, `set` is what changes, `emit` is what lands in the
