@@ -1,0 +1,187 @@
+{
+  "recipe": {
+    "source": "coassist",
+    "forks": [
+      "bi",
+      "pa",
+      "pricing"
+    ],
+    "choices": {
+      "bi": "coverage_found",
+      "pa": "approved",
+      "pricing": "retail"
+    },
+    "modules": [
+      {
+        "id": "enrollment"
+      },
+      {
+        "id": "pa_notification"
+      },
+      {
+        "id": "pharmacy_selection",
+        "props": {
+          "variant": "store"
+        }
+      },
+      {
+        "id": "tracking"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "event": "REFERRAL_RECEIVED",
+      "accepted": true,
+      "route": "/sms-message",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "COMPLETE_BI",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "APPROVE_PA",
+      "accepted": true,
+      "route": "/pa-approved-sms",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_SMS",
+      "accepted": true,
+      "route": "/pa-approved-otp",
+      "pricingOption": null,
+      "pharmacy": null,
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_OTP",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "CVS Pharmacy #3795",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "SELECT_PHARMACY",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": false,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": false,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "PATIENT_PAYS",
+      "accepted": false,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "VERIFY_PAYMENT",
+      "accepted": false,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "none",
+      "pharmacyStatus": "none"
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "dispatched",
+      "pharmacyStatus": "processing"
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "dispatched",
+      "pharmacyStatus": "ready"
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "dispatched",
+      "pharmacyStatus": "shipped"
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "pricingOption": "retail",
+      "pharmacy": "Test Pharmacy",
+      "dispatchStatus": "dispatched",
+      "pharmacyStatus": "delivered"
+    }
+  ]
+}

@@ -67,6 +67,26 @@ export const COA_DME_RECIPE: ScenarioRecipe = {
   ],
 };
 
+/**
+ * The composition proof (step 2.6). Commercial coverage, PA approved, the patient's Retail pick, a pharmacy the
+ * patient selects, and the Rx handed over: the order tracker shows it. No `scheduling` and no `payment`.
+ *
+ * It is not a scenario the presenter can pick. It exists so a test can compose a path from modules, with no new
+ * rule, route, or screen. See `coassist.composition.test.ts`. It borrows Copay's forks, because Copay declares
+ * the `pricing` fork with a Retail exit. Making it pickable needs a scenario id, which is the rule 7 cleanup first.
+ */
+export const COA_COMMERCIAL_TRANSFER_RECIPE: ScenarioRecipe = {
+  source: "coassist",
+  forks: ["bi", "pa", "pricing"],
+  choices: { bi: "coverage_found", pa: "approved", pricing: "retail" },
+  modules: [
+    { id: "enrollment" },
+    { id: "pa_notification" },
+    { id: "pharmacy_selection", props: { variant: "store" } },
+    { id: "tracking" },
+  ],
+};
+
 export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,

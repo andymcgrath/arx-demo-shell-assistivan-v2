@@ -1,6 +1,6 @@
 import type { FlowType, WorkflowData } from "@/engine/types";
 import { inScope } from "./scope";
-import type { ForkDefinition, RuleScope, ScenarioDefinition } from "./types";
+import type { ForkDefinition, ScenarioDefinition, Scope } from "./types";
 
 /**
  * A screen the patient can see. The catalog lists screens in menu order.
@@ -18,7 +18,7 @@ export interface Screen {
    * Show only when the scenario's recipe or forks match (see scope.ts). Needs `scenarioDefs` on the map.
    * Replaces a hand-written `scenarios` list.
    */
-  scope?: RuleScope;
+  scope?: Scope;
   /**
    * Leave this screen out of the menu while this is true. For a screen the current data skips: a pinned pick
    * the patient never makes. Only `menuFor` reads it, and only when it gets data. Routing is unaffected.
@@ -45,7 +45,7 @@ export interface ScreenRule {
   path: string;
   scenarios?: FlowType[];
   /** Applies only when the scenario's recipe or forks match. Needs `scenarioDefs` and `forks` on the map. */
-  scope?: RuleScope;
+  scope?: Scope;
   /** Where the rule sits in the map's `slots`. Required when the map declares slots. */
   slot?: string;
   when?: (data: WorkflowData) => boolean;
@@ -79,7 +79,7 @@ export interface ScreenMap {
 
 function appliesTo(
   map: ScreenMap,
-  item: { scenarios?: FlowType[]; scope?: RuleScope },
+  item: { scenarios?: FlowType[]; scope?: Scope },
   flowType: FlowType,
 ): boolean {
   if (item.scenarios && !item.scenarios.includes(flowType)) return false;

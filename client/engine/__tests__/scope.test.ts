@@ -40,6 +40,27 @@ describe("module scope", () => {
   });
 });
 
+describe("scope list", () => {
+  const forks = [fork("bi", ["coverage_found"], ["A", "B"]), fork("bi", ["pharmacy_covered"], ["C"])];
+  const a = scenario("A", [{ id: "scheduling" }]);
+  const b = scenario("B", [{ id: "enrollment" }]);
+  const c = scenario("C", [{ id: "scheduling" }]);
+  const both = [{ module: "scheduling" }, { fork: "bi", exit: "coverage_found" }];
+
+  it("needs every scope in the list to hold", () => {
+    expect(inScope(both, a, forks)).toBe(true);
+    // B has the branch but not the module. C has the module but not the branch.
+    expect(inScope(both, b, forks)).toBe(false);
+    expect(inScope(both, c, forks)).toBe(false);
+  });
+
+  it("flags a list no scenario satisfies, even when each part is real", () => {
+    const unsatisfiable = rule({ id: "r.x", scope: [{ module: "scheduling" }, { fork: "bi", exit: "pharmacy_covered" }] });
+    expect(scopeProblems([unsatisfiable], [a, b], forks)).toEqual([`rule "r.x" has a scope list that no scenario satisfies`]);
+    expect(scopeProblems([unsatisfiable], [a, b, c], forks)).toEqual([]);
+  });
+});
+
 describe("fork scope", () => {
   const forks = [fork("bi", ["coverage_found", "no_coverage"], ["A"]), fork("bi", ["pharmacy_covered"], ["B"]), fork("pa", ["approved", "denied"])];
 

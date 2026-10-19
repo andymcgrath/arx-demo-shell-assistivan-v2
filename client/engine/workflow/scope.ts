@@ -1,5 +1,5 @@
 import { forkApplies } from "./forks";
-import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition } from "./types";
+import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from "./types";
 
 /**
  * Pure checks for where a rule applies. No React, no store, no machine, so the factory and the tests use the
@@ -10,8 +10,14 @@ import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition } from "./type
 const propsMatch = (have: Record<string, unknown> | undefined, want: Record<string, unknown> | undefined) =>
   !want || Object.entries(want).every(([key, value]) => have?.[key] === value);
 
-/** True when the scenario falls inside the scope. */
-export function inScope(scope: RuleScope, scenario: ScenarioDefinition<any>, forks: ForkDefinition[]): boolean {
+const listOf = (scope: Scope): RuleScope[] => (Array.isArray(scope) ? scope : [scope]);
+
+/** True when the scenario falls inside the scope. A list of scopes needs all of them. */
+export function inScope(scope: Scope, scenario: ScenarioDefinition<any>, forks: ForkDefinition[]): boolean {
+  return listOf(scope).every((one) => inOneScope(one, scenario, forks));
+}
+
+function inOneScope(scope: RuleScope, scenario: ScenarioDefinition<any>, forks: ForkDefinition[]): boolean {
   if ("module" in scope) {
     return !!scenario.recipe?.modules.some((m) => m.id === scope.module && propsMatch(m.props, scope.props));
   }
@@ -32,17 +38,22 @@ export function ruleAppliesTo(rule: Rule<any, any>, scenario: ScenarioDefinition
 export function scopeProblems(rules: Rule<any, any>[], scenarios: ScenarioDefinition<any>[], forks: ForkDefinition[]): string[] {
   const problems: string[] = [];
   for (const rule of rules) {
-    const scope = rule.scope;
-    if (!scope) continue;
+    if (!rule.scope) continue;
     const name = rule.id ?? rule.on;
-    if ("fork" in scope) {
-      const declared = forks.filter((f) => f.id === scope.fork);
-      if (!declared.length) problems.push(`rule "${name}" is scoped to fork "${scope.fork}", which no fork declares`);
-      else if (scope.exit && !declared.some((f) => f.exits.some((e) => e.id === scope.exit))) {
-        problems.push(`rule "${name}" is scoped to exit "${scope.exit}", which fork "${scope.fork}" does not have`);
+    for (const scope of listOf(rule.scope)) {
+      if ("fork" in scope) {
+        const declared = forks.filter((f) => f.id === scope.fork);
+        if (!declared.length) problems.push(`rule "${name}" is scoped to fork "${scope.fork}", which no fork declares`);
+        else if (scope.exit && !declared.some((f) => f.exits.some((e) => e.id === scope.exit))) {
+          problems.push(`rule "${name}" is scoped to exit "${scope.exit}", which fork "${scope.fork}" does not have`);
+        }
+      } else if (!scenarios.some((s) => inScope(scope, s, forks))) {
+        problems.push(`rule "${name}" is scoped to module "${scope.module}", which no scenario recipe lists with those props`);
       }
-    } else if (!scenarios.some((s) => inScope(scope, s, forks))) {
-      problems.push(`rule "${name}" is scoped to module "${scope.module}", which no scenario recipe lists with those props`);
+    }
+    // A list that no scenario satisfies together can never apply, even when each part is real.
+    if (Array.isArray(rule.scope) && !scenarios.some((s) => inScope(rule.scope!, s, forks))) {
+      problems.push(`rule "${name}" has a scope list that no scenario satisfies`);
     }
   }
   return problems;

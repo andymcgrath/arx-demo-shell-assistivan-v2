@@ -133,6 +133,12 @@ export interface ScenarioDefinition<Content = unknown> {
  */
 export type RuleScope = { module: string; props?: Record<string, unknown> } | { fork: string; exit?: string };
 
+/**
+ * One scope, or a list that must all hold. A route rule owned by a module on one branch uses a list: the module
+ * says the screen exists in the recipe, and the fork exit says which branch shows it.
+ */
+export type Scope = RuleScope | RuleScope[];
+
 /** One entry appended to the event log when a rule fires. */
 export interface Emit<E = any, C = any> {
   /** Defaults to the event's own type. */
@@ -179,7 +185,7 @@ export interface Rule<E = any, C = any> {
   /** Apply only to these scenarios. Omit to apply to every scenario of the workflow. Prefer `scope`. */
   scenarios?: FlowType[];
   /** Apply only where the scenario's recipe or forks say so. Both `scenarios` and `scope` must pass when both are set. */
-  scope?: RuleScope;
+  scope?: Scope;
   /** Precondition on the data. Omit for "always allowed". */
   when?: (data: WorkflowData, event: E, scenario: ScenarioDefinition<C>) => boolean;
   /** Fields to change. */

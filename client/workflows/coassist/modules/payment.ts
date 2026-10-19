@@ -27,6 +27,7 @@ export const PAYMENT_RULES: CoaRule[] = [
   {
     id: "payment.patient_pays",
     on: "PATIENT_PAYS",
+    scope: { module: "payment" },
     when: (d) => d.cashOfferStatus !== "paid" && (d.cashOfferStatus === "sent" || inFulfillmentTail(d)),
     set: () => ({ cashOfferStatus: "paid" }),
     emit: { portal: "patient", step: 9 },
@@ -34,6 +35,7 @@ export const PAYMENT_RULES: CoaRule[] = [
   {
     id: "payment.verify_payment",
     on: "VERIFY_PAYMENT",
+    scope: { module: "payment" },
     when: (d) => !d.paymentVerified && d.pharmacyStatus === "none" && (d.cashOfferStatus === "paid" || inFulfillmentTail(d)),
     set: () => ({ paymentVerified: true }),
     emit: { portal: "crm", step: 9 },
