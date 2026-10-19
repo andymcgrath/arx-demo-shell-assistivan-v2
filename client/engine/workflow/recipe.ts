@@ -81,7 +81,10 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
         continue;
       }
       for (const m of exit.requires ?? []) {
-        if (!ids.includes(m as ModuleId)) problems.push(`fork "${forkId}" exit "${exitId}" requires ${m} in the recipe`);
+        // `module:variant` needs that module with that `variant` prop. A bare module id needs the module.
+        const [moduleId, variant] = m.split(":");
+        const found = recipe.modules.some((spec) => spec.id === moduleId && (variant === undefined || spec.props?.variant === variant));
+        if (!found) problems.push(`fork "${forkId}" exit "${exitId}" requires ${m} in the recipe`);
       }
     }
   }

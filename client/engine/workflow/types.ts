@@ -61,7 +61,8 @@ export interface ForkExit {
   /**
    * Module ids a recipe must include to pick this exit (see `recipeProblems`). A recipe that picks `denied`
    * without a module that handles a denial fails a test, not a demo. Module ids are plain strings here so
-   * this file does not import the component catalog.
+   * this file does not import the component catalog. `module:variant` (for example `pharmacy_selection:assigned`)
+   * also needs that module's `variant` prop, for an exit that only one variant of a module handles.
    */
   requires?: string[];
   /**

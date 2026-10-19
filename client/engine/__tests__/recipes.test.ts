@@ -106,6 +106,25 @@ describe("iAssist recipes", () => {
   });
 });
 
+describe("exit requires with a variant", () => {
+  const forks = forksForScenario(ALL_FORKS, "iAssist_Medical_Transfer");
+  const base = IASSIST_RECIPES.iAssist_Medical_Transfer;
+  const swap = (variant?: string) => ({
+    ...base,
+    modules: base.modules.map((m) => (m.id === "pharmacy_selection" ? { id: m.id, ...(variant ? { props: { variant } } : {}) } : m)),
+  });
+
+  it("accepts the variant the exit names", () => {
+    expect(recipeProblems(base, forks)).toEqual([]);
+  });
+
+  it("rejects the module with another variant, or with none", () => {
+    for (const variant of ["crm", undefined]) {
+      expect(recipeProblems(swap(variant), forks)).toContain('fork "bi" exit "medical_pa_required" requires pharmacy_selection:assigned in the recipe');
+    }
+  });
+});
+
 describe("CRM panels", () => {
   it("only Coverage and the iAssist medical transfer show the benefits panel", () => {
     expect(COASSIST_RECIPES.CoA_Coverage.panels).toEqual(["benefits"]);

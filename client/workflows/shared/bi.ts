@@ -48,7 +48,7 @@ export const BI_EXITS = {
     label: "Medical Coverage, PA Required",
     description: "The medical benefit covers it and a PA is required. The Rx transfers to an assigned pharmacy.",
     data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "covered", paRequired: true, pharmacyAssigned: true },
-    requires: ["pharmacy_selection"],
+    requires: ["pharmacy_selection:assigned"],
   },
   no_coverage: {
     label: "No Coverage (Cash)",
