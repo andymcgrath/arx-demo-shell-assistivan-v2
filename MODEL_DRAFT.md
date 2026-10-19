@@ -214,7 +214,7 @@ One source at a time. `pnpm test` and `pnpm typecheck:ratchet` stay green at eve
 
 1. Add the component types: module contracts (needs, sets, props, tracker steps), `enters` on fork exits, and Triage rules. No behavior change.
 2. Move CoAssist onto the recipe. It already has forks and golden paths, so it is the reference.
-3. Add the headless tests: module-order, precondition invariant, and one golden path per recipe.
+3. Add the headless tests: module-order, precondition invariant, and one golden path per recipe. (Done. Module order is `recipes.test.ts`. The precondition invariant is `coassist.invariants.test.ts` and covers CoAssist only. Golden paths now name an end state in `END_STATES` and must reach it, and a test fails if a scenario has no golden path. The invariant extends to each source as step 4 moves it.)
 4. Move the next source onto the recipe. Repeat for each remaining source.
 5. Collapse the per-source machines into the one CRM machine once the last source moves.
 6. Update `CLAUDE.md` vocabulary and rules. This lands with step 5, so the docs match the code.
