@@ -13,6 +13,7 @@ import { FileText } from "lucide-react";
 import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
 import type { FlowType } from "@/engine/types";
 import { BenefitsPanel } from "../components/BenefitsPanel";
+import { PAYER } from "../payerFacts";
 import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
 import {
@@ -2525,8 +2526,7 @@ export default function Index() {
                 patientName={patientName}
                 drugName={drugName}
                 caseNumber={caseNumber}
-                phone={phone}
-                payer={payer}
+                biComplete={biStatus === "complete"}
                 pharmacyBenefitStatus={pharmacyBenefitStatus}
                 medicalBenefitStatus={medicalBenefitStatus}
                 paRequired={workflowData.paRequired}
@@ -2572,21 +2572,21 @@ export default function Index() {
                       </div>
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
-                          <FieldRow label="Insurance Plan Type" value="Commercial PPO" />
-                          <FieldRow label="Insurance Payer Type" value="Commercial" />
-                          <FieldRow label="Medical Group Number" value="GRP-88420" />
-                          <FieldRow label="Employer" value="" />
-                          <FieldRow label="Copay Accumulator" value="" />
-                          <FieldRow label="Non Emergency Transportation Coverage" value="" />
+                          <FieldRow label="Insurance Plan Type" value={PAYER.planType} />
+                          <FieldRow label="Insurance Payer Type" value={PAYER.type} />
+                          <FieldRow label="Medical Group Number" value={PAYER.groupNumber} />
+                          <FieldRow label="Employer" value={PAYER.employer} />
+                          <FieldRow label="Copay Accumulator" value="No" />
+                          <FieldRow label="Non Emergency Transportation Coverage" value="No" />
                         </div>
                         <div>
-                          <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
-                          <FieldRow label="Payer Summary" value="" />
-                          <FieldRow label="Medical Plan Name" value="" />
-                          <FieldRow label="Plan Funding" value="" />
-                          <FieldRow label="OOP Included in Deductible" value="" />
-                          <FieldRow label="Insurance Phone #" value="(800) 477-3736" />
-                          <FieldRow label="Medical Member ID" value="BCB-KR-298341" />
+                          <FieldRow label="Payer" value={PAYER.name} />
+                          <FieldRow label="Payer Summary" value={`Payer ID: ${PAYER.payerId}`} />
+                          <FieldRow label="Medical Plan Name" value={PAYER.planName} />
+                          <FieldRow label="Plan Funding" value={PAYER.planFunding} />
+                          <FieldRow label="OOP Included in Deductible" value="Yes" />
+                          <FieldRow label="Insurance Phone #" value={PAYER.insurancePhone} />
+                          <FieldRow label="Medical Member ID" value={PAYER.memberId} />
                         </div>
                       </div>
                     </div>
@@ -2598,7 +2598,7 @@ export default function Index() {
                       </div>
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
-                          <FieldRow label="Medical Insurance Effective Date" value="1/1/2026" />
+                          <FieldRow label="Medical Insurance Effective Date" value={PAYER.effectiveDate} />
                           <FieldRow label="Medical Insurance Termination Date" value="" />
                         </div>
                         <div>

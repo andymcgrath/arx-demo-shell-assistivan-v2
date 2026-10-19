@@ -5,13 +5,14 @@
  */
 import { FieldRow, SfLink, SF_SECTION_BG } from "./SfPrimitives";
 import { ChevronDown } from "lucide-react";
+import { PAYER } from "../payerFacts";
 
 export interface BenefitsPanelProps {
   patientName: string;
   drugName: string;
   caseNumber: string;
-  phone: string;
-  payer: string;
+  /** True once BI has resolved. Before that the benefit rows are pending, not "Not Covered". */
+  biComplete: boolean;
   pharmacyBenefitStatus: "none" | "covered" | "not_covered";
   medicalBenefitStatus: "none" | "covered" | "not_covered";
   paRequired: boolean;
@@ -21,7 +22,7 @@ export interface BenefitsPanelProps {
 }
 
 export function BenefitsPanel(props: BenefitsPanelProps) {
-  const { patientName, drugName, caseNumber, phone, payer, pharmacyBenefitStatus, medicalBenefitStatus, paRequired, transferProvider, onOpenProductDetail } = props;
+  const { patientName, drugName, caseNumber, biComplete, pharmacyBenefitStatus, medicalBenefitStatus, paRequired, transferProvider, onOpenProductDetail } = props;
   // The PA belongs to the benefit that covers the order: medical when it covers, otherwise pharmacy.
   const paOn = !paRequired ? null : medicalBenefitStatus === "covered" ? "medical" : "pharmacy";
   return (
@@ -38,13 +39,13 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
               <div>
                 <FieldRow label="Patient" value={patientName} isLink />
                 <FieldRow label="Product" value={drugName} isLink />
-                <FieldRow label="Care" value={caseNumber} isLink />
+                <FieldRow label="Case" value={caseNumber} isLink />
                 <FieldRow label="Benefit Investigation Result Name" value="BIR-0431" />
                 <FieldRow label="Stage" value="BI-14273" isLink />
-                <FieldRow label="Subscriber Name" value="Dr. Sarah Chen" />
+                <FieldRow label="Subscriber Name" value={patientName} />
               </div>
               <div>
-                <FieldRow label="Prior Authorization Phone #" value={phone} />
+                <FieldRow label="Prior Authorization Phone #" value={PAYER.paPhone} />
                 <FieldRow label="Internal Comments" value="" />
                 <FieldRow label="External Comments" value="" />
               </div>
@@ -62,17 +63,17 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="Record Type" value="Pharmacy" />
                 <FieldRow label="Benefit Type" value="Pharmacy" />
                 <FieldRow label="Rank" value="Primary" />
-                <FieldRow label="Selected Product Coverage" value="Pharmacy" />
-                <FieldRow label="Payer" value={payer} />
-                <FieldRow label="Payer Type" value="Commercial" />
+                <FieldRow label="Selected Product Coverage" value="BIPC-0455" isLink />
+                <FieldRow label="Payer" value={PAYER.name} />
+                <FieldRow label="Payer Type" value={PAYER.type} />
               </div>
               <div>
-                <FieldRow label="Benefit Source" value="BI" />
-                <FieldRow label="Status" value={pharmacyBenefitStatus === "covered" ? "Active" : "Inactive"} />
-                <FieldRow label="Reimbursement Plan" value={pharmacyBenefitStatus === "covered" ? "Standard" : ""} />
-                <FieldRow label="Sub-Status" value={pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
-                <FieldRow label="Insured?" value={pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
-                <FieldRow label="PA Required?" value={paOn === "pharmacy" ? "Yes" : "No"} />
+                <FieldRow label="Benefit Source" value="eBV" />
+                <FieldRow label="Status" value={!biComplete ? "Pending" : pharmacyBenefitStatus === "covered" ? "Active" : "Inactive"} />
+                <FieldRow label="Reimbursement Plan" value={biComplete && pharmacyBenefitStatus === "covered" ? "Standard" : ""} />
+                <FieldRow label="Sub-Status" value={!biComplete ? "" : pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
+                <FieldRow label="Insured?" value={!biComplete ? "" : pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
+                <FieldRow label="PA Required?" value={!biComplete ? "" : paOn === "pharmacy" ? "Yes" : "No"} />
               </div>
             </div>
           </div>
@@ -88,17 +89,17 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="Record Type" value="Medical" />
                 <FieldRow label="Benefit Type" value="Medical" />
                 <FieldRow label="Rank" value="Primary" />
-                <FieldRow label="Selected Product Coverage" value="Medical" />
-                <FieldRow label="Payer" value={payer} />
-                <FieldRow label="Payer Type" value="Commercial" />
+                <FieldRow label="Selected Product Coverage" value="BIPC-0456" isLink />
+                <FieldRow label="Payer" value={PAYER.name} />
+                <FieldRow label="Payer Type" value={PAYER.type} />
               </div>
               <div>
-                <FieldRow label="Benefit Source" value="BI" />
-                <FieldRow label="Status" value={medicalBenefitStatus === "covered" ? "Active" : "Inactive"} />
-                <FieldRow label="Sub-Status" value={medicalBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
-                <FieldRow label="Insured?" value={medicalBenefitStatus === "covered" ? "Yes" : "No"} />
-                <FieldRow label="PA Required?" value={paOn === "medical" ? "Yes" : "No"} />
-                {medicalBenefitStatus === "covered" && (
+                <FieldRow label="Benefit Source" value="eBV" />
+                <FieldRow label="Status" value={!biComplete ? "Pending" : medicalBenefitStatus === "covered" ? "Active" : "Inactive"} />
+                <FieldRow label="Sub-Status" value={!biComplete ? "" : medicalBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
+                <FieldRow label="Insured?" value={!biComplete ? "" : medicalBenefitStatus === "covered" ? "Yes" : "No"} />
+                <FieldRow label="PA Required?" value={!biComplete ? "" : paOn === "medical" ? "Yes" : "No"} />
+                {biComplete && medicalBenefitStatus === "covered" && !paRequired && (
                   <FieldRow label="Provider" value={transferProvider} />
                 )}
               </div>
@@ -122,11 +123,11 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
-                <div className="text-[13px] text-[#3e3e3c]">{pharmacyBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "Pending" : pharmacyBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                <div className="text-[13px] text-[#3e3e3c]">{paOn === "pharmacy" ? "Yes" : "No"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : paOn === "pharmacy" ? "Yes" : "No"}</div>
               </div>
             </div>
           </div>
@@ -144,11 +145,11 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
-                <div className="text-[13px] text-[#3e3e3c]">{medicalBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "Pending" : medicalBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                <div className="text-[13px] text-[#3e3e3c]">{paOn === "medical" ? "Yes" : "No"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : paOn === "medical" ? "Yes" : "No"}</div>
               </div>
             </div>
           </div>
