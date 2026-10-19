@@ -4,9 +4,18 @@ import { pricingPinNeedsConfirm } from "../../forks";
 import { dmeNeitherCovered } from "../shared";
 import { DME_BI, STANDARD_BI, type CoaRoute } from "../slots";
 
+// A pinned pricing pick skips the pricing menu. The patient lands on the self-pay offer when the pin needs
+// confirming, or past pricing when it does not. So Benefit Pricing is skipped on any pin, and the offer unless it needs confirming.
 export const PAYMENT_SCREENS: Screen[] = [
-  { path: "/benefit-pricing", label: "Benefit Pricing", group: "Pricing and pharmacy", scope: { fork: "pricing" }, sticky: true },
-  { path: "/copay-enroll", label: "Copay Enrollment", group: "Pricing and pharmacy", scope: { fork: "pricing" }, sticky: true },
+  { path: "/benefit-pricing", label: "Benefit Pricing", group: "Pricing and pharmacy", scope: { fork: "pricing" }, skipped: (d) => !!d.choices?.pricing, sticky: true },
+  {
+    path: "/copay-enroll",
+    label: "Copay Enrollment",
+    group: "Pricing and pharmacy",
+    scope: { fork: "pricing" },
+    skipped: (d) => !!d.choices?.pricing && !pricingPinNeedsConfirm(d),
+    sticky: true,
+  },
   { path: "/delivery-payment", label: "Payment", group: "{program} order", scope: { module: "payment" }, sticky: true },
   { path: "/delivery-confirmation", label: "Order Confirmation", group: "{program} order", scope: { module: "payment" }, sticky: true },
 ];

@@ -20,6 +20,11 @@ export interface Screen {
    */
   scope?: RuleScope;
   /**
+   * Leave this screen out of the menu while this is true. For a screen the current data skips: a pinned pick
+   * the patient never makes. Only `menuFor` reads it, and only when it gets data. Routing is unaffected.
+   */
+  skipped?: (data: WorkflowData) => boolean;
+  /**
    * The patient may sit here while the data has not caught up: a one-time
    * confirmation, or a screen reached by a tap before its event fires.
    * The portal does not navigate away on a state change. A reset still does.
@@ -130,12 +135,16 @@ export type MenuEntry =
   | { label: string; path: string }
   | { group: string; items: { label: string; path: string }[] };
 
-/** The hamburger menu for one scenario, in catalog order. Groups keep the order of their first screen. */
-export function menuFor(map: ScreenMap, flowType: FlowType): MenuEntry[] {
+/**
+ * The hamburger menu for one scenario, in catalog order. Groups keep the order of their first screen.
+ * With `data`, screens the data skips (`Screen.skipped`) are left out. Without it, the menu is the full catalog.
+ */
+export function menuFor(map: ScreenMap, flowType: FlowType, data?: WorkflowData): MenuEntry[] {
   const entries: MenuEntry[] = [];
   const groups = new Map<string, { label: string; path: string }[]>();
   for (const screen of map.screens) {
     if (!appliesTo(map, screen, flowType)) continue;
+    if (data && screen.skipped?.(data)) continue;
     if (screen.group === "") {
       entries.push({ label: screen.label, path: screen.path });
       continue;

@@ -132,6 +132,8 @@ Shared helpers (`inFulfillmentTail`, `assignment`, `prePicked`, `pricingExit`) m
 
 **2.5b (done).** Screens and route rules live in `workflows/coassist/modules/screens/<module>.ts`. `modules/slots.ts` declares 13 slots (gate, awaiting, transfer, pa_notice, pricing, pharmacy, shortcut, cash_offer, address, date, payment, tracking, fallback) and the menu group order. Every `scenarios:` filter became a `scope`: `STANDARD_BI` (fork `bi`, exit `coverage_found`) for DTP and Copay, `DME_BI` (exit `pharmacy_covered`) for DME, `{fork:"pricing"}`, `{fork:"copay"}`, or a module and variant. Menu screens are scoped by module, so a recipe without `scheduling` drops those screens. `coassist-route-order.json` freezes the old order. The walk test holds the new one to it, and fails when I move `shortcut` after `tracking`. `coassist-screens.json` changed in route order only. Menu and sticky are identical.
 
+**2.5c (done).** `Screen.skipped(data)` leaves a screen out of the menu when the data skips it. `menuFor` takes optional data, and the patient `Header` passes it. A pinned pricing pick hides Benefit Pricing. It hides Copay Enrollment too, unless the pin is the self-pay offer the patient must confirm. Routing is untouched. The recorded menu is the no-data catalog, so it did not change. The CRM stage ladders for DTP and Copay stay hard-coded in `coassistLadders.ts`. That is its own step.
+
 **What the recorded order shows.** The first match wins, and the modules interleave in the order a patient meets them. Module runs, in route order:
 
 | Scenario | Runs |

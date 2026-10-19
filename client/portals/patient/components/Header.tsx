@@ -7,14 +7,15 @@ import { MANUFACTURER, CHATBOT_ICON, PROGRAM } from "@/portals/patient/config/br
 import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { FlowType } from "@/store/demoStore";
+import type { WorkflowData } from "@/engine/types";
 import { menuFor, type MenuEntry } from "@/engine/workflow/screens";
 import { screenMapFor } from "@/workflows/screenMaps";
 
 /** The menu comes from the workflow's screen list, the same list derivePatientRoute reads. */
-function buildNavLinks(flowType: FlowType): MenuEntry[] {
+function buildNavLinks(flowType: FlowType, data: WorkflowData): MenuEntry[] {
   const screenMap = screenMapFor(flowType);
   if (!screenMap) return [];
-  return menuFor(screenMap, flowType).map((entry) =>
+  return menuFor(screenMap, flowType, data).map((entry) =>
     "group" in entry ? { ...entry, group: entry.group.replace("{program}", PROGRAM.name) } : entry,
   );
 }
@@ -27,7 +28,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const navLinks = buildNavLinks(flowType);
+  const navLinks = buildNavLinks(flowType, workflowData);
 
   function handleNav(path: string) {
     setMenuOpen(false);

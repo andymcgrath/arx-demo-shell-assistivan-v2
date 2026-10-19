@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 import { isSticky, menuFor, menuPaths, rulesFor } from "@/engine/workflow/screens";
-import { expectMatchesFixture } from "./harness";
+import { ctx, expectMatchesFixture, startFlow } from "./harness";
 
 /**
  * The CoAssist screen map, recorded per scenario.
@@ -24,6 +24,26 @@ describe("CoAssist screen map", () => {
     const ids = COASSIST_SCREENS.rules.map((r) => r.id);
     expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("leaves out the pricing screens a pinned pick skips", () => {
+    const paths = (flow: (typeof FLOWS)[number], choices?: Record<string, string>) => {
+      const actor = startFlow(flow, choices ? { choices } : {});
+      const data = ctx(actor).workflowData;
+      actor.stop();
+      return menuFor(COASSIST_SCREENS, flow, data).flatMap((e) => ("path" in e ? [e.path] : e.items.map((i) => i.path)));
+    };
+    // No pin: the patient picks, so the full catalog shows.
+    expect(paths("CoA_DTP")).toContain("/benefit-pricing");
+    expect(paths("CoA_DTP")).toContain("/copay-enroll");
+    // A pinned Mail Order skips both pricing screens.
+    expect(paths("CoA_DTP", { pricing: "mail_order" })).not.toContain("/benefit-pricing");
+    expect(paths("CoA_DTP", { pricing: "mail_order" })).not.toContain("/copay-enroll");
+    // A pinned self-pay is confirmed on the offer, so the offer stays.
+    expect(paths("CoA_DTP", { pricing: "self_pay" })).not.toContain("/benefit-pricing");
+    expect(paths("CoA_DTP", { pricing: "self_pay" })).toContain("/copay-enroll");
+    // Without data the menu is the full catalog: the recorded fixture.
+    expect(menuPaths(COASSIST_SCREENS, "CoA_DTP")).toContain("/benefit-pricing");
   });
 
   it("keeps each scenario's route order, menu, and sticky screens", () => {
