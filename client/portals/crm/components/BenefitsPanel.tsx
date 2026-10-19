@@ -42,7 +42,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="Case" value={caseNumber} isLink />
                 <FieldRow label="Benefit Investigation Result Name" value="BIR-0431" />
                 <FieldRow label="Stage" value="BI-14273" isLink />
-                <FieldRow label="Subscriber Name" value={patientName} />
+                <FieldRow label="Subscriber Name" value="Dr. Sarah Chen" />
               </div>
               <div>
                 <FieldRow label="Prior Authorization Phone #" value={PAYER.paPhone} />
