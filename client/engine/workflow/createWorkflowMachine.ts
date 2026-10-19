@@ -13,7 +13,7 @@
 import { assign, enqueueActions, setup } from "xstate";
 import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
 import { createInitialWorkflowData } from "./baseData";
-import { choiceProblems, forkApplies } from "./forks";
+import { choiceProblems } from "./forks";
 import { ruleAppliesTo, scopeProblems } from "./scope";
 import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
 
@@ -159,25 +159,6 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
       active: {
         on: {
           ...on,
-          // CHOOSE { fork, exit }: the presenter picks a branch before the fork resolves. Not an UNDO step and
-          // not an event-log entry. After the fork resolves, the caller resets (RESET carries `choices`) and replays.
-          ...(forks.length
-            ? {
-                CHOOSE: {
-                  guard: ({ context, event }: any) => {
-                    const data = context.workflowData;
-                    const fork = forks.find((f) => f.id === event.fork && forkApplies(f, data.flowType));
-                    return !!fork && fork.exits.some((e) => e.id === event.exit) && !fork.resolved(data);
-                  },
-                  actions: assign(({ context, event }: any) => ({
-                    workflowData: {
-                      ...context.workflowData,
-                      choices: { ...(context.workflowData.choices ?? {}), [event.fork]: event.exit },
-                    },
-                  })),
-                },
-              }
-            : {}),
           // UNDO restores the context from before the last step and drops any pending delayed automation.
           UNDO: {
             guard: ({ context }: any) => context._snapshots.length > 0,

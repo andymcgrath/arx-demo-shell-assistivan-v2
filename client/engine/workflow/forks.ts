@@ -48,9 +48,6 @@ export function forkStageEvents(fork: ForkDefinition, data: Pick<WorkflowData, "
     .flatMap((s) => s.events);
 }
 
-/** The events that take a fresh run to the point where the fork is about to resolve. */
-export const forkLeadIn = (fork: ForkDefinition): StageEvent[] => (fork.stagesBefore ?? []).flatMap((s) => s.events);
-
 /** Problems with a set of choices for one scenario. Empty when every choice names a real fork and exit. */
 export function choiceProblems(
   forks: ForkDefinition[],

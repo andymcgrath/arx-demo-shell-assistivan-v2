@@ -80,25 +80,6 @@ describe("DME benefits investigation fork", () => {
     });
   });
 
-  it("lets CHOOSE pick until the fork resolves, then ignores CHOOSE", () => {
-    const actor = startFlow("CoA_DME");
-    enrollThroughBiRunning(actor);
-    actor.send({ type: "CHOOSE", fork: "bi", exit: "medical_covered" } as any);
-    expect(data(actor).choices.bi).toBe("medical_covered");
-    actor.send({ type: "COMPLETE_BI" } as any);
-    expect(data(actor)).toMatchObject({ medicalBenefitStatus: "covered", paStatus: "none" });
-
-    actor.send({ type: "CHOOSE", fork: "bi", exit: "no_coverage" } as any);
-    expect(data(actor).choices.bi).toBe("medical_covered");
-  });
-
-  it("ignores a choice that names no real fork or exit", () => {
-    const actor = startFlow("CoA_DME");
-    actor.send({ type: "CHOOSE", fork: "bi", exit: "nonsense" } as any);
-    actor.send({ type: "CHOOSE", fork: "nope", exit: "pharmacy_covered" } as any);
-    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
-  });
-
   it("keeps the choice through RESET, and RESET can change it", () => {
     const actor = startFlow("CoA_DME", { choices: { bi: "medical_covered" } });
     enrollThroughBiRunning(actor);
@@ -122,7 +103,6 @@ describe("forks on other flows", () => {
   it("leaves flows without forks alone", () => {
     const actor = startFlow("Fax_QS_PA_Approved");
     expect(data(actor).choices).toEqual({});
-    actor.send({ type: "CHOOSE", fork: "bi", exit: "no_coverage" } as any);
     expect(data(actor).choices).toEqual({});
   });
 });

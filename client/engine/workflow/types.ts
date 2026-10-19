@@ -89,8 +89,7 @@ export interface ForkDefinition {
   exits: ForkExit[];
   /**
    * The rungs of the stage-jump list before the fork resolves, the same for every branch. Their events,
-   * in order, take a fresh run to the point where the fork is about to resolve. "Switch branch" resets,
-   * applies the choice, then sends them.
+   * in order, take a fresh run to the point where the fork is about to resolve.
    */
   stagesBefore?: ForkStage[];
   /** True once the fork has resolved. A choice can change only before that. After it, reset and replay. */
