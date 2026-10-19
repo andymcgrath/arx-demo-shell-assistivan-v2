@@ -29,7 +29,7 @@ import { create } from "zustand";
 import { workflowRegistry } from "./WorkflowRegistry";
 import type { FlowType } from "./types";
 import { BRAND, DEFAULT_FLOW, findDemo, isFlowEnabled } from "@/brand";
-
+import { snapshotHasChoices } from "./snapshotChoices";
 let actorInstance: ReturnType<typeof createActor> | null = null;
 let currentFlowType: FlowType = DEFAULT_FLOW;
 
@@ -220,7 +220,12 @@ function createActorForFlow(
   // switch) > sessionStorage (survives a reload) > fresh machine defaults.
   // Both are keyed strictly by the flowType argument — see file header on
   // why we never trust a flowType embedded inside the snapshot itself.
-  const restoreFrom = snapshot ?? loadPersistedSnapshot(flowType);
+  let restoreFrom = snapshot ?? loadPersistedSnapshot(flowType);
+  // A saved run on a different branch than the selected demo pins is stale. Start fresh on the demo's branches.
+  if (restoreFrom && !snapshotHasChoices(restoreFrom, startingChoices(flowType))) {
+    clearPersistedSnapshot(flowType);
+    restoreFrom = undefined;
+  }
 
   const freshActor = () => createActor(machine, { input: { flowType, choices: startingChoices(flowType) } } as any);
   let actor: ReturnType<typeof createActor>;
