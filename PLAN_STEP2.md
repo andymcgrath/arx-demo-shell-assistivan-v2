@@ -62,7 +62,7 @@ The one UI change: `/benefit-pricing` is a sticky screen and `PaApprovedOtp` nav
 
 **2.4 Rules per module.** See "2.4 design" below. Three sub-steps: 2.4a records today's rule order and applicability as a fixture, 2.4b moves the rules into module files, 2.4c replaces the `scenarios:` filters with derived scope.
 
-**2.5 Screens per module.** Each module contributes its screens and route rules. The route list and the menu derive from the recipe. Delete every `scenarios:` filter in `screens.ts`. `screens.test.ts` already checks that every visited screen is in the menu.
+**2.5 Screens per module.** Each module contributes its screens and route rules. The route list and the menu derive from the recipe. Delete every `scenarios:` filter in `screens.ts`. `screens.test.ts` already checks that every visited screen is in the menu. See "2.5 design" below for the ordering question.
 
 **2.6 Proof recipe.** Compose one new scenario with no new code: commercial coverage, PA approved, patient selects a pharmacy, Rx transferred, no scheduling or payment. Add its golden path. This is the one sub-step that records a new fixture, and it must be reviewed.
 
@@ -125,6 +125,22 @@ Shared helpers (`inFulfillmentTail`, `assignment`, `prePicked`, `pricingExit`) m
 `cash_offer` needs a `variant` prop so DME keeps its SMS rules and DTP and Copay keep `DENY_PA` and `SEND_CASH_OFFER`. All 13 filters can be derived this way. The recipes gain `variant` on `cash_offer`.
 
 **Decision for 2.4c.** DME has `cash_offer` in its recipe, because the no-coverage path uses it. If the `pa_denied` variant were not separate, DME would gain `DENY_PA`, the known gap from 2.2. Splitting by variant keeps DME as it is today. Giving DME a real denial is a separate step with its own screens and fixture.
+
+## 2.5 design
+
+**2.5a (done).** Every one of the 42 route rules has an id, and `coassist-screens.json` records, per scenario, the route rules in the order they are tried, the menu, and the sticky screens.
+
+**What the recorded order shows.** The first match wins, and the modules interleave in the order a patient meets them. Module runs, in route order:
+
+| Scenario | Runs |
+|---|---|
+| DTP | enrollment, pa_notification, payment, scheduling, cash_offer, payment, scheduling, tracking |
+| Copay | enrollment, pa_notification, payment, tracking, scheduling, cash_offer, payment, scheduling, tracking, scheduling, tracking |
+| DME | enrollment, provider_transfer, pa_notification, pharmacy_selection, tracking, cash_offer, scheduling, payment, tracking, enrollment |
+
+`payment`, `scheduling`, and `tracking` each appear several times. A spine with one position per module cannot reproduce this. The spine has to be slots: a declared list of stages, with each route rule sitting at a slot and its module owning it. Reproducing today's exact order needs about as many slots as there are rules.
+
+**The ordering decision** (see the question to the user): keep the recorded order exactly, relax it and prove equivalence by behavior, or leave the route list in one file and derive only scope and menu from the recipe.
 
 ## Risks
 

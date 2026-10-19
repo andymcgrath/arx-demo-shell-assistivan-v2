@@ -64,98 +64,105 @@ export const COASSIST_SCREENS: ScreenMap = {
 
   rules: [
     // ── Onboarding: same for every CoAssist scenario ──────────────────
-    { path: "/lock-screen", when: (d) => d.enrollmentStatus === "none" },
-    { path: "/sms-message", when: (d) => d.enrollmentInviteSent && !d.smsVerified },
-    { path: "/otp-verification", when: (d) => d.smsVerified && !d.otpVerified },
-    { path: "/confirm-details", when: (d) => d.otpVerified && d.consentStatus === "pending" },
+    { id: "enrollment.lock_screen", path: "/lock-screen", when: (d) => d.enrollmentStatus === "none" },
+    { id: "enrollment.sms", path: "/sms-message", when: (d) => d.enrollmentInviteSent && !d.smsVerified },
+    { id: "enrollment.otp", path: "/otp-verification", when: (d) => d.smsVerified && !d.otpVerified },
+    { id: "enrollment.confirm_details", path: "/confirm-details", when: (d) => d.otpVerified && d.consentStatus === "pending" },
 
     // ── DTP and Copay ─────────────────────────────────────────────────
     // Waiting for BI, then for the PA decision.
-    { path: "/enrollment-complete", scenarios: PA_FLOWS, when: (d) => d.consentStatus === "confirmed" && d.biStatus !== "complete" },
+    { id: "enrollment.waiting_for_bi", path: "/enrollment-complete", scenarios: PA_FLOWS, when: (d) => d.consentStatus === "confirmed" && d.biStatus !== "complete" },
     {
+      id: "enrollment.waiting_for_pa",
       path: "/enrollment-complete",
       scenarios: PA_FLOWS,
       when: (d) => d.consentStatus === "confirmed" && d.biStatus === "complete" && (d.paStatus === "none" || d.paStatus === "submitted"),
     },
     // PA approved: SMS and OTP again, then pricing.
-    { path: "/pa-approved-sms", scenarios: PA_FLOWS, when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
+    { id: "pa_notification.sms", path: "/pa-approved-sms", scenarios: PA_FLOWS, when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
     {
+      id: "pa_notification.otp",
       path: "/pa-approved-otp",
       scenarios: PA_FLOWS,
       when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
     },
     // A pin on an exit the patient must confirm (the self-pay offer) skips the menu and lands on that screen.
     {
+      id: "payment.self_pay_offer",
       path: "/copay-enroll",
       scenarios: [DTP],
       when: (d) => d.paStatus === "approved" && d.paApprovedOtpVerified && d.pricingOption === null && pricingPinNeedsConfirm(d),
     },
     {
+      id: "payment.benefit_pricing",
       path: "/benefit-pricing",
       scenarios: PA_FLOWS,
       when: (d) => d.paStatus === "approved" && d.paApprovedOtpVerified && d.pricingOption === null,
     },
     // Copay Retail is filled at a pharmacy counter. No address or ship date. Before the generic address rule.
-    { path: "/order-tracker", scenarios: [COPAY], when: (d) => d.pricingOption === "retail" },
-    { path: "/delivery-address", scenarios: PA_FLOWS, when: (d) => d.paStatus === "approved" && d.pricingOption !== null && d.dispatchStatus === "none" },
+    { id: "tracking.copay_retail", path: "/order-tracker", scenarios: [COPAY], when: (d) => d.pricingOption === "retail" },
+    { id: "scheduling.address", path: "/delivery-address", scenarios: PA_FLOWS, when: (d) => d.paStatus === "approved" && d.pricingOption !== null && d.dispatchStatus === "none" },
     // PA denied: cash offer, payment, then address.
-    { path: "/pa-denied", scenarios: PA_FLOWS, when: (d) => d.paStatus === "denied" && d.cashOfferStatus === "none" },
-    { path: "/delivery-payment", scenarios: PA_FLOWS, when: (d) => d.cashOfferStatus === "sent" && !d.paymentVerified },
-    { path: "/delivery-address", scenarios: PA_FLOWS, when: (d) => d.cashOfferStatus === "paid" && d.dispatchStatus === "none" },
+    { id: "cash_offer.pa_denied", path: "/pa-denied", scenarios: PA_FLOWS, when: (d) => d.paStatus === "denied" && d.cashOfferStatus === "none" },
+    { id: "payment.delivery_payment", path: "/delivery-payment", scenarios: PA_FLOWS, when: (d) => d.cashOfferStatus === "sent" && !d.paymentVerified },
+    { id: "scheduling.address_after_cash_offer", path: "/delivery-address", scenarios: PA_FLOWS, when: (d) => d.cashOfferStatus === "paid" && d.dispatchStatus === "none" },
     // Copay Mail Order ends once the address is set. The filling pharmacy handles the date.
-    { path: "/order-tracker", scenarios: [COPAY], when: (d) => d.pricingOption === "mail_order" && d.dispatchStatus !== "none" },
-    { path: "/delivery-date", scenarios: PA_FLOWS, when: (d) => d.dispatchStatus === "selected" && d.patientShipDate === null },
-    { path: "/enrollment-complete", scenarios: PA_FLOWS, when: (d) => d.patientShipDate !== null && d.pharmacyStatus === "none" },
-    { path: "/order-tracker", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready" },
-    { path: "/order-shipped", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "shipped" },
+    { id: "tracking.copay_mail_order", path: "/order-tracker", scenarios: [COPAY], when: (d) => d.pricingOption === "mail_order" && d.dispatchStatus !== "none" },
+    { id: "scheduling.date", path: "/delivery-date", scenarios: PA_FLOWS, when: (d) => d.dispatchStatus === "selected" && d.patientShipDate === null },
+    { id: "tracking.order_confirmed", path: "/enrollment-complete", scenarios: PA_FLOWS, when: (d) => d.patientShipDate !== null && d.pharmacyStatus === "none" },
+    { id: "tracking.processing", path: "/order-tracker", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready" },
+    { id: "tracking.shipped", path: "/order-shipped", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "shipped" },
     // The tracker already shows a finished "delivered" state.
-    { path: "/order-tracker", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "delivered" },
+    { id: "tracking.delivered", path: "/order-tracker", scenarios: PA_FLOWS, when: (d) => d.pharmacyStatus === "delivered" },
 
     // ── DME ───────────────────────────────────────────────────────────
     // Waiting for BI. Home, not /enrollment-complete: that screen is a one-time confirmation.
-    { path: "/", scenarios: [DME], when: (d) => d.biStatus !== "complete" },
+    { id: "enrollment.dme_waiting_for_bi", path: "/", scenarios: [DME], when: (d) => d.biStatus !== "complete" },
 
     // Medical benefit covered always wins: provider transfer.
-    { path: "/", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus !== "notified" },
-    { path: "/dme-transfer-sms", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" && !d.dmeTransferSmsVerified },
-    { path: "/dme-provider-transfer", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" },
+    { id: "provider_transfer.dme_waiting", path: "/", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" && d.dmeProviderTransferStatus !== "notified" },
+    { id: "provider_transfer.dme_sms", path: "/dme-transfer-sms", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" && !d.dmeTransferSmsVerified },
+    { id: "provider_transfer.dme_transfer", path: "/dme-provider-transfer", scenarios: [DME], when: (d) => d.medicalBenefitStatus === "covered" },
 
     // Pharmacy covered: PA, SMS and OTP again, then a network pharmacy. Ends at the tracker.
-    { path: "/", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && (d.paStatus === "none" || d.paStatus === "submitted") },
+    { id: "pa_notification.dme_waiting_for_pa", path: "/", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && (d.paStatus === "none" || d.paStatus === "submitted") },
     {
+      id: "pa_notification.dme_sms",
       path: "/pa-approved-sms",
       scenarios: [DME],
       when: (d) => d.pharmacyBenefitStatus === "covered" && d.paStatus === "approved" && !d.paApprovedSmsVerified,
     },
     {
+      id: "pa_notification.dme_otp",
       path: "/pa-approved-otp",
       scenarios: [DME],
       when: (d) => d.pharmacyBenefitStatus === "covered" && d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
     },
     // The scenario assigns the pharmacy: the patient goes from the OTP straight to the transfer confirmation.
-    { path: "/pharmacy-transfer", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pharmacyAssigned && d.paApprovedOtpVerified },
-    { path: "/network-pharmacy-selection", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pricingOption === null },
-    { path: "/order-tracker", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" },
+    { id: "pharmacy_selection.dme_transfer", path: "/pharmacy-transfer", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pharmacyAssigned && d.paApprovedOtpVerified },
+    { id: "pharmacy_selection.dme_network", path: "/network-pharmacy-selection", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pricingOption === null },
+    { id: "tracking.dme_pharmacy_covered", path: "/order-tracker", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" },
 
     // Neither covered: cash offer SMS, cash option, address, date, payment, tracking.
     // The SMS flips to sent in the same step BI completes. Until then, home.
-    { path: "/", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.cashOfferSmsSent },
-    { path: "/cash-offer-sms", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.cashOfferSmsVerified },
-    { path: "/pa-denied", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pricingOption === null },
+    { id: "cash_offer.dme_waiting_for_sms", path: "/", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.cashOfferSmsSent },
+    { id: "cash_offer.dme_sms", path: "/cash-offer-sms", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.cashOfferSmsVerified },
+    { id: "cash_offer.dme_no_coverage", path: "/pa-denied", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pricingOption === null },
     {
+      id: "scheduling.dme_address",
       path: "/delivery-address",
       scenarios: [DME],
       when: (d) => isNoCoverage(d) && (d.dispatchStatus === "none" || d.dispatchStatus === "pending_selection"),
     },
-    { path: "/delivery-date", scenarios: [DME], when: (d) => isNoCoverage(d) && d.patientShipDate === null },
-    { path: "/delivery-payment", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.paymentVerified },
-    { path: "/enrollment-complete", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pharmacyStatus === "none" },
-    { path: "/order-tracker", scenarios: [DME], when: (d) => isNoCoverage(d) && (d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready") },
-    { path: "/order-shipped", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pharmacyStatus === "shipped" },
-    { path: "/order-tracker", scenarios: [DME], when: (d) => isNoCoverage(d) },
+    { id: "scheduling.dme_date", path: "/delivery-date", scenarios: [DME], when: (d) => isNoCoverage(d) && d.patientShipDate === null },
+    { id: "payment.dme_delivery_payment", path: "/delivery-payment", scenarios: [DME], when: (d) => isNoCoverage(d) && !d.paymentVerified },
+    { id: "tracking.dme_order_confirmed", path: "/enrollment-complete", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pharmacyStatus === "none" },
+    { id: "tracking.dme_processing", path: "/order-tracker", scenarios: [DME], when: (d) => isNoCoverage(d) && (d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready") },
+    { id: "tracking.dme_shipped", path: "/order-shipped", scenarios: [DME], when: (d) => isNoCoverage(d) && d.pharmacyStatus === "shipped" },
+    { id: "tracking.dme_delivered", path: "/order-tracker", scenarios: [DME], when: (d) => isNoCoverage(d) },
 
     // BI complete but neither benefit is set. COMPLETE_BI always sets both, so this should not happen.
-    { path: "/enrollment-complete", scenarios: [DME] },
+    { id: "enrollment.dme_fallback", path: "/enrollment-complete", scenarios: [DME] },
   ],
 };
 

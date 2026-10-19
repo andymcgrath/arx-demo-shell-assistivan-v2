@@ -25,6 +25,11 @@ export interface Screen {
  * A rule without `when` always matches.
  */
 export interface ScreenRule {
+  /**
+   * A stable name, for example `scheduling.address`. Tests record each scenario's route order by id, so a
+   * refactor cannot move or re-scope a route rule without a fixture diff. Unique within a screen map.
+   */
+  id?: string;
   path: string;
   scenarios?: FlowType[];
   when?: (data: WorkflowData) => boolean;
@@ -47,10 +52,14 @@ function appliesTo(scenarios: FlowType[] | undefined, flowType: FlowType): boole
   return !scenarios || scenarios.includes(flowType);
 }
 
+/** The route rules that apply to a scenario, in the order they are tried. */
+export function rulesFor(map: ScreenMap, flowType: FlowType): ScreenRule[] {
+  return map.rules.filter((rule) => appliesTo(rule.scenarios, flowType));
+}
+
 /** The route the patient portal should show for this data. */
 export function routeFor(map: ScreenMap, data: WorkflowData): string {
-  for (const rule of map.rules) {
-    if (!appliesTo(rule.scenarios, data.flowType)) continue;
+  for (const rule of rulesFor(map, data.flowType)) {
     if (!rule.when || rule.when(data)) return rule.path;
   }
   return map.fallback;

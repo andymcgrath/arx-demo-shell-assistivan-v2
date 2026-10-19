@@ -1,0 +1,444 @@
+{
+  "fallback": "/lock-screen",
+  "hidden": [
+    "/lock-screen"
+  ],
+  "scenarios": {
+    "CoA_DTP": {
+      "route": [
+        "enrollment.lock_screen -> /lock-screen",
+        "enrollment.sms -> /sms-message",
+        "enrollment.otp -> /otp-verification",
+        "enrollment.confirm_details -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "enrollment.waiting_for_pa -> /enrollment-complete",
+        "pa_notification.sms -> /pa-approved-sms",
+        "pa_notification.otp -> /pa-approved-otp",
+        "payment.self_pay_offer -> /copay-enroll",
+        "payment.benefit_pricing -> /benefit-pricing",
+        "scheduling.address -> /delivery-address",
+        "cash_offer.pa_denied -> /pa-denied",
+        "payment.delivery_payment -> /delivery-payment",
+        "scheduling.address_after_cash_offer -> /delivery-address",
+        "scheduling.date -> /delivery-date",
+        "tracking.order_confirmed -> /enrollment-complete",
+        "tracking.processing -> /order-tracker",
+        "tracking.shipped -> /order-shipped",
+        "tracking.delivered -> /order-tracker"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            },
+            {
+              "label": "PA Denied and Cash Offer",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "Pricing and pharmacy",
+          "items": [
+            {
+              "label": "Benefit Pricing",
+              "path": "/benefit-pricing"
+            },
+            {
+              "label": "Copay Enrollment",
+              "path": "/copay-enroll"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
+            {
+              "label": "Payment",
+              "path": "/delivery-payment"
+            },
+            {
+              "label": "Order Confirmation",
+              "path": "/delivery-confirmation"
+            },
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/benefit-pricing",
+        "/copay-enroll",
+        "/delivery-address",
+        "/delivery-date",
+        "/delivery-payment",
+        "/delivery-confirmation",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
+    },
+    "CoA_Copay": {
+      "route": [
+        "enrollment.lock_screen -> /lock-screen",
+        "enrollment.sms -> /sms-message",
+        "enrollment.otp -> /otp-verification",
+        "enrollment.confirm_details -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "enrollment.waiting_for_pa -> /enrollment-complete",
+        "pa_notification.sms -> /pa-approved-sms",
+        "pa_notification.otp -> /pa-approved-otp",
+        "payment.benefit_pricing -> /benefit-pricing",
+        "tracking.copay_retail -> /order-tracker",
+        "scheduling.address -> /delivery-address",
+        "cash_offer.pa_denied -> /pa-denied",
+        "payment.delivery_payment -> /delivery-payment",
+        "scheduling.address_after_cash_offer -> /delivery-address",
+        "tracking.copay_mail_order -> /order-tracker",
+        "scheduling.date -> /delivery-date",
+        "tracking.order_confirmed -> /enrollment-complete",
+        "tracking.processing -> /order-tracker",
+        "tracking.shipped -> /order-shipped",
+        "tracking.delivered -> /order-tracker"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            },
+            {
+              "label": "PA Denied and Cash Offer",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "Pricing and pharmacy",
+          "items": [
+            {
+              "label": "Benefit Pricing",
+              "path": "/benefit-pricing"
+            },
+            {
+              "label": "Copay Enrollment",
+              "path": "/copay-enroll"
+            },
+            {
+              "label": "Pharmacy Selection",
+              "path": "/pharmacy-selection"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
+            {
+              "label": "Payment",
+              "path": "/delivery-payment"
+            },
+            {
+              "label": "Order Confirmation",
+              "path": "/delivery-confirmation"
+            },
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/benefit-pricing",
+        "/copay-enroll",
+        "/pharmacy-selection",
+        "/delivery-address",
+        "/delivery-date",
+        "/delivery-payment",
+        "/delivery-confirmation",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
+    },
+    "CoA_DME": {
+      "route": [
+        "enrollment.lock_screen -> /lock-screen",
+        "enrollment.sms -> /sms-message",
+        "enrollment.otp -> /otp-verification",
+        "enrollment.confirm_details -> /confirm-details",
+        "enrollment.dme_waiting_for_bi -> /",
+        "provider_transfer.dme_waiting -> /",
+        "provider_transfer.dme_sms -> /dme-transfer-sms",
+        "provider_transfer.dme_transfer -> /dme-provider-transfer",
+        "pa_notification.dme_waiting_for_pa -> /",
+        "pa_notification.dme_sms -> /pa-approved-sms",
+        "pa_notification.dme_otp -> /pa-approved-otp",
+        "pharmacy_selection.dme_transfer -> /pharmacy-transfer",
+        "pharmacy_selection.dme_network -> /network-pharmacy-selection",
+        "tracking.dme_pharmacy_covered -> /order-tracker",
+        "cash_offer.dme_waiting_for_sms -> /",
+        "cash_offer.dme_sms -> /cash-offer-sms",
+        "cash_offer.dme_no_coverage -> /pa-denied",
+        "scheduling.dme_address -> /delivery-address",
+        "scheduling.dme_date -> /delivery-date",
+        "payment.dme_delivery_payment -> /delivery-payment",
+        "tracking.dme_order_confirmed -> /enrollment-complete",
+        "tracking.dme_processing -> /order-tracker",
+        "tracking.dme_shipped -> /order-shipped",
+        "tracking.dme_delivered -> /order-tracker",
+        "enrollment.dme_fallback -> /enrollment-complete"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            }
+          ]
+        },
+        {
+          "group": "Pricing and pharmacy",
+          "items": [
+            {
+              "label": "Network Pharmacy Selection",
+              "path": "/network-pharmacy-selection"
+            },
+            {
+              "label": "Pharmacy Confirmation",
+              "path": "/pharmacy-selection-confirmation"
+            }
+          ]
+        },
+        {
+          "group": "Cash pay",
+          "items": [
+            {
+              "label": "Cash Offer SMS",
+              "path": "/cash-offer-sms"
+            },
+            {
+              "label": "No Coverage and Cash Option",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "Provider transfer",
+          "items": [
+            {
+              "label": "Transfer SMS",
+              "path": "/dme-transfer-sms"
+            },
+            {
+              "label": "DME Provider Transfer",
+              "path": "/dme-provider-transfer"
+            },
+            {
+              "label": "Pharmacy Transfer",
+              "path": "/pharmacy-transfer"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
+            {
+              "label": "Payment",
+              "path": "/delivery-payment"
+            },
+            {
+              "label": "Order Confirmation",
+              "path": "/delivery-confirmation"
+            },
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/network-pharmacy-selection",
+        "/pharmacy-selection-confirmation",
+        "/dme-provider-transfer",
+        "/pharmacy-transfer",
+        "/delivery-address",
+        "/delivery-date",
+        "/delivery-payment",
+        "/delivery-confirmation",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
+    }
+  }
+}
