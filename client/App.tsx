@@ -7,7 +7,7 @@
  */
 import "./global.css";
 import { createRoot } from "react-dom/client";
-import { Component, useEffect, type ReactNode } from "react";
+import { Component, Suspense, lazy, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -55,6 +55,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 
+// Dev only. `import.meta.env.DEV` is false in a build, so the page and its route drop out of client bundles.
+const BrandLab = import.meta.env.DEV ? lazy(() => import("@/shell/BrandLab")) : null;
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
@@ -68,6 +71,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/hub" replace />} />
             <Route path="/iassist" element={<IAssistRedirect />} />
+            {BrandLab && (
+              <Route path="/brand-lab" element={<Suspense fallback={null}><BrandLab /></Suspense>} />
+            )}
             <Route path="/:portal" element={<DemoShell />} />
             <Route path="*" element={<Navigate to="/hub" replace />} />
           </Routes>
