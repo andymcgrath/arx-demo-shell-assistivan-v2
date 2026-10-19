@@ -60,7 +60,7 @@ Every workflow follows the same patient, Keanu Dixon, through a different real-w
 
 The baseline, happy-path story. A referral comes in by fax, the patient enrolls (SMS and one-time-passcode verification, then consent), AssistRx runs a benefits check, submits a prior authorization, and the payer approves it. The prescription gets dispatched to a pharmacy, fills, ships, and arrives.
 
-Stages: Referral Received → Patient Enrolled → Benefits Investigation → Prior Authorization → Dispatch to Triage → Rx Processing → Rx Shipped → Medication Delivered.
+Stages: Referral Received → Patient Enrolled → Benefits Investigation → Prior Authorization → Triage to Pharmacy → Rx Processing → Rx Shipped → Medication Delivered.
 
 Use this one to show the core pipeline before layering on a more specific story.
 
@@ -70,7 +70,7 @@ Use this one to show the core pipeline before layering on a more specific story.
 
 The patient has no insurance, so instead of a prior authorization, AssistRx enrolls them in a Patient Assistance Program (PAP) and the medication ships free. Ninety days later, a routine audit checks whether the patient has since gotten insurance.
 
-Stages: Referral Received → Patient Enrolled → Benefits Investigation → PAP Enrolled → Dispatch to Triage → Rx Processing → Rx Shipped → Medication Delivered.
+Stages: Referral Received → Patient Enrolled → Benefits Investigation → PAP Enrolled → Triage to Pharmacy → Rx Processing → Rx Shipped → Medication Delivered.
 
 Use this one to show the free-goods path and the compliance audit that follows it.
 
@@ -80,7 +80,7 @@ Use this one to show the free-goods path and the compliance audit that follows i
 
 CoAssist is AssistRx's cash-pay track for patients who'd rather not wait on insurance, or whose insurance doesn't cover the drug. After enrollment and a benefits check, the patient (or their provider) chooses how to pay: through insurance with a prior authorization, or a cash-pay option fulfilled through CoAssist's own pharmacy. A "Cash Offer" stage sits between the PA decision and dispatch, showing the price the patient would pay out of pocket.
 
-Stages: Referral Received → Patient Enrolled → Benefits Investigation → Prior Authorization → Cash Offer → Dispatch to Triage → Rx Processing → Rx Shipped → Medication Delivered.
+Stages: Referral Received → Patient Enrolled → Benefits Investigation → Prior Authorization → Cash Offer → Triage to Pharmacy → Rx Processing → Rx Shipped → Medication Delivered.
 
 ### 4. CoAssist Copay — adds a copay assistance option
 
@@ -94,7 +94,7 @@ Same shape as CoAssist DTP, with one more choice at the pricing step: a Copay Pr
 
 This flow starts differently: instead of a referral landing in the CRM, a hub agent opens the iAssist app and builds the case by hand, screen by screen (patient search, clinical details, insurance, prescription, prior authorization). Once submitted, the PA gets approved and the case flows into the same pricing, dispatch, and shipping pipeline as the other workflows.
 
-Stages: Referral Received → eRx Submitted (benefits check complete, PA submitted) → Patient Enrolled → PA Approved → Dispatch to Triage → Rx Shipped → Medication Delivered.
+Stages: Referral Received → eRx Submitted (benefits check complete, PA submitted) → Patient Enrolled → PA Approved → Triage to Pharmacy → Rx Shipped → Medication Delivered.
 
 Use this one to demo iAssist's case-creation screens, not just the downstream fulfillment.
 
@@ -104,7 +104,7 @@ Use this one to demo iAssist's case-creation screens, not just the downstream fu
 
 Same case-intake flow as #5, but the payer denies the prior authorization instead of approving it. An appeal gets filed, and once it's approved, fulfillment moves forward anyway.
 
-Stages: Referral Received → eRx Submitted → Patient Enrolled → PA Denied → Appeal Filed → Dispatch to Triage (Keanu to Facility).
+Stages: Referral Received → eRx Submitted → Patient Enrolled → PA Denied → Appeal Filed → Triage to Pharmacy (Keanu to Facility).
 
 This is the one built to pair with the Rules portal: create and activate the rule named "Initiate Appeal, Upon PA Denial," and the appeal files itself the moment the denial happens, instead of a hub agent doing it by hand. Use #5 and #6 back to back to contrast a clean approval against a denial that needs intervention, then show the Rules portal automating that intervention.
 
@@ -114,7 +114,7 @@ This is the one built to pair with the Rules portal: create and activate the rul
 
 A provider starts the referral by signing it electronically instead of faxing it in, and the patient goes through the same income-qualification and PAP enrollment as workflow #2. The actual e-signature capture screens aren't built yet, so this flow currently reuses the PAP workflow's steps end to end. Treat it as a placeholder for where that intake experience is headed, not a finished story.
 
-Stages: Referral Received → Patient Enrolled → Benefits Investigation → PAP Enrolled → Dispatch to Triage → Rx Processing → Rx Shipped → Medication Delivered.
+Stages: Referral Received → Patient Enrolled → Benefits Investigation → PAP Enrolled → Triage to Pharmacy → Rx Processing → Rx Shipped → Medication Delivered.
 
 ## Quick reference
 

@@ -68,7 +68,7 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
       // it (cosmetic) and this roster row reflects it as its own status
       // rather than sitting on "Appeal Approved" once there's actually a
       // scheduled appointment to show. Final status for this flow — the
-      // "Dispatch to Triage" milestone (site of care selected) is folded
+      // "Triage to Pharmacy" milestone (site of care selected) is folded
       // into the same completed dot here since WF5 has no dispense tail
       // left to distinguish it from.
       if (workflowData.infusionDate !== null) {
@@ -84,7 +84,7 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
       // into "Appeal Filed" below even though the site of care was already
       // selected, so "Reset → Stage 6" visibly resolved to Stage 5.
       if (workflowData.selectedPharmacy !== null) {
-        return { label: "Dispatch to Triage", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
+        return { label: "Triage to Pharmacy", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
       }
       return { label: "Appeal Filed", color: "warning", dots: ["completed", "completed", "completed", "pending", "pending", "disabled"] };
     }

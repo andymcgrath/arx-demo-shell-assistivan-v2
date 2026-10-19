@@ -134,7 +134,7 @@ const pharmacyStatus = useOrderStore((s) => s.pharmacyStatus);
 - **Clinical workflow**: Referral → Enrollment → BI → PA → Dispatch
 - **Order lifecycle**: Order received → Processing → Shipped → Delivered
 
-These operate independently. A patient can be in clinical stage 5 (Dispatch to Triage) but still see order status "Pending" if the order hasn't been filled yet.
+These operate independently. A patient can be in clinical stage 5 (Triage to Pharmacy) but still see order status "Pending" if the order hasn't been filled yet.
 
 ### 4. Simplified Derivation Logic
 ```typescript

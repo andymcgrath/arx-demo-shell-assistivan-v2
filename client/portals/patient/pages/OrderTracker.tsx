@@ -106,7 +106,7 @@ function buildSteps(workflowStep: number, pharmacyStatus: string): StepDef[] {
 // path anyway (in-person pickup for Retail, "the pharmacy still handles it
 // from here" for Mail Order). This is a 2-step version instead: "Routing to
 // pharmacy" while HUB staff haven't dispatched yet, "Received by pharmacy"
-// the moment they click "Dispatch to Pharmacy" (FILL_RX) — both flip to
+// the moment they click "Triage to Pharmacy" (FILL_RX) — both flip to
 // done together, since that one click is this path's entire fulfillment
 // step (matching TP-14277's own "Complete" the instant dispatchStatus is
 // "dispatched," see crm/pages/Index.tsx's tpStage).

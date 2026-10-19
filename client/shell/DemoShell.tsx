@@ -234,7 +234,7 @@ const STEP_LABELS_DEFAULT = [
   "Patient Enrolled",
   "Benefits Investigation",
   "Prior Authorization",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
   "Rx Processing",
   "Rx Shipped",
   "Medication Delivered",
@@ -244,7 +244,7 @@ const STEP_LABELS_DEFAULT = [
 // (Prior Authorization is replaced by "PAP Enrolled," the eIncome/PAP
 // milestone), but once CRM dispatches to a pharmacy the rest is driven by
 // the same pharmacyStatus states WF1 uses (see WorkflowEngine.ts's
-// Fax_PAP_Audit branch), so "Dispatch to Triage / Rx Processing / Rx
+// Fax_PAP_Audit branch), so "Triage to Pharmacy / Rx Processing / Rx
 // Shipped / Medication Delivered" describes it accurately — unlike the
 // "First Dispense / Audit Initiated / PA Approved" labels this replaced,
 // which didn't correspond to anything the demo actually does (no audit or
@@ -254,7 +254,7 @@ const STEP_LABELS_PAP_AUDIT = [
   "Patient Enrolled",
   "Benefits Investigation",
   "PAP Enrolled",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
   "Rx Processing",
   "Rx Shipped",
   "Medication Delivered",
@@ -266,14 +266,14 @@ const STEP_LABELS_PAP_AUDIT = [
 // WITHOUT WF4's Rx Processing/Rx Shipped/Medication Delivered tail: WF5
 // dispenses "Keanu to facility" (a site of care, not a pharmacy shipment —
 // see crm/pages/Index.tsx's SITES_OF_CARE/officeDispenseOptions), so
-// "Dispatch to Triage" is this flow's final, terminal step.
+// "Triage to Pharmacy" is this flow's final, terminal step.
 const STEP_LABELS_IASSIST_PAP = [
   "Referral Received",
   "Patient Enrolled",
   "Benefits Investigation",
   "Prior Authorization",
   "Appeal",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
 ];
 
 // "Copay Enrollment" and "Patient Payment" used to be two separate steps,
@@ -294,7 +294,7 @@ const STEP_LABELS_COA = [
   "Benefits Investigation",
   "Prior Authorization",
   "Payment",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
   "Rx Processing",
   "Rx Shipped",
   "Medication Delivered",
@@ -307,7 +307,7 @@ const STEP_LABELS_COA = [
 // Medication Delivered tail. Same reasoning as STEP_LABELS_IASSIST_PAP
 // dropping that tail for its own out-of-pipeline dispense: both are filled
 // outside AssistRx's own dispensing pipeline (a retail counter, or the
-// mail-order pharmacy's own facility), so "Dispatch to Triage" is this
+// mail-order pharmacy's own facility), so "Triage to Pharmacy" is this
 // path's final, terminal step either way. CoA_DTP keeps the full 9-step
 // STEP_LABELS_COA bar.
 const STEP_LABELS_COA_COPAY_RETAIL = [
@@ -316,7 +316,7 @@ const STEP_LABELS_COA_COPAY_RETAIL = [
   "Benefits Investigation",
   "Prior Authorization",
   "Payment",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
 ];
 
 // CoA_Coverage (one Benefits Investigation, three coverage outcomes — see
@@ -337,7 +337,7 @@ const STEP_LABELS_COVERAGE = [
   "Consent",
   "Benefits Investigation",
   "Payment",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
   "Rx Processing",
   "Rx Shipped",
   "Medication Delivered",
@@ -350,7 +350,7 @@ const STEP_LABELS_COVERAGE = [
 // its paSubmitted/paApproved/paApprovedSmsVerified/paApprovedOtpVerified
 // states), then the patient picks a network pharmacy, and fulfillment
 // happens outside AssistRx's own pipeline from there — same shape as
-// STEP_LABELS_COA_COPAY_RETAIL's own 6-step, Dispatch-to-Triage-terminal bar,
+// STEP_LABELS_COA_COPAY_RETAIL's own 6-step, Triage-to-Pharmacy-terminal bar,
 // just with this flow's own step names. This replaces the scenario's old
 // single automatic tap-through SMS milestone ("Patient Notification")
 // entirely.
@@ -360,7 +360,7 @@ const STEP_LABELS_COVERAGE_PHARMACY = [
   "Benefits Investigation",
   "Prior Authorization",
   "Pharmacy Selection",
-  "Dispatch to Triage",
+  "Triage to Pharmacy",
 ];
 
 // CoA_Coverage Scenario 2 only (medicalBenefitStatus === "covered", medical
@@ -448,7 +448,7 @@ function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['wo
     biStatus === 'complete',                                         // 3 Benefits Investigation
     paResolved,                                                      // 4 Prior Authorization
     paymentDone,                                                     // 5 Payment
-    dispatched,                                                      // 6 Dispatch to Triage
+    dispatched,                                                      // 6 Triage to Pharmacy
     pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 7 Rx Processing
     pharmacyStatus === 'delivered',                                  // 8 Rx Shipped
     pharmacyStatus === 'delivered',                                  // 9 Medication Delivered
@@ -482,7 +482,7 @@ function computeCoverageStepDone(workflowData: ReturnType<typeof usePersonaState
   // (always true once reached, per the confirmed no-denial design) instead
   // of this outcome's old single tap-through SMS flag. Once approved, the
   // patient picks a network pharmacy, then this mirrors CoA_Copay Retail's
-  // own short, Dispatch-to-Triage-terminal bar (see STEP_LABELS_COVERAGE_PHARMACY/
+  // own short, Triage-to-Pharmacy-terminal bar (see STEP_LABELS_COVERAGE_PHARMACY/
   // computeCoaStepDone's own isCopayRetailFlow shape for the analogous
   // "dispatched" signal).
   if (pharmacyBenefitStatus === 'covered') {
@@ -492,7 +492,7 @@ function computeCoverageStepDone(workflowData: ReturnType<typeof usePersonaState
       biStatus === 'complete',           // 3 Benefits Investigation
       paStatus === 'approved',           // 4 Prior Authorization
       pricingOption !== null,            // 5 Pharmacy Selection
-      pharmacyStatus !== 'none',         // 6 Dispatch to Triage
+      pharmacyStatus !== 'none',         // 6 Triage to Pharmacy
     ];
   }
 
@@ -506,7 +506,7 @@ function computeCoverageStepDone(workflowData: ReturnType<typeof usePersonaState
     consentStatus === 'confirmed',                                   // 2 Consent
     biStatus === 'complete',                                         // 3 Benefits Investigation
     paymentVerified,                                                 // 4 Payment
-    dispatched,                                                      // 5 Dispatch to Triage
+    dispatched,                                                      // 5 Triage to Pharmacy
     pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 6 Rx Processing
     pharmacyStatus === 'delivered',                                  // 7 Rx Shipped
     pharmacyStatus === 'delivered',                                  // 8 Medication Delivered
@@ -532,7 +532,7 @@ function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>
     consentStatus === 'confirmed',                // 2 Patient Enrolled — real consent, not just an invite sent
     biStatus === 'complete',                      // 3 Benefits Investigation
     paStatus === 'approved',                      // 4 Prior Authorization — "submitted" alone isn't done yet
-    dispatched || pastDispatch,                   // 5 Dispatch to Triage
+    dispatched || pastDispatch,                   // 5 Triage to Pharmacy
     pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 6 Rx Processing
     pharmacyStatus === 'delivered',                // 7 Rx Shipped
     pharmacyStatus === 'delivered',                // 8 Medication Delivered
@@ -542,8 +542,8 @@ function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>
 // WF5 (iAssist_PAP) variant of computeIAssistStepDone above — identical
 // except it inserts its own "Appeal" milestone right after Prior
 // Authorization, and has no dispense tail at all: WF5 dispenses "Keanu to
-// facility" (a site of care, not a pharmacy shipment), so "Dispatch to
-// Triage" (step 6) is this flow's final step — it never touches
+// facility" (a site of care, not a pharmacy shipment), so "Triage to
+// Pharmacy" (step 6) is this flow's final step — it never touches
 // pharmacyStatus. Step 4 (Prior Authorization) is judged as "resolved" on
 // denial, not approval — this flow's PA never reaches 'approved' (see
 // workflows/iassist/rules.ts) — and step 5 only ticks once the Appeal is
@@ -564,7 +564,7 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
     // below gives it the same pending/pulsing treatment as Prior
     // Authorization while awaiting its own response.
     appealStatus === 'approved',                   // 5 Appeal
-    dispatched,                                    // 6 Dispatch to Triage — final step, ticks once a site of care is selected
+    dispatched,                                    // 6 Triage to Pharmacy — final step, ticks once a site of care is selected
   ];
 }
 
@@ -577,7 +577,7 @@ function StepBar() {
   // (not just the workflowStep number) needs to change mid-flow, since
   // which pricing option resolves only once the patient reaches Benefit
   // Pricing (pricingOption starts null for all three). Covers both Retail
-  // and Mail Order now — both end at Dispatch to Triage (see
+  // and Mail Order now — both end at Triage to Pharmacy (see
   // WorkflowEngine.ts's derivePatientRoute) — Copay-enrolled-then-picked
   // included, since pricingOption is what this checks either way.
   const isCopayRetailFlow = flowType === "CoA_Copay" && (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order");
@@ -596,7 +596,7 @@ function StepBar() {
   // instead — same "swap the label array once the outcome is known" pattern
   // isCopayRetailFlow already uses for CoA_Copay's own pricingOption.
   const isCoverageMedicalFlow = isCoverageFlow && workflowData.medicalBenefitStatus === "covered";
-  // Scenario 1 only — swaps in the short, Dispatch-to-Triage-terminal
+  // Scenario 1 only — swaps in the short, Triage-to-Pharmacy-terminal
   // STEP_LABELS_COVERAGE_PHARMACY bar (no pricing/address/date/payment step at
   // all in this outcome anymore — see workflows/coassist/'s header comment). Checked
   // before the fallback STEP_LABELS_COVERAGE bar below, which now only applies
@@ -654,7 +654,7 @@ function StepBar() {
   // instead of hardcoded. Fax_PAP_Audit also runs BI through the same
   // biStatus field (n=3 slot, checking BI for no insurance) and, now that
   // its dispense tail reuses WF1's exact pharmacyStatus-driven labels at
-  // the exact same n=6/7 positions (Dispatch to Triage/Rx Processing/Rx
+  // the exact same n=6/7 positions (Triage to Pharmacy/Rx Processing/Rx
   // Shipped/Medication Delivered — see STEP_LABELS_PAP_AUDIT), the rx
   // decorations apply there too. Only paProcessing stays WF1/CoA-only —
   // WF2 has no Prior Authorization step (paStatus never leaves 'none' for
@@ -670,9 +670,9 @@ function StepBar() {
   // same "sent, awaiting response" moment paProcessing captures for PA.
   const appealPending   = appealStatus === "initiated";
   const appealStepN     = 5;
-  // isCoveragePharmacyFlow's own 6-step bar ends at Dispatch to Triage (n=6, same
+  // isCoveragePharmacyFlow's own 6-step bar ends at Triage to Pharmacy (n=6, same
   // terminal position as STEP_LABELS_COA_COPAY_RETAIL) with no Rx
-  // Processing/Rx Shipped steps at all — FILL_RX (CRM's "Dispatch to
+  // Processing/Rx Shipped steps at all — FILL_RX (CRM's "Triage to
   // Pharmacy") can still flip pharmacyStatus to "processing" for this flow
   // (same as isCopayRetailFlow), but there's no further stage left to
   // advance it, so this ring would otherwise land on the terminal Dispatch
@@ -1352,7 +1352,7 @@ export default function DemoShell() {
                       { stage: 2, label: "Patient Enrolled" },
                       { stage: 3, label: "Benefits Investigation" },
                       { stage: 4, label: "PAP Enrolled" },
-                      { stage: 5, label: "Dispatch to Triage" },
+                      { stage: 5, label: "Triage to Pharmacy" },
                       { stage: 6, label: "Rx Processing" },
                       { stage: 7, label: "Rx Shipped" },
                       { stage: 8, label: "Medication Delivered" },
@@ -1364,7 +1364,7 @@ export default function DemoShell() {
                       { stage: 3, label: "Patient Enrolled" },
                       { stage: 4, label: "PA Denied" },
                       { stage: 5, label: "Appeal Filed" },
-                      { stage: 6, label: "Dispatch to Triage (Keanu to Facility)" },
+                      { stage: 6, label: "Triage to Pharmacy (Keanu to Facility)" },
                     ]
                     : isTransferScenario(flowType)
                     ? TRANSFER_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
@@ -1374,7 +1374,7 @@ export default function DemoShell() {
                       { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
                       { stage: 3, label: "Patient Enrolled" },
                       { stage: 4, label: "PA Approved" },
-                      { stage: 5, label: "Dispatch to Triage" },
+                      { stage: 5, label: "Triage to Pharmacy" },
                       { stage: 6, label: "Rx Shipped" },
                       { stage: 7, label: "Medication Delivered" },
                     ]
@@ -1391,7 +1391,7 @@ export default function DemoShell() {
                     // either) — this is what left the patient stranded on
                     // /enrollment-complete past "PA results." Also adds the
                     // "Cash Offer" rung the CRM's own STAGES_LIVE has
-                    // between Prior Authorization and Dispatch to Triage
+                    // between Prior Authorization and Triage to Pharmacy
                     // (see resetActorToStage's own isCoaFlow branch above),
                     // which the old shared list never had at all.
                     : isCoaFlow
@@ -1401,7 +1401,7 @@ export default function DemoShell() {
                       { stage: 3, label: "Benefits Investigation" },
                       { stage: 4, label: "Prior Authorization" },
                       { stage: 5, label: "Cash Offer" },
-                      { stage: 6, label: "Dispatch to Triage" },
+                      { stage: 6, label: "Triage to Pharmacy" },
                       { stage: 7, label: "Rx Processing" },
                       { stage: 8, label: "Rx Shipped" },
                       { stage: 9, label: "Medication Delivered" },
@@ -1411,7 +1411,7 @@ export default function DemoShell() {
                       { stage: 2, label: "Patient Enrolled" },
                       { stage: 3, label: "Benefits Investigation" },
                       { stage: 4, label: "Prior Authorization" },
-                      { stage: 5, label: "Dispatch to Triage" },
+                      { stage: 5, label: "Triage to Pharmacy" },
                       { stage: 6, label: "Rx Processing" },
                       { stage: 7, label: "Rx Shipped" },
                       { stage: 8, label: "Medication Delivered" },

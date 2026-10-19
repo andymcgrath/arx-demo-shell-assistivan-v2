@@ -385,7 +385,7 @@ export default function FieldPortal() {
     stageName: item.id === "missing-information" ? "Enrollment"
       : item.id === "pa-submission-required" ? "Prior Authorization"
       : item.id === "appeal-review" ? "Appeals"
-      : "Dispatch to Triage",
+      : "Triage to Pharmacy",
   }));
 
   // The one case behind this patient's live tasks — same onboarding/PA

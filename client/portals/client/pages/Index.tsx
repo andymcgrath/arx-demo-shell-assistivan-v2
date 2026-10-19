@@ -19,6 +19,7 @@ import {
   User,
   X,
   Zap,
+  CornerUpRight,
   Loader2,
   Settings,
   RefreshCw,
@@ -229,7 +230,7 @@ const STAGES_PAP_AUDIT: Stage[] = [
   },
   {
     id: "TP-14277",
-    name: "Dispatch to Triage",
+    name: "Triage to Pharmacy",
     statusLabel: "Stage not started",
     statusDetail: "Awaiting PAP enrollment",
     isComplete: false,
@@ -331,7 +332,7 @@ const STAGES: Stage[] = [
   },
   {
     id: "TP-14277",
-    name: "Dispatch to Triage",
+    name: "Triage to Pharmacy",
     statusLabel: "Stage not started",
     statusDetail: "No Status available",
     isComplete: false,
@@ -371,6 +372,36 @@ function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClick?: (st
   // stages genuinely blocked upstream are isNotStarted: true, so neither
   // gets this treatment.
   const isActiveWaiting = !stage.isComplete && !stage.isNotStarted;
+  // Skipped stages get a compact, muted row: dashed icon, gray title, short
+  // reason. They stay clickable. Keyed on the status label, not the flow.
+  if (stage.statusLabel === "Not needed") {
+    return (
+      <div
+        className="flex items-center gap-2.5 py-1.5 border-b border-[#dddbda] last:border-b-0"
+        data-stage-skipped
+      >
+        <div
+          className="flex items-center justify-center shrink-0 rounded-full"
+          style={{ width: 20, height: 20, border: "1.5px dashed #c9c7c5", color: "#9a9a9a" }}
+        >
+          <CornerUpRight size={11} />
+        </div>
+        <span
+          className="text-[12px] text-[#706e6b] shrink-0 cursor-pointer hover:underline"
+          onClick={() => onHeaderClick?.(stage)}
+        >
+          {stage.name} - {stage.id}
+        </span>
+        <span
+          className="flex-1 min-w-0 truncate text-right text-[11px] italic text-[#9a9a9a]"
+          title={stage.statusDetail}
+        >
+          Skipped - {stage.statusDetail}
+        </span>
+      </div>
+    );
+  }
+
   const iconBg = stage.isNotStarted ? "#9a9a9a" : FC_BLUE;
   const statusColor = stage.isComplete
     ? "#2e844a"
@@ -785,7 +816,7 @@ export default function Index() {
   // Order — see coaCopay.ts, PharmacySelection.tsx, and
   // WorkflowEngine.ts's derivePatientRoute), so there's no Processing/
   // Ready/Shipped/Delivered chain for HUB staff to track for either.
-  // Dispatch to Triage (TP-14277) is this path's last stage — Pharmacy
+  // Triage to Pharmacy (TP-14277) is this path's last stage — Pharmacy
   // Status (PS-14278) is dropped from STAGES_LIVE below, the same way
   // isIAssistPapFlow drops it for its own out-of-pipeline site-of-care
   // dispense. Named for its original Retail-only scope; kept short rather
@@ -1103,8 +1134,8 @@ export default function Index() {
   // there's no separate Rx Processing/Shipped/Delivered chain to wait on.
   const tpStage: Stage = isIAssistPapFlow
     ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
-      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
-      : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
+      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+      : { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     // CoA_Copay Retail/Mail Order — see isCopayRetailFlow above. Keyed off
     // selectedPharmacy/dispatchStatus === "dispatched" rather than
     // dispatchStatus === "selected" like the generic branch below does.
@@ -1119,19 +1150,19 @@ export default function Index() {
     // fulfillment happens outside AssistRx's own pipeline either way.
     : isCopayRetailFlow
     ? (!selectedPharmacy
-      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : dispatchStatus !== "dispatched"
-      ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
-      : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: pricingOption === "retail" ? "Dispatched to retail pharmacy — filled outside AssistRx" : "Dispatched via Mail Order — filled outside AssistRx", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Dispatched" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
+      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Complete", statusDetail: pricingOption === "retail" ? "Dispatched to retail pharmacy — filled outside AssistRx" : "Dispatched via Mail Order — filled outside AssistRx", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Dispatched" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     : dispatchStatus === "pending_selection" || dispatchStatus === "none"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+    ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
     : dispatchStatus === "selected"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : pharmacyStatus === "processing"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "First dispense processing", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Initiated" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "In Progress", statusDetail: "First dispense processing", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Initiated" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : pharmacyStatus === "ready"
-    ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "In Progress", statusDetail: "Ready for delivery", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Ready" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
-    : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "First dispense shipped", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Shipped" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
+    ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "In Progress", statusDetail: "Ready for delivery", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Ready" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+    : { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Complete", statusDetail: "First dispense shipped", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: selectedPharmacy?.name || null }, { label: "First Dispense", value: "Shipped" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const psStage: Stage = pharmacyStatus === "shipped"
     ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "In Transit", statusDetail: "First dispense shipped — in transit to patient", isComplete: false, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Est. Delivery", value: daysFromToday(7) }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
@@ -1258,7 +1289,7 @@ export default function Index() {
           lastUpdated: cashOfferStatus !== "none" || patientShipDate ? new Date().toLocaleDateString() : null,
           lastUpdatedAgo: cashOfferStatus !== "none" || patientShipDate ? "today" : null,
         },
-        // Dispatch to Triage / Pharmacy Status — reused verbatim from WF1
+        // Triage to Pharmacy / Pharmacy Status — reused verbatim from WF1
         // (tpStage/psStage, computed above) instead of a bespoke CoA-only
         // "Dispense" stage, so HUB staff see the exact same dispensing UI
         // regardless of flow.
@@ -2495,7 +2526,7 @@ export default function Index() {
             </div>
           </div>
         ) : activeStage.id === "TP-14277" ? (
-        /* ── Dispatch to Triage Detail View ─────────────────────────────── */
+        /* ── Triage to Pharmacy Detail View ─────────────────────────────── */
         <div className="p-4 max-w-5xl">
           <div className="border border-[#dddbda] rounded">
             <div
@@ -2524,7 +2555,7 @@ export default function Index() {
                   style={{ background: FC_BLUE }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  Dispatch to Pharmacy
+                  Triage to Pharmacy
                 </button>
               )}
             </div>
@@ -2568,7 +2599,7 @@ export default function Index() {
                   <div className="flex flex-col items-center justify-center p-4 gap-4">
                     {isIAssistPapFlow ? (
                       // WF5 dispatches the instant a site of care is picked —
-                      // no separate "Dispatch to Pharmacy" click, no
+                      // no separate "Triage to Pharmacy" click, no
                       // Processing/Shipping cosmetic states (those all belong
                       // to the Rx Processing/Shipped/Delivered chain this
                       // flow doesn't have — see tpStage above).
@@ -2614,7 +2645,7 @@ export default function Index() {
                     ) : isCoaFlow ? (
                       // CoA_DTP's pharmacy is auto-assigned at pricing selection
                       // (see coaDtp.ts) — there's nothing to choose here, so no
-                      // CTA. Dispatching is done from the "Dispatch to Pharmacy"
+                      // CTA. Dispatching is done from the "Triage to Pharmacy"
                       // button in the header above instead.
                       <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "#f5f5f5" }}>
                         <span className="text-[12px] font-semibold text-[#706e6b]">
@@ -2993,7 +3024,7 @@ export default function Index() {
                   style={{ background: FC_BLUE }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  Dispatch to Pharmacy
+                  Triage to Pharmacy
                 </button>
               )}
               {activeStage.id === "TP-14277" && isIAssistPapFlow && selectedPharmacy && (
