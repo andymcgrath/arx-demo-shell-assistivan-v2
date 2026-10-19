@@ -28,7 +28,7 @@ import { createActor } from "xstate";
 import { create } from "zustand";
 import { workflowRegistry } from "./WorkflowRegistry";
 import type { FlowType } from "./types";
-import { DEFAULT_FLOW, isFlowEnabled } from "@/brand";
+import { BRAND, DEFAULT_FLOW, findDemo, isFlowEnabled } from "@/brand";
 
 let actorInstance: ReturnType<typeof createActor> | null = null;
 let currentFlowType: FlowType = DEFAULT_FLOW;
@@ -72,7 +72,8 @@ const actorSnapshots = new Map<FlowType, unknown>();
 // v2: the CoAssist machines were rebuilt (refactor step 01), so snapshots saved by the old
 // state-graph machines cannot restore. Bump this whenever a machine's shape changes.
 // v4: workflowData gained `choices` (fork picks), so older snapshots lack it.
-const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v4";
+// v5: a fresh machine now starts on the selected demo's branches, so older snapshots hold the wrong branch.
+const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v5";
 
 function readSnapshotStore(): Partial<Record<FlowType, unknown>> {
   try {
@@ -188,6 +189,23 @@ export function resetAllWorkflowSnapshots(): void {
   }
 }
 
+/**
+ * The branches a fresh machine starts on: the selected demo's, or the first demo on this flow.
+ * Without this, a new session shows the scenario's default branch instead of the demo the client picked.
+ * Reads the stored demo id directly for the same circular-import reason as readPersistedFlowType.
+ */
+function startingChoices(flowType: FlowType): Record<string, string> | undefined {
+  let stored: string | undefined;
+  try {
+    stored = JSON.parse(sessionStorage.getItem("arx-demo-shell") ?? "null")?.state?.demoId;
+  } catch {
+    stored = undefined;
+  }
+  const picked = findDemo(stored);
+  const demo = picked && picked.flow === flowType ? picked : BRAND.demos.find((d) => d.flow === flowType);
+  return demo?.choices;
+}
+
 function createActorForFlow(
   flowType: FlowType,
   snapshot?: unknown
@@ -204,7 +222,7 @@ function createActorForFlow(
   // why we never trust a flowType embedded inside the snapshot itself.
   const restoreFrom = snapshot ?? loadPersistedSnapshot(flowType);
 
-  const freshActor = () => createActor(machine, { input: { flowType } } as any);
+  const freshActor = () => createActor(machine, { input: { flowType, choices: startingChoices(flowType) } } as any);
   let actor: ReturnType<typeof createActor>;
   if (restoreFrom) {
     try {

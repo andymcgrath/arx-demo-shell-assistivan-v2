@@ -7,7 +7,6 @@ import { getLiveWorkItems, KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEng
 import { dateFromToday, daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
-import ForkButtons from "@/portals/crm/components/ForkButtons";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
@@ -1691,12 +1690,6 @@ export default function Index() {
                 )}
               </button>
             )}
-            {/* Branch buttons for the running scenario, drawn from the fork declarations
-                (workflows/forks.ts). For CoA_DME they are the three coverage outcomes. Each button
-                resets to the "Benefits Investigation running" resting state with that choice made
-                (restartAtFork in shell/demos.ts). The machine holds the choice, so the tab-open
-                auto-complete and "Check Status" resolve BI to it. A flow with no forks shows nothing. */}
-            <ForkButtons flowType={flowType} choices={workflowData.choices} color={FC_BLUE} />
           </div>
 
           {/* Sub-tab content */}
@@ -2996,7 +2989,11 @@ export default function Index() {
                           Shipping…
                         </span>
                       </div>
-                    ) : isCoaFlow ? (
+                    ) : isCoaFlow || (isDmeFlow && !isDmeRetailFlow && !!selectedPharmacy) ? (
+                      // DME cash pay (No Coverage) also lands here: the scenario
+                      // sets the pharmacy when the patient picks self-pay, so
+                      // there is nothing to choose. The button would only
+                      // hesitate the presenter before "Dispatch to Pharmacy".
                       // CoA_DTP's pharmacy is auto-assigned at pricing selection
                       // (see coaDtp.ts) — there's nothing to choose here, so no
                       // CTA. Dispatching is done from the "Dispatch to Pharmacy"
@@ -3385,7 +3382,7 @@ export default function Index() {
                 <button
                   onClick={() => {
                     if (isDmeFlow) {
-                      // The branch comes from the `bi` fork's choice in the machine (see ForkButtons).
+                      // The branch comes from the `bi` fork's choice in the machine (set by the selected demo).
                       dispatch('COMPLETE_BI', { portal: 'crm' });
                     } else {
                       dispatch('COMPLETE_BI', { portal: 'crm', result: isPapFlow ? "no_insurance" : "coverage_found" });

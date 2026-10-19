@@ -148,9 +148,13 @@ export interface DemoState {
   enrollmentFormTabOpen: boolean;
   /** Bumped on every resetDemo() call — see file header comment. */
   resetNonce: number;
+  /** Bumped when the presenter undoes a step. The patient portal re-syncs its screen to the machine. */
+  undoNonce: number;
 }
 
 export interface DemoActions {
+  /** Signals that the machine just stepped back. Does not touch the machine. */
+  markUndo: () => void;
   changeFlow: (flow: FlowType) => void;
   switchFlow: (newFlow: FlowType) => void;
   /** Remembers the selected demo and its flow. Does not touch the machine (see shell/demos.ts). */
@@ -167,6 +171,7 @@ export const SEED: DemoState = {
   demoId: DEFAULT_DEMO.id,
   enrollmentFormTabOpen: false,
   resetNonce: 0,
+  undoNonce: 0,
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -175,6 +180,10 @@ export const useDemoStore = create<DemoStore>()(
   persist(
     (set, get) => ({
       ...SEED,
+
+      markUndo(): void {
+        set({ undoNonce: get().undoNonce + 1 });
+      },
 
       closeEnrollmentFormTab(): void {
         set({ enrollmentFormTabOpen: false });
