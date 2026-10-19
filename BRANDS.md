@@ -103,6 +103,20 @@ The build merges it over the parent. Objects merge field by field. Arrays and va
 
 The build keeps only the active brand's image folder, plus the folders of any brand it extends. Other clients' folders are deleted from the build, so their URLs return nothing on that site. A brand may therefore point only at images in its own folder or a parent's. The brand test checks this. `pnpm dev` still serves every folder.
 
+## Documents
+
+PDFs for Related Documents and the viewers live in `public/brands/<slug>/docs/` and are named under `program.documents`. They follow the same isolation rule as images.
+
+```json
+"documents": {
+  "enrollmentForm": { "file": "/brands/<slug>/docs/enrollment-form.pdf", "fileName": "Enrollment_Form.pdf" },
+  "summaryOfBenefits": { "file": "/brands/<slug>/docs/summary-of-benefits.pdf", "fileName": "Summary_of_Benefits.pdf" },
+  "paForm": { "file": "/brands/<slug>/docs/pa-form.pdf", "fileName": "PA_Form.pdf" }
+}
+```
+
+Every key is optional. Without `enrollmentForm` or `summaryOfBenefits`, a brand shows the shared files in `public/`. Without `paForm`, no PA form row appears. The PA form shows in the CRM and Field Related Documents on every flow except the PAP flows. Screens read these through `client/brand/documents.ts`. Do not hardcode a PDF path or file name.
+
 ## Pick a brand
 
 Set `BRAND=<slug>` in the Netlify site settings. The default is `assistivan`. The build fails when the slug has no `brands/<slug>/brand.json`.

@@ -33,6 +33,25 @@ export interface BrandAssets {
 }
 
 /**
+ * A PDF the demo shows in Related Documents and in the document viewers. `file` is a local path in
+ * `public/brands/<slug>/docs/`. `fileName` is the name the screens show and the download uses.
+ */
+export interface BrandDocument {
+  file: string;
+  fileName: string;
+}
+
+/**
+ * Per-brand documents. Every key is optional. A brand with no `enrollmentForm` or `summaryOfBenefits`
+ * shows the shared defaults. A brand with no `paForm` shows no PA form row (see brand/documents.ts).
+ */
+export interface BrandDocuments {
+  enrollmentForm?: BrandDocument;
+  summaryOfBenefits?: BrandDocument;
+  paForm?: BrandDocument;
+}
+
+/**
  * One entry in the demo dropdown: a flow plus the branch to take at each fork. The client picks a
  * story, not a workflow. A demo can only select declared fork exits (see workflows/forks.ts), so a
  * bad edit cannot build an illegal path. The brand test checks every flow and choice.
@@ -75,6 +94,8 @@ export interface BrandConfig {
     dosageForm: string;
     /** Leave it out when the drug has no logo files. The program name then shows as text. */
     assets?: BrandAssets;
+    /** PDFs for Related Documents. Leave out to use the shared defaults. */
+    documents?: BrandDocuments;
     colors: BrandColors;
     educationVideo?: { title: string; description: string; thumbnail: string; embedUrl: string };
     /**

@@ -75,6 +75,16 @@
       "logoColor": "/brands/boehringer-ingelheim/1786385288896-imgi_1_JASCAYD-logo-link-to-homepage.png",
       "logoWhite": "/brands/boehringer-ingelheim/1786385297021-jascayd-logo-white.svg"
     },
+    "documents": {
+      "enrollmentForm": {
+        "file": "/brands/boehringer-ingelheim/docs/enrollment-form.pdf",
+        "fileName": "keanu_dixon_jascayd_enrollment.pdf"
+      },
+      "paForm": {
+        "file": "/brands/boehringer-ingelheim/docs/pa-form.pdf",
+        "fileName": "PA_Form_KDixon.pdf"
+      }
+    },
     "colors": {
       "brand": "#08312A",
       "accent": "#00E47C"

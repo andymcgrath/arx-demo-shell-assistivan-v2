@@ -12,6 +12,7 @@ import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
 import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
 import type { FlowType } from "@/engine/types";
+import { enrollmentFormDocument } from "@/brand/documents";
 import {
   ChevronDown,
   ChevronRight,
@@ -471,7 +472,7 @@ const RIGHT_TABS = [
 const FAX_DOCUMENTS = [
   {
     fileId: "FAX-2026-00431",
-    fileName: "Enrollment_Form_KDixon_051526.pdf",
+    fileName: enrollmentFormDocument().fileName,
     dateReceived: daysFromToday(-4),
     type: "Enrollment Form",
     pages: 3,
@@ -1596,7 +1597,7 @@ export default function Index() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-[12px] text-[#706e6b]">
-              <span>Enrollment_Form_KDixon_051526.pdf</span>
+              <span>{enrollmentFormDocument().fileName}</span>
               <span>·</span>
               <span>5 pages</span>
               <span>·</span>
@@ -1751,24 +1752,24 @@ export default function Index() {
             {/* Right panel — original PDF */}
             <div className="flex flex-col" style={{ flex: 1 }}>
               <div className="flex items-center justify-between px-4 py-2 border-b border-[#dddbda]" style={{ background: "#f3f3f3" }}>
-                <span className="text-[12px] font-semibold text-[#3e3e3c]">Original Fax — Enrollment_Form_KDixon_051526.pdf</span>
+                <span className="text-[12px] font-semibold text-[#3e3e3c]">Original Fax — {enrollmentFormDocument().fileName}</span>
                 <a
-                  href="/enrollment-form.pdf"
-                  download="Enrollment_Form_KDixon_051526.pdf"
+                  href={enrollmentFormDocument().file}
+                  download={enrollmentFormDocument().fileName}
                   className="text-[11px] px-2 py-1 rounded border border-[#dddbda] bg-white text-[hsl(var(--arx-primary))] hover:bg-[hsl(var(--arx-primary-30))] transition-colors"
                 >
                   Download
                 </a>
               </div>
               <object
-                data="/enrollment-form.pdf"
+                data={enrollmentFormDocument().file}
                 type="application/pdf"
                 className="flex-1 w-full"
               >
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-[#706e6b]" style={{ background: "#f9f9f9" }}>
                   <FileText size={40} className="opacity-30" />
                   <div className="text-[13px] font-medium">PDF preview not available</div>
-                  <div className="text-[11px]">Place <code className="bg-[#f0f0f0] px-1 rounded">enrollment-form.pdf</code> in the <code className="bg-[#f0f0f0] px-1 rounded">public/</code> folder to enable preview</div>
+                  <div className="text-[11px]">Add <code className="bg-[#f0f0f0] px-1 rounded">{enrollmentFormDocument().file}</code> under <code className="bg-[#f0f0f0] px-1 rounded">public/</code> to enable preview</div>
                 </div>
               </object>
             </div>

@@ -29,6 +29,8 @@ import {
   KEANU_SITE_OF_CARE_FACTS,
 } from "@/engine/WorkflowEngine";
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
+import { enrollmentFormDocument, paFormDocument } from "@/brand/documents";
+import type { BrandDocument } from "@/brand/schema";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
 // CRM's enrollment fax, iAssist, the live tasks above) — referenced by the
@@ -209,7 +211,8 @@ export default function FieldPortal() {
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
-  const [showEnrollmentDoc, setShowEnrollmentDoc] = useState(false);
+  const isPapFlow = state.flow_type === "Fax_PAP_Audit" || state.flow_type === "PrES_PAP";
+  const [viewedDoc, setViewedDoc] = useState<BrandDocument | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
@@ -1849,36 +1852,47 @@ export default function FieldPortal() {
                   point at, so dropping a real PDF into public/ lights up
                   the preview in both places at once. */}
               {patientTab === "RELATED DOCS" && (() => {
-                const hasEnrollmentDoc = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled" && isFaxFlow;
-                if (!hasEnrollmentDoc) {
+                const isLivePatient = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled";
+                // Same lists as CRM: the enrollment form on fax flows, the brand's PA form on every non-PAP flow.
+                const enrollmentForm = enrollmentFormDocument();
+                const paForm = paFormDocument();
+                const docs: { fileId: string; doc: BrandDocument; type: string; pages: string; received: string }[] = [
+                  ...(isLivePatient && isFaxFlow
+                    ? [{ fileId: "FAX-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) }]
+                    : []),
+                  ...(isLivePatient && paForm && !isPapFlow
+                    ? [{ fileId: "FAX-2026-00433", doc: paForm, type: "Prior Authorization Form", pages: "5", received: daysFromToday(-2) }]
+                    : []),
+                ];
+                if (docs.length === 0) {
                   return <p className="text-sm text-slate-400 text-center py-10">No documents</p>;
                 }
                 return (
                   <div>
                     <RelatedTable
                       title="Documents"
-                      count={1}
+                      count={docs.length}
                       columns={["File ID", "File Name", "Type", "Pages", "Date Received"]}
-                      rows={[[
-                        <button key="f" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary font-medium hover:underline">
-                          FAX-2026-00431
+                      rows={docs.map((d) => [
+                        <button key="f" onClick={() => setViewedDoc(d.doc)} className="text-arx-primary font-medium hover:underline">
+                          {d.fileId}
                         </button>,
-                        <button key="n" onClick={() => setShowEnrollmentDoc(true)} className="text-arx-primary hover:underline">
-                          Enrollment_Form_KDixon_051526.pdf
+                        <button key="n" onClick={() => setViewedDoc(d.doc)} className="text-arx-primary hover:underline">
+                          {d.doc.fileName}
                         </button>,
-                        "Enrollment Form",
-                        "3",
-                        daysFromToday(-4),
-                      ]]}
+                        d.type,
+                        d.pages,
+                        d.received,
+                      ])}
                     />
 
-                    {showEnrollmentDoc && createPortal(
+                    {viewedDoc && createPortal(
                       <div
                         // See the calendar preview modal's identical comment
                         // above — same document.body portal, same need for
                         // this class so arx-primary etc. resolve here too.
                         className="portal-field fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-                        onClick={() => setShowEnrollmentDoc(false)}
+                        onClick={() => setViewedDoc(null)}
                       >
                         <div
                           className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col"
@@ -1886,17 +1900,17 @@ export default function FieldPortal() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-                            <span className="text-sm font-semibold text-slate-700">Enrollment_Form_KDixon_051526.pdf</span>
+                            <span className="text-sm font-semibold text-slate-700">{viewedDoc.fileName}</span>
                             <div className="flex items-center gap-2">
                               <a
-                                href="/enrollment-form.pdf"
-                                download="Enrollment_Form_KDixon_051526.pdf"
+                                href={viewedDoc.file}
+                                download={viewedDoc.fileName}
                                 className="text-xs px-2 py-1 rounded border border-slate-300 text-arx-primary hover:bg-slate-100"
                               >
                                 Download
                               </a>
                               <button
-                                onClick={() => setShowEnrollmentDoc(false)}
+                                onClick={() => setViewedDoc(null)}
                                 aria-label="Close"
                                 className="rounded p-1 text-slate-500 hover:opacity-70"
                               >
@@ -1904,11 +1918,11 @@ export default function FieldPortal() {
                               </button>
                             </div>
                           </div>
-                          <object data="/enrollment-form.pdf" type="application/pdf" className="flex-1 w-full">
+                          <object data={viewedDoc.file} type="application/pdf" className="flex-1 w-full">
                             <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500 bg-slate-50">
                               <span className="text-sm font-medium">PDF preview not available</span>
                               <span className="text-xs">
-                                Place <code className="bg-slate-200 px-1 rounded">enrollment-form.pdf</code> in the <code className="bg-slate-200 px-1 rounded">public/</code> folder to enable preview
+                                Add <code className="bg-slate-200 px-1 rounded">{viewedDoc.file}</code> under <code className="bg-slate-200 px-1 rounded">public/</code> to enable preview
                               </span>
                             </div>
                           </object>

@@ -144,6 +144,16 @@ for (const slug of slugs) {
       }
     });
 
+    it("lists documents as PDFs with a file and a display name", () => {
+      const documents = brand.program.documents ?? {};
+      for (const key of Object.keys(documents)) {
+        expect(["enrollmentForm", "summaryOfBenefits", "paForm"].includes(key)).toBe(true);
+        const doc = documents[key];
+        expect(typeof doc.file === "string" && doc.file.startsWith("/brands/") && doc.file.endsWith(".pdf")).toBe(true);
+        expect(typeof doc.fileName === "string" && doc.fileName.endsWith(".pdf")).toBe(true);
+      }
+    });
+
     it("points every local image at a committed file", () => {
       for (const url of localAssets(brand)) {
         if (KNOWN_MISSING_ASSETS.has(url)) continue;
