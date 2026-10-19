@@ -73,7 +73,8 @@ export interface BrandConfig {
     drugDisplayName: string;
     description: string;
     dosageForm: string;
-    assets: BrandAssets;
+    /** Leave it out when the drug has no logo files. The program name then shows as text. */
+    assets?: BrandAssets;
     colors: BrandColors;
     educationVideo?: { title: string; description: string; thumbnail: string; embedUrl: string };
     /**

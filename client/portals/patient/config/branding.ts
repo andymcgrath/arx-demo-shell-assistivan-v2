@@ -18,6 +18,7 @@
  */
 import { BRAND } from "@/brand";
 import { applyBrandCssVars } from "@/lib/applyBrandCssVars";
+import { withProgramDefaults } from "@/brand/program";
 
 const activeBrand = BRAND;
 
@@ -29,7 +30,7 @@ export const MANUFACTURER = {
   ),
 };
 
-export const PROGRAM = activeBrand.program;
+export const PROGRAM = withProgramDefaults(activeBrand.program);
 
 export const CHATBOT_ICON = activeBrand.chatbotIcon;
 

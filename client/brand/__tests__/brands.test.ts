@@ -97,12 +97,13 @@ for (const slug of slugs) {
 
     it("has transparent-asset logos with no CSS filter", () => {
       // Each variant is a file path or empty. An empty one shows the program name as text.
-      const { logoColor, logoWhite } = brand.program.assets;
+      const assets = brand.program.assets ?? {};
+      const { logoColor, logoWhite } = assets;
       for (const logo of [logoColor, logoWhite]) {
         expect(logo === undefined || logo === null || typeof logo === "string").toBe(true);
       }
       expect("logo" in brand.program).toBe(false);
-      expect("requiresFilter" in brand.program.assets).toBe(false);
+      expect("requiresFilter" in assets).toBe(false);
       // A brand that extends a legacy brand inherits its filter until it sets its own logo.
       const inheritsLegacy = brandChain(BRANDS_DIR, slug).some((s) => LEGACY_FILTER_BRANDS.has(s));
       if (!inheritsLegacy) {
