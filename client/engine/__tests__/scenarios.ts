@@ -47,6 +47,8 @@ export interface Scenario {
   /** The named end state the steps must reach. */
   endsAt: EndState;
   flowType: FlowType;
+  /** Fork picks the run starts with, as a demo in a brand file would pass them. */
+  choices?: Record<string, string>;
   steps: Step[];
   /** Step indexes the machine is expected to ignore (no transition). Everything else must be accepted. */
   ignored?: number[];
@@ -195,6 +197,20 @@ export const SCENARIOS: Scenario[] = [
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
+      ...fulfillment,
+    ],
+  },
+  {
+    // BI finds pharmacy coverage, so a PA is required and starts on its own. The PA is approved. The scenario assigns
+    // the pharmacy, so the patient never picks one: after the PA-approved OTP the Rx is handed over and fulfillment follows.
+    name: "coa-pharmacy-transfer",
+    endsAt: "delivered",
+    flowType: "CoA_DME",
+    choices: { bi: "pharmacy_transfer", pa: "approved" },
+    steps: [
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
       ...fulfillment,
     ],
   },

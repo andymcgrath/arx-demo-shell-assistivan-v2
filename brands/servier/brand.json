@@ -7,9 +7,10 @@
       "id": "coa-pharmacy-transfer",
       "flow": "CoA_DME",
       "label": "Pharmacy Transfer",
-      "description": "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy and sees transfer details.",
+      "description": "BI finds pharmacy coverage, so a PA is required and starts on its own. The PA is approved. The patient does not choose a pharmacy and sees transfer details.",
       "choices": {
-        "bi": "pharmacy_transfer"
+        "bi": "pharmacy_transfer",
+        "pa": "approved"
       }
     }
   ],

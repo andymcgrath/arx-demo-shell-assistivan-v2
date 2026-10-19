@@ -1,0 +1,96 @@
+[
+  {
+    "eventType": "REFERRAL_RECEIVED",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Pharmacy Benefit Coverage Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation confirmed Test Patient's DME (CGM sensor) is covered under their pharmacy benefit.",
+      "A Prior Authorization is being submitted automatically; once approved, the patient will be notified to pick a network pharmacy."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SUBMIT_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Submitted - Test Patient",
+    "bodyParagraphs": [
+      "A prior authorization request was submitted to the payer for Test Patient.",
+      "AssistRx is monitoring for a decision and will notify you once the payer responds."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "APPROVE_PA",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prior Authorization Approved - Test Patient",
+    "bodyParagraphs": [
+      "The payer approved the prior authorization for Test Patient. Dr. Test has also been notified.",
+      "The prescription now moves to fulfillment."
+    ],
+    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
+    "linkedItemLabel": "View Task: Prior Authorization Requested"
+  },
+  {
+    "eventType": "VERIFY_PA_APPROVED_SMS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Verify Pa Approved Sms - Test Patient",
+    "bodyParagraphs": [
+      "Verify Pa Approved Sms occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "VERIFY_PA_APPROVED_OTP",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Verify Pa Approved Otp - Test Patient",
+    "bodyParagraphs": [
+      "Verify Pa Approved Otp occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  }
+]

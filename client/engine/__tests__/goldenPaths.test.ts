@@ -29,7 +29,7 @@ describe("golden paths", () => {
   for (const scenario of SCENARIOS) {
     it(scenario.name, () => {
       withFrozenClock(() => {
-        const actor = startFlow(scenario.flowType);
+        const actor = startFlow(scenario.flowType, scenario.choices ? { choices: scenario.choices } : {});
         const records = runSteps(actor, scenario.steps);
 
         const ignored = records.map((r, i) => (r.accepted ? -1 : i)).filter((i) => i >= 0);
