@@ -135,7 +135,6 @@ Reset before each run-through so the audience isn't confused by stage numbers le
 ## Where to go next
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** — how the demo is actually built: the XState workflow machines, the (deliberately thin) Zustand shell store, and how to add a new workflow or portal.
-- **[ARCHITECTURE_ORDER_STORE.md](./ARCHITECTURE_ORDER_STORE.md)** — historical note on an earlier refactor of order/pharmacy state. Superseded by `ARCHITECTURE.md`; kept for context.
-- **[BRANDING_ADMIN_GUIDE.md](./BRANDING_ADMIN_GUIDE.md)** — how to rebrand the Patient portal (colors, logos, program name) from the `/admin` screen, and how to promote a preset live.
-- **[CONSISTENCY_README.md](./CONSISTENCY_README.md)** — the `[CONSISTENCY] Feature: ...` request workflow for asking an AI coding assistant to build a new cross-portal feature without breaking sync between tabs. Start here, then follow its links to `CONSISTENCY_INDEX.md`, `CONSISTENCY_SYSTEM.md`, and `CONSISTENCY_ENFORCER.md`.
-- **[PROMPTING_GUIDE.md](./PROMPTING_GUIDE.md)** — companion guide to the consistency system above, on how to phrase feature requests.
+- **[BRANDS.md](./BRANDS.md)** — how a client's brand works: the brand file, colors, demos, documents, and the `BRAND` setting for each Netlify site.
+- **[REFACTOR_AUDIT.md](./REFACTOR_AUDIT.md)** — why the platform is built around workflows, scenarios, and brand data.
+- **[docs/archive/](./docs/archive/)** — obsolete notes from before the XState refactor (the consistency system, the order store). Kept for history only.
