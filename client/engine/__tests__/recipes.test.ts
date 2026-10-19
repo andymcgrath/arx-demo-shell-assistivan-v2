@@ -72,9 +72,9 @@ describe("iAssist recipes", () => {
   it("rejects the pick of a branch no module in the recipe handles", () => {
     const forks = forksForScenario(ALL_FORKS, "iAssist_PA_Approved");
     // Denied needs the appeal, approved needs the PA notification, and no coverage needs financial assistance.
-    const denied = { ...IASSIST_RECIPES.iAssist_PA_Approved, choices: { bi: "coverage_found", pa: "denied" } };
+    const denied = { ...IASSIST_RECIPES.iAssist_PA_Approved, choices: { bi: "pharmacy_covered", pa: "denied" } };
     expect(recipeProblems(denied, forks)).toContain('fork "pa" exit "denied" requires appeal in the recipe');
-    const approvedOnAppeal = { ...IASSIST_RECIPES.iAssist_PAP, choices: { bi: "coverage_found", pa: "approved" } };
+    const approvedOnAppeal = { ...IASSIST_RECIPES.iAssist_PAP, choices: { bi: "pharmacy_covered", pa: "approved" } };
     expect(recipeProblems(approvedOnAppeal, forksForScenario(ALL_FORKS, "iAssist_PAP"))).toContain(
       'fork "pa" exit "approved" requires pa_notification in the recipe',
     );

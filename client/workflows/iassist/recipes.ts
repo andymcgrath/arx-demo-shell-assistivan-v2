@@ -16,7 +16,7 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
 export const IA_PA_APPROVED_RECIPE: ScenarioRecipe = {
   source: "iassist",
   forks: ["bi", "pa"],
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },
@@ -31,7 +31,7 @@ export const IA_PA_APPROVED_RECIPE: ScenarioRecipe = {
 export const IA_PA_DENIED_APPEAL_RECIPE: ScenarioRecipe = {
   source: "iassist",
   forks: ["bi", "pa"],
-  choices: { bi: "coverage_found", pa: "denied" },
+  choices: { bi: "pharmacy_covered", pa: "denied" },
   modules: [
     { id: "enrollment" },
     { id: "appeal" },

@@ -67,7 +67,7 @@ describe("iAssist ordering rules", () => {
       it("does not submit a PA when BI says none is required", () => {
         withFrozenClock(() => {
           const { actor, data } = start(flow);
-          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", result: "no_coverage" }]);
+          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" }]);
           expect(data().paStatus).toBe("none");
           expect(accepts(actor, { type: "SUBMIT_PA" })).toBe(false);
         });
@@ -181,8 +181,8 @@ describe("iAssist ordering rules", () => {
 describe("iAssist forks", () => {
   it("each scenario starts on its story's picks", () => {
     withFrozenClock(() => {
-      expect(start(APPROVED).data().choices).toEqual({ bi: "coverage_found", pa: "approved" });
-      expect(start(APPEAL).data().choices).toEqual({ bi: "coverage_found", pa: "denied" });
+      expect(start(APPROVED).data().choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
+      expect(start(APPEAL).data().choices).toEqual({ bi: "pharmacy_covered", pa: "denied" });
     });
   });
 

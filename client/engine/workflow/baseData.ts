@@ -21,6 +21,7 @@ export function createInitialWorkflowData(
     paStatus: "none",
     biStatus: "none",
     biResult: null,
+    paRequired: false,
     pharmacyStatus: "none",
     dispatchStatus: "none",
     qsStatus: "none",

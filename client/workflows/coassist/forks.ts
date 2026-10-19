@@ -1,6 +1,7 @@
 import type { FlowType } from "@/engine/types";
 import type { ForkDefinition, ForkStage, StageEvent } from "@/engine/workflow/types";
 import { forkApplies } from "@/engine/workflow/forks";
+import { biFork } from "../shared/bi";
 
 /**
  * CoAssist forks. A fork is a point where the story has a default branch and named alternatives.
@@ -48,51 +49,16 @@ const fulfillment = (firstLabel: string) => [
 ];
 
 /**
- * The benefits investigation, one fork for every CoAssist scenario. One BI resolves to one of four coverage
- * outcomes. Every exit sets both benefit statuses, and `biResult` is derived from them (rules: spine.complete_bi).
- * The story, or a demo in the brand file, picks the exit. Medical benefit always wins when covered.
+ * The benefits investigation, one fork for every CoAssist scenario, built from the shared BI catalog
+ * (workflows/shared/bi.ts). The story, or a demo in the brand file, picks the exit. Medical benefit wins when covered.
  *
  * An exit `requires` the modules its branch needs, so a recipe that lacks them cannot pick it. The rungs after the
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
-export const BI_FORK: ForkDefinition = {
-  id: "bi",
-  label: "Benefits investigation result",
-  chooser: "story",
-  // CoAssist only. iAssist and the standard workflow declare their own `bi` fork.
+export const BI_FORK: ForkDefinition = biFork({
   scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage"],
-  resolved: (d) => d.biStatus === "complete",
-  exits: [
-    {
-      id: "pharmacy_covered",
-      label: "Pharmacy Coverage",
-      description: "The pharmacy benefit covers it and needs a PA.",
-      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
-    },
-    {
-      id: "pharmacy_transfer",
-      label: "Pharmacy Transfer",
-      description:
-        "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy. The Rx transfers to an assigned one and the patient sees its contact details.",
-      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered", pharmacyAssigned: true },
-      requires: ["provider_transfer"],
-    },
-    {
-      id: "medical_covered",
-      label: "Medical Coverage",
-      description: "The medical benefit covers it. The case transfers to an outside provider.",
-      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
-      requires: ["provider_transfer"],
-    },
-    {
-      id: "no_coverage",
-      label: "No Coverage (Cash)",
-      description: "Neither benefit covers it. The patient gets a cash offer.",
-      data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },
-      requires: ["cash_offer"],
-    },
-  ],
-};
+  exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "no_coverage" }],
+});
 
 /**
  * The stage-jump rungs after the `bi` fork, owned by the scenario and keyed by exit id. A scenario with no table

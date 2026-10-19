@@ -3,8 +3,10 @@
  * "the agent is looking at this stage" (VIEW_STAGE) and "left it" (LEAVE_STAGE). The machine owns the delay and the
  * outcome. Leaving the stage cancels a pending reveal. The `bi` and `pa` forks decide the outcomes.
  */
+import type { IassistContent } from "../scenarios";
 import type { IaRule } from "./shared";
 import { nowIso, REVEAL_MS, APPEAL_MS } from "./shared";
+import { resolveBi, submitPaRule } from "../../shared/bi";
 import { exitFor } from "@/engine/workflow/forks";
 import { IASSIST_BI_FORK, IASSIST_PA_FORK } from "../forks";
 
@@ -29,21 +31,14 @@ export const SPINE_RULES: IaRule[] = [
     id: "spine.complete_bi",
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
-    set: (d, e) => ({ biStatus: "complete", biResult: e.result ?? exitFor(IASSIST_BI_FORK, d).data.biResult }),
+    set: (d, e) => resolveBi(IASSIST_BI_FORK, d, e),
     emit: { portal: "analytics", step: 7 },
     // The PA starts when BI returns. SUBMIT_PA checks that the result requires one.
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
 
   // ── Prior Authorization ────────────────────────────────────────────
-  {
-    // A PA needs a completed BI whose result says one is required.
-    id: "spine.submit_pa",
-    on: "SUBMIT_PA",
-    when: (d) => d.biStatus === "complete" && d.biResult === "coverage_found" && d.paStatus === "none",
-    set: () => ({ paStatus: "submitted", paSubmittedAt: nowIso() }),
-    emit: { portal: "provider", step: 8 },
-  },
+  submitPaRule<IassistContent>(),
   {
     // The appeal scenario never approves its PA. The appeal is what unlocks it.
     id: "spine.approve_pa",
@@ -81,7 +76,7 @@ export const SPINE_RULES: IaRule[] = [
       trigger: "agent",
       id: "bi-reveal",
       after: REVEAL_MS,
-      send: (d) => ({ type: "COMPLETE_BI", result: exitFor(IASSIST_BI_FORK, d).data.biResult }),
+      send: () => ({ type: "COMPLETE_BI" }),
     },
   },
   {

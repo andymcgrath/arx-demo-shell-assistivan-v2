@@ -23,7 +23,7 @@ const SELF_PAY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake
 export const IA_PA_APPROVED: ScenarioDefinition<IassistContent> = {
   flowType: "iAssist_PA_Approved",
   intake: "erx",
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: IA_PA_APPROVED_RECIPE,
   content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
 };
@@ -32,7 +32,7 @@ export const IA_PA_APPROVED: ScenarioDefinition<IassistContent> = {
 export const IA_PA_DENIED_APPEAL: ScenarioDefinition<IassistContent> = {
   flowType: "iAssist_PAP",
   intake: "erx",
-  choices: { bi: "coverage_found", pa: "denied" },
+  choices: { bi: "pharmacy_covered", pa: "denied" },
   recipe: IA_PA_DENIED_APPEAL_RECIPE,
   content: { retail: RETAIL, mailOrder: MAIL_ORDER, selfPay: SELF_PAY },
 };

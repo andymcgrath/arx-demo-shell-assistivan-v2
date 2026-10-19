@@ -59,6 +59,8 @@ export interface WorkflowData {
   patientShipDate: string | null;
   biStatus: 'none' | 'running' | 'submitted' | 'complete';
   biResult: string | null;
+  /** Set by BI from the `bi` fork's exit. The PA starts only when this is true. */
+  paRequired: boolean;
   pharmacyStatus: 'none' | 'processing' | 'ready' | 'shipped' | 'delivered';
   dispatchStatus: 'none' | 'pending_selection' | 'selected' | 'dispatched';
   qsStatus: 'none' | 'active' | 'complete';

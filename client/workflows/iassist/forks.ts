@@ -1,5 +1,6 @@
 import type { FlowType } from "@/engine/types";
 import type { ForkDefinition } from "@/engine/workflow/types";
+import { biFork } from "../shared/bi";
 
 /**
  * iAssist forks. The story picks both, so there is no presenter button. They replace `content.biResult` and
@@ -11,31 +12,14 @@ import type { ForkDefinition } from "@/engine/workflow/types";
 const IASSIST: FlowType[] = ["iAssist_PA_Approved", "iAssist_PAP"];
 
 /**
- * What BI finds. Only `coverage_found` means a PA is required. `no_coverage` is reachable by event only: no
- * module handles it yet, so it requires `financial_assistance` (a no-coverage BI is a PAP qualification).
+ * What BI finds, from the shared BI catalog (workflows/shared/bi.ts). A PA starts only when the exit requires one.
+ * `no_coverage` is reachable by event only: no module handles it yet, so it requires `financial_assistance` (a
+ * no-coverage BI is a PAP qualification).
  */
-export const IASSIST_BI_FORK: ForkDefinition = {
-  id: "bi",
-  label: "Benefits investigation result",
-  chooser: "story",
+export const IASSIST_BI_FORK: ForkDefinition = biFork({
   scenarios: IASSIST,
-  resolved: (d) => d.biStatus === "complete",
-  exits: [
-    {
-      id: "coverage_found",
-      label: "Coverage found",
-      description: "Coverage is found and a PA is required.",
-      data: { biResult: "coverage_found" },
-    },
-    {
-      id: "no_coverage",
-      label: "No coverage",
-      description: "No coverage is found. No PA is submitted.",
-      data: { biResult: "no_coverage" },
-      requires: ["financial_assistance"],
-    },
-  ],
-};
+  exits: [{ id: "pharmacy_covered" }, { id: "medical_pa_required" }, { id: "no_coverage", requires: ["financial_assistance"] }],
+});
 
 /**
  * The PA decision. Approved leads to the PA-approved SMS and OTP, so it requires `pa_notification`. Denied leads
