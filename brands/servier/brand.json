@@ -27,32 +27,26 @@
       "phone": "800-813-5905"
     },
     "legal": {
-      "privacyUrl": "https://servier.us/privacy-notice/",
-      "termsUrl": "#",
-      "safetyUrl": "#",
-      "prescribingUrl": "#"
+      "privacyUrl": "https://servier.us/privacy-notice/"
     },
-    "copyright": ""
+    "copyright": "©{{YEAR}} Servier. All Rights Reserved."
   },
   "program": {
     "name": "Sevasemten",
     "drugDisplayName": "Sevasemten",
     "description": "10 mg, Once daily",
     "dosageForm": "Tablet",
-    "assets": {
-      "logoColor": "",
-      "logoWhite": ""
-    },
     "colors": {
       "brand": "#24226a",
       "accent": "#ea5b47",
       "source": "https://servier.us/"
     },
-    "educationVideo": {
-      "title": "",
-      "description": "",
-      "thumbnail": "",
-      "embedUrl": ""
+    "transferPartner": {
+      "name": "Servier SP",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zip": ""
     }
   },
   "chatbotIcon": "/brands/servier/servier-logo-color.svg",
