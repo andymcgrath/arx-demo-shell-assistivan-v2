@@ -10,6 +10,9 @@ import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
+import { BenefitsPanel } from "../components/BenefitsPanel";
+import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
+import { ALL_SCENARIOS } from "@/workflows/scenarios";
 import {
   ChevronDown,
   ChevronRight,
@@ -29,10 +32,8 @@ import {
   Send,
 } from "lucide-react";
 
-const SF_BLUE = "#0070d2";
 const FC_BLUE = "#0176d3";
 const SF_BORDER = "#dddbda";
-const SF_SECTION_BG = "#f3f3f3";
 
 // ─── Shared SF components ────────────────────────────────────────────────────
 
@@ -93,35 +94,6 @@ function Signature({ name, width = 160 }: { name: string; width?: number }) {
         }}
       />
     </span>
-  );
-}
-
-function SfLink({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
-  return (
-    <span className={`cursor-pointer hover:underline ${className}`} style={{ color: SF_BLUE }} onClick={onClick}>
-      {children}
-    </span>
-  );
-}
-
-function FieldRow({ label, value, isLink, onEdit }: { label: string; value?: React.ReactNode; isLink?: boolean; onEdit?: () => void }) {
-  return (
-    <div className="group relative flex flex-col px-3 py-2 border-b border-[#dddbda] pr-6 min-h-[44px]">
-      <span className="text-[11px] text-[#706e6b] mb-0.5 uppercase tracking-wide font-medium leading-tight">{label}</span>
-      {isLink ? (
-        <SfLink className="text-[13px]">{value}</SfLink>
-      ) : (
-        <span className="text-[13px] text-[#3e3e3c]">{value || "\u00a0"}</span>
-      )}
-      {onEdit && (
-        <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-          onClick={onEdit}
-        >
-          <Pencil size={12} className="text-[#706e6b]" />
-        </button>
-      )}
-    </div>
   );
 }
 
@@ -809,6 +781,8 @@ export default function Index() {
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
   const isCoverageFlow = flowType === "CoA_Coverage";
+  // The scenario's recipe says whether the CRM shows the benefits panel.
+  const showBenefitsPanel = !!ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.panels?.includes("benefits");
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -2544,152 +2518,19 @@ export default function Index() {
               </div>
             </div>
 
-            {isCoverageFlow ? (
-              /* ── CoA_Coverage's own layout: Information + Pharmacy/Medical
-                  Benefits split out (instead of one shared Information
-                  section), and two stacked Product Coverage cards on the
-                  right instead of one. Every other flow keeps the untouched
-                  single-section layout in the else branch below. ── */
-              <div className="flex gap-0 overflow-hidden">
-                <div className="flex-1 min-w-0 p-4 space-y-4">
-                  {/* Information — case-level fields only; pharmacy-specific
-                      fields moved into the two benefit sections below. */}
-                  <div className="border border-[#dddbda] rounded">
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                      <ChevronDown size={14} className="text-[#706e6b]" />
-                      <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
-                      <div>
-                        <FieldRow label="Patient" value={patientName} isLink />
-                        <FieldRow label="Product" value={drugName} isLink />
-                        <FieldRow label="Care" value={caseNumber} isLink />
-                        <FieldRow label="Benefit Investigation Result Name" value="BIR-0431" />
-                        <FieldRow label="Stage" value="BI-14273" isLink />
-                        <FieldRow label="Subscriber Name" value="Dr. Sarah Chen" />
-                      </div>
-                      <div>
-                        <FieldRow label="Prior Authorization Phone #" value={phone} />
-                        <FieldRow label="Internal Comments" value="" />
-                        <FieldRow label="External Comments" value="" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pharmacy Benefits */}
-                  <div className="border border-[#dddbda] rounded">
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                      <ChevronDown size={14} className="text-[#706e6b]" />
-                      <span className="text-[12px] font-semibold text-[#3e3e3c]">Pharmacy Benefits</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
-                      <div>
-                        <FieldRow label="Record Type" value="Pharmacy" />
-                        <FieldRow label="Benefit Type" value="Pharmacy" />
-                        <FieldRow label="Rank" value="Primary" />
-                        <FieldRow label="Selected Product Coverage" value="Pharmacy" />
-                        <FieldRow label="Payer" value={payer} />
-                        <FieldRow label="Payer Type" value="Commercial" />
-                      </div>
-                      <div>
-                        <FieldRow label="Benefit Source" value="BI" />
-                        <FieldRow label="Status" value={pharmacyBenefitStatus === "covered" ? "Active" : "Inactive"} />
-                        <FieldRow label="Reimbursement Plan" value={pharmacyBenefitStatus === "covered" ? "Standard" : ""} />
-                        <FieldRow label="Sub-Status" value={pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
-                        <FieldRow label="Insured?" value={pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
-                        {/* Scenario 1 only (pharmacy covered, medical not) —
-                            see workflows/coassist/'s biComplete SUBMIT_PA guard and
-                            this component's own isCoverageFlow-scoped SUBMIT_PA
-                            effect, which use this exact condition. Medical
-                            covered always wins (Scenario 2), so a pharmacy
-                            benefit that's merely "covered" alongside a
-                            covered medical benefit still never submits a
-                            PA. */}
-                        <FieldRow label="PA Required?" value={pharmacyBenefitStatus === "covered" && medicalBenefitStatus !== "covered" ? "Yes" : "No"} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Medical Benefits */}
-                  <div className="border border-[#dddbda] rounded">
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                      <ChevronDown size={14} className="text-[#706e6b]" />
-                      <span className="text-[12px] font-semibold text-[#3e3e3c]">Medical Benefits</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
-                      <div>
-                        <FieldRow label="Record Type" value="Medical" />
-                        <FieldRow label="Benefit Type" value="Medical" />
-                        <FieldRow label="Rank" value="Primary" />
-                        <FieldRow label="Selected Product Coverage" value="Medical" />
-                        <FieldRow label="Payer" value={payer} />
-                        <FieldRow label="Payer Type" value="Commercial" />
-                      </div>
-                      <div>
-                        <FieldRow label="Benefit Source" value="BI" />
-                        <FieldRow label="Status" value={medicalBenefitStatus === "covered" ? "Active" : "Inactive"} />
-                        <FieldRow label="Sub-Status" value={medicalBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
-                        <FieldRow label="Insured?" value={medicalBenefitStatus === "covered" ? "Yes" : "No"} />
-                        <FieldRow label="PA Required?" value="No" />
-                        {medicalBenefitStatus === "covered" && (
-                          <FieldRow label="Provider" value="Advanced Diabetes Supply" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: two stacked Product Coverage cards */}
-                <div className="shrink-0 border-l border-[#dddbda] p-4 space-y-4" style={{ width: 260 }}>
-                  <div className="border border-[#dddbda] rounded">
-                    <div className="px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                      <span className="text-[12px] font-semibold text-[#3e3e3c]">Pharmacy Product Coverage</span>
-                    </div>
-                    <div className="space-y-0">
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <SfLink onClick={() => setProductDetailModalOpen(true)}>BIPC-0455</SfLink>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Product</div>
-                        <SfLink>{drugName}</SfLink>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
-                        <div className="text-[13px] text-[#3e3e3c]">{pharmacyBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                        {/* Same Scenario-1-only condition as the Pharmacy
-                            Benefits section's own PA Required? row above —
-                            see that FieldRow's comment. */}
-                        <div className="text-[13px] text-[#3e3e3c]">{pharmacyBenefitStatus === "covered" && medicalBenefitStatus !== "covered" ? "Yes" : "No"}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border border-[#dddbda] rounded">
-                    <div className="px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                      <span className="text-[12px] font-semibold text-[#3e3e3c]">Medical Product Coverage</span>
-                    </div>
-                    <div className="space-y-0">
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <SfLink onClick={() => setProductDetailModalOpen(true)}>BIPC-0456</SfLink>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Product</div>
-                        <SfLink>{drugName}</SfLink>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
-                        <div className="text-[13px] text-[#3e3e3c]">{medicalBenefitStatus === "covered" ? "Covered" : "Not Covered"}</div>
-                      </div>
-                      <div className="px-3 py-2 border-b border-[#dddbda]">
-                        <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                        <div className="text-[13px] text-[#3e3e3c]">No</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {showBenefitsPanel ? (
+              <BenefitsPanel
+                patientName={patientName}
+                drugName={drugName}
+                caseNumber={caseNumber}
+                phone={phone}
+                payer={payer}
+                pharmacyBenefitStatus={pharmacyBenefitStatus}
+                medicalBenefitStatus={medicalBenefitStatus}
+                paRequired={workflowData.paRequired}
+                transferProvider="Advanced Diabetes Supply"
+                onOpenProductDetail={() => setProductDetailModalOpen(true)}
+              />
             ) : (
             <div className="flex gap-0 overflow-hidden">
               {/* Left: Information + tables */}

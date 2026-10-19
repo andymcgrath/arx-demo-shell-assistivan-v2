@@ -55,6 +55,7 @@ export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa"],
   choices: { bi: "pharmacy_covered", pa: "approved" },
+  panels: ["benefits"],
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },

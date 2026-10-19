@@ -126,7 +126,12 @@ export interface ScenarioRecipe {
   /** The Triage exit, when the recipe sets one. The validator checks the module list against its rules. */
   triage?: TriageExitId;
   modules: ModuleSpec[];
+  /** CRM panels the scenario shows. `benefits` is the pharmacy and medical benefits panel. */
+  panels?: PanelId[];
 }
+
+/** CRM panels a recipe can turn on. */
+export type PanelId = "benefits";
 
 /** Sources defined so far. The rest arrive as each source moves onto the recipe (steps 4 and later). */
 export const SOURCES: Partial<Record<SourceId, SourceDef>> = {

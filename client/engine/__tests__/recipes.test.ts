@@ -106,6 +106,15 @@ describe("iAssist recipes", () => {
   });
 });
 
+describe("CRM panels", () => {
+  it("only Coverage shows the benefits panel", () => {
+    expect(COASSIST_RECIPES.CoA_Coverage.panels).toEqual(["benefits"]);
+    expect(COASSIST_RECIPES.CoA_DTP.panels).toBeUndefined();
+    expect(COASSIST_RECIPES.CoA_Copay.panels).toBeUndefined();
+    for (const r of Object.values(IASSIST_RECIPES)) expect(r.panels).toBeUndefined();
+  });
+});
+
 describe("recipeProblems and forks", () => {
   const dtpForks = forksFor("CoA_DTP");
   const passthrough = { forks: ["bi", "pa"], choices: { bi: "pharmacy_covered", pa: "approved" } };
