@@ -1,0 +1,35 @@
+{
+  "_note": "iAssist route rule order before the move into module slots. iassist.routes.test.ts compares the slot spine against it by walking the machine. Never re-record.",
+  "scenarios": {
+    "iAssist_PA_Approved": [
+      "enrollment.sms.approved",
+      "enrollment.lock_screen.approved",
+      "enrollment.otp.approved",
+      "enrollment.confirm_details.approved",
+      "enrollment.waiting_for_bi",
+      "spine.pa_denied",
+      "spine.waiting",
+      "pa_notification.sms",
+      "pa_notification.otp",
+      "payment.benefit_pricing",
+      "scheduling.address",
+      "scheduling.date",
+      "payment.delivery_payment",
+      "tracking.order_confirmed",
+      "tracking.processing",
+      "tracking.shipped",
+      "tracking.delivered"
+    ],
+    "iAssist_PAP": [
+      "enrollment.sms.appeal",
+      "enrollment.lock_screen.appeal",
+      "enrollment.otp.appeal",
+      "enrollment.confirm_details.appeal",
+      "enrollment.waiting_for_bi",
+      "appeal.medication_delivered",
+      "appeal.approved",
+      "spine.pa_denied",
+      "spine.waiting"
+    ]
+  }
+}

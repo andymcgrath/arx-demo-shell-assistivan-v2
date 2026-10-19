@@ -1,0 +1,219 @@
+{
+  "fallback": "/lock-screen",
+  "hidden": [
+    "/lock-screen"
+  ],
+  "scenarios": {
+    "iAssist_PA_Approved": {
+      "route": [
+        "enrollment.sms.approved -> /sms-message",
+        "enrollment.lock_screen.approved -> /lock-screen",
+        "enrollment.otp.approved -> /otp-verification",
+        "enrollment.confirm_details.approved -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "spine.pa_denied -> /pa-denied",
+        "spine.waiting -> /",
+        "pa_notification.sms -> /pa-approved-sms",
+        "pa_notification.otp -> /pa-approved-otp",
+        "payment.benefit_pricing -> /benefit-pricing",
+        "scheduling.address -> /delivery-address",
+        "scheduling.date -> /delivery-date",
+        "payment.delivery_payment -> /delivery-payment",
+        "tracking.order_confirmed -> /enrollment-complete",
+        "tracking.processing -> /order-tracker",
+        "tracking.shipped -> /order-shipped",
+        "tracking.delivered -> /order-tracker"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            },
+            {
+              "label": "PA Denied",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "Pricing",
+          "items": [
+            {
+              "label": "Benefit Pricing",
+              "path": "/benefit-pricing"
+            },
+            {
+              "label": "Copay Enrollment",
+              "path": "/copay-enroll"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
+            {
+              "label": "Payment",
+              "path": "/delivery-payment"
+            },
+            {
+              "label": "Order Confirmation",
+              "path": "/delivery-confirmation"
+            },
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/benefit-pricing",
+        "/copay-enroll",
+        "/delivery-address",
+        "/delivery-date",
+        "/delivery-payment",
+        "/delivery-confirmation",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
+    },
+    "iAssist_PAP": {
+      "route": [
+        "enrollment.sms.appeal -> /sms-message",
+        "enrollment.lock_screen.appeal -> /lock-screen",
+        "enrollment.otp.appeal -> /otp-verification",
+        "enrollment.confirm_details.appeal -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "appeal.medication_delivered -> /medication-delivered",
+        "appeal.approved -> /pa-approved",
+        "spine.pa_denied -> /pa-denied",
+        "spine.waiting -> /"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Denied",
+              "path": "/pa-denied"
+            },
+            {
+              "label": "Appeal Approved: Schedule Infusion",
+              "path": "/pa-approved"
+            },
+            {
+              "label": "Infusion Date",
+              "path": "/infusion-date"
+            },
+            {
+              "label": "Appointment Confirmation",
+              "path": "/appointment-confirmation"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/infusion-date",
+        "/appointment-confirmation",
+        "/medication-delivered"
+      ]
+    }
+  }
+}
