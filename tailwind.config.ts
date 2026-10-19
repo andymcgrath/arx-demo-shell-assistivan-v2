@@ -14,6 +14,26 @@ export default {
         sans: ["Inter", "-apple-system", "sans-serif"],
         "open-sans": ["Open Sans", "-apple-system", "Roboto", "Helvetica", "sans-serif"],
       },
+      /*
+       * Patient type scale, from the internal design system (2.0 Design System, Color: Type).
+       * Open Sans. Pick the token by role, not by size. Sizes are px.
+       * h1 intro and page titles. h2 service page titles. h3 and h4 info card titles (h4 when
+       * the title shares a row with an icon). h5 section labels and question headers.
+       * h6 step titles. h7 up-next titles. body-lg, body, body-sm for copy. footer for the footer.
+       */
+      fontSize: {
+        h1: ["44px", { lineHeight: "1.1", fontWeight: "800" }],
+        h2: ["28px", { lineHeight: "1.15", fontWeight: "800" }],
+        h3: ["21px", { lineHeight: "1.25", fontWeight: "600" }],
+        h4: ["18px", { lineHeight: "1.25", fontWeight: "800" }],
+        h5: ["16px", { lineHeight: "1.25", fontWeight: "600" }],
+        h6: ["14px", { lineHeight: "1.25", fontWeight: "600" }],
+        h7: ["12px", { lineHeight: "1.25", fontWeight: "600" }],
+        "body-lg": ["16px", { lineHeight: "1.4", fontWeight: "600" }],
+        body: ["14px", { lineHeight: "1.4", fontWeight: "400" }],
+        "body-sm": ["12px", { lineHeight: "1.2", fontWeight: "400" }],
+        footer: ["11px", { lineHeight: "1.4", fontWeight: "700" }],
+      },
       colors: {
         /* ── shadcn/ui base tokens (shared, CRM default) ── */
         border: "hsl(var(--border))",
@@ -69,6 +89,16 @@ export default {
         "arx-action-hover": "hsl(var(--arx-action-hover))",
         "arx-on-action": "hsl(var(--arx-on-action))",
         "arx-brand": "hsl(var(--arx-brand))",
+        "arx-tile": "hsl(var(--arx-tile))",
+        "arx-on-tile": "hsl(var(--arx-on-tile))",
+        "arx-step-done": "hsl(var(--arx-step-done))",
+        "arx-step-row": "hsl(var(--arx-step-row))",
+        "arx-on-step-row": "hsl(var(--arx-on-step-row) / <alpha-value>)",
+        "arx-marker": "hsl(var(--arx-marker))",
+        "arx-on-marker": "hsl(var(--arx-on-marker))",
+        "arx-link": "hsl(var(--arx-link))",
+        "arx-strip": "hsl(var(--arx-strip))",
+        "arx-on-hero": "hsl(var(--arx-on-hero) / <alpha-value>)",
         "arx-accent": "hsl(var(--arx-accent))",
         "arx-secondary": "hsl(var(--arx-secondary))",
         "arx-sky": "hsl(var(--arx-sky))",
@@ -146,6 +176,10 @@ export default {
         "status-success": "#035257",
         "status-warning": "#D8693A",
         "status-error": "#D02B20",
+      },
+      backgroundImage: {
+        /* Confirmation screens. The accent color, flat. Brand color when the brand has no accent. */
+        "arx-hero": "var(--arx-hero)",
       },
       borderRadius: {
         lg: "var(--radius)",

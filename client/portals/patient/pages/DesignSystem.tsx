@@ -105,7 +105,7 @@ function Section({
 }) {
   return (
     <section id={id} className="scroll-mt-20 mb-20">
-      <p className="text-xs font-semibold uppercase tracking-widest text-arx-primary mb-1">
+      <p className="text-xs font-semibold uppercase tracking-widest text-arx-link mb-1">
         {category}
       </p>
       <h2 className="text-4xl font-light text-arx-slate mb-3">{title}</h2>
@@ -188,10 +188,10 @@ function DesktopHeader() {
           </div>
         </div>
         <nav className="flex items-center gap-6">
-          <a href="#" className="text-arx-primary font-semibold text-sm hover:underline">
+          <a href="#" className="text-arx-link font-semibold text-sm hover:underline">
             Important Safety Information
           </a>
-          <a href="#" className="text-arx-primary font-semibold text-sm hover:underline">
+          <a href="#" className="text-arx-link font-semibold text-sm hover:underline">
             Prescribing Information
           </a>
         </nav>
@@ -258,9 +258,9 @@ function DesktopFooter() {
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2 text-xs">
-            <a href="#" className="text-arx-primary font-bold hover:underline">Privacy Policy</a>
+            <a href="#" className="text-arx-link font-bold hover:underline">Privacy Policy</a>
             <span className="text-arx-body-copy">|</span>
-            <a href="#" className="text-arx-primary font-bold hover:underline">Terms of Use</a>
+            <a href="#" className="text-arx-link font-bold hover:underline">Terms of Use</a>
           </div>
           <p className="text-arx-inactive text-xs font-bold">
             ©{new Date().getFullYear()} AssistRx. All Rights Reserved. Intended for US residents only.
@@ -356,8 +356,8 @@ function ISIBox() {
   return (
     <div className="relative max-w-[560px] h-80 border border-arx-inactive rounded overflow-hidden">
       <div className="absolute inset-0 overflow-y-auto pr-3 p-3">
-        <p className="text-arx-primary font-bold text-sm">IMPORTANT SAFETY INFORMATION WARNINGS AND PRECAUTIONS</p>
-        <p className="text-arx-primary font-bold text-sm mt-2">Vulnerability:</p>
+        <p className="text-arx-link font-bold text-sm">IMPORTANT SAFETY INFORMATION WARNINGS AND PRECAUTIONS</p>
+        <p className="text-arx-link font-bold text-sm mt-2">Vulnerability:</p>
         <p className="text-arx-body-copy text-sm leading-relaxed mt-1">
           • Lorem ipsum dolor sit amet, consectetur adipiscing elit. Massa scelerisque volutpat gravida mauris nunc sem tincidunt. Id nisi, sem eget in.
         </p>
@@ -506,7 +506,7 @@ function Pagination() {
           onClick={() => setActive(page)}
           className={cn(
             "w-8 h-8 rounded border text-sm font-semibold transition-colors",
-            active === page ? "border-arx-primary text-arx-primary" : "border-arx-borders text-arx-inactive"
+            active === page ? "border-arx-primary text-arx-link" : "border-arx-borders text-arx-inactive"
           )}
         >
           {page}
@@ -593,7 +593,7 @@ function UploadCard() {
   return (
     <div className="border-2 border-dashed border-arx-borders rounded-lg p-8 flex flex-col items-center gap-3 w-56 text-center hover:border-arx-primary transition-colors cursor-pointer">
       <div className="w-12 h-12 rounded-full bg-arx-neutral-100 flex items-center justify-center">
-        <Plus className="w-6 h-6 text-arx-primary" />
+        <Plus className="w-6 h-6 text-arx-link" />
       </div>
       <p className="text-arx-slate font-semibold text-sm">Upload Document</p>
       <p className="text-arx-body-copy text-xs">Drag & drop or click to upload. PDF, JPG, PNG accepted.</p>
@@ -633,13 +633,13 @@ function ISIFooterPreview() {
       <div className="bg-white">
         <div className="px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <span className="text-arx-primary font-bold text-sm">Indications</span>
+            <span className="text-arx-link font-bold text-sm">Indications</span>
             <div className="w-px h-4 bg-arx-borders" />
-            <span className="text-arx-primary font-bold text-sm">Important Safety Information</span>
+            <span className="text-arx-link font-bold text-sm">Important Safety Information</span>
           </div>
           <button
             onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 text-arx-primary text-xs font-semibold"
+            className="flex items-center gap-2 text-arx-link text-xs font-semibold"
           >
             {open ? <><Minus className="w-4 h-4" /> Collapse</> : <><Plus className="w-4 h-4" /> Expand</>}
           </button>
@@ -649,13 +649,13 @@ function ISIFooterPreview() {
         <div className="bg-white border-t border-arx-borders">
           <div className="px-6 py-4 grid grid-cols-2 gap-8">
             <div>
-              <h4 className="text-arx-primary font-bold text-sm mb-2">Indications</h4>
+              <h4 className="text-arx-link font-bold text-sm mb-2">Indications</h4>
               <p className="text-arx-slate text-xs font-semibold leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nec, amet morbi mauris sollicitudin. Ut tellus faucibus viverra pharetra turpis.
               </p>
             </div>
             <div>
-              <h4 className="text-arx-primary font-bold text-sm mb-2">Important Safety Information</h4>
+              <h4 className="text-arx-link font-bold text-sm mb-2">Important Safety Information</h4>
               <p className="text-arx-slate text-xs font-semibold leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nec, amet morbi mauris sollicitudin. Ut tellus faucibus viverra pharetra turpis.
               </p>
@@ -731,7 +731,7 @@ function Sidebar({ activeId, onClose }: { activeId: string; onClose?: () => void
                       "flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                       "border-l-2",
                       isActive
-                        ? "border-arx-primary text-arx-primary bg-arx-primary/5 font-semibold"
+                        ? "border-arx-primary text-arx-link bg-arx-primary/5 font-semibold"
                         : "border-transparent text-arx-body-copy hover:text-arx-slate hover:bg-arx-neutral-100"
                     )}
                   >
@@ -1049,7 +1049,7 @@ export default function DesignSystem() {
                       <li>Match the user's intent</li>
                     </ul>
                     <p className="font-semibold text-arx-slate mt-2 mb-1">Good examples</p>
-                    <p className="text-arx-primary">Continue · Submit · Save · Upload File · Confirm</p>
+                    <p className="text-arx-link">Continue · Submit · Save · Upload File · Confirm</p>
                   </div>
                   <div>
                     <p className="font-bold text-arx-slate mb-1">Avoid</p>
@@ -1296,9 +1296,9 @@ export default function DesignSystem() {
               <UploadCard />
               <div className="border-2 border-dashed border-arx-primary rounded-lg p-8 flex flex-col items-center gap-3 w-56 text-center cursor-pointer">
                 <div className="w-12 h-12 rounded-full bg-arx-sky flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-arx-primary" />
+                  <Plus className="w-6 h-6 text-arx-link" />
                 </div>
-                <p className="text-arx-primary font-semibold text-sm">Upload Document</p>
+                <p className="text-arx-link font-semibold text-sm">Upload Document</p>
                 <p className="text-arx-body-copy text-xs">Hover / Active State</p>
               </div>
             </div>

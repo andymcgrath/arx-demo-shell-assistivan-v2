@@ -159,7 +159,7 @@ export default function PapIncomeVerification() {
                   dispatch('VERIFY_INCOME', { portal: 'patient' });
                 }, 1800);
               }}
-              className="text-sm underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-arx-primary hover:text-arx-primary-dark"
+              className="text-sm underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-arx-link hover:text-arx-primary-dark"
             >
               {calculating ? (
                 <span className="flex items-center gap-1.5">

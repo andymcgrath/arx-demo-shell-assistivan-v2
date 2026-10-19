@@ -24,9 +24,9 @@ export default function PrescriptionsSection() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-          <span className="font-bold text-arx-slate text-base">Prescriptions</span>
+          <span className="text-h5 text-arx-slate">Prescriptions</span>
         </div>
-        <button className="flex items-center gap-1 text-sm font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors">
+        <button className="flex items-center gap-1 text-sm font-semibold text-arx-link hover:text-arx-primary-80 transition-colors">
           View all
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -39,7 +39,7 @@ export default function PrescriptionsSection() {
             key={rx.name}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
-            className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors border-2 border-arx-primary text-arx-primary bg-transparent hover:bg-arx-primary hover:text-white"
+            className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-white"
           >
             {/* Logo switches to white on hover */}
             <ProgramLogo

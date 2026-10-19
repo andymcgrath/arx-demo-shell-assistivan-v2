@@ -1,5 +1,4 @@
 {
-  "extends": "assistivan",
   "slug": "celldex",
   "name": "Celldex",
   "title": "Celldex Barzolvolimab Demo",
@@ -19,10 +18,21 @@
   ],
   "manufacturer": {
     "name": "Celldex",
+    "tagline": "Pioneering new horizons in immunology to deliver life-changing therapies.",
     "logo": {
       "colors": "/brands/celldex/imgi_1_logo-celldex.png",
       "white": "/brands/celldex/imgi_6_logo-celldex-footer.png",
       "requiresFilter": false
+    },
+    "support": {
+      "label": "Technical Help",
+      "phone": "877-454-7120"
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
     },
     "copyright": "©{{YEAR}} Celldex. All Rights Reserved. Intended for US residents only."
   },
@@ -36,11 +46,15 @@
       "logoWhite": null
     },
     "colors": {
-      "brand": "#15355E",
-      "accent": "#59B47D",
-      "action": "#EF4162",
+      "brand": "#15355e",
+      "accent": "#59b47d",
+      "action": "#ef4162",
+      "surfaces": {
+        "confirmation": "accent"
+      },
       "source": "https://celldex.com/"
     }
   },
+  "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da",
   "favicon": "/brands/celldex/cropped-CelldexFavicon-32x32.png"
 }

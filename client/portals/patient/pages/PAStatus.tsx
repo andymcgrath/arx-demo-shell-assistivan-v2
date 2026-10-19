@@ -30,7 +30,7 @@ export default function PAStatus() {
                 className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky hover:bg-arx-primary-30 transition-colors"
                 aria-label="Advance to next stage"
               >
-                <span className="text-lg font-bold text-arx-primary">Rx</span>
+                <span className="text-lg font-bold text-arx-link">Rx</span>
               </button>
             </div>
 
@@ -48,7 +48,7 @@ export default function PAStatus() {
               <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
               <span>Have questions? Start a chat</span>
             </button>
-            <button className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors">
+            <button className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors">
               <span>Learn what's next</span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -61,7 +61,7 @@ export default function PAStatus() {
                 <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
                 <span className="font-bold text-arx-slate text-base">Prescriptions</span>
               </div>
-              <button className="flex items-center gap-1 text-sm font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors">
+              <button className="flex items-center gap-1 text-sm font-semibold text-arx-link hover:text-arx-primary-80 transition-colors">
                 View all <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -78,7 +78,7 @@ export default function PAStatus() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Suggested for you</h3>
+              <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
@@ -86,7 +86,7 @@ export default function PAStatus() {
                   Prior Authorization (PA): What to Expect
                 </h4>
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-arx-sky">
-                  <HelpCircle className="w-5 h-5 text-arx-primary" />
+                  <HelpCircle className="w-5 h-5 text-arx-link" />
                 </div>
               </div>
               <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">

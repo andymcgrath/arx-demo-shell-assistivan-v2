@@ -70,7 +70,7 @@ export default function MedicationDelivered() {
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-arx-link flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.facilityName}</p>
                     <p className="text-xs text-arx-body-copy">
@@ -80,7 +80,7 @@ export default function MedicationDelivered() {
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 text-arx-primary flex-shrink-0 mt-0.5" />
+                  <Phone className="w-4 h-4 text-arx-link flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.contactName}</p>
                     <p className="text-xs text-arx-body-copy">{KEANU_SITE_OF_CARE_FACTS.contactPhone}</p>
@@ -127,7 +127,7 @@ export default function MedicationDelivered() {
             </button>
             <button
               onClick={openChat}
-              className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+              className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
             >
               <span>Have questions? Start a chat</span>
             </button>
@@ -139,7 +139,7 @@ export default function MedicationDelivered() {
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-                <h3 className="font-semibold text-sm text-arx-primary">Education video</h3>
+                <h3 className="font-semibold text-sm text-arx-link">Education video</h3>
               </div>
 
               <button
@@ -166,7 +166,7 @@ export default function MedicationDelivered() {
                   )}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
                     <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
-                      <Play className="w-6 h-6 text-arx-primary fill-arx-primary" />
+                      <Play className="w-6 h-6 text-arx-link fill-arx-primary" />
                     </div>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function MedicationDelivered() {
                 <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
                 <span className="font-bold text-arx-slate text-base">Prescriptions</span>
               </div>
-              <button className="flex items-center gap-1 text-sm font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors">
+              <button className="flex items-center gap-1 text-sm font-semibold text-arx-link hover:text-arx-primary-80 transition-colors">
                 View all <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -208,7 +208,7 @@ export default function MedicationDelivered() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">Suggested for you</h3>
+              <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
@@ -224,7 +224,7 @@ export default function MedicationDelivered() {
                 </p>
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-2 font-semibold text-sm text-arx-primary hover:text-arx-primary-80 transition-colors"
+                  className="flex items-center gap-2 font-semibold text-sm text-arx-link hover:text-arx-primary-80 transition-colors"
                 >
                   Learn more <ArrowRight className="w-4 h-4" />
                 </button>

@@ -34,3 +34,11 @@ export function hexToColorFilter(hex: string): string {
 
   return `brightness(0) saturate(100%) invert(${invertPct}%) sepia(100%) saturate(${saturatePct}%) hue-rotate(${hueRotate}deg) brightness(${brightnessPct}%)`;
 }
+
+/** A CSS filter that recolors a black icon. White and near-black skip the sepia math, which drifts on them. */
+export function iconFilter(hex: string): string {
+  const h = hex.toLowerCase();
+  if (h === "#ffffff") return "brightness(0) invert(1)";
+  if (h === "#111111" || h === "#000000") return "brightness(0)";
+  return hexToColorFilter(hex);
+}

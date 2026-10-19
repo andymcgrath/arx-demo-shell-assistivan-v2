@@ -232,7 +232,7 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
                     )}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-arx-sky flex-shrink-0">
-                        <Icon className="w-4 h-4 text-arx-primary" />
+                        <Icon className="w-4 h-4 text-arx-link" />
                       </div>
                       <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
                     </div>
@@ -248,7 +248,7 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
                         <p className="text-xs text-arx-body-copy">Pharmacy: {option.pharmacy}</p>
                       </>
                     )}
-                    <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-primary">
+                    <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-link">
                       <span>{option.cta}</span>
                       <ArrowRight className="w-4 h-4" />
                     </div>
@@ -312,7 +312,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
 
             {copayEnrolled && (
               <div className="rounded-xl p-4 bg-arx-primary/10 border border-arx-primary/30">
-                <p className="font-bold text-sm text-arx-primary flex items-center gap-2">
+                <p className="font-bold text-sm text-arx-link flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   You're enrolled in the {PROGRAM.drugDisplayName} Copay Program
                 </p>
@@ -346,7 +346,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
                     )}
                     <div className="flex items-center gap-2 mb-3">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isPrimary ? "bg-arx-primary" : "bg-arx-sky"}`}>
-                        <Icon className={`w-4 h-4 ${isPrimary ? "text-white" : "text-arx-primary"}`} />
+                        <Icon className={`w-4 h-4 ${isPrimary ? "text-white" : "text-arx-link"}`} />
                       </div>
                       <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
                     </div>
@@ -368,7 +368,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
                         <ArrowRight className="w-4 h-4" />
                       </div>
                     ) : (
-                      <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-primary">
+                      <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-link">
                         <span>{option.cta}</span>
                         <ArrowRight className="w-4 h-4" />
                       </div>

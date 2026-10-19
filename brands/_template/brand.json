@@ -1,0 +1,41 @@
+{
+  "slug": "REQUIRED: same as the folder name",
+  "name": "REQUIRED: human name, tooling only",
+  "title": "REQUIRED: browser tab title",
+  "demos": [
+    {
+      "id": "REQUIRED: unique within this brand",
+      "flow": "REQUIRED: a flow id, for example CoA_DTP",
+      "label": "REQUIRED: dropdown text",
+      "description": "optional",
+      "choices": { "optional fork id": "exit id" }
+    }
+  ],
+  "showClientTab": false,
+  "manufacturer": {
+    "name": "",
+    "tagline": "",
+    "logo": { "colors": "/brands/<slug>/logo-color.svg", "white": "/brands/<slug>/logo-white.svg" },
+    "support": { "label": "", "phone": "" },
+    "legal": { "privacyUrl": "#", "termsUrl": "#", "safetyUrl": "#", "prescribingUrl": "#" },
+    "copyright": "©{{YEAR}} Name. All Rights Reserved."
+  },
+  "program": {
+    "name": "",
+    "drugDisplayName": "REQUIRED: string (may be empty)",
+    "description": "",
+    "dosageForm": "",
+    "assets": { "logoColor": null, "logoWhite": null },
+    "colors": {
+      "brand": "REQUIRED: #rrggbb",
+      "accent": "optional #rrggbb",
+      "action": "optional #rrggbb, defaults to brand",
+      "surfaces": {},
+      "source": "optional URL"
+    },
+    "educationVideo": { "title": "", "description": "", "thumbnail": "", "embedUrl": "" },
+    "transferPartner": { "name": "", "address": "", "city": "", "state": "", "zip": "", "phone": "" }
+  },
+  "chatbotIcon": "REQUIRED: image path or URL",
+  "favicon": "/brands/<slug>/favicon.png"
+}

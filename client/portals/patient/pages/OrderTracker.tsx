@@ -11,13 +11,13 @@ type StepDef = { n: number; label: string; sub: string | null; status: StepStatu
 
 function StepIcon({ n, status }: { n: number; status: StepStatus }) {
   if (status === "done") return (
-    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-arx-primary-80">
+    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-arx-step-done">
       <Check className="w-5 h-5 text-white" strokeWidth={3} />
     </div>
   );
   if (status === "active") return (
-    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white text-base bg-white text-arx-primary">
-      <span className="text-arx-primary font-bold">{n}</span>
+    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-base bg-arx-marker text-arx-on-marker">
+      <span className="text-arx-on-marker font-bold">{n}</span>
     </div>
   );
   return (
@@ -32,14 +32,14 @@ function StepRow({ step, onClick }: { step: StepDef; onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-colors ${isActive ? "bg-arx-primary" : "bg-white border border-arx-borders"}`}
+      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-colors ${isActive ? "bg-arx-step-row" : "bg-white border border-arx-borders"}`}
     >
       <StepIcon n={step.n} status={step.status} />
       <div className="flex-1 min-w-0">
-        <p className={`font-semibold text-sm ${isActive ? "text-white" : "text-arx-slate"}`}>{step.label}</p>
-        {step.sub && <p className={`text-xs mt-0.5 ${isActive ? "text-white/75" : "text-arx-body-copy"}`}>{step.sub}</p>}
+        <p className={`font-semibold text-sm ${isActive ? "text-arx-on-step-row" : "text-arx-slate"}`}>{step.label}</p>
+        {step.sub && <p className={`text-xs mt-0.5 ${isActive ? "text-arx-on-step-row/75" : "text-arx-body-copy"}`}>{step.sub}</p>}
       </div>
-      <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white/70" : "text-arx-borders"}`} />
+      <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-arx-on-step-row/70" : "text-arx-borders"}`} />
     </button>
   );
 }
@@ -134,8 +134,8 @@ function RetailPharmacyTracker({ selectedPharmacyName, isMailOrder }: { selected
                 ? (isMailOrder ? "Your prescription has been received at the pharmacy" : "Your prescription is ready at the pharmacy")
                 : "Your prescription is being routed to your pharmacy"}
             </h2>
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-sky">
-              <span className="text-lg font-bold text-arx-primary">Rx</span>
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-tile">
+              <span className="text-lg font-bold text-arx-on-tile">Rx</span>
             </div>
           </div>
           <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{ORDER_NUMBER}</span></p>
@@ -154,7 +154,7 @@ function RetailPharmacyTracker({ selectedPharmacyName, isMailOrder }: { selected
         <section>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-            <h3 className="font-semibold text-sm text-arx-primary">{PROGRAM.name} pharmacy status</h3>
+            <h3 className="font-semibold text-sm text-arx-link">{PROGRAM.name} pharmacy status</h3>
           </div>
           <div className="space-y-2">
             {steps.map(step => (
@@ -214,8 +214,8 @@ export default function OrderTracker() {
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
                 Your first fill order is being processed
               </h2>
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-sky">
-                <span className="text-lg font-bold text-arx-primary">Rx</span>
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-tile">
+                <span className="text-lg font-bold text-arx-on-tile">Rx</span>
               </div>
             </div>
             <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{ORDER_NUMBER}</span></p>
@@ -228,7 +228,7 @@ export default function OrderTracker() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-              <h3 className="font-semibold text-sm text-arx-primary">{PROGRAM.name} delivery status</h3>
+              <h3 className="font-semibold text-sm text-arx-link">{PROGRAM.name} delivery status</h3>
             </div>
             <div className="space-y-2">
               {steps.map(step => (

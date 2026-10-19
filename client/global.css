@@ -73,6 +73,17 @@
     --arx-action-hover: 184 100% 18%;
     --arx-on-action: 0 0% 100%;
     --arx-brand: 183 100% 22%;
+    --arx-tile: var(--arx-sky);
+    --arx-on-tile: var(--arx-brand);
+    --arx-step-done: var(--arx-primary-80);
+    --arx-step-row: var(--arx-brand);
+    --arx-on-step-row: 0 0% 100%;
+    --arx-marker: 0 0% 100%;
+    --arx-on-marker: var(--arx-brand);
+    --arx-link: var(--arx-brand);
+    --arx-strip: 0 0% 100%;
+    --arx-hero: linear-gradient(hsl(var(--arx-brand)), hsl(var(--arx-brand)));
+    --arx-on-hero: 0 0% 100%;
     --arx-secondary: 197 51% 38%;
     --arx-sky: 181 57% 87%;
 
@@ -135,6 +146,17 @@
     --arx-action-hover: 191 44% 25%;
     --arx-on-action: 0 0% 100%;
     --arx-brand: 184 100% 33%;
+    --arx-tile: var(--arx-sky);
+    --arx-on-tile: var(--arx-brand);
+    --arx-step-done: var(--arx-primary-80);
+    --arx-step-row: var(--arx-brand);
+    --arx-on-step-row: 0 0% 100%;
+    --arx-marker: 0 0% 100%;
+    --arx-on-marker: var(--arx-brand);
+    --arx-link: var(--arx-brand);
+    --arx-strip: 0 0% 100%;
+    --arx-hero: linear-gradient(hsl(var(--arx-brand)), hsl(var(--arx-brand)));
+    --arx-on-hero: 0 0% 100%;
   }
 }
 
@@ -242,6 +264,17 @@
     --arx-action-hover: 184 100% 18%;
     --arx-on-action: 0 0% 100%;
     --arx-brand: 183 100% 22%;
+    --arx-tile: var(--arx-sky);
+    --arx-on-tile: var(--arx-brand);
+    --arx-step-done: var(--arx-primary-80);
+    --arx-step-row: var(--arx-brand);
+    --arx-on-step-row: 0 0% 100%;
+    --arx-marker: 0 0% 100%;
+    --arx-on-marker: var(--arx-brand);
+    --arx-link: var(--arx-brand);
+    --arx-strip: 0 0% 100%;
+    --arx-hero: linear-gradient(hsl(var(--arx-brand)), hsl(var(--arx-brand)));
+    --arx-on-hero: 0 0% 100%;
     --arx-secondary: 197 51% 38%;
     --arx-sky: 181 57% 87%;
     --arx-orange: 33 87% 51%;

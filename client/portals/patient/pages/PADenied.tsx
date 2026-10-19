@@ -74,7 +74,7 @@ export default function PADenied() {
               </button>
               <button
                 onClick={openChat}
-                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
                 <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
@@ -104,7 +104,7 @@ export default function PADenied() {
               </button>
               <button
                 onClick={openChat}
-                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
                 <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
@@ -126,7 +126,7 @@ export default function PADenied() {
                   className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky hover:bg-arx-primary-30 transition-colors"
                   aria-label="Advance to next stage"
                 >
-                  <span className="text-lg font-bold text-arx-primary">Rx</span>
+                  <span className="text-lg font-bold text-arx-link">Rx</span>
                 </button>
               </div>
 
@@ -144,7 +144,7 @@ export default function PADenied() {
               </button>
               <button
                 onClick={openChat}
-                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
                 <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
                 <span>Have questions? Start a chat</span>
@@ -159,18 +159,18 @@ export default function PADenied() {
                 Real-time updates about your case, anytime!
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center bg-arx-sky">
-                <Phone className="w-5 h-5 text-arx-primary" />
+                <Phone className="w-5 h-5 text-arx-link" />
               </div>
             </div>
 
             <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
               If you'd like a live status update on your prescription, you can call our Virtual Assistant at{" "}
-              <a href="tel:3163940074" className="font-semibold underline text-arx-primary">
+              <a href="tel:3163940074" className="font-semibold underline text-arx-link">
                 (316) 394-0074
               </a>.
             </p>
 
-            <button className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors">
+            <button className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors">
               <Phone className="w-4 h-4" />
               <span>Call Virtual Assistant</span>
             </button>
@@ -186,7 +186,7 @@ export default function PADenied() {
                   <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
                   <span className="font-bold text-arx-slate text-base">Prescriptions</span>
                 </div>
-                <button className="flex items-center gap-1 text-sm font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors">
+                <button className="flex items-center gap-1 text-sm font-semibold text-arx-link hover:text-arx-primary-80 transition-colors">
                   View all <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -207,7 +207,7 @@ export default function PADenied() {
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
-                <h3 className="font-semibold text-sm text-arx-primary">Suggested for you</h3>
+                <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
               </div>
               <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
                 <div className="flex items-center justify-between mb-3">
@@ -219,7 +219,7 @@ export default function PADenied() {
                     Learn about financial assistance programs
                   </h4>
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-arx-sky">
-                    <DollarSign className="w-5 h-5 text-arx-primary" />
+                    <DollarSign className="w-5 h-5 text-arx-link" />
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
@@ -231,7 +231,7 @@ export default function PADenied() {
                 </p>
                 <button
                   onClick={() => navigate("/")}
-                  className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                  className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
                 >
                   Learn more
                 </button>

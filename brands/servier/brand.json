@@ -1,0 +1,59 @@
+{
+  "slug": "servier",
+  "name": "Servier",
+  "title": "Servier Sevasemten Demo",
+  "demos": [
+    {
+      "id": "coa-pharmacy-transfer",
+      "flow": "CoA_DME",
+      "label": "Pharmacy Transfer",
+      "description": "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy and sees transfer details.",
+      "choices": {
+        "bi": "pharmacy_transfer"
+      }
+    }
+  ],
+  "manufacturer": {
+    "name": "Servier",
+    "tagline": "Moved by you",
+    "logo": {
+      "colors": "/brands/servier/servier-logo-color.svg",
+      "white": "/brands/servier/servier-logo-white.svg",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "ServierONE assistance",
+      "phone": "800-813-5905"
+    },
+    "legal": {
+      "privacyUrl": "https://servier.us/privacy-notice/",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": ""
+  },
+  "program": {
+    "name": "Sevasemten",
+    "drugDisplayName": "Sevasemten",
+    "description": "10 mg, Once daily",
+    "dosageForm": "Tablet",
+    "assets": {
+      "logoColor": "",
+      "logoWhite": ""
+    },
+    "colors": {
+      "brand": "#24226a",
+      "accent": "#ea5b47",
+      "source": "https://servier.us/"
+    },
+    "educationVideo": {
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": ""
+    }
+  },
+  "chatbotIcon": "/brands/servier/servier-logo-color.svg",
+  "favicon": "/brands/servier/favicon.jpeg"
+}

@@ -63,11 +63,11 @@ export default function CopayEnroll() {
           <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5 bg-arx-sky">
-                <Sparkles className="w-5 h-5 text-arx-primary" />
+                <Sparkles className="w-5 h-5 text-arx-link" />
               </div>
               <div>
                 <p className="font-bold text-xl text-arx-slate">{PROGRAM.drugDisplayName} Copay Program</p>
-                <p className="text-2xl font-bold mt-0.5 text-arx-primary">
+                <p className="text-2xl font-bold mt-0.5 text-arx-link">
                   As low as $25<span className="text-sm font-semibold">/month</span>
                 </p>
               </div>
@@ -83,7 +83,7 @@ export default function CopayEnroll() {
                 "Cancel anytime",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
-                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-primary" />
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-link" />
                   {item}
                 </li>
               ))}
@@ -130,11 +130,11 @@ export default function CopayEnroll() {
             <div className="rounded-xl p-4 mb-4 bg-arx-neutral-100 border border-arx-borders">
               <div className="flex items-start gap-3 mb-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5 bg-arx-sky">
-                  <CreditCard className="w-5 h-5 text-arx-primary" />
+                  <CreditCard className="w-5 h-5 text-arx-link" />
                 </div>
                 <div>
                   <p className="font-bold text-base text-arx-slate">{PROGRAM.drugDisplayName} Savings Card</p>
-                  <p className="text-2xl font-bold mt-0.5 text-arx-primary">
+                  <p className="text-2xl font-bold mt-0.5 text-arx-link">
                     As low as $25<span className="text-sm font-semibold">/month</span>
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default function CopayEnroll() {
                   "Free to enroll — no additional fees",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-primary" />
+                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-link" />
                     {item}
                   </li>
                 ))}
@@ -161,11 +161,11 @@ export default function CopayEnroll() {
             <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders">
               <div className="flex items-start gap-3 mb-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5 bg-arx-sky">
-                  <ShoppingBag className="w-5 h-5 text-arx-primary" />
+                  <ShoppingBag className="w-5 h-5 text-arx-link" />
                 </div>
                 <div>
                   <p className="font-bold text-base text-arx-slate">CoAssist Self-Pay</p>
-                  <p className="text-2xl font-bold mt-0.5 text-arx-primary">
+                  <p className="text-2xl font-bold mt-0.5 text-arx-link">
                     From $149<span className="text-sm font-semibold">/month</span>
                   </p>
                 </div>
@@ -195,14 +195,14 @@ export default function CopayEnroll() {
                   "Refill within 45 days to maintain pricing",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-primary" />
+                    <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-arx-link" />
                     {item}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={() => navigate("/delivery-address")}
-                className="w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                className="w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
                 <span>Order via CoAssist</span>
                 <ArrowRight className="w-4 h-4" />

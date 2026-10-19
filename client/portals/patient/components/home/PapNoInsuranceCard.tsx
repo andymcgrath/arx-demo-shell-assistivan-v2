@@ -23,15 +23,15 @@ export default function PapNoInsuranceCard() {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-xl font-bold leading-snug text-arx-slate">
+        <h2 className="text-h4 text-arx-slate">
           We couldn't confirm active insurance coverage
         </h2>
-        <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-primary">
-          <HeartHandshake className="w-6 h-6 text-white" />
+        <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-tile">
+          <HeartHandshake className="w-6 h-6 text-arx-on-tile" />
         </div>
       </div>
 
-      <div className="mt-4 space-y-3 text-sm leading-relaxed text-arx-body-copy">
+      <div className="mt-4 space-y-3 text-body leading-relaxed text-arx-body-copy">
         <p>
           We checked, but weren't able to find active insurance coverage on file for this
           medication. This doesn't mean you're out of options.

@@ -106,7 +106,7 @@ export default function PharmacySelection() {
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center bg-arx-sky flex-shrink-0">
-                      <Store className="w-4 h-4 text-arx-primary" />
+                      <Store className="w-4 h-4 text-arx-link" />
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-arx-slate">{pharmacy.name}</p>
@@ -116,7 +116,7 @@ export default function PharmacySelection() {
                       <p className="text-xs text-arx-body-copy">{pharmacy.phone}</p>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-1 text-sm font-semibold text-arx-primary">
+                  <div className="mt-3 flex items-center gap-1 text-sm font-semibold text-arx-link">
                     <span>Select</span>
                     <ArrowRight className="w-4 h-4" />
                   </div>

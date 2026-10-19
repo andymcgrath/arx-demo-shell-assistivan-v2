@@ -61,7 +61,10 @@
       "logoWhite": "/brands/dexcom/dexcom_g7_white_transparent.png"
     },
     "colors": {
-      "brand": "#137d00"
+      "brand": "#137d00",
+      "accent": "#412636",
+      "surfaces": { "confirmation": "accent" },
+      "source": "https://www.dexcom.com"
     },
     "educationVideo": {
       "title": "",

@@ -71,7 +71,7 @@ export default function InfusionDate() {
                 style={{ border: `1.5px solid ${open ? "#007178" : "#E0E0E0"}` }}
               >
                 <span>{selected ? formatDate(selected) : "Select a date"}</span>
-                <CalendarDays className="w-5 h-5 flex-shrink-0 text-arx-primary" />
+                <CalendarDays className="w-5 h-5 flex-shrink-0 text-arx-link" />
               </button>
 
               {open && (
@@ -82,7 +82,7 @@ export default function InfusionDate() {
                       <button
                         key={i}
                         onClick={() => { setSelected(d); setOpen(false); }}
-                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors ${isSelected ? "bg-arx-sky text-arx-primary font-semibold" : "text-arx-slate hover:bg-arx-background"} ${i < available.length - 1 ? "border-b border-arx-borders" : ""}`}
+                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors ${isSelected ? "bg-arx-sky text-arx-link font-semibold" : "text-arx-slate hover:bg-arx-background"} ${i < available.length - 1 ? "border-b border-arx-borders" : ""}`}
                       >
                         {formatDate(d)}
                         {isSelected && <Check className="w-4 h-4" />}

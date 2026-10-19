@@ -68,7 +68,7 @@ export default function IncomeQualification() {
             </div>
             <button
               onClick={openChat}
-              className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+              className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
             >
               <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
               <span>Have questions? Start a chat</span>
@@ -144,7 +144,7 @@ export default function IncomeQualification() {
           {/* Household size */}
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-arx-slate mb-3">
-              <Users className="w-4 h-4 text-arx-primary" />
+              <Users className="w-4 h-4 text-arx-link" />
               Household size
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -168,7 +168,7 @@ export default function IncomeQualification() {
           {/* Annual income */}
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-arx-slate mb-2">
-              <DollarSign className="w-4 h-4 text-arx-primary" />
+              <DollarSign className="w-4 h-4 text-arx-link" />
               Annual household income
             </label>
             <div className="relative">

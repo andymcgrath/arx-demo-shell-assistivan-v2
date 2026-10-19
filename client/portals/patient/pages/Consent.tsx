@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import { MANUFACTURER } from "@/portals/patient/config/branding";
 
 export default function Consent() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function Consent() {
           {/* Scrollable legal content */}
           <div className="bg-arx-neutral-100 rounded-xl p-5 max-h-80 overflow-y-auto text-sm leading-relaxed space-y-4 border border-arx-borders text-arx-body-copy">
             <p className="font-bold uppercase text-xs tracking-wide text-arx-slate">
-              Patient Authorization to Share Protected Health Information and CoAssist Communications
+              Patient Authorization to Share Protected Health Information and {MANUFACTURER.name} Communications
             </p>
 
             <div>
@@ -22,7 +23,7 @@ export default function Consent() {
                 By signing this authorization, I (or my representative) authorize my healthcare
                 providers, health plans, and pharmacies (collectively, "Healthcare Organizations")
                 to use and share my personal and health information related to my medical condition,
-                treatment, and insurance coverage (my "health information") with CoAssist to help me
+                treatment, and insurance coverage (my "health information") with {MANUFACTURER.name} to help me
                 get coverage, reimbursement, or payment for the medication ordered by my prescriber,
                 for referral to and enrollment in patient support, and for providing me with
                 materials, information, and services related to my drug therapy and ways to help me
@@ -30,23 +31,23 @@ export default function Consent() {
               </p>
               <p className="mt-2">
                 I understand that, once disclosed pursuant to this authorization, my health
-                information may no longer be protected under federal or state law. CoAssist will
+                information may no longer be protected under federal or state law. {MANUFACTURER.name} will
                 make reasonable efforts to keep it private and to disclose it only for the purposes
                 set forth in this authorization.
               </p>
             </div>
 
             <div>
-              <p className="font-semibold mb-2 text-arx-slate">CoAssist Communications</p>
+              <p className="font-semibold mb-2 text-arx-slate">{MANUFACTURER.name} Communications</p>
               <p>
-                I authorize CoAssist to contact me by mail, telephone (including voicemail), or
+                I authorize {MANUFACTURER.name} to contact me by mail, telephone (including voicemail), or
                 email for educational and support purposes, including contacting me for market
-                research about CoAssist services.
+                research about {MANUFACTURER.name} services.
               </p>
               <p className="mt-2">
                 This authorization will remain valid for 10 years after the date set forth herein
                 unless I revoke it earlier by cancelling my enrollment in writing by contacting
-                CoAssist Patient Support.
+                {MANUFACTURER.name} Patient Support.
               </p>
             </div>
           </div>
@@ -61,7 +62,7 @@ export default function Consent() {
             />
             <span className="text-sm leading-relaxed text-arx-body-copy">
               By checking this box, I consent to receiving support, reminder, and educational
-              messages from the CoAssist Patient Support Program. Standard messaging rates may apply.
+              messages from the {MANUFACTURER.name} Patient Support Program. Standard messaging rates may apply.
             </span>
           </label>
 

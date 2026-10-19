@@ -33,7 +33,7 @@ export default function EnrollmentShell({
       <div className="flex items-center mb-3">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-arx-sky/40 flex items-center justify-center hover:bg-arx-primary hover:text-white transition-colors text-arx-primary"
+          className="w-9 h-9 rounded-full bg-arx-sky/40 flex items-center justify-center hover:bg-arx-primary hover:text-white transition-colors text-arx-link"
           aria-label="Go back"
         >
           <ArrowLeft className="w-4 h-4" />

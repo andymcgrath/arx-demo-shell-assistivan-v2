@@ -12,7 +12,7 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: 1,
     role: "bot",
-    text: "Hello Alex! Thank you for contacting CoAssist. I'm your virtual assistant, here to help.",
+    text: `Hello Alex! Thank you for contacting ${MANUFACTURER.name}. I'm your virtual assistant, here to help.`,
   },
   {
     id: 2,
@@ -165,7 +165,7 @@ function BotMessage({ text }: { text: string }) {
 function UserMessage({ text }: { text: string }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-white text-arx-primary font-medium">
+      <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-white text-arx-link font-medium">
         {text}
       </div>
     </div>

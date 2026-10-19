@@ -45,7 +45,7 @@ export default function PesIncomeSubmission() {
         <div className="flex flex-col gap-5">
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-arx-slate mb-2">
-              <Users className="w-4 h-4 text-arx-primary" />
+              <Users className="w-4 h-4 text-arx-link" />
               Household size (including yourself)
             </label>
             <input
@@ -60,7 +60,7 @@ export default function PesIncomeSubmission() {
 
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-arx-slate mb-2">
-              <DollarSign className="w-4 h-4 text-arx-primary" />
+              <DollarSign className="w-4 h-4 text-arx-link" />
               Annual household income
             </label>
             <input
@@ -75,7 +75,7 @@ export default function PesIncomeSubmission() {
 
           {isCalculating ? (
             <div className="w-full flex flex-col items-center justify-center gap-3 py-6">
-              <Loader2 className="w-6 h-6 animate-spin text-arx-primary" />
+              <Loader2 className="w-6 h-6 animate-spin text-arx-link" />
               <p className="text-sm font-semibold text-arx-body-copy">Calculating...</p>
             </div>
           ) : (

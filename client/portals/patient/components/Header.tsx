@@ -74,23 +74,26 @@ export default function Header() {
             <a
               href={MANUFACTURER.legal.safetyUrl}
               className="text-[11px] font-semibold transition-colors whitespace-nowrap"
-              style={{ color: "hsl(var(--arx-primary))" }}
+              style={{ color: "hsl(var(--arx-link))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--arx-primary-dark))")}
-              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--arx-primary))")}
+              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--arx-link))")}
             >
               Important Safety Information
             </a>
             <a
               href={MANUFACTURER.legal.prescribingUrl}
               className="text-[11px] font-semibold transition-colors whitespace-nowrap"
-              style={{ color: "hsl(var(--arx-primary))" }}
+              style={{ color: "hsl(var(--arx-link))" }}
               onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--arx-primary-dark))")}
-              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--arx-primary))")}
+              onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--arx-link))")}
             >
               Prescribing Information
             </a>
           </div>
         </div>
+
+        {/* Accent strip. Shows only when the brand has an accent color (white otherwise). */}
+        <div className="h-[3px] bg-arx-strip" />
 
         {/* Pendo Placeholder */}
         <div className="hidden" data-pendo-id="header-navigation" title="Pendo: Header Navigation Tracking" />

@@ -112,7 +112,7 @@ export default function DeliveryPayment() {
             <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
               <div className="flex justify-center mb-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-arx-sky">
-                  <span className="text-xl font-bold text-arx-primary">Rx</span>
+                  <span className="text-xl font-bold text-arx-link">Rx</span>
                 </div>
               </div>
               <h1 className="text-xl font-bold text-center mb-1 text-arx-slate">Payment Information</h1>
@@ -124,7 +124,7 @@ export default function DeliveryPayment() {
             <div className="px-5 py-4 space-y-5">
               {/* Drug name */}
               <div>
-                <p className="font-bold text-base text-arx-primary">{PROGRAM.drugDisplayName}</p>
+                <p className="font-bold text-base text-arx-link">{PROGRAM.drugDisplayName}</p>
                 <p className="text-sm mt-0.5 text-arx-body-copy">
                   {usesCoaPricingDisplay
                     ? COA_SUPPLY_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? PROGRAM.description
@@ -139,7 +139,7 @@ export default function DeliveryPayment() {
               {usesCoaPricingDisplay ? (
                 <div className="rounded-xl p-4 bg-arx-neutral-100 border border-arx-borders flex items-center justify-between">
                   <span className="text-sm font-semibold text-arx-slate">Total due today</span>
-                  <span className="text-2xl font-bold text-arx-primary">
+                  <span className="text-2xl font-bold text-arx-link">
                     ${coaPricing.price}
                     {coaPricing.cadence && <span className="text-sm font-semibold">{coaPricing.cadence}</span>}
                   </span>
@@ -154,7 +154,7 @@ export default function DeliveryPayment() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-arx-body-copy">Patient Access Program Discount</span>
-                      <span className="text-arx-primary font-semibold">-${DISCOUNT.toFixed(2)}</span>
+                      <span className="text-arx-link font-semibold">-${DISCOUNT.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-start pt-2 border-t border-arx-borders">
                       <div>
@@ -166,10 +166,10 @@ export default function DeliveryPayment() {
                   </div>
 
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm font-semibold text-arx-primary">You saved ${DISCOUNT}</span>
+                    <span className="text-sm font-semibold text-arx-link">You saved ${DISCOUNT}</span>
                     <button
                       onClick={() => setBreakdown(v => !v)}
-                      className="flex items-center gap-1 text-xs font-semibold text-arx-primary hover:text-arx-primary-80 transition-colors"
+                      className="flex items-center gap-1 text-xs font-semibold text-arx-link hover:text-arx-primary-80 transition-colors"
                     >
                       {breakdown ? "hide" : "view"} full breakdown
                       {breakdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -184,7 +184,7 @@ export default function DeliveryPayment() {
                       </div>
                       <div className="flex justify-between">
                         <span>Patient Access Program Discount applied</span>
-                        <span className="text-arx-primary">-$426.00</span>
+                        <span className="text-arx-link">-$426.00</span>
                       </div>
                     </div>
                   )}
@@ -264,7 +264,7 @@ export default function DeliveryPayment() {
                     </div>
                     <button
                       onClick={completePayment}
-                      className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-primary hover:bg-arx-sky/30 transition-colors"
+                      className="w-full font-semibold py-3.5 rounded-lg border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
                     >
                       Pay ${cardTotalLabel}
                     </button>
@@ -274,8 +274,8 @@ export default function DeliveryPayment() {
 
               <p className="text-[10px] text-center leading-relaxed text-arx-body-copy">
                 By clicking Pay, you agree to the{" "}
-                <a href="#" className="underline text-arx-primary">Terms</a> and{" "}
-                <a href="#" className="underline text-arx-primary">Privacy Policy</a>
+                <a href="#" className="underline text-arx-link">Terms</a> and{" "}
+                <a href="#" className="underline text-arx-link">Privacy Policy</a>
               </p>
             </div>
           </div>

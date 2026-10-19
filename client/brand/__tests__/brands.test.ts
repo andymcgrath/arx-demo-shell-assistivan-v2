@@ -3,7 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { SCENARIOS } from "@/engine/__tests__/scenarios";
 import { brandChain, listBrandSlugs, resolveBrand } from "@/brand/resolve";
-import { AA_CONTRAST, buildTheme, contrastRatio, normalizeHex } from "@/brand/theme";
+import {
+  AA_CONTRAST,
+  buildTheme,
+  contrastRatio,
+  contrastReport,
+  normalizeHex,
+  resolveSurfaces,
+  rowPasses,
+} from "@/brand/theme";
 import { choiceProblems } from "@/engine/workflow/forks";
 import { ALL_FORKS } from "@/workflows/forks";
 
@@ -65,8 +73,20 @@ for (const slug of slugs) {
         if (colors[key] !== undefined) expect(() => normalizeHex(colors[key])).not.toThrow();
       }
       for (const key of Object.keys(colors)) {
-        expect(["brand", "accent", "action", "source"].includes(key)).toBe(true);
+        expect(["brand", "accent", "action", "surfaces", "source"].includes(key)).toBe(true);
       }
+      // Throws on an unknown surface or option.
+      expect(() => resolveSurfaces(colors.surfaces, !!colors.accent)).not.toThrow();
+    });
+
+    it("meets WCAG AA on the required color pairs", () => {
+      // Required: button text (4.5) and the confirmation heading (3.0, large text).
+      // The other pairs are warnings in the Brand Lab (/brand-lab). See contrastReport in client/brand/theme.ts.
+      if (KNOWN_LOW_CONTRAST.has(slug)) return;
+      const failing = contrastReport(buildTheme(brand.program.colors))
+        .filter((r) => r.required && !rowPasses(r))
+        .map((r) => `${r.label}: ${r.ratio.toFixed(2)}`);
+      expect(failing).toEqual([]);
     });
 
     it("has readable button text (WCAG AA)", () => {

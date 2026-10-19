@@ -76,6 +76,7 @@ import PesConfirmation from "./pages/PesConfirmation";
 import InfusionDate from "./pages/InfusionDate";
 import AppointmentConfirmation from "./pages/AppointmentConfirmation";
 import DmeProviderTransfer from "./pages/DmeProviderTransfer";
+import PharmacyTransfer from "./pages/PharmacyTransfer";
 import CashOfferSms from "./pages/CashOfferSms";
 import DmeTransferSms from "./pages/DmeTransferSms";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
@@ -112,8 +113,15 @@ function StateDrivenNav() {
   const resetNonce = useDemoStore((s) => s.resetNonce);
   const lastResetNonceRef = useRef(resetNonce);
 
+  // Undo also overrides the sticky-screen guard. Without it the patient stays on a screen the
+  // machine has stepped back from (for example Payment after the price choice is undone).
+  const undoNonce = useDemoStore((s) => s.undoNonce);
+  const lastUndoNonceRef = useRef(undoNonce);
+
   useEffect(() => {
-    const isReset = resetNonce !== lastResetNonceRef.current;
+    const isUndo = undoNonce !== lastUndoNonceRef.current;
+    lastUndoNonceRef.current = undoNonce;
+    const isReset = resetNonce !== lastResetNonceRef.current || isUndo;
     lastResetNonceRef.current = resetNonce;
 
     // Compare against actual current path, not last-navigated-by-this-hook,
@@ -125,7 +133,7 @@ function StateDrivenNav() {
     if (!isReset && isStaying(actor.getSnapshot().context.workflowData.flowType, pathnameRef.current)) return;
 
     navigate(targetRoute, { replace: true });
-  }, [targetRoute, navigate, resetNonce, actor]);
+  }, [targetRoute, navigate, resetNonce, undoNonce, actor]);
 
   return null;
 }
@@ -209,6 +217,7 @@ function PatientRoutes() {
           <Route path="/infusion-date"          element={<InfusionDate />} />
           <Route path="/appointment-confirmation" element={<AppointmentConfirmation />} />
           <Route path="/dme-provider-transfer"    element={<DmeProviderTransfer />} />
+          <Route path="/pharmacy-transfer"        element={<PharmacyTransfer />} />
           <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
           <Route path="/dme-transfer-sms"         element={<DmeTransferSms />} />
           <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />
