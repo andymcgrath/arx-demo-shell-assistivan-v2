@@ -63,8 +63,7 @@
       "tracking.ship_rx"
     ],
     "SUBMIT_PA": [
-      "spine.submit_pa.standard",
-      "spine.submit_pa.dme"
+      "spine.submit_pa"
     ],
     "VERIFY_CASH_OFFER_SMS": [
       "cash_offer.verify_sms"
@@ -215,12 +214,10 @@
       "CoA_Copay",
       "CoA_DME"
     ],
-    "spine.submit_pa.dme": [
-      "CoA_DME"
-    ],
-    "spine.submit_pa.standard": [
+    "spine.submit_pa": [
       "CoA_DTP",
-      "CoA_Copay"
+      "CoA_Copay",
+      "CoA_DME"
     ],
     "spine.view_stage.bi": [
       "CoA_DTP",

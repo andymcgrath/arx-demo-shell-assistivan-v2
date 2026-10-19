@@ -1,6 +1,6 @@
 /** Enrollment screens and route rules. Every CoAssist scenario has them. */
 import type { Screen } from "@/engine/workflow/screens";
-import { DME_BI, STANDARD_BI, type CoaRoute } from "../slots";
+import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/", label: "Home", group: "" },
@@ -22,19 +22,19 @@ export const ENROLLMENT_ROUTES: CoaRoute[] = [
     id: "enrollment.waiting_for_bi",
     slot: "awaiting",
     path: "/enrollment-complete",
-    scope: STANDARD_BI,
+    scope: PRICING_JOURNEY,
     when: (d) => d.consentStatus === "confirmed" && d.biStatus !== "complete",
   },
   {
     id: "enrollment.waiting_for_pa",
     slot: "awaiting",
     path: "/enrollment-complete",
-    scope: STANDARD_BI,
+    scope: PRICING_JOURNEY,
     when: (d) => d.consentStatus === "confirmed" && d.biStatus === "complete" && (d.paStatus === "none" || d.paStatus === "submitted"),
   },
   // DME waits on Home, not /enrollment-complete: that screen is a one-time confirmation.
-  { id: "enrollment.dme_waiting_for_bi", slot: "awaiting", path: "/", scope: DME_BI, when: (d) => d.biStatus !== "complete" },
+  { id: "enrollment.dme_waiting_for_bi", slot: "awaiting", path: "/", scope: TRANSFER_JOURNEY, when: (d) => d.biStatus !== "complete" },
 
   // BI complete but neither benefit is set. COMPLETE_BI always sets both, so this should not happen.
-  { id: "enrollment.dme_fallback", slot: "fallback", path: "/enrollment-complete", scope: DME_BI },
+  { id: "enrollment.dme_fallback", slot: "fallback", path: "/enrollment-complete", scope: TRANSFER_JOURNEY },
 ];

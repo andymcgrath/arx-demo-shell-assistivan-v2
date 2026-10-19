@@ -34,7 +34,9 @@
         "paStatus": "submitted",
         "biStatus": "complete",
         "biResult": "coverage_found",
-        "paSubmittedAt": "2026-01-15T12:00:00.000Z"
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z",
+        "pharmacyBenefitStatus": "covered",
+        "medicalBenefitStatus": "not_covered"
       },
       "newEvents": [
         {

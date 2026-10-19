@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MODULE_CONTRACTS, type ScenarioRecipe } from "@/engine/workflow/components";
+import { MODULE_CONTRACTS, type ModuleSpec, type ScenarioRecipe } from "@/engine/workflow/components";
 import { recipeProblems } from "@/engine/workflow/recipe";
 import { COASSIST_RECIPES } from "@/workflows/coassist/recipes";
 import { IASSIST_RECIPES } from "@/workflows/iassist/recipes";
@@ -108,7 +108,7 @@ describe("iAssist recipes", () => {
 
 describe("recipeProblems and forks", () => {
   const dtpForks = forksFor("CoA_DTP");
-  const passthrough = { forks: ["bi", "pa"], choices: { bi: "coverage_found", pa: "approved" } };
+  const passthrough = { forks: ["bi", "pa"], choices: { bi: "pharmacy_covered", pa: "approved" } };
 
   it("needs the pa fork for pa_notification", () => {
     const problems = recipeProblems(recipe({ forks: ["bi"], modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }] }));
@@ -116,7 +116,7 @@ describe("recipeProblems and forks", () => {
   });
 
   it("rejects a pick of denied without a module that handles a denial", () => {
-    const denied = { ...passthrough, choices: { bi: "coverage_found", pa: "denied" } };
+    const denied = { ...passthrough, choices: { bi: "pharmacy_covered", pa: "denied" } };
     const without = recipe({ ...denied, modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }] });
     expect(recipeProblems(without, dtpForks)).toContain('fork "pa" exit "denied" requires cash_offer in the recipe');
 
@@ -137,11 +137,17 @@ describe("recipeProblems and forks", () => {
     expect(problems).toContain('fork "appeal" is not declared for this scenario');
   });
 
-  it("uses the BI fork that belongs to the scenario", () => {
-    // A DME exit is not an exit of the DTP fork, and the reverse.
-    expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "pharmacy_covered" } }), dtpForks)).toContain(
-      'fork "bi" has no exit "pharmacy_covered"',
-    );
+  it("shares one BI fork across CoAssist, and an exit requires the modules its branch needs", () => {
+    const modules: ModuleSpec[] = [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }];
+    for (const bi of ["medical_covered", "pharmacy_transfer"]) {
+      const picked = recipe({ ...passthrough, choices: { bi, pa: "approved" }, modules });
+      expect(recipeProblems(picked, dtpForks)).toContain(`fork "bi" exit "${bi}" requires provider_transfer in the recipe`);
+      const withTransfer = recipe({ ...passthrough, choices: { bi, pa: "approved" }, modules: [...modules.slice(0, -1), { id: "provider_transfer" }, { id: "tracking" }] });
+      expect(recipeProblems(withTransfer, dtpForks)).toEqual([]);
+    }
+    const noCoverage = recipe({ ...passthrough, choices: { bi: "no_coverage", pa: "approved" }, modules });
+    expect(recipeProblems(noCoverage, dtpForks)).toContain('fork "bi" exit "no_coverage" requires cash_offer in the recipe');
+    // The old exit ids no longer exist on any CoAssist scenario.
     expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "coverage_found" } }), forksFor("CoA_DME"))).toContain(
       'fork "bi" has no exit "coverage_found"',
     );

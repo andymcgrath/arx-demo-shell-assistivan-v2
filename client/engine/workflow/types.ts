@@ -79,8 +79,11 @@ export interface ForkExit {
 export interface ForkDefinition {
   id: string;
   label: string;
-  /** Who picks. `story`: the scenario fixes it. `presenter`: picked live. `patient`: picked in the app. */
-  chooser: "story" | "presenter" | "patient";
+  /**
+   * Who picks. `story`: the scenario fixes it, and a demo in the brand file can pin another exit. `patient`: picked
+   * in the app. The presenter never picks: each outcome is a demo.
+   */
+  chooser: "story" | "patient";
   /** Apply to these scenarios only. Omit for every scenario of the workflow. */
   scenarios?: FlowType[];
   exits: ForkExit[];

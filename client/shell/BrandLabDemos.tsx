@@ -201,7 +201,7 @@ export default function DemosLab() {
                   <section key={fork.id} className="mb-5">
                     <h3 className="text-sm font-bold">{fork.label}</h3>
                     <p className="mb-2 text-xs" style={{ color: MUTED }}>
-                      Chosen by the {fork.chooser}. {chosen ? "" : "No pick, so the workflow's default branch runs."}
+                      {chosen ? "" : "No pick, so the workflow's default branch runs."}
                     </p>
                     <div className="mb-3 flex flex-wrap gap-2">
                       {fork.exits.map((x) => {

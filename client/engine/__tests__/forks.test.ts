@@ -3,7 +3,7 @@ import { SimulatedClock, ctx, startFlow } from "./harness";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ALL_FORKS } from "@/workflows/forks";
 import { choiceProblems, exitFor, forksForScenario, pickedExit } from "@/engine/workflow/forks";
-import { DME_BI_FORK } from "@/workflows/coassist/forks";
+import { biForkFor } from "@/workflows/coassist/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
 
 /**
@@ -80,16 +80,16 @@ describe("DME benefits investigation fork", () => {
     });
   });
 
-  it("lets the presenter choose until the fork resolves, then ignores CHOOSE", () => {
+  it("lets CHOOSE pick until the fork resolves, then ignores CHOOSE", () => {
     const actor = startFlow("CoA_DME");
     enrollThroughBiRunning(actor);
-    actor.send({ type: "CHOOSE", fork: "bi", exit: "covered_by_both" } as any);
-    expect(data(actor).choices.bi).toBe("covered_by_both");
+    actor.send({ type: "CHOOSE", fork: "bi", exit: "medical_covered" } as any);
+    expect(data(actor).choices.bi).toBe("medical_covered");
     actor.send({ type: "COMPLETE_BI" } as any);
     expect(data(actor)).toMatchObject({ medicalBenefitStatus: "covered", paStatus: "none" });
 
     actor.send({ type: "CHOOSE", fork: "bi", exit: "no_coverage" } as any);
-    expect(data(actor).choices.bi).toBe("covered_by_both");
+    expect(data(actor).choices.bi).toBe("medical_covered");
   });
 
   it("ignores a choice that names no real fork or exit", () => {
@@ -100,10 +100,10 @@ describe("DME benefits investigation fork", () => {
   });
 
   it("keeps the choice through RESET, and RESET can change it", () => {
-    const actor = startFlow("CoA_DME", { choices: { bi: "covered_by_both" } });
+    const actor = startFlow("CoA_DME", { choices: { bi: "medical_covered" } });
     enrollThroughBiRunning(actor);
     actor.send({ type: "RESET" } as any);
-    expect(data(actor).choices.bi).toBe("covered_by_both");
+    expect(data(actor).choices.bi).toBe("medical_covered");
     expect(data(actor).biStatus).toBe("none");
 
     actor.send({ type: "RESET", choices: { bi: "no_coverage", bogus: "x" } } as any);
@@ -133,7 +133,7 @@ describe("BI and PA forks on DTP and Copay", () => {
 
   for (const flow of PA_FLOWS) {
     it(`${flow}: starts on coverage found and an approved PA`, () => {
-      expect(data(startFlow(flow)).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+      expect(data(startFlow(flow)).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
     });
 
     it(`${flow}: a BI with no result takes the exit the fork picked`, () => {
@@ -148,10 +148,10 @@ describe("BI and PA forks on DTP and Copay", () => {
       expect(data(none)).toMatchObject({ biResult: "no_coverage", paStatus: "none" });
     });
 
-    it(`${flow}: an event that carries a result still wins over the fork`, () => {
+    it(`${flow}: an event that carries the statuses still wins over the fork`, () => {
       const actor = startFlow(flow);
       enrollThroughBiRunning(actor);
-      actor.send({ type: "COMPLETE_BI", result: "no_coverage" } as any);
+      actor.send({ type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" } as any);
       expect(data(actor)).toMatchObject({ biResult: "no_coverage", paStatus: "none" });
     });
 
@@ -241,10 +241,10 @@ describe("patient-chosen pricing forks on DTP and Copay", () => {
     const actor = startFlow("CoA_DTP");
     reachPricing(actor);
     actor.send({ type: "SELECT_PRICING_OPTION", option: "retail" } as any);
-    expect(data(actor).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
 
     actor.send({ type: "RESET" } as any);
-    expect(data(actor).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
     expect(data(actor).pricingOption).toBeNull();
   });
 
@@ -361,18 +361,20 @@ describe("fork declarations", () => {
   });
 
   it("resolve a choice to an exit, and fall back to the first exit", () => {
-    expect(exitFor(DME_BI_FORK, { choices: { bi: "no_coverage" } }).id).toBe("no_coverage");
-    expect(exitFor(DME_BI_FORK, { choices: {} }).id).toBe("pharmacy_covered");
-    expect(exitFor(DME_BI_FORK, {} as any).id).toBe("pharmacy_covered");
+    expect(exitFor(biForkFor("CoA_DME"), { choices: { bi: "no_coverage" } }).id).toBe("no_coverage");
+    expect(exitFor(biForkFor("CoA_DME"), { choices: {} }).id).toBe("pharmacy_covered");
+    expect(exitFor(biForkFor("CoA_DME"), {} as any).id).toBe("pharmacy_covered");
   });
 
   it("report choices that name no real fork or exit", () => {
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "no_coverage" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "nonsense" })).toHaveLength(1);
-    // Each scenario has its own BI fork. A DME exit means nothing on DTP, and the reverse.
+    // Every CoAssist scenario shares one BI fork. The old exit ids are gone.
     expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "no_coverage" })).toEqual([]);
-    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "pharmacy_covered" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "pharmacy_covered" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "coverage_found" })).toHaveLength(1);
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "coverage_found" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "covered_by_both" })).toHaveLength(1);
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { pa: "denied" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "Fax_QS_PA_Approved", { bi: "no_coverage" })).toHaveLength(1);
   });

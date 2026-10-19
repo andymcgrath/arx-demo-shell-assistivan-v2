@@ -4,7 +4,7 @@ import { iassistStageEvents } from "@/shell/iassistLadders";
 import { faxStageEvents } from "@/shell/faxLadders";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { forkStageList } from "@/engine/workflow/forks";
-import { DME_BI_FORK } from "@/workflows/coassist/forks";
+import { biForkFor } from "@/workflows/coassist/forks";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
@@ -26,6 +26,8 @@ const LADDERS = [
   { flowType: "Fax_PAP_Audit", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
   { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
 ] as const;
+
+const DME_BI_FORK = biForkFor("CoA_DME");
 
 describe("DME stage jump follows the selected branch", () => {
   for (const exit of DME_BI_FORK.exits) {

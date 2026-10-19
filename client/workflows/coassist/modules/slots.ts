@@ -52,10 +52,11 @@ export const COASSIST_GROUPS = [
 ] as const;
 
 /**
- * DTP and Copay: BI can find coverage, and the PA decision follows. Named by the BI fork's `coverage_found` exit.
- * DME's BI fork has no such exit.
+ * The two journeys after BI. Every scenario shares the `bi` fork, so the fork cannot tell them apart. The recipe can.
+ * `PRICING_JOURNEY`: the patient picks Retail, Mail Order, or the self-pay offer. Only DTP and Copay declare the
+ * `pricing` fork.
  */
-export const STANDARD_BI: RuleScope = { fork: "bi", exit: "coverage_found" };
+export const PRICING_JOURNEY: RuleScope = { fork: "pricing" };
 
-/** DME: BI can find pharmacy coverage. Named by the DME BI fork's `pharmacy_covered` exit. */
-export const DME_BI: RuleScope = { fork: "bi", exit: "pharmacy_covered" };
+/** `TRANSFER_JOURNEY`: the Rx goes to a network pharmacy, a provider, or a cash offer. Only a recipe with `provider_transfer` has it. */
+export const TRANSFER_JOURNEY: RuleScope = { module: "provider_transfer" };

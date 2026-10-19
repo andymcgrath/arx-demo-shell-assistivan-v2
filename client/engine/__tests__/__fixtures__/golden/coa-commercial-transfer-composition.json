@@ -7,7 +7,7 @@
       "pricing"
     ],
     "choices": {
-      "bi": "coverage_found",
+      "bi": "pharmacy_covered",
       "pa": "approved",
       "pricing": "retail"
     },

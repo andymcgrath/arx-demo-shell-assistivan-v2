@@ -23,7 +23,7 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
 export const COA_DTP_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa", "pricing"],
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },
@@ -37,7 +37,7 @@ export const COA_DTP_RECIPE: ScenarioRecipe = {
 export const COA_COPAY_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa", "copay", "pricing"],
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },
@@ -50,7 +50,7 @@ export const COA_COPAY_RECIPE: ScenarioRecipe = {
   ],
 };
 
-/** DME never offers Retail or Mail Order. The BI fork picks the branch. */
+/** DME never offers Retail or Mail Order. The `bi` fork picks the branch. */
 export const COA_DME_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa"],
@@ -78,7 +78,7 @@ export const COA_DME_RECIPE: ScenarioRecipe = {
 export const COA_COMMERCIAL_TRANSFER_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa", "pricing"],
-  choices: { bi: "coverage_found", pa: "approved", pricing: "retail" },
+  choices: { bi: "pharmacy_covered", pa: "approved", pricing: "retail" },
   modules: [
     { id: "enrollment" },
     { id: "pa_notification" },

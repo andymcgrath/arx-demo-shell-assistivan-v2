@@ -16,7 +16,7 @@ export const nowIso = () => new Date().toISOString();
 export const inFulfillmentTail = (d: WorkflowData) =>
   d.pharmacyStatus === "none" && (d.pricingOption !== null || d.dispatchStatus !== "none" || d.paymentVerified);
 
-/** CoA_DME BI outcome. Medical benefit always wins when covered. */
+/** The BI outcome for a pair of benefit statuses. Medical benefit always wins when covered. */
 export function deriveBiResult(
   pharmacyBenefitStatus: "covered" | "not_covered",
   medicalBenefitStatus: "covered" | "not_covered",

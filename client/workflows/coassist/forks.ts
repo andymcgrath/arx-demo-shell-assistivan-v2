@@ -1,5 +1,5 @@
 import type { FlowType } from "@/engine/types";
-import type { ForkDefinition, StageEvent } from "@/engine/workflow/types";
+import type { ForkDefinition, ForkStage, StageEvent } from "@/engine/workflow/types";
 import { forkApplies } from "@/engine/workflow/forks";
 
 /**
@@ -48,27 +48,65 @@ const fulfillment = (firstLabel: string) => [
 ];
 
 /**
- * CoA_DME benefits investigation. One BI resolves to one of three coverage outcomes. The presenter picks
- * it on the CRM, or a demo in the brand file starts with it chosen. Medical benefit always wins when covered.
+ * The benefits investigation, one fork for every CoAssist scenario. One BI resolves to one of four coverage
+ * outcomes. Every exit sets both benefit statuses, and `biResult` is derived from them (rules: spine.complete_bi).
+ * The story, or a demo in the brand file, picks the exit. Medical benefit always wins when covered.
+ *
+ * An exit `requires` the modules its branch needs, so a recipe that lacks them cannot pick it. The rungs after the
+ * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
-export const DME_BI_FORK: ForkDefinition = {
+export const BI_FORK: ForkDefinition = {
   id: "bi",
   label: "Benefits investigation result",
-  chooser: "presenter",
-  scenarios: ["CoA_DME"],
-  stagesBefore: [
-    { label: "Referral Received", events: [] },
-    { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
-    { label: "Benefits Investigation", events: [] },
-  ],
+  chooser: "story",
+  // CoAssist only. iAssist and the standard workflow declare their own `bi` fork.
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_DME"],
   resolved: (d) => d.biStatus === "complete",
   exits: [
     {
       id: "pharmacy_covered",
       label: "Pharmacy Coverage",
-      description: "The pharmacy benefit covers it and needs a PA. The patient picks a network pharmacy.",
+      description: "The pharmacy benefit covers it and needs a PA.",
       data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" },
-      stages: [
+    },
+    {
+      id: "pharmacy_transfer",
+      label: "Pharmacy Transfer",
+      description:
+        "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy. The Rx transfers to an assigned one and the patient sees its contact details.",
+      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered", pharmacyAssigned: true },
+      requires: ["provider_transfer"],
+    },
+    {
+      id: "medical_covered",
+      label: "Medical Coverage",
+      description: "The medical benefit covers it. The case transfers to an outside provider.",
+      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
+      requires: ["provider_transfer"],
+    },
+    {
+      id: "no_coverage",
+      label: "No Coverage (Cash)",
+      description: "Neither benefit covers it. The patient gets a cash offer.",
+      data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },
+      requires: ["cash_offer"],
+    },
+  ],
+};
+
+/**
+ * The stage-jump rungs after the `bi` fork, owned by the scenario and keyed by exit id. A scenario with no table
+ * here has no rungs for the fork (DTP and Copay keep their hand-built ladder in shell/coassistLadders.ts).
+ */
+const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<string, ForkStage[]> }>> = {
+  CoA_DME: {
+    before: [
+      { label: "Referral Received", events: [] },
+      { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
+      { label: "Benefits Investigation", events: [] },
+    ],
+    exits: {
+      pharmacy_covered: [
         { label: "Pharmacy Coverage Confirmed (PA not yet submitted)", events: [completeBi("covered", "not_covered")] },
         {
           label: "PA Approved & Pharmacy Selected",
@@ -81,14 +119,7 @@ export const DME_BI_FORK: ForkDefinition = {
         },
         ...fulfillment("Rx Processing"),
       ],
-    },
-    {
-      id: "pharmacy_transfer",
-      label: "Pharmacy Transfer",
-      description:
-        "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy. The Rx transfers to an assigned one and the patient sees its contact details.",
-      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered", pharmacyAssigned: true },
-      stages: [
+      pharmacy_transfer: [
         { label: "Pharmacy Coverage Confirmed (PA submitted)", events: [completeBi("covered", "not_covered")] },
         { label: "PA Approved", events: [ev("APPROVE_PA", "crm")] },
         {
@@ -96,24 +127,12 @@ export const DME_BI_FORK: ForkDefinition = {
           events: [ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient")],
         },
       ],
-    },
-    {
-      id: "covered_by_both",
-      label: "Covered by Both",
-      description: "The medical benefit covers it. The case transfers to an outside DME provider.",
-      data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
-      stages: [
+      medical_covered: [
         { label: "Medical Coverage Confirmed (transfer to DME provider)", events: [completeBi("covered", "covered")] },
         { label: "DME Provider Notified", events: [ev("NOTIFY_PROVIDER_TRANSFER", "crm")] },
         { label: "Transfer SMS Confirmed", events: [ev("VERIFY_DME_TRANSFER_SMS", "patient")] },
       ],
-    },
-    {
-      id: "no_coverage",
-      label: "No Coverage (Cash)",
-      description: "Neither benefit covers it. The patient gets a cash offer.",
-      data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" },
-      stages: [
+      no_coverage: [
         { label: "No Coverage Confirmed (cash offer SMS sent)", events: [completeBi("not_covered", "not_covered")] },
         { label: "Cash Option Chosen", events: [ev("VERIFY_CASH_OFFER_SMS", "patient"), ev("SELECT_SELF_PAY", "patient")] },
         { label: "Cash Payment Verified", events: [ev("PATIENT_PAYS", "patient"), ev("VERIFY_PAYMENT", "crm")] },
@@ -121,36 +140,7 @@ export const DME_BI_FORK: ForkDefinition = {
         ...fulfillment("Rx Processing"),
       ],
     },
-  ],
-};
-
-/**
- * BI for DTP and Copay. The result decides whether a PA is needed: only `coverage_found` submits one.
- * The story picks it. No presenter button, so the demo's behavior is the same as before the fork existed.
- * `no_coverage` is reachable by event only. The patient app has no screens for it yet, so a recipe that picks
- * it must include `cash_offer`.
- */
-export const STANDARD_BI_FORK: ForkDefinition = {
-  id: "bi",
-  label: "Benefits investigation result",
-  chooser: "story",
-  scenarios: ["CoA_DTP", "CoA_Copay"],
-  resolved: (d) => d.biStatus === "complete",
-  exits: [
-    {
-      id: "coverage_found",
-      label: "Coverage found",
-      description: "Coverage is found and a PA is required.",
-      data: { biResult: "coverage_found" },
-    },
-    {
-      id: "no_coverage",
-      label: "No coverage",
-      description: "No coverage is found. No PA is submitted.",
-      data: { biResult: "no_coverage" },
-      requires: ["cash_offer"],
-    },
-  ],
+  },
 };
 
 /**
@@ -235,8 +225,7 @@ export const COPAY_PRICING_FORK: ForkDefinition = {
 };
 
 export const COASSIST_FORKS: ForkDefinition[] = [
-  DME_BI_FORK,
-  STANDARD_BI_FORK,
+  BI_FORK,
   PA_FORK,
   DTP_PRICING_FORK,
   COPAY_FORK,
@@ -251,6 +240,17 @@ export const pricingPinNeedsConfirm = (d: { flowType: FlowType; choices?: Record
 export const pricingForkFor = (flowType: FlowType): ForkDefinition | undefined =>
   COASSIST_FORKS.find((f) => f.id === "pricing" && forkApplies(f, flowType));
 
-/** The BI fork that applies to a scenario. DME has its own, so this reads the declarations and not the flow type. */
-export const biForkFor = (flowType: FlowType): ForkDefinition =>
-  COASSIST_FORKS.find((f) => f.id === "bi" && forkApplies(f, flowType)) ?? STANDARD_BI_FORK;
+/**
+ * The BI fork for a scenario: the shared exits, with the rungs that scenario owns (BI_STAGES). A scenario with no
+ * rungs gets the shared fork as is.
+ */
+const BI_FORKS: Partial<Record<FlowType, ForkDefinition>> = {};
+export const biForkFor = (flowType: FlowType): ForkDefinition => {
+  const stages = BI_STAGES[flowType];
+  if (!stages) return BI_FORK;
+  return (BI_FORKS[flowType] ??= {
+    ...BI_FORK,
+    stagesBefore: stages.before,
+    exits: BI_FORK.exits.map((e) => ({ ...e, stages: stages.exits[e.id] })),
+  });
+};

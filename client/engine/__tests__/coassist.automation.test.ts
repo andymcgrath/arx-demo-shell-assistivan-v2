@@ -37,7 +37,7 @@ describe("CoAssist automation", () => {
       it(`${flow}: a BI that says no PA is required does not submit one`, () => {
         withFrozenClock(() => {
           const { actor, data } = start(flow);
-          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", result: "no_coverage" }]);
+          runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered" }]);
           expect(data().biStatus).toBe("complete");
           expect(data().biResult).toBe("no_coverage");
           expect(data().paStatus).toBe("none");

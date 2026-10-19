@@ -2,7 +2,7 @@
 import type { Screen } from "@/engine/workflow/screens";
 import { pricingPinNeedsConfirm } from "../../forks";
 import { dmeNeitherCovered } from "../shared";
-import { DME_BI, STANDARD_BI, type CoaRoute } from "../slots";
+import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 // A pinned pricing pick skips the pricing menu. The patient lands on the self-pay offer when the pin needs
 // confirming, or past pricing when it does not. So Benefit Pricing is skipped on any pin, and the offer unless it needs confirming.
@@ -38,6 +38,6 @@ export const PAYMENT_ROUTES: CoaRoute[] = [
     scope: { fork: "pricing" },
     when: (d) => d.paStatus === "approved" && d.paApprovedOtpVerified && d.pricingOption === null,
   },
-  { id: "payment.delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, STANDARD_BI], when: (d) => d.cashOfferStatus === "sent" && !d.paymentVerified },
-  { id: "payment.dme_delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, DME_BI], when: (d) => dmeNeitherCovered(d) && !d.paymentVerified },
+  { id: "payment.delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, PRICING_JOURNEY], when: (d) => d.cashOfferStatus === "sent" && !d.paymentVerified },
+  { id: "payment.dme_delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, TRANSFER_JOURNEY], when: (d) => dmeNeitherCovered(d) && !d.paymentVerified },
 ];

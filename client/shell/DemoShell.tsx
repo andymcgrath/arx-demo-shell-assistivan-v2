@@ -36,7 +36,7 @@ import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
-import { DME_BI_FORK } from "@/workflows/coassist/forks";
+import { biForkFor } from "@/workflows/coassist/forks";
 import { iassistStageEvents } from "./iassistLadders";
 import { faxStageEvents } from "./faxLadders";
 
@@ -1370,7 +1370,7 @@ export default function DemoShell() {
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
                     : isDmeFlow
-                    ? forkStageList(DME_BI_FORK, { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor("CoA_DME"), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic

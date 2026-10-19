@@ -18,7 +18,7 @@
       "label": "DME: Covered by Both",
       "description": "The medical benefit covers it. The case transfers to an outside DME provider.",
       "choices": {
-        "bi": "covered_by_both"
+        "bi": "medical_covered"
       }
     },
     {

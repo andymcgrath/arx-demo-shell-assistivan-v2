@@ -19,7 +19,7 @@
  * at the provider transfer.
  */
 
-import { DME_BI_FORK, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
+import { biForkFor, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
 import { forkStageEvents } from "@/engine/workflow/forks";
 
 export interface LadderEvent {
@@ -43,7 +43,7 @@ export function coassistStageEvents(
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
-  if (flowType === "CoA_DME") return forkStageEvents(DME_BI_FORK, { choices }, stage);
+  if (flowType === "CoA_DME") return forkStageEvents(biForkFor("CoA_DME"), { choices }, stage);
 
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;
@@ -54,7 +54,7 @@ export function coassistStageEvents(
   {
     if (upTo(4)) {
       out.push(
-        ev("COMPLETE_BI", "crm", { result: "coverage_found" }),
+        ev("COMPLETE_BI", "crm"),
         ev("APPROVE_PA", "crm"),
         ev("VERIFY_PA_APPROVED_SMS", "patient"),
         ev("VERIFY_PA_APPROVED_OTP", "patient"),

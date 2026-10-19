@@ -18,16 +18,13 @@ export const SPINE_RULES: CoaRule[] = [
     emit: { portal: "analytics", step: 6 },
   },
   {
-    // One BI resolves to the exit the scenario's `bi` fork picked (forks.ts). An event that carries a result (DTP and
-    // Copay) or the two benefit statuses (DME) still wins, so a replay or a test can force one.
+    // One BI resolves to the exit the scenario's `bi` fork picked (forks.ts). An event that carries the two benefit
+    // statuses still wins, so a replay or a test can force one. `biResult` is derived from the statuses.
     id: "spine.complete_bi",
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
     set: (d, e) => {
       const chosen = exitFor(biForkFor(d.flowType), d).data;
-      // DTP and Copay exits carry a result. Only `coverage_found` means a PA is required.
-      if (chosen.pharmacyBenefitStatus === undefined) return { biStatus: "complete", biResult: e.result ?? chosen.biResult };
-      // DME: one BI resolves to one of four coverage outcomes. Their exits carry the two benefit statuses.
       const pharmacy = e.pharmacyBenefitStatus ?? chosen.pharmacyBenefitStatus;
       const medical = e.medicalBenefitStatus ?? chosen.medicalBenefitStatus;
       return {
@@ -46,12 +43,12 @@ export const SPINE_RULES: CoaRule[] = [
       { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: dmeNeitherCovered },
     ],
     // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA checks the BI result:
-    // DTP and Copay need `coverage_found`, and DME needs "pharmacy covered, medical not". It ignores the rest.
+    // A PA is needed only when the pharmacy benefit covers and the medical benefit does not. It ignores the rest.
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
   {
-    // The BI result lands after a delay once the agent opens the BI stage. The `bi` fork's exit decides it. DME's stage
-    // event may also carry the statuses the presenter picked on the CRM, which COMPLETE_BI prefers.
+    // The BI result lands after a delay once the agent opens the BI stage. The `bi` fork's exit decides it. The stage
+    // event may also carry statuses, which COMPLETE_BI prefers.
     id: "spine.view_stage.bi",
     on: "VIEW_STAGE",
     snapshot: false,
@@ -62,7 +59,6 @@ export const SPINE_RULES: CoaRule[] = [
       after: REVEAL_MS,
       send: (d, e) => ({
         type: "COMPLETE_BI",
-        result: exitFor(biForkFor(d.flowType), d).data.biResult,
         pharmacyBenefitStatus: e.pharmacyBenefitStatus,
         medicalBenefitStatus: e.medicalBenefitStatus,
       }),
@@ -84,19 +80,10 @@ export const SPINE_RULES: CoaRule[] = [
   { id: "spine.leave_stage.bi", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
   { id: "spine.leave_stage.pa", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
   {
-    id: "spine.submit_pa.standard",
+    id: "spine.submit_pa",
     on: "SUBMIT_PA",
-    scope: { fork: "bi", exit: "coverage_found" },
-    // A PA needs a completed BI whose result says one is required.
-    when: (d) => d.biStatus === "complete" && d.biResult === "coverage_found" && d.paStatus === "none",
-    set: () => ({ paStatus: "submitted", paSubmittedAt: nowIso() }),
-    emit: { portal: "provider", step: 8 },
-  },
-  {
-    // DME: a PA is needed only when the pharmacy benefit covers and the medical benefit does not.
-    id: "spine.submit_pa.dme",
-    on: "SUBMIT_PA",
-    scope: { fork: "bi", exit: "pharmacy_covered" },
+    scope: { fork: "bi" },
+    // A PA needs a completed BI where the pharmacy benefit covers and the medical benefit does not.
     when: (d) =>
       d.biStatus === "complete" &&
       d.paStatus === "none" &&

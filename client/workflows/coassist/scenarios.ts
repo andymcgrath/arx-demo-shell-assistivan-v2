@@ -40,7 +40,7 @@ const TRANSFER_PHARMACY: Pharmacy = BRAND.program.transferPartner ?? {
 export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
   intake: "erx",
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: COA_DTP_RECIPE,
   content: {
     retail: { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" },
@@ -53,7 +53,7 @@ export const COA_DTP: ScenarioDefinition<CoassistContent> = {
 export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Copay",
   intake: "erx",
-  choices: { bi: "coverage_found", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: COA_COPAY_RECIPE,
   content: {
     retail: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
@@ -67,7 +67,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
 export const COA_DME: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DME",
   intake: "erx",
-  // The story: pharmacy coverage. A demo in the brand file or the presenter can pick another branch.
+  // The story: pharmacy coverage. A demo in the brand file can pick another branch.
   choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: COA_DME_RECIPE,
   content: {
