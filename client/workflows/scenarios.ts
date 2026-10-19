@@ -1,5 +1,5 @@
 import type { ScenarioDefinition } from "@/engine/workflow/types";
-import { COA_DTP, COA_COPAY, COA_DME } from "./coassist/scenarios";
+import { COA_DTP, COA_COPAY, COA_COVERAGE } from "./coassist/scenarios";
 import { IA_PA_APPROVED, IA_PA_DENIED_APPEAL } from "./iassist/scenarios";
 import { STANDARD_PA_APPROVED } from "./standard/scenarios";
 import { PAP_AUDIT, PAP_PRES } from "./pap/scenarios";
@@ -10,7 +10,7 @@ export const ALL_SCENARIOS: ScenarioDefinition<any>[] = [
   PAP_AUDIT,
   COA_DTP,
   COA_COPAY,
-  COA_DME,
+  COA_COVERAGE,
   IA_PA_APPROVED,
   IA_PA_DENIED_APPEAL,
   PAP_PRES,

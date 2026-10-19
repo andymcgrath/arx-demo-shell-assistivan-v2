@@ -1,6 +1,6 @@
 import type { ScreenMap } from "@/engine/workflow/screens";
 import { COASSIST_FORKS } from "./forks";
-import { COA_COPAY, COA_DME, COA_DTP, COASSIST_FLOWS } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COASSIST_FLOWS } from "./scenarios";
 import { CASH_OFFER_ROUTES, CASH_OFFER_SCREENS } from "./modules/screens/cash_offer";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
 import { PA_NOTIFICATION_ROUTES, PA_NOTIFICATION_SCREENS } from "./modules/screens/pa_notification";
@@ -32,7 +32,7 @@ export const COASSIST_SCREENS: ScreenMap = {
   hidden: ["/lock-screen"],
   slots: COASSIST_SLOTS,
   groups: COASSIST_GROUPS,
-  scenarioDefs: [COA_DTP, COA_COPAY, COA_DME],
+  scenarioDefs: [COA_DTP, COA_COPAY, COA_COVERAGE],
   forks: COASSIST_FORKS,
 
   screens: [

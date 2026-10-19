@@ -1,7 +1,7 @@
 /** Payment: the patient's pricing pick (Retail, Mail Order, self-pay offer) and the delivery payment. */
 import type { Screen } from "@/engine/workflow/screens";
 import { pricingPinNeedsConfirm } from "../../forks";
-import { dmeNeitherCovered } from "../shared";
+import { neitherCovered } from "../shared";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 // A pinned pricing pick skips the pricing menu. The patient lands on the self-pay offer when the pin needs
@@ -39,5 +39,5 @@ export const PAYMENT_ROUTES: CoaRoute[] = [
     when: (d) => d.paStatus === "approved" && d.paApprovedOtpVerified && d.pricingOption === null,
   },
   { id: "payment.delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, PRICING_JOURNEY], when: (d) => d.cashOfferStatus === "sent" && !d.paymentVerified },
-  { id: "payment.dme_delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, TRANSFER_JOURNEY], when: (d) => dmeNeitherCovered(d) && !d.paymentVerified },
+  { id: "payment.coverage_delivery_payment", slot: "payment", path: "/delivery-payment", scope: [PAYMENT, TRANSFER_JOURNEY], when: (d) => neitherCovered(d) && !d.paymentVerified },
 ];

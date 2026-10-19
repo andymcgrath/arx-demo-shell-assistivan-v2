@@ -5,7 +5,7 @@
  * DemoShell's resetActorToStage RESETs the actor, then sends these events to
  * land on a stage. This module is pure (no store, no actor, no React) so the
  * same lists run in the headless tests (__tests__/stageLadders.test.ts). A
- * test that mirrored a copy of this code is how the DME "stage 7 never
+ * test that mirrored a copy of this code is how the Coverage "stage 7 never
  * advances" bug stayed hidden: it sent SHIP_RX without READY_RX.
  *
  * Stages: 2 enrolled and verified (BI is already running), 3 same as 2, 4 BI complete (and for
@@ -30,7 +30,7 @@ export interface LadderEvent {
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
-// One list, shared with the DME benefits-investigation fork's lead-in (workflows/coassist/forks.ts).
+// One list, shared with the Coverage benefits-investigation fork's lead-in (workflows/coassist/forks.ts).
 const IDENTITY: LadderEvent[] = ENROLL_AND_VERIFY;
 
 /**

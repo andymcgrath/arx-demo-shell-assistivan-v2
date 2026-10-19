@@ -28,7 +28,7 @@ const everyEvent: Step[] = [
   { type: "SEND_CASH_OFFER" }, { type: "PATIENT_PAYS" }, { type: "VERIFY_PAYMENT" },
   { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
   { type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" },
-  { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_DME_TRANSFER_SMS" }, { type: "VERIFY_CASH_OFFER_SMS" },
+  { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_PROVIDER_TRANSFER_SMS" }, { type: "VERIFY_CASH_OFFER_SMS" },
 ];
 
 const accepts = (actor: ReturnType<typeof startFlow>, step: Step) => actor.getSnapshot().can(step as any);
@@ -98,7 +98,7 @@ describe("CoAssist ordering rules", () => {
   }
 
   describe("scenario differences", () => {
-    it("DTP and Copay can deny the PA. DME cannot.", () => {
+    it("DTP and Copay can deny the PA. Coverage cannot.", () => {
       withFrozenClock(() => {
         for (const flow of COA) {
           const actor = startFlow(flow);
@@ -108,7 +108,7 @@ describe("CoAssist ordering rules", () => {
       });
     });
 
-    it("DME: a PA is needed only when the pharmacy benefit covers and the medical benefit does not", () => {
+    it("Coverage: a PA is needed only when the pharmacy benefit covers and the medical benefit does not", () => {
       withFrozenClock(() => {
         const cases: [string, "covered" | "not_covered", "covered" | "not_covered", boolean][] = [
           ["pharmacy only", "covered", "not_covered", true],
@@ -125,7 +125,7 @@ describe("CoAssist ordering rules", () => {
       });
     });
 
-    it("DME: provider transfer needs medical coverage. The cash-offer SMS needs neither covered.", () => {
+    it("Coverage: provider transfer needs medical coverage. The cash-offer SMS needs neither covered.", () => {
       withFrozenClock(() => {
         const medical = startFlow("CoA_Coverage");
         runSteps(medical, [{ type: "REFERRAL_RECEIVED" }, bi("CoA_Coverage", "covered", "covered")]);

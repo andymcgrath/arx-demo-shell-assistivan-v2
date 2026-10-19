@@ -190,7 +190,7 @@ export default function OrderTracker() {
   // CoA_Coverage Scenario 1 (pharmacy covered, medical not) — mirrors CoA_Copay's
   // Retail path exactly (confirmed design decision), including this same
   // 2-step tracker: fulfillment happens outside AssistRx's own pipeline (see
-  // crm/pages/Index.tsx's isDmeRetailFlow, which drops the Pharmacy Status
+  // crm/pages/Index.tsx's isCoverageRetailFlow, which drops the Pharmacy Status
   // stage the same way isCopayRetailFlow does), so the default 5-step
   // shipping tracker below would get stuck forever on "Routing to pharmacy."
   if (workflowData.flowType === "CoA_Coverage" &&

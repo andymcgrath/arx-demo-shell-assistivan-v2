@@ -78,7 +78,7 @@
       "route": "/",
       "changed": {
         "biStatus": "complete",
-        "biResult": "dme_covered",
+        "biResult": "medical_covered",
         "pharmacyBenefitStatus": "covered",
         "medicalBenefitStatus": "covered"
       },
@@ -93,10 +93,10 @@
     {
       "event": "NOTIFY_PROVIDER_TRANSFER",
       "accepted": true,
-      "route": "/dme-transfer-sms",
+      "route": "/provider-transfer-sms",
       "changed": {
-        "dmeProviderTransferStatus": "notified",
-        "dmeTransferSmsSent": true
+        "providerTransferStatus": "notified",
+        "providerTransferSmsSent": true
       },
       "newEvents": [
         {
@@ -107,15 +107,15 @@
       ]
     },
     {
-      "event": "VERIFY_DME_TRANSFER_SMS",
+      "event": "VERIFY_PROVIDER_TRANSFER_SMS",
       "accepted": true,
-      "route": "/dme-provider-transfer",
+      "route": "/provider-transfer",
       "changed": {
-        "dmeTransferSmsVerified": true
+        "providerTransferSmsVerified": true
       },
       "newEvents": [
         {
-          "eventType": "VERIFY_DME_TRANSFER_SMS",
+          "eventType": "VERIFY_PROVIDER_TRANSFER_SMS",
           "portal": "patient",
           "workflowStep": 9
         }

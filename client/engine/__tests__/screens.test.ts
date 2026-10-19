@@ -74,7 +74,7 @@ describe("CoAssist stay-put screens", () => {
       expect(isSticky(COASSIST_SCREENS, flowType, "/confirm-details")).toBe(false);
       expect(isSticky(COASSIST_SCREENS, flowType, "/lock-screen")).toBe(false);
     }
-    // Scenario-specific: only DME has the network pharmacy screen.
+    // Scenario-specific: only Coverage has the network pharmacy screen.
     expect(isSticky(COASSIST_SCREENS, "CoA_Coverage", "/network-pharmacy-selection")).toBe(true);
     expect(isSticky(COASSIST_SCREENS, "CoA_DTP", "/network-pharmacy-selection")).toBe(false);
   });

@@ -5,7 +5,7 @@
  * the delay and the outcome. Leaving the stage cancels a pending reveal. The `bi` and `pa` forks decide the outcomes.
  */
 import type { CoaRule } from "./shared";
-import { nowIso, deriveBiResult, dmeNeitherCovered, REVEAL_MS } from "./shared";
+import { nowIso, deriveBiResult, neitherCovered, REVEAL_MS } from "./shared";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 
@@ -40,7 +40,7 @@ export const SPINE_RULES: CoaRule[] = [
     },
     emit: [
       { portal: "analytics", step: 7 },
-      { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: dmeNeitherCovered },
+      { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: neitherCovered },
     ],
     // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA checks the BI result:
     // A PA is needed only when the pharmacy benefit covers and the medical benefit does not. It ignores the rest.
@@ -73,7 +73,7 @@ export const SPINE_RULES: CoaRule[] = [
       trigger: "agent",
       id: "pa-decision",
       after: REVEAL_MS,
-      // The `pa` fork's exit decides the outcome. DME pins `approved`.
+      // The `pa` fork's exit decides the outcome. Coverage pins `approved`.
       send: (d) => ({ type: exitFor(PA_FORK, d).id === "denied" ? "DENY_PA" : "APPROVE_PA" }),
     },
   },

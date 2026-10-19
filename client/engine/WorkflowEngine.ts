@@ -297,8 +297,8 @@ export const KEANU_SITE_OF_CARE_FACTS = {
  * Advanced Diabetes Supply's contact facts — CoA_Coverage only. Mirrors
  * KEANU_SITE_OF_CARE_FACTS's shape/style above: shared raw facts (not a full
  * Pharmacy/FieldSOC record, since this is a fulfillment hand-off to a
- * third-party DME provider, not a pharmacy dispatch or a site-of-care visit)
- * so DmeProviderTransfer.tsx and this file's own generated-email copy always
+ * third-party provider, not a pharmacy dispatch or a site-of-care visit)
+ * so ProviderTransfer.tsx and this file's own generated-email copy always
  * describe the exact same provider instead of two hand-typed copies that
  * could quietly drift.
  */
@@ -338,10 +338,10 @@ export interface GeneratedEmailInputs {
   patientName: string;
   prescriberName: string;
   frmName: string;
-  // 'dme_covered' — CoA_Coverage only: BI confirmed the DME is covered under the
-  // patient's commercial medical benefit (see workflows/coaDme.ts's
+  // 'medical_covered' — CoA_Coverage only: BI confirmed the CGM sensor is covered under the
+  // patient's commercial medical benefit (see workflows/coassist/'s
   // COMPLETE_BI).
-  biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | 'dme_covered' | null;
+  biResult: 'coverage_found' | 'no_coverage' | 'no_insurance' | 'medical_covered' | null;
   // iAssist_PAP (WF5) only — read directly off current workflow state
   // (like biResult above) rather than event.metadata, since createEvent()
   // never populates metadata (see workflows/iassist/rules.ts) — the event log
@@ -370,11 +370,11 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   // SMS's own tap-through (CashOfferSms.tsx). SEND_CASH_OFFER_SMS still
   // falls through to the default case below.
   'VERIFY_CASH_OFFER_SMS',
-  // CoA_Coverage Scenario 2 only — same reasoning, mirrored for the DME transfer
-  // SMS's own tap-through (DmeTransferSms.tsx). NOTIFY_PROVIDER_TRANSFER
+  // CoA_Coverage Scenario 2 only — same reasoning, mirrored for the provider transfer
+  // SMS's own tap-through (ProviderTransferSms.tsx). NOTIFY_PROVIDER_TRANSFER
   // (the CRM action that sends it) still falls through to the default case
   // below, where its existing email case already lives.
-  'VERIFY_DME_TRANSFER_SMS',
+  'VERIFY_PROVIDER_TRANSFER_SMS',
 ]);
 
 function formatSentAt(iso: string): string {
@@ -399,7 +399,7 @@ function friendlyEventLabel(eventType: string): string {
  */
 export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[] {
   const { events, patientName, prescriberName, frmName, biResult, infusionDate, flowType } = input;
-  const isDmeFlow = flowType === 'CoA_Coverage';
+  const isCoverageFlow = flowType === 'CoA_Coverage';
   const emails: GeneratedEmail[] = [];
 
   for (const event of events) {
@@ -466,38 +466,38 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         break;
 
       case 'COMPLETE_BI':
-        if (biResult === 'dme_covered') {
+        if (biResult === 'medical_covered') {
           emails.push({
             ...base,
             subject: `Medical Benefit Coverage Confirmed - ${patientName}`,
             bodyParagraphs: [
-              `Benefits investigation confirmed ${patientName}'s DME (CGM sensor) is covered under their commercial medical benefit.`,
-              `The case is being transferred to an outside DME provider for fulfillment — no Prior Authorization is needed on this case.`,
+              `Benefits investigation confirmed ${patientName}'s CGM sensor is covered under their commercial medical benefit.`,
+              `The case is being transferred to an outside provider for fulfillment — no Prior Authorization is needed on this case.`,
             ],
             linkedItemId: LIVE_CASE_ID,
             linkedItemLabel: 'View Case',
           });
-        } else if (isDmeFlow && biResult === 'coverage_found') {
+        } else if (isCoverageFlow && biResult === 'coverage_found') {
           // CoA_Coverage Scenario 1 — pharmacy benefit covered, medical not. This
           // outcome now requires a real Prior Authorization, mirroring
-          // CoA_DTP's own PA flow exactly (see workflows/coaDme.ts's header
+          // CoA_DTP's own PA flow exactly (see workflows/coassist/'s header
           // comment and its SUBMIT_PA handlers) — it's submitted
           // automatically by CRM, not by the prescriber, so this email
           // doesn't open a Prior Authorization task the way the generic
-          // non-DME branch below does. No pricing/dollar framing either —
+          // non-Coverage branch below does. No pricing/dollar framing either —
           // once PA approves, it's a network pharmacy pick, not a
           // Retail-vs-Mail-Order choice.
           emails.push({
             ...base,
             subject: `Pharmacy Benefit Coverage Confirmed - ${patientName}`,
             bodyParagraphs: [
-              `Benefits investigation confirmed ${patientName}'s DME (CGM sensor) is covered under their pharmacy benefit.`,
+              `Benefits investigation confirmed ${patientName}'s CGM sensor is covered under their pharmacy benefit.`,
               `A Prior Authorization is being submitted automatically; once approved, the patient will be notified to pick a network pharmacy.`,
             ],
             linkedItemId: LIVE_CASE_ID,
             linkedItemLabel: 'View Case',
           });
-        } else if (isDmeFlow && biResult === 'no_coverage') {
+        } else if (isCoverageFlow && biResult === 'no_coverage') {
           // CoA_Coverage Scenario 3 — neither benefit covered. The generic
           // 'no_coverage' copy below assumes a non-formulary Prior
           // Authorization submission, which doesn't apply here either.
@@ -505,7 +505,7 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             ...base,
             subject: `No Coverage Found - ${patientName}`,
             bodyParagraphs: [
-              `Benefits investigation found no coverage for ${patientName}'s DME (CGM sensor) under either the pharmacy or medical benefit.`,
+              `Benefits investigation found no coverage for ${patientName}'s CGM sensor under either the pharmacy or medical benefit.`,
               `The patient has been offered a cash-pay option. No Prior Authorization task will open on this case.`,
             ],
             linkedItemId: LIVE_CASE_ID,
@@ -540,12 +540,12 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         break;
 
       // CoA_Coverage only — CoAssist hands the case to Advanced Diabetes Supply,
-      // the outside DME provider, once medical-benefit coverage is
-      // confirmed. This flow's terminal event (see workflows/coaDme.ts).
+      // the outside provider, once medical-benefit coverage is
+      // confirmed. This flow's terminal event (see workflows/coassist/).
       case 'NOTIFY_PROVIDER_TRANSFER':
         emails.push({
           ...base,
-          subject: `DME Provider Transfer Notified - ${patientName}`,
+          subject: `Provider Transfer Notified - ${patientName}`,
           bodyParagraphs: [
             `${patientName}'s case has been transferred to ${ADVANCED_DIABETES_SUPPLY_FACTS.name} for fulfillment, now that medical-benefit coverage is confirmed.`,
             `${ADVANCED_DIABETES_SUPPLY_FACTS.name} will contact the patient directly to complete the order (${ADVANCED_DIABETES_SUPPLY_FACTS.contactPhone}). No further action is needed on this case.`,
@@ -558,14 +558,14 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
       // CoA_Coverage Scenario 3 only — the cash-offer SMS beat (see
       // engine/types.ts's cashOfferSmsSent). CoA_Coverage Scenario 1 no longer has
       // an equivalent automatic SMS of its own — it now submits a real PA
-      // instead (see coaDme.ts's header comment and the COMPLETE_BI case
+      // instead (see workflows/coassist/'s header comment and the COMPLETE_BI case
       // above), so there's no SEND_PHARMACY_SMS sibling here anymore.
       case 'SEND_CASH_OFFER_SMS':
         emails.push({
           ...base,
           subject: `Cash Pay Offer Notification Sent - ${patientName}`,
           bodyParagraphs: [
-            `AssistRx sent ${patientName} a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their DME (CGM sensor).`,
+            `AssistRx sent ${patientName} a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their CGM sensor.`,
             `No action is needed from you unless the patient reports an issue receiving it.`,
           ],
           linkedItemId: LIVE_CASE_ID,

@@ -7,7 +7,7 @@ import { menuPaths, routeFor, routedPaths, type ScreenMap } from "@/engine/workf
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COA_COMMERCIAL_TRANSFER_RECIPE as RECIPE } from "@/workflows/coassist/recipes";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
-import { COA_COPAY, COA_DME, COA_DTP } from "@/workflows/coassist/scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP } from "@/workflows/coassist/scenarios";
 import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 import { expectMatchesFixture } from "./harness";
 
@@ -30,10 +30,10 @@ const machine = createWorkflowMachine({
   defaultFlowType: "CoA_Copay",
   rules: COASSIST_RULES,
   forks: COASSIST_FORKS,
-  // DTP and DME stay, so the build-time scope check still finds every module some recipe lists.
-  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_Coverage: COA_DME },
+  // DTP and Coverage stay, so the build-time scope check still finds every module some recipe lists.
+  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_Coverage: COA_COVERAGE },
 });
-const screens: ScreenMap = { ...COASSIST_SCREENS, scenarioDefs: [COA_DTP, SCENARIO, COA_DME] };
+const screens: ScreenMap = { ...COASSIST_SCREENS, scenarioDefs: [COA_DTP, SCENARIO, COA_COVERAGE] };
 
 const PHARMACY = { name: "Test Pharmacy", address: "1 Main St", city: "Orlando", state: "FL", zip: "32801", phone: "(555) 555-0100" };
 const SCHEDULING_AND_PAYMENT = ["/delivery-address", "/delivery-date", "/delivery-payment", "/delivery-confirmation"];

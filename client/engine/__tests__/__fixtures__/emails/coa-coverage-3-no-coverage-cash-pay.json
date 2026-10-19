@@ -41,7 +41,7 @@
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "No Coverage Found - Test Patient",
     "bodyParagraphs": [
-      "Benefits investigation found no coverage for Test Patient's DME (CGM sensor) under either the pharmacy or medical benefit.",
+      "Benefits investigation found no coverage for Test Patient's CGM sensor under either the pharmacy or medical benefit.",
       "The patient has been offered a cash-pay option. No Prior Authorization task will open on this case."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
@@ -53,7 +53,7 @@
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "Cash Pay Offer Notification Sent - Test Patient",
     "bodyParagraphs": [
-      "AssistRx sent Test Patient a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their DME (CGM sensor).",
+      "AssistRx sent Test Patient a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their CGM sensor.",
       "No action is needed from you unless the patient reports an issue receiving it."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",

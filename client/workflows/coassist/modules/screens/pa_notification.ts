@@ -16,23 +16,23 @@ export const PA_NOTIFICATION_ROUTES: CoaRoute[] = [
     scope: PRICING_JOURNEY,
     when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
   },
-  // DME, pharmacy covered: wait for the PA, then SMS and OTP again.
+  // Coverage, pharmacy covered: wait for the PA, then SMS and OTP again.
   {
-    id: "pa_notification.dme_waiting_for_pa",
+    id: "pa_notification.coverage_waiting_for_pa",
     slot: "pa_notice",
     path: "/",
     scope: TRANSFER_JOURNEY,
     when: (d) => d.pharmacyBenefitStatus === "covered" && (d.paStatus === "none" || d.paStatus === "submitted"),
   },
   {
-    id: "pa_notification.dme_sms",
+    id: "pa_notification.coverage_sms",
     slot: "pa_notice",
     path: "/pa-approved-sms",
     scope: TRANSFER_JOURNEY,
     when: (d) => d.pharmacyBenefitStatus === "covered" && d.paStatus === "approved" && !d.paApprovedSmsVerified,
   },
   {
-    id: "pa_notification.dme_otp",
+    id: "pa_notification.coverage_otp",
     slot: "pa_notice",
     path: "/pa-approved-otp",
     scope: TRANSFER_JOURNEY,

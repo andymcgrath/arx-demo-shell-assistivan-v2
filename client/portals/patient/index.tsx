@@ -75,10 +75,10 @@ import PesPapTerms from "./pages/PesPapTerms";
 import PesConfirmation from "./pages/PesConfirmation";
 import InfusionDate from "./pages/InfusionDate";
 import AppointmentConfirmation from "./pages/AppointmentConfirmation";
-import DmeProviderTransfer from "./pages/DmeProviderTransfer";
+import ProviderTransfer from "./pages/ProviderTransfer";
 import PharmacyTransfer from "./pages/PharmacyTransfer";
 import CashOfferSms from "./pages/CashOfferSms";
-import DmeTransferSms from "./pages/DmeTransferSms";
+import ProviderTransferSms from "./pages/ProviderTransferSms";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 
@@ -167,7 +167,7 @@ function PatientRoutes() {
   // list originally, which is why it rendered sandwiched between the white
   // Header/Footer instead of full-screen black like every other SMS-bubble
   // screen (AppointmentConfirmation.tsx).
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation" && pathname !== "/cash-offer-sms" && pathname !== "/dme-transfer-sms";
+  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation" && pathname !== "/cash-offer-sms" && pathname !== "/provider-transfer-sms";
 
   return (
     <div className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
@@ -216,10 +216,10 @@ function PatientRoutes() {
           <Route path="/pes-confirmation"       element={<PesConfirmation />} />
           <Route path="/infusion-date"          element={<InfusionDate />} />
           <Route path="/appointment-confirmation" element={<AppointmentConfirmation />} />
-          <Route path="/dme-provider-transfer"    element={<DmeProviderTransfer />} />
+          <Route path="/provider-transfer"    element={<ProviderTransfer />} />
           <Route path="/pharmacy-transfer"        element={<PharmacyTransfer />} />
           <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
-          <Route path="/dme-transfer-sms"         element={<DmeTransferSms />} />
+          <Route path="/provider-transfer-sms"         element={<ProviderTransferSms />} />
           <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />
           <Route path="/pharmacy-selection-confirmation" element={<PharmacySelectionConfirmation />} />
         </Routes>

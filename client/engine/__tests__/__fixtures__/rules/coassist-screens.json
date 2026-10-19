@@ -280,27 +280,27 @@
         "enrollment.sms -> /sms-message",
         "enrollment.otp -> /otp-verification",
         "enrollment.confirm_details -> /confirm-details",
-        "enrollment.dme_waiting_for_bi -> /",
-        "provider_transfer.dme_waiting -> /",
-        "provider_transfer.dme_sms -> /dme-transfer-sms",
-        "provider_transfer.dme_transfer -> /dme-provider-transfer",
-        "pa_notification.dme_waiting_for_pa -> /",
-        "pa_notification.dme_sms -> /pa-approved-sms",
-        "pa_notification.dme_otp -> /pa-approved-otp",
-        "pharmacy_selection.dme_transfer -> /pharmacy-transfer",
-        "pharmacy_selection.dme_network -> /network-pharmacy-selection",
-        "cash_offer.dme_waiting_for_sms -> /",
-        "cash_offer.dme_sms -> /cash-offer-sms",
-        "cash_offer.dme_no_coverage -> /pa-denied",
-        "scheduling.dme_address -> /delivery-address",
-        "scheduling.dme_date -> /delivery-date",
-        "payment.dme_delivery_payment -> /delivery-payment",
-        "tracking.dme_pharmacy_covered -> /order-tracker",
-        "tracking.dme_order_confirmed -> /enrollment-complete",
-        "tracking.dme_processing -> /order-tracker",
-        "tracking.dme_shipped -> /order-shipped",
-        "tracking.dme_delivered -> /order-tracker",
-        "enrollment.dme_fallback -> /enrollment-complete"
+        "enrollment.coverage_waiting_for_bi -> /",
+        "provider_transfer.coverage_waiting -> /",
+        "provider_transfer.coverage_sms -> /provider-transfer-sms",
+        "provider_transfer.coverage_transfer -> /provider-transfer",
+        "pa_notification.coverage_waiting_for_pa -> /",
+        "pa_notification.coverage_sms -> /pa-approved-sms",
+        "pa_notification.coverage_otp -> /pa-approved-otp",
+        "pharmacy_selection.coverage_transfer -> /pharmacy-transfer",
+        "pharmacy_selection.coverage_network -> /network-pharmacy-selection",
+        "cash_offer.coverage_waiting_for_sms -> /",
+        "cash_offer.coverage_sms -> /cash-offer-sms",
+        "cash_offer.coverage_no_coverage -> /pa-denied",
+        "scheduling.coverage_address -> /delivery-address",
+        "scheduling.coverage_date -> /delivery-date",
+        "payment.coverage_delivery_payment -> /delivery-payment",
+        "tracking.coverage_pharmacy_covered -> /order-tracker",
+        "tracking.coverage_order_confirmed -> /enrollment-complete",
+        "tracking.coverage_processing -> /order-tracker",
+        "tracking.coverage_shipped -> /order-shipped",
+        "tracking.coverage_delivered -> /order-tracker",
+        "enrollment.coverage_fallback -> /enrollment-complete"
       ],
       "menu": [
         {
@@ -376,11 +376,11 @@
           "items": [
             {
               "label": "Transfer SMS",
-              "path": "/dme-transfer-sms"
+              "path": "/provider-transfer-sms"
             },
             {
-              "label": "DME Provider Transfer",
-              "path": "/dme-provider-transfer"
+              "label": "Provider Transfer",
+              "path": "/provider-transfer"
             },
             {
               "label": "Pharmacy Transfer",
@@ -429,7 +429,7 @@
         "/pa-approved-otp",
         "/network-pharmacy-selection",
         "/pharmacy-selection-confirmation",
-        "/dme-provider-transfer",
+        "/provider-transfer",
         "/pharmacy-transfer",
         "/delivery-address",
         "/delivery-date",

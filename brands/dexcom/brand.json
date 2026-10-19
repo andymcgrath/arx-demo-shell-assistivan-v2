@@ -16,7 +16,7 @@
       "id": "coa-coverage-covered-by-both",
       "flow": "CoA_Coverage",
       "label": "Coverage: Covered by Both",
-      "description": "The medical benefit covers it. The case transfers to an outside DME provider.",
+      "description": "The medical benefit covers it. The case transfers to an outside provider.",
       "choices": {
         "bi": "medical_covered"
       }

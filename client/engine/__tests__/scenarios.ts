@@ -35,8 +35,8 @@ export const END_STATES = {
   delivered: (d: WorkflowData) => d.pharmacyStatus === "delivered",
   /** The PA was denied and the scenario stops there. */
   pa_denied: (d: WorkflowData) => d.paStatus === "denied" && d.pharmacyStatus === "none",
-  /** The Rx went to the DME provider, and the patient verified the transfer SMS. */
-  provider_transferred: (d: WorkflowData) => d.dmeProviderTransferStatus === "notified" && d.dmeTransferSmsVerified,
+  /** The Rx went to the provider, and the patient verified the transfer SMS. */
+  provider_transferred: (d: WorkflowData) => d.providerTransferStatus === "notified" && d.providerTransferSmsVerified,
 } as const;
 
 export type EndState = keyof typeof END_STATES;
@@ -186,7 +186,7 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 
-  // ── CoAssist: DME (three BI outcomes) ───────────────────────────────
+  // ── CoAssist: Coverage (three BI outcomes) ───────────────────────────────
   {
     name: "coa-coverage-1-pharmacy-covered",
 
@@ -222,7 +222,7 @@ export const SCENARIOS: Scenario[] = [
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" },
-      { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_DME_TRANSFER_SMS" },
+      { type: "NOTIFY_PROVIDER_TRANSFER" }, { type: "VERIFY_PROVIDER_TRANSFER_SMS" },
     ],
   },
   {

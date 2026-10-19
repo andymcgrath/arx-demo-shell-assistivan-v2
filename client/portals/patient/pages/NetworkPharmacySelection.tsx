@@ -18,7 +18,7 @@ import type { Pharmacy } from "@/engine/types";
  * Retail-vs-Mail-Order choice either (there's only one list to pick from),
  * and no Copay Program upsell.
  *
- * Selecting a card dispatches SELECT_PHARMACY, which (from coaDme.ts's
+ * Selecting a card dispatches SELECT_PHARMACY, which (from workflows/coassist/'s
  * pharmacySmsVerified state) both assigns the pharmacy AND sets
  * pricingOption to "retail" in one action — joining pricingSelected so this
  * outcome gets CoA_Copay's Retail treatment from here on. Then navigates to

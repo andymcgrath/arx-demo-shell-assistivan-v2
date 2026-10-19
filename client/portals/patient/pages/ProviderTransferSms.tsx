@@ -5,28 +5,28 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 
 // CoA_Coverage Scenario 2 only — both benefits covered (medical always wins).
 // Mirrors PharmacyCoverageSms.tsx/CashOfferSms.tsx's exact shape (same
-// second, later SMS milestone pattern — dmeTransferSmsSent/
-// dmeTransferSmsVerified in engine/types.ts), except this one is sent as
-// part of CRM's own NOTIFY_PROVIDER_TRANSFER action (see coaDme.ts's
+// second, later SMS milestone pattern — providerTransferSmsSent/
+// providerTransferSmsVerified in engine/types.ts), except this one is sent as
+// part of CRM's own NOTIFY_PROVIDER_TRANSFER action (see workflows/coassist/'s
 // biComplete state) rather than automatically — transferring the case to
-// an outside DME provider (Advanced Diabetes Supply) stays a deliberate
+// an outside provider (Advanced Diabetes Supply) stays a deliberate
 // CRM hand-off, unlike Scenario 1/3's fully automatic SMS. Single
 // tap-through, no OTP step, straight into the terminal
-// /dme-provider-transfer screen.
+// /provider-transfer screen.
 //
-// /dme-transfer-sms is NOT in patient/index.tsx's DELIVERY_FLOW_PATHS —
+// /provider-transfer-sms is NOT in patient/index.tsx's DELIVERY_FLOW_PATHS —
 // same reasoning as the other two SMS screens: derivePatientRoute
 // (WorkflowEngine.ts) already targets this route directly once
-// dmeProviderTransferStatus is "notified" and dmeTransferSmsVerified isn't
+// providerTransferStatus is "notified" and providerTransferSmsVerified isn't
 // yet, so StateDrivenNav landing here on its own is the correct, current
 // behavior, not a stale bounce to guard against.
-export default function DmeTransferSms() {
+export default function ProviderTransferSms() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
 
   const handleTapMessage = () => {
-    dispatch("VERIFY_DME_TRANSFER_SMS", { portal: "patient" });
-    navigate("/dme-provider-transfer");
+    dispatch("VERIFY_PROVIDER_TRANSFER_SMS", { portal: "patient" });
+    navigate("/provider-transfer");
   };
 
   return (

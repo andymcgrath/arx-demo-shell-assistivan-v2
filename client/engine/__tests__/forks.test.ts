@@ -17,7 +17,7 @@ const enrollThroughBiRunning = (actor: ReturnType<typeof startFlow>) => {
   for (const type of IDENTITY) actor.send({ type } as any);
 };
 
-describe("DME pharmacy transfer branch", () => {
+describe("Coverage pharmacy transfer branch", () => {
   const start = () => {
     const actor = startFlow("CoA_Coverage", { choices: { bi: "pharmacy_transfer" } });
     enrollThroughBiRunning(actor);
@@ -54,7 +54,7 @@ describe("DME pharmacy transfer branch", () => {
   });
 });
 
-describe("DME benefits investigation fork", () => {
+describe("Coverage benefits investigation fork", () => {
   it("starts on the story's default branch", () => {
     const actor = startFlow("CoA_Coverage");
     expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
@@ -228,7 +228,7 @@ describe("patient-chosen pricing forks on DTP and Copay", () => {
     expect(data(actor).pricingOption).toBeNull();
   });
 
-  it("gives DME no pricing fork", () => {
+  it("gives Coverage no pricing fork", () => {
     expect(forksForScenario(ALL_FORKS, "CoA_Coverage").some((f) => f.id === "pricing")).toBe(false);
   });
 });

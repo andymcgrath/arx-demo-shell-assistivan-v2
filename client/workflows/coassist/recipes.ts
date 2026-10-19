@@ -10,13 +10,13 @@ import type { ScenarioRecipe } from "@/engine/workflow/components";
  * `forks` names the forks the scenario passes through. Every CoAssist scenario passes through `bi` and `pa`.
  * DTP and Copay add the patient's `pricing` pick, and Copay adds the `copay` enrollment. The patient picks those live,
  * so `choices` does not pin them.
- * `choices` pins the branch the story walks. DME pins `pa` to `approved`: its rules do not handle a denial yet.
+ * `choices` pins the branch the story walks. Coverage pins `pa` to `approved`: its rules do not handle a denial yet.
  * `payment.method` is left out where the patient picks live (DTP and Copay today).
  *
  * Rules read these props to decide where they apply (a rule's `scope`, see engine/workflow/scope.ts):
  * - `cash_offer` has two variants. `pa_denied` is the cash offer after a denied PA (DTP and Copay). `sms` is the
- *   cash-offer SMS when neither benefit covers (DME).
- * - `pharmacy_selection` has two variants. `store` is the patient's retail store pick (Copay). `network` is DME's
+ *   cash-offer SMS when neither benefit covers (Coverage).
+ * - `pharmacy_selection` has two variants. `store` is the patient's retail store pick (Copay). `network` is Coverage's
  *   one-tap network pharmacy pick.
  */
 
@@ -50,8 +50,8 @@ export const COA_COPAY_RECIPE: ScenarioRecipe = {
   ],
 };
 
-/** DME never offers Retail or Mail Order. The `bi` fork picks the branch. */
-export const COA_DME_RECIPE: ScenarioRecipe = {
+/** Coverage never offers Retail or Mail Order. The `bi` fork picks the branch. */
+export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa"],
   choices: { bi: "pharmacy_covered", pa: "approved" },
@@ -90,5 +90,5 @@ export const COA_COMMERCIAL_TRANSFER_RECIPE: ScenarioRecipe = {
 export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,
-  CoA_Coverage: COA_DME_RECIPE,
+  CoA_Coverage: COA_COVERAGE_RECIPE,
 } as const;

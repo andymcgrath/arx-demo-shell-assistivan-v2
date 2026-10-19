@@ -15,7 +15,7 @@ export const COASSIST_SLOTS = [
   "gate",
   /** The patient waits for BI, then for the PA decision. */
   "awaiting",
-  /** Medical benefit covered: the Rx goes to the DME provider. */
+  /** Medical benefit covered: the Rx goes to the provider. */
   "transfer",
   /** PA approved: SMS and OTP again. */
   "pa_notice",

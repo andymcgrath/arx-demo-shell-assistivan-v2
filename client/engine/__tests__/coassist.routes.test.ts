@@ -37,7 +37,7 @@ const COVERAGE = [
 const EVENTS: { type: string; [k: string]: unknown }[] = [
   ...[
     "REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT", "RUN_BI", "SUBMIT_PA", "APPROVE_PA", "DENY_PA",
-    "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP", "NOTIFY_PROVIDER_TRANSFER", "VERIFY_DME_TRANSFER_SMS",
+    "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP", "NOTIFY_PROVIDER_TRANSFER", "VERIFY_PROVIDER_TRANSFER_SMS",
     "VERIFY_CASH_OFFER_SMS", "SELECT_SELF_PAY", "SEND_CASH_OFFER", "PATIENT_PAYS", "VERIFY_PAYMENT",
     "PATIENT_SETS_ADDRESS", "PATIENT_SELECTS_SHIP_DATE", "FILL_RX", "READY_RX", "SHIP_RX", "DELIVER_RX",
   ].map((type) => ({ type })),
@@ -45,7 +45,7 @@ const EVENTS: { type: string; [k: string]: unknown }[] = [
   { type: "COMPLETE_BI", result: "coverage_found" },
   { type: "COMPLETE_BI", result: "no_coverage" },
   ...COVERAGE.map((c) => ({ type: "COMPLETE_BI", ...c })),
-  ...["BI", "PA", "DME_TRANSFER"].flatMap((stage) => [
+  ...["BI", "PA", "PROVIDER_TRANSFER"].flatMap((stage) => [
     { type: "VIEW_STAGE", stage },
     { type: "LEAVE_STAGE", stage },
   ]),
@@ -102,7 +102,7 @@ describe("CoAssist route equivalence", () => {
 
       for (let walk = 0; walk < WALKS; walk++) {
         const rand = mulberry32(walk * 7919 + FLOWS.indexOf(flow) + 1);
-        // Pin a random exit at about half the forks, so DTP, Copay, and DME each reach their branches.
+        // Pin a random exit at about half the forks, so DTP, Copay, and Coverage each reach their branches.
         const choices: Record<string, string> = {};
         for (const fork of forks) if (rand() < 0.5) choices[fork.id] = fork.exits[Math.floor(rand() * fork.exits.length)].id;
 

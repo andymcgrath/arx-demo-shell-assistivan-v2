@@ -32,9 +32,9 @@ export const ENROLLMENT_ROUTES: CoaRoute[] = [
     scope: PRICING_JOURNEY,
     when: (d) => d.consentStatus === "confirmed" && d.biStatus === "complete" && (d.paStatus === "none" || d.paStatus === "submitted"),
   },
-  // DME waits on Home, not /enrollment-complete: that screen is a one-time confirmation.
-  { id: "enrollment.dme_waiting_for_bi", slot: "awaiting", path: "/", scope: TRANSFER_JOURNEY, when: (d) => d.biStatus !== "complete" },
+  // Coverage waits on Home, not /enrollment-complete: that screen is a one-time confirmation.
+  { id: "enrollment.coverage_waiting_for_bi", slot: "awaiting", path: "/", scope: TRANSFER_JOURNEY, when: (d) => d.biStatus !== "complete" },
 
   // BI complete but neither benefit is set. COMPLETE_BI always sets both, so this should not happen.
-  { id: "enrollment.dme_fallback", slot: "fallback", path: "/enrollment-complete", scope: TRANSFER_JOURNEY },
+  { id: "enrollment.coverage_fallback", slot: "fallback", path: "/enrollment-complete", scope: TRANSFER_JOURNEY },
 ];

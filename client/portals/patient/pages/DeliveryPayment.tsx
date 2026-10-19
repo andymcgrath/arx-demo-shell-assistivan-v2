@@ -14,20 +14,20 @@ const TOTAL = LIST_PRICE - DISCOUNT;
 // price; self_pay reflects the reduced Copay Program price unlocked at
 // enrollment (/copay-enroll), not the "list" self-pay rate.
 //
-// CoA_Coverage's own Scenario 3 (neither benefit covered — see coaDme.ts) also
+// CoA_Coverage's own Scenario 3 (neither benefit covered — see workflows/coassist/) also
 // sets pricingOption to "self_pay", but it's a flat cash-pay price for the
 // CGM sensor, not the Copay Program's discounted monthly rate — this table
 // alone can't tell the two apart since they share the same key, so
-// DME_SELF_PAY_PRICE below overrides it specifically for isDmeFlow.
+// COVERAGE_SELF_PAY_PRICE below overrides it specifically for isCoverageFlow.
 const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
   retail: { price: 50, cadence: "" },
   mail_order: { price: 100, cadence: "" },
   self_pay: { price: 25, cadence: "/month" },
 };
 
-// CoA_Coverage Scenario 3 only — confirmed cash price for the DME (CGM sensor),
+// CoA_Coverage Scenario 3 only — confirmed cash price for the CGM sensor,
 // flat, no monthly cadence (unlike Copay's self_pay above).
-const DME_SELF_PAY_PRICE = { price: 149.99, cadence: "" };
+const COVERAGE_SELF_PAY_PRICE = { price: 149.99, cadence: "" };
 
 // Supply duration also depends on the pricing option picked on Benefit
 // Pricing (see BenefitPricing.tsx's PRICING_OPTIONS: Retail is a 30-day
@@ -47,15 +47,15 @@ export default function DeliveryPayment() {
   const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   const isIAssist = flowType === "iAssist_PA_Approved";
   // CoA_Coverage only reaches this screen for its own self-pay scenario (Scenario
-  // 3 — neither benefit covered, see workflows/coaDme.ts) — display-only
+  // 3 — neither benefit covered, see workflows/coassist/) — display-only
   // addition, doesn't change completePayment()'s dispatch logic below, which
   // already fires PATIENT_PAYS/VERIFY_PAYMENT unconditionally for this flow
   // via the generic (!isCoA && !isIAssist) branch.
-  const isDmeFlow = flowType === "CoA_Coverage";
+  const isCoverageFlow = flowType === "CoA_Coverage";
   // iAssist replicates CoA's exact pricing display (Total due today card)
   // instead of WF1's List Price/Discount breakdown, since iAssist now also
   // sets pricingOption via Benefit Pricing.
-  const usesCoaPricingDisplay = isCoA || isIAssist || isDmeFlow;
+  const usesCoaPricingDisplay = isCoA || isIAssist || isCoverageFlow;
   const { data: patient } = usePatientCase();
 
   useEffect(() => {
@@ -98,8 +98,8 @@ export default function DeliveryPayment() {
   const [breakdown, setBreakdown] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
 
-  const coaPricing = isDmeFlow && workflowData.pricingOption === "self_pay"
-    ? DME_SELF_PAY_PRICE
+  const coaPricing = isCoverageFlow && workflowData.pricingOption === "self_pay"
+    ? COVERAGE_SELF_PAY_PRICE
     : COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
   const cardTotalLabel = usesCoaPricingDisplay ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);
 

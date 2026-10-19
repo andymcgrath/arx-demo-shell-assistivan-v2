@@ -10,7 +10,7 @@ This document reflects the current architecture. An earlier revision described a
 
 **Where:** `client/engine/workflowMachine.ts`, plus one module per newer workflow in `client/workflows/`:
 
-- `coassist/` (CoA_DTP, CoA_Copay, CoA_Coverage) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `coaDme.ts` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
+- `coassist/` (CoA_DTP, CoA_Copay, CoA_Coverage) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `workflows/coassist/` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
 - `iAssist.ts` — iAssist_PA_Approved
 - `iAssistPap.ts` — iAssist_PAP
 - `presPap.ts` — PrES_PAP
@@ -39,7 +39,7 @@ interface MachineContext {
 ```
 
 **Auto-advance timers (correction, 17 Oct 2026):** these do NOT live in the machines. No machine defines an `after` transition. The timers are `setTimeout` calls in React effects, mainly `client/portals/crm/pages/Index.tsx`:
-- BI completes 3 seconds after the agent opens the BI tab (and picks the BI result, including the DME scenario)
+- BI completes 3 seconds after the agent opens the BI tab (and picks the BI result, including the Coverage scenario)
 - PA resolves 3 seconds after the agent opens the PA tab (approve, or deny for `iAssist_PAP`)
 - Appeal is filed 2.5 seconds after PA denial when the Rules portal appeal rule is active
 

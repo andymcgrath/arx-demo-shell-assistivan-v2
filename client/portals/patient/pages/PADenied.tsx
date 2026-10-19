@@ -14,16 +14,16 @@ export default function PADenied() {
   const flowType = workflowData.flowType;
   const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
   // CoA_Coverage Scenario 3 only (neither pharmacy nor medical benefit covered —
-  // see workflows/coaDme.ts and WorkflowEngine.ts's derivePatientRoute).
+  // see workflows/coassist/ and WorkflowEngine.ts's derivePatientRoute).
   // This flow never submits a Prior Authorization at all, so it gets its own
   // copy below instead of isCoA's "insurance denied coverage" messaging,
   // which would incorrectly reference a PA denial that never happened. Its
-  // CTA dispatches SELECT_SELF_PAY (added to coaDme.ts's biComplete state)
+  // CTA dispatches SELECT_SELF_PAY (added to workflows/coassist/'s biComplete state)
   // instead of navigating straight to /delivery-payment — SELECT_SELF_PAY
   // joins the same pricingSelected state Scenario 1 uses, which needs an
   // address before payment (see derivePatientRoute's CoA_Coverage branch), so
   // this navigates to /delivery-address, not /delivery-payment.
-  const isDmeFlow = flowType === 'CoA_Coverage';
+  const isCoverageFlow = flowType === 'CoA_Coverage';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
   // workflows/iassist/rules.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other
@@ -47,7 +47,7 @@ export default function PADenied() {
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Denied card */}
-          {isDmeFlow ? (
+          {isCoverageFlow ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
@@ -179,7 +179,7 @@ export default function PADenied() {
           </div>
 
           {/* Prescriptions section - hidden for CoA and CoA_Coverage */}
-          {!isCoA && !isDmeFlow && (
+          {!isCoA && !isCoverageFlow && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ export default function PADenied() {
           )}
 
           {/* Suggested section - hidden for CoA and CoA_Coverage */}
-          {!isCoA && !isDmeFlow && (
+          {!isCoA && !isCoverageFlow && (
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />

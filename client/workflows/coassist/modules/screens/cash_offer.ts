@@ -1,9 +1,9 @@
 /**
  * Cash offer. Two variants (see recipes.ts): `pa_denied` is the offer after a denied PA (DTP, Copay). `sms` is the
- * cash-offer SMS when neither benefit covers (DME).
+ * cash-offer SMS when neither benefit covers (Coverage).
  */
 import type { Screen } from "@/engine/workflow/screens";
-import { dmeNeitherCovered } from "../shared";
+import { neitherCovered } from "../shared";
 import type { CoaRoute } from "../slots";
 
 const PA_DENIED = { module: "cash_offer", props: { variant: "pa_denied" } } as const;
@@ -20,7 +20,7 @@ export const CASH_OFFER_ROUTES: CoaRoute[] = [
   { id: "cash_offer.pa_denied", slot: "cash_offer", path: "/pa-denied", scope: PA_DENIED, when: (d) => d.paStatus === "denied" && d.cashOfferStatus === "none" },
 
   // Neither covered. The SMS flips to sent in the same step BI completes. Until then, home.
-  { id: "cash_offer.dme_waiting_for_sms", slot: "cash_offer", path: "/", scope: SMS, when: (d) => dmeNeitherCovered(d) && !d.cashOfferSmsSent },
-  { id: "cash_offer.dme_sms", slot: "cash_offer", path: "/cash-offer-sms", scope: SMS, when: (d) => dmeNeitherCovered(d) && !d.cashOfferSmsVerified },
-  { id: "cash_offer.dme_no_coverage", slot: "cash_offer", path: "/pa-denied", scope: SMS, when: (d) => dmeNeitherCovered(d) && d.pricingOption === null },
+  { id: "cash_offer.coverage_waiting_for_sms", slot: "cash_offer", path: "/", scope: SMS, when: (d) => neitherCovered(d) && !d.cashOfferSmsSent },
+  { id: "cash_offer.coverage_sms", slot: "cash_offer", path: "/cash-offer-sms", scope: SMS, when: (d) => neitherCovered(d) && !d.cashOfferSmsVerified },
+  { id: "cash_offer.coverage_no_coverage", slot: "cash_offer", path: "/pa-denied", scope: SMS, when: (d) => neitherCovered(d) && d.pricingOption === null },
 ];

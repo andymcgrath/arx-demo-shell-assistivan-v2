@@ -41,7 +41,7 @@
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "Pharmacy Benefit Coverage Confirmed - Test Patient",
     "bodyParagraphs": [
-      "Benefits investigation confirmed Test Patient's DME (CGM sensor) is covered under their pharmacy benefit.",
+      "Benefits investigation confirmed Test Patient's CGM sensor is covered under their pharmacy benefit.",
       "A Prior Authorization is being submitted automatically; once approved, the patient will be notified to pick a network pharmacy."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",

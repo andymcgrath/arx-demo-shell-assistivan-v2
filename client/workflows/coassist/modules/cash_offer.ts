@@ -1,11 +1,11 @@
 /**
- * Cash offer: a denied PA gets a cash offer (DTP and Copay), and no coverage gets a cash-offer SMS (DME).
+ * Cash offer: a denied PA gets a cash offer (DTP and Copay), and no coverage gets a cash-offer SMS (Coverage).
  */
 import type { CoaRule } from "./shared";
 
 export const CASH_OFFER_RULES: CoaRule[] = [
   {
-    // DME has no denial branch: the PA is a formality.
+    // Coverage has no denial branch: the PA is a formality.
     id: "cash_offer.deny_pa",
     on: "DENY_PA",
     scope: { module: "cash_offer", props: { variant: "pa_denied" } },
@@ -22,8 +22,8 @@ export const CASH_OFFER_RULES: CoaRule[] = [
     emit: { portal: "patient", step: 9 },
   },
   {
-    // DME: cash pay after the cash-offer SMS.
-    id: "cash_offer.select_self_pay.dme",
+    // Coverage: cash pay after the cash-offer SMS.
+    id: "cash_offer.select_self_pay.coverage",
     on: "SELECT_SELF_PAY",
     scope: { module: "cash_offer", props: { variant: "sms" } },
     when: (d) => d.cashOfferSmsVerified && d.pricingOption === null,

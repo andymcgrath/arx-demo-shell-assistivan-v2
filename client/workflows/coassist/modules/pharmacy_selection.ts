@@ -1,13 +1,13 @@
 /**
- * Pharmacy selection: DME's one-tap network pick must come before the generic pick. The first matching rule wins.
+ * Pharmacy selection: Coverage's one-tap network pick must come before the generic pick. The first matching rule wins.
  */
 import type { CoaRule } from "./shared";
 import { inFulfillmentTail } from "./shared";
 
 export const PHARMACY_SELECTION_RULES: CoaRule[] = [
   {
-    // DME: one tap picks a network pharmacy and sets pricing in the same action. Must come before the generic SELECT_PHARMACY.
-    id: "pharmacy_selection.select_pharmacy.dme",
+    // Coverage: one tap picks a network pharmacy and sets pricing in the same action. Must come before the generic SELECT_PHARMACY.
+    id: "pharmacy_selection.select_pharmacy.coverage",
     on: "SELECT_PHARMACY",
     scope: { module: "pharmacy_selection", props: { variant: "network" } },
     when: (d) => d.paApprovedOtpVerified && d.pricingOption === null,

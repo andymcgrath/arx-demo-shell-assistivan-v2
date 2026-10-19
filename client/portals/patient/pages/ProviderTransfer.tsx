@@ -6,9 +6,9 @@ import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
 // (full-bleed primary-color card, checkmark banner), but has nothing left to
 // dispatch: this flow ends here, with CoAssist having already handed the
 // case to Advanced Diabetes Supply for fulfillment, so there's no "Got it"
-// button advancing the machine further (see workflows/coaDme.ts and
+// button advancing the machine further (see workflows/coassist/ and
 // WorkflowEngine.ts's derivePatientRoute — this is the real terminal route).
-export default function DmeProviderTransfer() {
+export default function ProviderTransfer() {
   return (
     <main className="flex-grow min-h-full flex items-center justify-center px-6 py-6 bg-arx-hero">
       <div className="text-center max-w-sm mx-auto">

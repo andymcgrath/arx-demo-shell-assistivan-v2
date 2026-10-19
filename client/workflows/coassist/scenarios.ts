@@ -1,7 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { BRAND } from "@/brand";
-import { COA_COPAY_RECIPE, COA_DME_RECIPE, COA_DTP_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -63,13 +63,13 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
   },
 };
 
-/** DME never offers Retail or Mail Order. The patient picks a network pharmacy, or pays cash through CoAssist's own. */
-export const COA_DME: ScenarioDefinition<CoassistContent> = {
+/** Coverage never offers Retail or Mail Order. The patient picks a network pharmacy, or pays cash through CoAssist's own. */
+export const COA_COVERAGE: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Coverage",
   intake: "erx",
   // The story: pharmacy coverage. A demo in the brand file can pick another branch.
   choices: { bi: "pharmacy_covered", pa: "approved" },
-  recipe: COA_DME_RECIPE,
+  recipe: COA_COVERAGE_RECIPE,
   content: {
     retail: COA_DTP.content.retail,
     mailOrder: MAIL_ORDER,

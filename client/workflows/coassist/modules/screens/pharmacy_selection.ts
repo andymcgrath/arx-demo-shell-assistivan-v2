@@ -1,4 +1,4 @@
-/** Pharmacy selection. `store` is the patient's retail pick (Copay). `network` is DME's one-tap network pharmacy. */
+/** Pharmacy selection. `store` is the patient's retail pick (Copay). `network` is Coverage's one-tap network pharmacy. */
 import type { Screen } from "@/engine/workflow/screens";
 import type { CoaRoute } from "../slots";
 
@@ -15,11 +15,11 @@ export const PHARMACY_SELECTION_SCREENS: Screen[] = [
 export const PHARMACY_SELECTION_ROUTES: CoaRoute[] = [
   // The scenario assigns the pharmacy: the patient goes from the OTP straight to the transfer confirmation.
   {
-    id: "pharmacy_selection.dme_transfer",
+    id: "pharmacy_selection.coverage_transfer",
     slot: "pharmacy",
     path: "/pharmacy-transfer",
     scope: NETWORK,
     when: (d) => d.pharmacyBenefitStatus === "covered" && d.pharmacyAssigned && d.paApprovedOtpVerified,
   },
-  { id: "pharmacy_selection.dme_network", slot: "pharmacy", path: "/network-pharmacy-selection", scope: NETWORK, when: (d) => d.pharmacyBenefitStatus === "covered" && d.pricingOption === null },
+  { id: "pharmacy_selection.coverage_network", slot: "pharmacy", path: "/network-pharmacy-selection", scope: NETWORK, when: (d) => d.pharmacyBenefitStatus === "covered" && d.pricingOption === null },
 ];

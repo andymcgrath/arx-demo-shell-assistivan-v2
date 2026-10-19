@@ -1,6 +1,6 @@
 /**
  * CoAssist rules: the transition table shared by CoA_DTP, CoA_Copay, and CoA_Coverage. Replaces three copied 700-line
- * machines (coaDtp, coaCopay, coaDme). Each module under ./modules owns its own rules. This file assembles them.
+ * machines (coaDtp, coaCopay, workflows/coassist). Each module under ./modules owns its own rules. This file assembles them.
  *
  * Reading a rule: `when` is the precondition on workflowData, `set` is what changes, `emit` is what lands in the
  * event log (which Field notification emails read). A rule with `scenarios` applies only to those scenarios.

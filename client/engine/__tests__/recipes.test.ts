@@ -52,7 +52,7 @@ describe("CoAssist recipes", () => {
     expect(COASSIST_RECIPES.CoA_Coverage.forks).not.toContain("pricing");
   });
 
-  it("DME pins the PA to approved", () => {
+  it("Coverage pins the PA to approved", () => {
     expect(COASSIST_RECIPES.CoA_Coverage.choices.pa).toBe("approved");
   });
 });

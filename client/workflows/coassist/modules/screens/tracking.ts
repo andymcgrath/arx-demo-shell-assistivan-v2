@@ -1,6 +1,6 @@
 /** Tracking: the order tracker, from confirmation to delivery. */
 import type { Screen } from "@/engine/workflow/screens";
-import { dmeNeitherCovered } from "../shared";
+import { neitherCovered } from "../shared";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 const SCOPE = { module: "tracking" } as const;
@@ -24,11 +24,11 @@ export const TRACKING_ROUTES: CoaRoute[] = [
   // The tracker already shows a finished "delivered" state.
   { id: "tracking.delivered", slot: "tracking", path: "/order-tracker", scope: PRICING_JOURNEY, when: (d) => d.pharmacyStatus === "delivered" },
 
-  // DME, pharmacy covered: the order ends at the tracker.
-  { id: "tracking.dme_pharmacy_covered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => d.pharmacyBenefitStatus === "covered" },
-  // DME, neither covered.
-  { id: "tracking.dme_order_confirmed", slot: "tracking", path: "/enrollment-complete", scope: TRANSFER_JOURNEY, when: (d) => dmeNeitherCovered(d) && d.pharmacyStatus === "none" },
-  { id: "tracking.dme_processing", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => dmeNeitherCovered(d) && (d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready") },
-  { id: "tracking.dme_shipped", slot: "tracking", path: "/order-shipped", scope: TRANSFER_JOURNEY, when: (d) => dmeNeitherCovered(d) && d.pharmacyStatus === "shipped" },
-  { id: "tracking.dme_delivered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => dmeNeitherCovered(d) },
+  // Coverage, pharmacy covered: the order ends at the tracker.
+  { id: "tracking.coverage_pharmacy_covered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => d.pharmacyBenefitStatus === "covered" },
+  // Coverage, neither covered.
+  { id: "tracking.coverage_order_confirmed", slot: "tracking", path: "/enrollment-complete", scope: TRANSFER_JOURNEY, when: (d) => neitherCovered(d) && d.pharmacyStatus === "none" },
+  { id: "tracking.coverage_processing", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => neitherCovered(d) && (d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready") },
+  { id: "tracking.coverage_shipped", slot: "tracking", path: "/order-shipped", scope: TRANSFER_JOURNEY, when: (d) => neitherCovered(d) && d.pharmacyStatus === "shipped" },
+  { id: "tracking.coverage_delivered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => neitherCovered(d) },
 ];

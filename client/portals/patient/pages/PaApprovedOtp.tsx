@@ -7,8 +7,8 @@ import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider"
  * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
  * iAssist.ts's updatePaApprovedOtpVerified). WF1 (Fax_QS_PA_Approved) never
  * routes here. CoA_Coverage Scenario 1 also routes here now (see PaApprovedSms.tsx
- * and coaDme.ts's paApprovedSmsVerified state) — fully generic UI, no
- * drug-specific copy, so the only DME-specific wrinkle is where "Continue"
+ * and workflows/coassist/'s paApprovedSmsVerified state) — fully generic UI, no
+ * drug-specific copy, so the only coverage-specific wrinkle is where "Continue"
  * sends the patient next (see validateAndSubmit below).
  *
  * A second identity check after PA approval, separate from the original
@@ -21,7 +21,7 @@ export default function PaApprovedOtp() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
+  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
 
   const [otpInput, setOtpInput] = useState("");
   const [error, setError] = useState("");
@@ -51,7 +51,7 @@ export default function PaApprovedOtp() {
   const validateAndSubmit = (code: string) => {
     if (code === correctOTP) {
       dispatch("VERIFY_PA_APPROVED_OTP", { portal: "patient" });
-      navigate(isDmeFlow ? "/network-pharmacy-selection" : "/benefit-pricing");
+      navigate(isCoverageFlow ? "/network-pharmacy-selection" : "/benefit-pricing");
     } else {
       setError("That code didn't match. Please try again or request a new one.");
       setOtpInput("");

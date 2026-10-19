@@ -25,7 +25,7 @@ export const ENROLL_AND_VERIFY: StageEvent[] = [
 ];
 
 /** The pharmacy a stage jump picks for the patient. */
-const DME_DEFAULT_PHARMACY = {
+const COVERAGE_DEFAULT_PHARMACY = {
   name: "CVS Pharmacy #3795",
   address: "210 N Orange Ave",
   city: "Orlando",
@@ -114,7 +114,7 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
             ev("APPROVE_PA", "crm"),
             ev("VERIFY_PA_APPROVED_SMS", "patient"),
             ev("VERIFY_PA_APPROVED_OTP", "patient"),
-            ev("SELECT_PHARMACY", "patient", { pharmacy: DME_DEFAULT_PHARMACY }),
+            ev("SELECT_PHARMACY", "patient", { pharmacy: COVERAGE_DEFAULT_PHARMACY }),
           ],
         },
         ...fulfillment("Rx Processing"),
@@ -128,9 +128,9 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
         },
       ],
       medical_covered: [
-        { label: "Medical Coverage Confirmed (transfer to DME provider)", events: [completeBi("covered", "covered")] },
-        { label: "DME Provider Notified", events: [ev("NOTIFY_PROVIDER_TRANSFER", "crm")] },
-        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_DME_TRANSFER_SMS", "patient")] },
+        { label: "Medical Coverage Confirmed (transfer to Provider)", events: [completeBi("covered", "covered")] },
+        { label: "Provider Notified", events: [ev("NOTIFY_PROVIDER_TRANSFER", "crm")] },
+        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PROVIDER_TRANSFER_SMS", "patient")] },
       ],
       no_coverage: [
         { label: "No Coverage Confirmed (cash offer SMS sent)", events: [completeBi("not_covered", "not_covered")] },
@@ -145,7 +145,7 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
 
 /**
  * The PA decision, the same fork for every CoAssist scenario. The story picks it, so the decision lands when the
- * agent opens the PA stage. DME declares it too and pins `approved`. Its rules do not handle a denial yet, so
+ * agent opens the PA stage. Coverage declares it too and pins `approved`. Its rules do not handle a denial yet, so
  * `denied` requires `cash_offer`. Step 2.4 gives that module the denial rules.
  */
 export const PA_FORK: ForkDefinition = {
@@ -171,7 +171,7 @@ export const PA_FORK: ForkDefinition = {
  * What the patient picks on the pricing screens. Exit ids match `pricingOption`, so no read site changes.
  * The patient's pick is read from the data (`picked`), not stored in `choices`: `choices` survives RESET.
  * The pharmacy each exit names comes from scenario content (rules.ts), because exit data is static.
- * DME has no patient pick here. Its pricing follows the BI exit.
+ * Coverage has no patient pick here. Its pricing follows the BI exit.
  */
 export const DTP_PRICING_FORK: ForkDefinition = {
   id: "pricing",
@@ -236,7 +236,7 @@ export const COASSIST_FORKS: ForkDefinition[] = [
 export const pricingPinNeedsConfirm = (d: { flowType: FlowType; choices?: Record<string, string> }): boolean =>
   !!pricingForkFor(d.flowType)?.exits.find((e) => e.id === d.choices?.pricing)?.confirm;
 
-/** The pricing fork that applies to a scenario, or undefined when it has none (DME). */
+/** The pricing fork that applies to a scenario, or undefined when it has none (Coverage). */
 export const pricingForkFor = (flowType: FlowType): ForkDefinition | undefined =>
   COASSIST_FORKS.find((f) => f.id === "pricing" && forkApplies(f, flowType));
 

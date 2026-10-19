@@ -1,7 +1,7 @@
 import { createWorkflowMachine } from "@/engine/workflow/createWorkflowMachine";
 import { COASSIST_FORKS } from "./forks";
 import { COASSIST_RULES } from "./rules";
-import { COA_COPAY, COA_DME, COA_DTP } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP } from "./scenarios";
 
 /** CoAssist: one machine for CoA_DTP, CoA_Copay, and CoA_Coverage. The scenario arrives as `input: { flowType }`. */
 export const coassistMachine = createWorkflowMachine({
@@ -12,6 +12,6 @@ export const coassistMachine = createWorkflowMachine({
   scenarios: {
     CoA_DTP: COA_DTP,
     CoA_Copay: COA_COPAY,
-    CoA_Coverage: COA_DME,
+    CoA_Coverage: COA_COVERAGE,
   },
 });

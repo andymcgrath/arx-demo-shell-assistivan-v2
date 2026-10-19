@@ -5,7 +5,7 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 // qualification), but captures identity/consent differently (provider
 // e-signature intake instead of WF2's fax referral). The real capture
 // mechanism/screens are still being designed — see
-// client/workflows/presPap.ts and the Provider/Patient placeholder pages
+// client/workflows/presPap.ts and the provider/Patient placeholder pages
 // referenced there for what's foundation-only today.
 // "iAssist_PAP" (WF5) — structural clone of WF4 (iAssist_PA_Approved): same
 // auto-BI/auto-PA-submission behavior, same portals (iAssist tab, no
@@ -19,15 +19,15 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 // Assistance Program" PAP used by Fax_PAP_Audit/PrES_PAP — don't assume it
 // shares any of that logic (papSmsSent/papStatus/incomeStatus etc. don't
 // apply here).
-// "CoA_Coverage" — DME (durable medical equipment, a Dexcom CGM sensor) coverage
+// "CoA_Coverage" — Medical-benefit coverage (durable medical equipment, a Dexcom CGM sensor) coverage
 // modeled as ONE Benefits Investigation with THREE possible outcomes, driven
 // by two granular fields (pharmacyBenefitStatus/medicalBenefitStatus below)
 // instead of a single scalar. Shares CoA_DTP's enrollment -> SMS/OTP ->
-// consent -> Benefits Investigation shape (see workflows/coaDme.ts):
+// consent -> Benefits Investigation shape (see workflows/coassist/):
 //   1. Pharmacy covered, medical not — patient picks Retail/Mail Order and
 //      ships through AssistRx's own pipeline, same as CoA_DTP, minus PA.
 //   2. Both covered (medical always wins) — CoAssist transfers the case to
-//      an outside DME provider (Advanced Diabetes Supply) who owns
+//      an outside provider (Advanced Diabetes Supply) who owns
 //      fulfillment from there; the demo ends at that transfer notification.
 //   3. Neither covered — patient is offered a cash-pay option, pays, and
 //      ships through the same pipeline as outcome 1.
@@ -124,18 +124,18 @@ export interface WorkflowData {
    *  shipping through a pharmacy. Null until the patient picks a date;
    *  stays null for every other flow. */
   infusionDate: string | null;
-  /** CoA_Coverage only: has CoAssist notified the outside DME provider (Advanced
+  /** CoA_Coverage only: has CoAssist notified the outside provider (Advanced
    *  Diabetes Supply) that the case is being transferred to them for
    *  fulfillment? 'notified' is this flow's terminal milestone — reached
    *  specifically when medicalBenefitStatus === 'covered' (regardless of
    *  pharmacyBenefitStatus — medical benefit always takes priority when
-   *  covered) and a CRM agent opens the DME Provider Transfer stage tab (see
-   *  coaDme.ts's NOTIFY_PROVIDER_TRANSFER and crm/pages/Index.tsx's
-   *  DME-14282 stage). Stays 'none' for every other flow. */
-  dmeProviderTransferStatus: 'none' | 'notified';
+   *  covered) and a CRM agent opens the Provider Transfer stage tab (see
+   *  workflows/coassist/'s NOTIFY_PROVIDER_TRANSFER and crm/pages/Index.tsx's
+   *  PT-14282 stage). Stays 'none' for every other flow. */
+  providerTransferStatus: 'none' | 'notified';
   /** CoA_Coverage only: the two Benefits Investigation outcomes driving this
    *  flow's 3 coverage scenarios (see engine/types.ts's FlowType comment and
-   *  workflows/coaDme.ts). 'none' until COMPLETE_BI fires; both become
+   *  workflows/coassist/). 'none' until COMPLETE_BI fires; both become
    *  'covered' or 'not_covered' together at that point. Stays 'none' for
    *  every other flow. */
   pharmacyBenefitStatus: 'none' | 'covered' | 'not_covered';
@@ -143,12 +143,12 @@ export interface WorkflowData {
    *  goes from the PA approval SMS to the transfer confirmation. Set by the BI fork's exit. */
   pharmacyAssigned: boolean;
   /** CoA_Coverage only — see pharmacyBenefitStatus above. When this is 'covered',
-   *  it always wins over pharmacyBenefitStatus (Scenario 2, DME provider
+   *  it always wins over pharmacyBenefitStatus (Scenario 2, Provider
    *  transfer), regardless of pharmacyBenefitStatus's value. Stays 'none'
    *  for every other flow. */
   medicalBenefitStatus: 'none' | 'covered' | 'not_covered';
   /** CoA_Coverage only — Scenario 3's (no coverage) own tap-through SMS, sent
-   *  once BI resolves neither-covered (see coaDme.ts's SEND_CASH_OFFER_SMS).
+   *  once BI resolves neither-covered (see workflows/coassist/'s SEND_CASH_OFFER_SMS).
    *  Deliberately separate from smsVerified/otpVerified (the initial
    *  enrollment SMS/OTP pair) — represents a real time gap since the
    *  patient last opened the portal, rather than materializing on the
@@ -162,15 +162,15 @@ export interface WorkflowData {
   /** CoA_Coverage only — Scenario 2's (covered by both) own tap-through SMS,
    *  same shape as cashOfferSmsSent above. Sent as
    *  part of CRM's own NOTIFY_PROVIDER_TRANSFER action (not automatic, see
-   *  coaDme.ts's biComplete state) — transferring the case to an outside
-   *  DME provider stays a deliberate CRM hand-off, but the patient still
+   *  workflows/coassist/'s biComplete state) — transferring the case to an outside
+   *  Provider stays a deliberate CRM hand-off, but the patient still
    *  gets a tap-through SMS before landing on the terminal
-   *  /dme-provider-transfer screen. Stays false for every other flow. */
-  dmeTransferSmsSent: boolean;
-  /** CoA_Coverage only — see dmeTransferSmsSent above. True once the patient
-   *  taps through the SMS (VERIFY_DME_TRANSFER_SMS), which unlocks
-   *  /dme-provider-transfer. Stays false for every other flow. */
-  dmeTransferSmsVerified: boolean;
+   *  /provider-transfer screen. Stays false for every other flow. */
+  providerTransferSmsSent: boolean;
+  /** CoA_Coverage only — see providerTransferSmsSent above. True once the patient
+   *  taps through the SMS (VERIFY_PROVIDER_TRANSFER_SMS), which unlocks
+   *  /provider-transfer. Stays false for every other flow. */
+  providerTransferSmsVerified: boolean;
   /**
    * The branch picked at each declared fork, keyed by fork id (for example `{ bi: "no_coverage" }`).
    * The scenario sets the story's default. A demo in the brand file or the presenter can change it.

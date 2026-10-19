@@ -27,17 +27,17 @@ const LADDERS = [
   { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
 ] as const;
 
-const DME_BI_FORK = biForkFor("CoA_Coverage");
+const BI_FORK = biForkFor("CoA_Coverage");
 
-describe("DME stage jump follows the selected branch", () => {
-  for (const exit of DME_BI_FORK.exits) {
+describe("Coverage stage jump follows the selected branch", () => {
+  for (const exit of BI_FORK.exits) {
     it(`${exit.id}: every rung lands and the list matches the branch`, () => {
       withFrozenClock(() => {
         const choices = { bi: exit.id };
-        const list = forkStageList(DME_BI_FORK, { choices });
+        const list = forkStageList(BI_FORK, { choices });
         // Rungs before the fork, then this branch's rungs.
         expect(list.map((s) => s.label)).toEqual([
-          ...DME_BI_FORK.stagesBefore!.map((s) => s.label),
+          ...BI_FORK.stagesBefore!.map((s) => s.label),
           ...exit.stages!.map((s) => s.label),
         ]);
         for (const { stage } of list) {
@@ -57,8 +57,8 @@ describe("DME stage jump follows the selected branch", () => {
   }
 
   it("the branches have different lists", () => {
-    const labels = DME_BI_FORK.exits.map((e) => forkStageList(DME_BI_FORK, { choices: { bi: e.id } }).map((s) => s.label).join("|"));
-    expect(new Set(labels).size).toBe(DME_BI_FORK.exits.length);
+    const labels = BI_FORK.exits.map((e) => forkStageList(BI_FORK, { choices: { bi: e.id } }).map((s) => s.label).join("|"));
+    expect(new Set(labels).size).toBe(BI_FORK.exits.length);
   });
 });
 

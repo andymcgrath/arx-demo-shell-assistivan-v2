@@ -11,7 +11,7 @@ import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./har
  * delay and the outcome. Leaving the stage, or a reset, cancels the pending step.
  */
 const PA_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay"];
-const DME_PHARMACY_ONLY = { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" };
+const COVERAGE_PHARMACY_ONLY = { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered" };
 
 function start(flow: FlowType) {
   const clock = new SimulatedClock();
@@ -49,7 +49,7 @@ describe("CoAssist automation", () => {
     it("CoA_Coverage: only pharmacy-covered BI submits a PA", () => {
       withFrozenClock(() => {
         const covered = start("CoA_Coverage");
-        runSteps(covered.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", ...DME_PHARMACY_ONLY }]);
+        runSteps(covered.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "COMPLETE_BI", ...COVERAGE_PHARMACY_ONLY }]);
         expect(covered.data().paStatus).toBe("submitted");
 
         const noCoverage = start("CoA_Coverage");
@@ -85,12 +85,12 @@ describe("CoAssist automation", () => {
         const { actor, clock, data } = start("CoA_Coverage");
         runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VIEW_STAGE", stage: "BI", pharmacyBenefitStatus: "covered", medicalBenefitStatus: "covered" }]);
         clock.increment(3000);
-        expect(data().biResult).toBe("dme_covered");
+        expect(data().biResult).toBe("medical_covered");
         expect(data().paStatus).toBe("none"); // medical covered: no PA
 
-        runSteps(actor, [{ type: "VIEW_STAGE", stage: "DME_TRANSFER" }]);
+        runSteps(actor, [{ type: "VIEW_STAGE", stage: "PROVIDER_TRANSFER" }]);
         clock.increment(3000);
-        expect(data().dmeProviderTransferStatus).toBe("notified");
+        expect(data().providerTransferStatus).toBe("notified");
       });
     });
 

@@ -5,7 +5,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 // DeliveryConfirmation.tsx's/AppointmentConfirmation.tsx's visual pattern
 // (checkmark banner, "Got it" button) but with copy about the pharmacy
 // pick, not a delivery/ship date — there's no delivery-address/delivery-date
-// step anywhere in this outcome anymore (see coaDme.ts and
+// step anywhere in this outcome anymore (see workflows/coassist/ and
 // WorkflowEngine.ts's derivePatientRoute). "Got it" jumps straight to
 // /order-tracker, mirroring CoA_Copay's Retail path exactly.
 export default function PharmacySelectionConfirmation() {

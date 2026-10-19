@@ -41,8 +41,8 @@
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "Medical Benefit Coverage Confirmed - Test Patient",
     "bodyParagraphs": [
-      "Benefits investigation confirmed Test Patient's DME (CGM sensor) is covered under their commercial medical benefit.",
-      "The case is being transferred to an outside DME provider for fulfillment — no Prior Authorization is needed on this case."
+      "Benefits investigation confirmed Test Patient's CGM sensor is covered under their commercial medical benefit.",
+      "The case is being transferred to an outside provider for fulfillment — no Prior Authorization is needed on this case."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"
@@ -51,7 +51,7 @@
     "eventType": "NOTIFY_PROVIDER_TRANSFER",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "DME Provider Transfer Notified - Test Patient",
+    "subject": "Provider Transfer Notified - Test Patient",
     "bodyParagraphs": [
       "Test Patient's case has been transferred to Advanced Diabetes Supply for fulfillment, now that medical-benefit coverage is confirmed.",
       "Advanced Diabetes Supply will contact the patient directly to complete the order ((858) 555-0148). No further action is needed on this case."

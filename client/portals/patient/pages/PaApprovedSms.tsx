@@ -8,8 +8,8 @@ import { PROGRAM } from "@/portals/patient/config/branding";
  * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
  * iAssist.ts's updatePaApprovedSmsVerified). WF1 (Fax_QS_PA_Approved) never
  * routes here. CoA_Coverage Scenario 1 also routes here now — see this flow's own
- * header comment below and coaDme.ts's paApproved state — reusing this
- * screen (rather than a DME-specific clone) replaces that scenario's old
+ * header comment below and workflows/coassist/'s paApproved state — reusing this
+ * screen (rather than a coverage-specific clone) replaces that scenario's old
  * single tap-through SMS entirely, per the confirmed PA design.
  *
  * A second "text message" beat, separate from the original enrollment SMS
@@ -26,7 +26,7 @@ export default function PaApprovedSms() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
+  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
 
   const handleTapMessage = () => {
     dispatch("VERIFY_PA_APPROVED_SMS", { portal: "patient" });
@@ -63,7 +63,7 @@ export default function PaApprovedSms() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              {isDmeFlow
+              {isCoverageFlow
                 ? `Good news! Your ${PROGRAM.name} prior authorization was approved. Time to pick a pharmacy:`
                 : `Good news! Your ${PROGRAM.drugDisplayName} prior authorization was approved. Time to schedule delivery:`}
             </p>

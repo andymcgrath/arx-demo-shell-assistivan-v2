@@ -178,7 +178,7 @@ export default function BenefitPricing() {
   }
 
   // CoA_Coverage only reaches this screen for Scenario 1 (pharmacy covered,
-  // medical not — see workflows/coaDme.ts and WorkflowEngine.ts's
+  // medical not — see workflows/coassist/ and WorkflowEngine.ts's
   // derivePatientRoute) — its cash-pay scenario (Scenario 3) is a completely
   // separate branch triggered only when neither benefit is covered, never a
   // patient choice on this screen, so there's no self-pay/Copay option here.
@@ -226,7 +226,7 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
                 Great news! {PROGRAM.drugDisplayName} is covered by your insurance
               </p>
               {/* CoA_Coverage (hideSelfPay) never submits a Prior Authorization —
-                  see workflows/coaDme.ts's header comment — so this banner
+                  see workflows/coassist/'s header comment — so this banner
                   drops that line for this flow only. */}
               {!hideSelfPay && <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>}
             </div>

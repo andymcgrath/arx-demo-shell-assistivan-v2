@@ -37,16 +37,16 @@ export default function MedicationDelivered() {
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
   // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
-  // same condition as crm/pages/Index.tsx's isDmeRetailFlow. The Rx never
+  // same condition as crm/pages/Index.tsx's isCoverageRetailFlow. The Rx never
   // ships to the patient at all in this outcome — it's picked up at
   // whichever network pharmacy the patient chose on
-  // NetworkPharmacySelection.tsx (see coaDme.ts's header comment) — so the
+  // NetworkPharmacySelection.tsx (see workflows/coassist/'s header comment) — so the
   // generic "Your medication has arrived!" card below (written for a home
   // delivery) doesn't describe what actually happened here. This flow's own
   // terminal screen instead focuses on getting the patient set up with the
   // Dexcom G7 sensor itself, not on a package that was never shipped to
   // them.
-  const isDmeNetworkPharmacyFlow =
+  const isCoverageNetworkPharmacyFlow =
     workflowData.flowType === 'CoA_Coverage' &&
     workflowData.pharmacyBenefitStatus === 'covered' &&
     workflowData.medicalBenefitStatus !== 'covered';
@@ -99,14 +99,14 @@ export default function MedicationDelivered() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                {isDmeNetworkPharmacyFlow ? `Your ${drugName} has been sent to the pharmacy.` : "Your medication has arrived!"}
+                {isCoverageNetworkPharmacyFlow ? `Your ${drugName} has been sent to the pharmacy.` : "Your medication has arrived!"}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
-                <span className="text-xl">{isDmeNetworkPharmacyFlow ? "📍" : "🚚"}</span>
+                <span className="text-xl">{isCoverageNetworkPharmacyFlow ? "📍" : "🚚"}</span>
               </div>
             </div>
 
-            {isDmeNetworkPharmacyFlow ? (
+            {isCoverageNetworkPharmacyFlow ? (
               <>
                 <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
                   Before you start, review the step-by-step guide to learn how to insert your sensor and get connected.

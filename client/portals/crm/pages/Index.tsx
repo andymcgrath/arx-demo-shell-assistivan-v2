@@ -766,7 +766,7 @@ export default function Index() {
   const patientShipDate = workflowData.patientShipDate;
   const pricingOption = workflowData.pricingOption;
   const copayEnrolled = workflowData.copayEnrolled;
-  const dmeProviderTransferStatus = workflowData.dmeProviderTransferStatus;
+  const providerTransferStatus = workflowData.providerTransferStatus;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
 
@@ -804,11 +804,11 @@ export default function Index() {
   const isIAssistPapFlow = flowType === "iAssist_PAP";
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  // CoA_Coverage (medical-benefit DME, no PA/pricing/fulfillment — see
-  // workflows/coaDme.ts) is deliberately its own flag, not folded into
+  // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
+  // workflows/coassist/) is deliberately its own flag, not folded into
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
-  const isDmeFlow = flowType === "CoA_Coverage";
+  const isCoverageFlow = flowType === "CoA_Coverage";
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -826,11 +826,11 @@ export default function Index() {
   // outside AssistRx's own pipeline" reasoning isCopayRetailFlow already
   // uses, now that Scenario 1 no longer goes through Retail-vs-Mail-Order
   // pricing/address/date at all: the patient just picks a network pharmacy
-  // (see coaDme.ts's pharmacySmsVerified state), which sets pricingOption to
+  // (see workflows/coassist/'s pharmacySmsVerified state), which sets pricingOption to
   // "retail" the same way CoA_Copay's own Retail pick does. Named for
   // parallelism with isCopayRetailFlow, not because this flow offers a
   // Mail Order option too (it doesn't).
-  const isDmeRetailFlow = isDmeFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered" && pricingOption === "retail";
+  const isCoverageRetailFlow = isCoverageFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered" && pricingOption === "retail";
   // CO-14281's completion gate normally requires patientShipDate — for
   // CoA_Copay Retail/Mail Order, that field stays null forever (ship-date
   // collection is skipped entirely for both paths, see PharmacySelection.tsx,
@@ -852,7 +852,7 @@ export default function Index() {
   // dispatch to pharmacy as soon as one is known; WF1 still needs the
   // explicit "selected" status.
   const canDispatchToPharmacy = !!selectedPharmacy && pharmacyStatus === "none" && dispatchStatus !== "dispatched" &&
-    (isCoaFlow || isDmeFlow || dispatchStatus === "selected");
+    (isCoaFlow || isCoverageFlow || dispatchStatus === "selected");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
@@ -996,15 +996,15 @@ export default function Index() {
     return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'APPEAL' });
   }, [activeTopTab, appealStatus, dispatch]);
 
-  // CoA_Coverage: the provider transfer notice follows the agent opening the DME
+  // CoA_Coverage: the provider transfer notice follows the agent opening the
   // Provider Transfer stage. The machine owns the delay (rules.ts, VIEW_STAGE).
   useEffect(() => {
-    if (activeTopTab !== 'DME-14282') return;
+    if (activeTopTab !== 'PT-14282') return;
     if (biStatus !== 'complete' || medicalBenefitStatus !== 'covered') return;
-    if (dmeProviderTransferStatus !== 'none') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'DME_TRANSFER' });
-    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'DME_TRANSFER' });
-  }, [activeTopTab, biStatus, medicalBenefitStatus, dmeProviderTransferStatus, dispatch]);
+    if (providerTransferStatus !== 'none') return;
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PROVIDER_TRANSFER' });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PROVIDER_TRANSFER' });
+  }, [activeTopTab, biStatus, medicalBenefitStatus, providerTransferStatus, dispatch]);
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.
@@ -1032,7 +1032,7 @@ export default function Index() {
       : { id: "PA-14274", name: "Prior Authorization", statusLabel: "Denied", statusDetail: "PA Denied — Appeal initiated", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   const eaStage: Stage = consentStatus !== "confirmed"
-    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : (isCoaFlow || isDmeFlow) ? "SMS sent — awaiting patient consent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(-4).toLocaleDateString(), lastUpdatedAgo: "4 days ago" }
+    ? { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Pending", statusDetail: isIAssistFlow ? "Welcome message sent" : (isCoaFlow || isCoverageFlow) ? "SMS sent — awaiting patient consent" : "Awaiting patient consent", isComplete: false, isNotStarted: false, fields: [], lastUpdated: dateFromToday(-4).toLocaleDateString(), lastUpdatedAgo: "4 days ago" }
     : { id: "EA-14272", name: "Enrollment Assistance", statusLabel: "Complete", statusDetail: "Enrollment Completed", isComplete: true, isNotStarted: false, fields: [], lastUpdated: dateFromToday(-4).toLocaleDateString(), lastUpdatedAgo: "4 days ago" };
 
   const biCompleteDetail = isPapFlow
@@ -1068,7 +1068,7 @@ export default function Index() {
       ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     // CoA_Copay Retail/Mail Order, and now CoA_Coverage Scenario 1 too
-    // (isDmeRetailFlow — see that flag's own comment above) — see
+    // (isCoverageRetailFlow — see that flag's own comment above) — see
     // isCopayRetailFlow above. Keyed off selectedPharmacy/dispatchStatus ===
     // "dispatched" rather than dispatchStatus === "selected" like the
     // generic branch below does. Retail (CoA_Copay and CoA_Coverage alike) jumps
@@ -1082,7 +1082,7 @@ export default function Index() {
     // pharmacyStatus to reach "shipped" like the generic branch does —
     // there's no Pharmacy Status stage left to advance it that far, since
     // fulfillment happens outside AssistRx's own pipeline either way.
-    : (isCopayRetailFlow || isDmeRetailFlow)
+    : (isCopayRetailFlow || isCoverageRetailFlow)
     ? (!selectedPharmacy
       ? { id: "TP-14277", name: "Dispatch to Triage", statusLabel: "Pending", statusDetail: "Awaiting pharmacy selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : dispatchStatus !== "dispatched"
@@ -1140,14 +1140,14 @@ export default function Index() {
 
   // CoA_Coverage's Benefits Investigation stage's own outcome-aware statusDetail —
   // used both by the inline BI stage below and (via biStage further down)
-  // nowhere else, since isDmeFlow never reads the shared biStage constant.
-  const dmeBiOutcomeDetail = medicalBenefitStatus === "covered"
-    ? "Both Benefits Covered — Transferring to DME Provider"
+  // nowhere else, since isCoverageFlow never reads the shared biStage constant.
+  const coverageBiOutcomeDetail = medicalBenefitStatus === "covered"
+    ? "Both Benefits Covered — Transferring to Provider"
     : pharmacyBenefitStatus === "covered"
     ? "Pharmacy Benefit Covered"
     : "No Coverage Found — Cash Pay Offered";
 
-  const STAGES_LIVE: Stage[] = isDmeFlow
+  const STAGES_LIVE: Stage[] = isCoverageFlow
     ? [
         // Same "active, waiting on something automatic" treatment as
         // isCoaFlow's eaStage below — SMS/consent is sent automatically for
@@ -1157,7 +1157,7 @@ export default function Index() {
           id: "BI-14273",
           name: "Benefits Investigation",
           statusLabel: biStatus === "none" ? "Not Started" : biStatus === "running" ? "Running" : "Complete",
-          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : dmeBiOutcomeDetail,
+          statusDetail: biStatus === "none" ? "Awaiting case creation" : biStatus === "running" ? "Investigating patient benefits..." : coverageBiOutcomeDetail,
           isComplete: biStatus === "complete",
           isNotStarted: biStatus === "none",
           fields: [],
@@ -1171,18 +1171,18 @@ export default function Index() {
         // rather than growing the list only once each stage actually
         // starts).
         ...(() => {
-          const dmeTransferStage: Stage = {
-            id: "DME-14282",
-            name: "DME Provider Transfer",
-            statusLabel: biStatus !== "complete" ? "Stage not started" : dmeProviderTransferStatus === "notified" ? "Complete" : "Ready to Notify",
-            statusDetail: biStatus !== "complete" ? "Awaiting Benefits Investigation" : dmeProviderTransferStatus === "notified" ? "Transferred to Advanced Diabetes Supply for fulfillment" : "Medical benefit coverage confirmed — ready to notify Advanced Diabetes Supply",
-            isComplete: dmeProviderTransferStatus === "notified",
+          const coverageTransferStage: Stage = {
+            id: "PT-14282",
+            name: "Provider Transfer",
+            statusLabel: biStatus !== "complete" ? "Stage not started" : providerTransferStatus === "notified" ? "Complete" : "Ready to Notify",
+            statusDetail: biStatus !== "complete" ? "Awaiting Benefits Investigation" : providerTransferStatus === "notified" ? "Transferred to Advanced Diabetes Supply for fulfillment" : "Medical benefit coverage confirmed — ready to notify Advanced Diabetes Supply",
+            isComplete: providerTransferStatus === "notified",
             isNotStarted: biStatus !== "complete",
-            fields: dmeProviderTransferStatus === "notified" ? [{ label: "DME Provider", value: "Advanced Diabetes Supply" }] : [],
-            lastUpdated: dmeProviderTransferStatus === "notified" ? new Date().toLocaleDateString() : null,
-            lastUpdatedAgo: dmeProviderTransferStatus === "notified" ? "today" : null,
+            fields: providerTransferStatus === "notified" ? [{ label: "Provider", value: "Advanced Diabetes Supply" }] : [],
+            lastUpdated: providerTransferStatus === "notified" ? new Date().toLocaleDateString() : null,
+            lastUpdatedAgo: providerTransferStatus === "notified" ? "today" : null,
           };
-          const dmeCashOfferStage: Stage = {
+          const coverageCashOfferStage: Stage = {
             id: "CO-14281",
             name: "Cash Offer",
             statusLabel: paymentVerified ? "Complete" : pricingOption === "self_pay" ? "Payment Pending" : "Stage not started",
@@ -1201,27 +1201,27 @@ export default function Index() {
           // correctly as not-started, since dispatchStatus/pharmacyStatus
           // are still "none" at this point; paStage's own logic does too,
           // since paStatus is still "none" here) instead of just BI alone.
-          if (biStatus !== "complete") return [paStage, dmeTransferStage, dmeCashOfferStage, tpStage, psStage];
+          if (biStatus !== "complete") return [paStage, coverageTransferStage, coverageCashOfferStage, tpStage, psStage];
 
           // Every outcome keeps the full 4-stage set visible — the ones
           // that don't apply to the resolved scenario get the same "Not
           // needed" treatment the standard flow already uses for skipped
           // stages (see appealStage/faStage above: blue icon, isComplete
           // true, a specific reason instead of just disappearing).
-          const dmeTransferNotNeeded: Stage = {
-            ...dmeTransferStage,
+          const coverageTransferNotNeeded: Stage = {
+            ...coverageTransferStage,
             statusLabel: "Not needed",
             statusDetail: pharmacyBenefitStatus === "covered"
-              ? "Pharmacy benefit covers this order — no medical-benefit DME transfer needed"
-              : "No medical benefit coverage found — no DME transfer needed",
+              ? "Pharmacy benefit covers this order — no medical-benefit transfer needed"
+              : "No medical benefit coverage found — no transfer needed",
             isComplete: true,
             isNotStarted: false,
             fields: [],
             lastUpdated: dateFromToday(0).toLocaleDateString(),
             lastUpdatedAgo: "today",
           };
-          const dmeCashOfferNotNeeded: Stage = {
-            ...dmeCashOfferStage,
+          const coverageCashOfferNotNeeded: Stage = {
+            ...coverageCashOfferStage,
             statusLabel: "Not needed",
             statusDetail: medicalBenefitStatus === "covered"
               ? "Both benefits covered — no cash-pay offer needed"
@@ -1232,12 +1232,12 @@ export default function Index() {
             lastUpdated: dateFromToday(0).toLocaleDateString(),
             lastUpdatedAgo: "today",
           };
-          // Scenarios 2/3 only — Scenario 1 is the only DME outcome that
+          // Scenarios 2/3 only — Scenario 1 is the only Coverage outcome that
           // ever submits a real PA (see paStage below and this component's
-          // own isDmeFlow-scoped SUBMIT_PA effect above); paStatus stays
+          // own isCoverageFlow-scoped SUBMIT_PA effect above); paStatus stays
           // "none" forever for these two, so paStage's own logic would
           // wrongly show "Letter sent" once biStatus is complete. Same "Not
-          // needed" treatment as dmeTransferNotNeeded/dmeCashOfferNotNeeded
+          // needed" treatment as coverageTransferNotNeeded/coverageCashOfferNotNeeded
           // above, not just omitting the card.
           const paNotNeeded: Stage = {
             id: "PA-14274",
@@ -1277,7 +1277,7 @@ export default function Index() {
             lastUpdated: dateFromToday(0).toLocaleDateString(),
             lastUpdatedAgo: "today",
           };
-          // Scenario 1 only — same isDmeRetailFlow reasoning as tpStage's
+          // Scenario 1 only — same isCoverageRetailFlow reasoning as tpStage's
           // own "filled outside AssistRx" copy above, just for the stage
           // that's dropped entirely rather than reworded.
           const psNotNeededRetail: Stage = {
@@ -1292,26 +1292,26 @@ export default function Index() {
             lastUpdatedAgo: "today",
           };
 
-          // Scenario 2 — medical covered (always wins): only the DME
+          // Scenario 2 — medical covered (always wins): only the provider
           // transfer really happens. No PA stage, no cash-offer stage, no
-          // dispense tail — see workflows/coaDme.ts.
-          if (medicalBenefitStatus === "covered") return [paNotNeeded, dmeTransferStage, dmeCashOfferNotNeeded, tpNotNeededTransfer, psNotNeededTransfer];
+          // dispense tail — see workflows/coassist/.
+          if (medicalBenefitStatus === "covered") return [paNotNeeded, coverageTransferStage, coverageCashOfferNotNeeded, tpNotNeededTransfer, psNotNeededTransfer];
 
           // Scenario 1 — pharmacy covered, medical not. This outcome now
           // requires a real Prior Authorization (paStage — reused as-is from
-          // isCoaFlow, since isPapFlow is false for DME), submitted
-          // automatically by this component's own isDmeFlow-scoped SUBMIT_PA
+          // isCoaFlow, since isPapFlow is false for Coverage), submitted
+          // automatically by this component's own isCoverageFlow-scoped SUBMIT_PA
           // effect above and auto-approved by PA-14274's existing tab-open
           // effect — replaces this scenario's old automatic single
           // tap-through SMS entirely. Pharmacy Status (psStage) gets the
           // "Not needed" treatment once a pharmacy is picked
-          // (isDmeRetailFlow), same reasoning isCopayRetailFlow already
+          // (isCoverageRetailFlow), same reasoning isCopayRetailFlow already
           // uses: fulfillment happens outside AssistRx's own pipeline.
-          if (pharmacyBenefitStatus === "covered") return [paStage, dmeTransferNotNeeded, dmeCashOfferNotNeeded, tpStage, isDmeRetailFlow ? psNotNeededRetail : psStage];
+          if (pharmacyBenefitStatus === "covered") return [paStage, coverageTransferNotNeeded, coverageCashOfferNotNeeded, tpStage, isCoverageRetailFlow ? psNotNeededRetail : psStage];
 
           // Scenario 3 — neither covered. Cash Offer card plus the same
           // fulfillment-tracking stages Scenario 1 uses.
-          return [paNotNeeded, dmeTransferNotNeeded, dmeCashOfferStage, tpStage, psStage];
+          return [paNotNeeded, coverageTransferNotNeeded, coverageCashOfferStage, tpStage, psStage];
         })(),
       ]
     : isCoaFlow
@@ -1930,11 +1930,11 @@ export default function Index() {
                       that's a CoA_DTP/Copay-only precondition (cash offer
                       there only exists after a PA denial). CoA_Coverage's price
                       is shown straight to the patient in-app (PADenied.tsx's
-                      isDmeFlow branch) with no CRM "send" action at all —
-                      there's no SEND_CASH_OFFER handler in coaDme.ts for
+                      isCoverageFlow branch) with no CRM "send" action at all —
+                      there's no SEND_CASH_OFFER handler in workflows/coassist/ for
                       this button to even dispatch to — so skip it for this
                       flow and show a status label instead. */}
-                  {isDmeFlow ? (
+                  {isCoverageFlow ? (
                     <span className="text-[12px] font-semibold px-2.5 py-1.5 rounded" style={{ background: "#f3f2f2", color: "#3e3e3c" }}>
                       {biStatus === "complete" ? "Cash price presented to patient in-app" : "Awaiting Benefits Investigation"}
                     </span>
@@ -2544,7 +2544,7 @@ export default function Index() {
               </div>
             </div>
 
-            {isDmeFlow ? (
+            {isCoverageFlow ? (
               /* ── CoA_Coverage's own layout: Information + Pharmacy/Medical
                   Benefits split out (instead of one shared Information
                   section), and two stacked Product Coverage cards on the
@@ -2598,8 +2598,8 @@ export default function Index() {
                         <FieldRow label="Sub-Status" value={pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
                         <FieldRow label="Insured?" value={pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
                         {/* Scenario 1 only (pharmacy covered, medical not) —
-                            see coaDme.ts's biComplete SUBMIT_PA guard and
-                            this component's own isDmeFlow-scoped SUBMIT_PA
+                            see workflows/coassist/'s biComplete SUBMIT_PA guard and
+                            this component's own isCoverageFlow-scoped SUBMIT_PA
                             effect, which use this exact condition. Medical
                             covered always wins (Scenario 2), so a pharmacy
                             benefit that's merely "covered" alongside a
@@ -2632,7 +2632,7 @@ export default function Index() {
                         <FieldRow label="Insured?" value={medicalBenefitStatus === "covered" ? "Yes" : "No"} />
                         <FieldRow label="PA Required?" value="No" />
                         {medicalBenefitStatus === "covered" && (
-                          <FieldRow label="DME Provider" value="Advanced Diabetes Supply" />
+                          <FieldRow label="Provider" value="Advanced Diabetes Supply" />
                         )}
                       </div>
                     </div>
@@ -2989,8 +2989,8 @@ export default function Index() {
                           Shipping…
                         </span>
                       </div>
-                    ) : isCoaFlow || (isDmeFlow && !isDmeRetailFlow && !!selectedPharmacy) ? (
-                      // DME cash pay (No Coverage) also lands here: the scenario
+                    ) : isCoaFlow || (isCoverageFlow && !isCoverageRetailFlow && !!selectedPharmacy) ? (
+                      // Coverage cash pay (No Coverage) also lands here: the scenario
                       // sets the pharmacy when the patient picks self-pay, so
                       // there is nothing to choose. The button would only
                       // hesitate the presenter before "Dispatch to Pharmacy".
@@ -3003,11 +3003,11 @@ export default function Index() {
                           Pharmacy assigned — ready to dispatch
                         </span>
                       </div>
-                    ) : isDmeRetailFlow ? (
+                    ) : isCoverageRetailFlow ? (
                       // CoA_Coverage Scenario 1 — the patient picks their own
                       // network pharmacy on NetworkPharmacySelection.tsx
                       // (SELECT_PHARMACY, only valid once the PA chain
-                      // reaches paApprovedOtpVerified — see coaDme.ts), not
+                      // reaches paApprovedOtpVerified — see workflows/coassist/), not
                       // the CRM agent. The generic "Choose Pharmacy" button
                       // below let an agent pick one from here instead — but
                       // the machine isn't in a state that accepts
@@ -3381,7 +3381,7 @@ export default function Index() {
               {activeStage.id === "BI-14273" && biStatus === "running" && (
                 <button
                   onClick={() => {
-                    if (isDmeFlow) {
+                    if (isCoverageFlow) {
                       // The branch comes from the `bi` fork's choice in the machine (set by the selected demo).
                       dispatch('COMPLETE_BI', { portal: 'crm' });
                     } else {
@@ -3400,7 +3400,7 @@ export default function Index() {
                   Approved
                 </span>
               )}
-              {activeStage.id === "DME-14282" && biStatus === "complete" && medicalBenefitStatus === "covered" && dmeProviderTransferStatus === "none" && (
+              {activeStage.id === "PT-14282" && biStatus === "complete" && medicalBenefitStatus === "covered" && providerTransferStatus === "none" && (
                 <button
                   onClick={() => dispatch('NOTIFY_PROVIDER_TRANSFER', { portal: 'crm' })}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -3410,7 +3410,7 @@ export default function Index() {
                   Notify Provider
                 </button>
               )}
-              {activeStage.id === "DME-14282" && dmeProviderTransferStatus === "notified" && (
+              {activeStage.id === "PT-14282" && providerTransferStatus === "notified" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
                   Transferred
                 </span>
@@ -3431,18 +3431,18 @@ export default function Index() {
                 </span>
               )}
               {/* CoA_Copay Retail/Mail Order (isCopayRetailFlow) and CoA_Coverage
-                  Scenario 1 (isDmeRetailFlow) — dispatchStatus "dispatched"
+                  Scenario 1 (isCoverageRetailFlow) — dispatchStatus "dispatched"
                   is this path's completion signal (see tpStage above);
                   pharmacyStatus stays "processing" forever after that since
                   there's no Pharmacy Status tab left to advance it, so the
                   generic "Processing…"/"Shipping…" pills below never fire
                   for either and this needs its own chip. */}
-              {activeStage.id === "TP-14277" && (isCopayRetailFlow || isDmeRetailFlow) && dispatchStatus === "dispatched" && (
+              {activeStage.id === "TP-14277" && (isCopayRetailFlow || isCoverageRetailFlow) && dispatchStatus === "dispatched" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
                   Dispatched
                 </span>
               )}
-              {activeStage.id === "TP-14277" && !isIAssistPapFlow && !isCopayRetailFlow && !isDmeRetailFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
+              {activeStage.id === "TP-14277" && !isIAssistPapFlow && !isCopayRetailFlow && !isCoverageRetailFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "#e8f0fa", color: FC_BLUE }}>
                   Processing…
                 </span>

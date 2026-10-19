@@ -45,7 +45,7 @@
       "spine.run_bi"
     ],
     "SELECT_PHARMACY": [
-      "pharmacy_selection.select_pharmacy.dme",
+      "pharmacy_selection.select_pharmacy.coverage",
       "pharmacy_selection.select_pharmacy"
     ],
     "SELECT_PRICING_OPTION": [
@@ -54,7 +54,7 @@
     "SELECT_SELF_PAY": [
       "payment.select_self_pay.dtp",
       "financial_assistance.select_self_pay.copay",
-      "cash_offer.select_self_pay.dme"
+      "cash_offer.select_self_pay.coverage"
     ],
     "SEND_CASH_OFFER": [
       "cash_offer.send_cash_offer"
@@ -68,9 +68,6 @@
     "VERIFY_CASH_OFFER_SMS": [
       "cash_offer.verify_sms"
     ],
-    "VERIFY_DME_TRANSFER_SMS": [
-      "provider_transfer.verify_sms"
-    ],
     "VERIFY_OTP": [
       "enrollment.verify_otp"
     ],
@@ -82,6 +79,9 @@
     ],
     "VERIFY_PA_APPROVED_SMS": [
       "pa_notification.verify_sms"
+    ],
+    "VERIFY_PROVIDER_TRANSFER_SMS": [
+      "provider_transfer.verify_sms"
     ],
     "VERIFY_SMS": [
       "enrollment.verify_sms"
@@ -97,7 +97,7 @@
       "CoA_DTP",
       "CoA_Copay"
     ],
-    "cash_offer.select_self_pay.dme": [
+    "cash_offer.select_self_pay.coverage": [
       "CoA_Coverage"
     ],
     "cash_offer.send_cash_offer": [
@@ -162,7 +162,7 @@
       "CoA_Copay",
       "CoA_Coverage"
     ],
-    "pharmacy_selection.select_pharmacy.dme": [
+    "pharmacy_selection.select_pharmacy.coverage": [
       "CoA_Coverage"
     ],
     "provider_transfer.leave_stage": [

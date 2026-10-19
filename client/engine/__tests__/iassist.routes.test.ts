@@ -99,7 +99,7 @@ describe("iAssist route equivalence", () => {
 
       for (let walk = 0; walk < WALKS; walk++) {
         const rand = mulberry32(walk * 7919 + FLOWS.indexOf(flow) + 1);
-        // Pin a random exit at about half the forks, so DTP, Copay, and DME each reach their branches.
+        // Pin a random exit at about half the forks, so DTP, Copay, and Coverage each reach their branches.
         const choices: Record<string, string> = {};
         for (const fork of forks) if (rand() < 0.5) choices[fork.id] = fork.exits[Math.floor(rand() * fork.exits.length)].id;
 

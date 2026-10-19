@@ -1093,15 +1093,15 @@ function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   const consentDot: PatientStatus["dots"][number] =
     workflowData.consentStatus === "confirmed" ? "completed" : "pending";
 
-  // CoA_Coverage (medical-benefit DME, no PA/pricing/fulfillment — see
-  // workflows/coaDme.ts) — checked before the generic biStatus/paStatus
+  // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
+  // workflows/coassist/) — checked before the generic biStatus/paStatus
   // branches below, which would otherwise mislabel this flow "PA Required"
   // once BI completes (paStatus stays 'none' forever for CoA_Coverage, same as
   // pharmacyStatus) and surface a "Start Prior Auth" button
   // (PrescriptionsIdlePanel) this flow's machine has no handler for at all.
   if (workflowData.flowType === "CoA_Coverage") {
-    if (workflowData.dmeProviderTransferStatus === "notified") {
-      return { label: "Transferred to DME Provider", color: "success", dots: ["completed", consentDot, "completed", "completed", "disabled", "disabled"] };
+    if (workflowData.providerTransferStatus === "notified") {
+      return { label: "Transferred to Provider", color: "success", dots: ["completed", consentDot, "completed", "completed", "disabled", "disabled"] };
     }
     if (workflowData.biStatus === "complete") {
       return { label: "Covered — Medical Benefit", color: "success", dots: ["completed", consentDot, "completed", "pending", "disabled", "disabled"] };
@@ -2912,8 +2912,8 @@ export default function ProviderPortal() {
   // CoA_Coverage reuses this same Heroic EHR chart shell (CoaProviderExperience)
   // below — there's no dedicated alternative — but never leaves it for
   // IAssistDashboardPage the way CoA_DTP/CoA_Copay do once a PA exists
-  // (paStatus stays 'none' forever for CoA_Coverage, see workflows/coaDme.ts),
-  // and deriveKeanuStatus below has its own DME-specific branch so this
+  // (paStatus stays 'none' forever for CoA_Coverage, see workflows/coassist/),
+  // and deriveKeanuStatus below has its own coverage-specific branch so this
   // flow's Prescriptions panel never mislabels itself "PA Required".
   const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_Coverage";
   // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed

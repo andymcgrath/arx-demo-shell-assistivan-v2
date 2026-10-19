@@ -46,9 +46,9 @@ export default function DeliveryAddress() {
   const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
   const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
-  // 1 and Scenario 3 — see workflows/coaDme.ts) and needs the same
+  // 1 and Scenario 3 — see workflows/coassist/) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
-  const isDmeFlow = workflowData.flowType === "CoA_Coverage";
+  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));
@@ -69,7 +69,7 @@ export default function DeliveryAddress() {
   // Triage tab, this just signals the patient's own part is done.
   function handleContinue() {
     if (!valid) return;
-    if (isCoA || isIAssist || isPapFlow || isDmeFlow) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (isCoA || isIAssist || isPapFlow || isCoverageFlow) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
     // workflow once dispatched" treatment (Retail skips this screen
     // entirely; Mail Order still confirms an address, just no ship date —

@@ -21,12 +21,12 @@ export function deriveBiResult(
   pharmacyBenefitStatus: "covered" | "not_covered",
   medicalBenefitStatus: "covered" | "not_covered",
 ): string {
-  if (medicalBenefitStatus === "covered") return "dme_covered";
+  if (medicalBenefitStatus === "covered") return "medical_covered";
   if (pharmacyBenefitStatus === "covered") return "coverage_found";
   return "no_coverage";
 }
 
-export const dmeNeitherCovered = (d: WorkflowData) =>
+export const neitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";
 
 /** A scenario that assigns the pharmacy hands the Rx over as soon as the PA approval is verified. No patient choice. */

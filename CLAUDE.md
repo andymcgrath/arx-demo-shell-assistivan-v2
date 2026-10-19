@@ -7,7 +7,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 ## Vocabulary
 
 - **Workflow:** the platform choreography. Which apps take part, which app starts, the stage spine, and which app owns each interaction. Example: CoAssist.
-- **Scenario:** a variant that runs on a workflow. Different outcomes and content, same apps and spine. Example: CoAssist DTP, Copay, DME.
+- **Scenario:** a variant that runs on a workflow. Different outcomes and content, same apps and spine. Example: CoAssist DTP, Copay, Coverage.
 - **Step module:** a reusable step shared by scenarios. Example: payment, pharmacy selection, address and ship date, enrollment with SMS and OTP.
 - **Legacy scenario:** a scenario marked `legacy: true` (for example PrES). Keep it working and tested. Add no new features to it.
 - **Fork:** a point where a scenario has a default branch and named alternatives. A workflow declares it (`workflows/<name>/forks.ts`) with its exits and who chooses (story or patient). The presenter never picks a branch. Each outcome is a demo. The pick lives in `workflowData.choices`.

@@ -63,8 +63,8 @@ workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, {
 });
 
 workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, {
-  label: "CoAssist DME (Medical Benefit)",
-  description: "Commercial medical-benefit DME coverage — transfers to an outside DME provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
+  label: "CoAssist Coverage (Medical Benefit)",
+  description: "Commercial medical-benefit coverage — transfers to an outside provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",
 });
 
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iassistMachine, {
