@@ -1,0 +1,234 @@
+{
+  "order": {
+    "APPROVE_APPEAL": [
+      "appeal.approve"
+    ],
+    "APPROVE_PA": [
+      "spine.approve_pa"
+    ],
+    "COMPLETE_BI": [
+      "spine.complete_bi"
+    ],
+    "COMPLETE_PROVIDER_PA": [
+      "spine.complete_provider_pa"
+    ],
+    "CONFIRM_CONSENT": [
+      "enrollment.confirm_consent.approved",
+      "enrollment.confirm_consent.appeal"
+    ],
+    "DELIVER_RX": [
+      "tracking.deliver_rx"
+    ],
+    "DENY_PA": [
+      "spine.deny_pa"
+    ],
+    "DISMISS_WELCOME": [
+      "enrollment.dismiss_welcome"
+    ],
+    "FILL_RX": [
+      "tracking.fill_rx.delivery",
+      "tracking.fill_rx.site_of_care"
+    ],
+    "INITIATE_APPEAL": [
+      "appeal.initiate"
+    ],
+    "LEAVE_STAGE": [
+      "spine.leave_stage.bi",
+      "spine.leave_stage.pa",
+      "appeal.leave_stage"
+    ],
+    "PATIENT_PAYS": [
+      "payment.patient_pays"
+    ],
+    "PATIENT_SELECTS_INFUSION_DATE": [
+      "scheduling.patient_selects_infusion_date"
+    ],
+    "PATIENT_SELECTS_SHIP_DATE": [
+      "scheduling.patient_selects_ship_date"
+    ],
+    "PATIENT_SETS_ADDRESS": [
+      "scheduling.patient_sets_address"
+    ],
+    "READY_RX": [
+      "tracking.ready_rx"
+    ],
+    "REFERRAL_RECEIVED": [
+      "enrollment.referral_received"
+    ],
+    "RUN_BI": [
+      "spine.run_bi"
+    ],
+    "SELECT_PHARMACY": [
+      "pharmacy_selection.select_pharmacy.crm",
+      "pharmacy_selection.select_pharmacy.site_of_care"
+    ],
+    "SELECT_PRICING_OPTION": [
+      "payment.select_pricing_option"
+    ],
+    "SELECT_SELF_PAY": [
+      "payment.select_self_pay"
+    ],
+    "SET_APPEAL_RULE": [
+      "appeal.rule_on",
+      "appeal.rule_off"
+    ],
+    "SHIP_RX": [
+      "tracking.ship_rx"
+    ],
+    "SUBMIT_PA": [
+      "spine.submit_pa"
+    ],
+    "VERIFY_OTP": [
+      "enrollment.verify_otp"
+    ],
+    "VERIFY_PAYMENT": [
+      "payment.verify_payment"
+    ],
+    "VERIFY_PA_APPROVED_OTP": [
+      "pa_notification.verify_otp"
+    ],
+    "VERIFY_PA_APPROVED_SMS": [
+      "pa_notification.verify_sms"
+    ],
+    "VERIFY_SMS": [
+      "enrollment.verify_sms"
+    ],
+    "VIEW_STAGE": [
+      "spine.view_stage.bi",
+      "spine.view_stage.pa",
+      "appeal.view_stage"
+    ]
+  },
+  "applies": {
+    "appeal.approve": [
+      "iAssist_PAP"
+    ],
+    "appeal.initiate": [
+      "iAssist_PAP"
+    ],
+    "appeal.leave_stage": [
+      "iAssist_PAP"
+    ],
+    "appeal.rule_off": [
+      "iAssist_PAP"
+    ],
+    "appeal.rule_on": [
+      "iAssist_PAP"
+    ],
+    "appeal.view_stage": [
+      "iAssist_PAP"
+    ],
+    "enrollment.confirm_consent.appeal": [
+      "iAssist_PAP"
+    ],
+    "enrollment.confirm_consent.approved": [
+      "iAssist_PA_Approved"
+    ],
+    "enrollment.dismiss_welcome": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "enrollment.referral_received": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "enrollment.verify_otp": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "enrollment.verify_sms": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "pa_notification.verify_otp": [
+      "iAssist_PA_Approved"
+    ],
+    "pa_notification.verify_sms": [
+      "iAssist_PA_Approved"
+    ],
+    "payment.patient_pays": [
+      "iAssist_PA_Approved"
+    ],
+    "payment.select_pricing_option": [
+      "iAssist_PA_Approved"
+    ],
+    "payment.select_self_pay": [
+      "iAssist_PA_Approved"
+    ],
+    "payment.verify_payment": [
+      "iAssist_PA_Approved"
+    ],
+    "pharmacy_selection.select_pharmacy.crm": [
+      "iAssist_PA_Approved"
+    ],
+    "pharmacy_selection.select_pharmacy.site_of_care": [
+      "iAssist_PAP"
+    ],
+    "scheduling.patient_selects_infusion_date": [
+      "iAssist_PAP"
+    ],
+    "scheduling.patient_selects_ship_date": [
+      "iAssist_PA_Approved"
+    ],
+    "scheduling.patient_sets_address": [
+      "iAssist_PA_Approved"
+    ],
+    "spine.approve_pa": [
+      "iAssist_PA_Approved"
+    ],
+    "spine.complete_bi": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.complete_provider_pa": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.deny_pa": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.leave_stage.bi": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.leave_stage.pa": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.run_bi": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.submit_pa": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.view_stage.bi": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "spine.view_stage.pa": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "tracking.deliver_rx": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "tracking.fill_rx.delivery": [
+      "iAssist_PA_Approved"
+    ],
+    "tracking.fill_rx.site_of_care": [
+      "iAssist_PAP"
+    ],
+    "tracking.ready_rx": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ],
+    "tracking.ship_rx": [
+      "iAssist_PA_Approved",
+      "iAssist_PAP"
+    ]
+  }
+}

@@ -37,6 +37,8 @@ iAssist owns its module files under `workflows/iassist/modules/`. The two source
 
 **4.2 (done).** `workflows/iassist/forks.ts` declares `bi` and `pa`, both story forks, in `ALL_FORKS`. `content.biResult` and `content.paOutcome` are gone. Scenarios carry `choices` and a `recipe`, and the rules and both reveals read the pick through `exitFor`. Exits name the modules a recipe needs: `approved` requires `pa_notification`, `denied` requires `appeal`, and `no_coverage` requires `financial_assistance` (no module handles it yet, so no iAssist recipe can pick it). CoAssist's `pa` fork was global, so it now lists its three scenarios. Otherwise iAssist would have two `pa` forks. The `appeal` fork in the original plan is not needed: no behavior reads one. Existing iAssist golden paths and the automation test are the behavior proof, and they did not change.
 
+**4.3 (done).** `iassist/rules.ts` is a 36-line assembly of eight module files under `workflows/iassist/modules/` (enrollment, spine, pa_notification, appeal, payment, pharmacy_selection, scheduling, tracking). All 38 rules have ids. All 15 `scenarios:` filters are scopes: `{module:"pa_notification"}` for the approved scenario, `{module:"appeal"}` for the appeal, variants of `scheduling` and `pharmacy_selection`, and a `[tracking, scheduling variant]` list for the two `FILL_RX` rules. `rules/iassist.json` was recorded from the table before the split. The split passes it unchanged, so order per event and where each rule applies are identical.
+
 ## Risks
 
 - **Module names that do not fit.** `scheduling` covers an address and ship date. The PAP infusion date is a different screen and event. A `variant` prop separates them, as `cash_offer` does.
