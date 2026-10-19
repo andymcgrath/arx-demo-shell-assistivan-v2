@@ -34,6 +34,12 @@ const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): 
 const IDENTITY: LadderEvent[] = ENROLL_AND_VERIFY;
 
 /**
+ * The `bi` exits the hand-built DTP and Copay ladder below can land on. It ignores `choices`, so it is right only for
+ * these. stageLadders.test.ts fails when a recipe can pick another exit.
+ */
+export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
+
+/**
  * Every event to send, in order, to land a RESET actor on `stage`. Stage 1 is the reset itself.
  * CoA_Coverage reads its stages from the BI fork (workflows/coassist/forks.ts), so `choices` selects the branch.
  * Without `choices`, it takes the scenario's default branch.
