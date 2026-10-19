@@ -2,7 +2,7 @@ import type { ForkExit } from "./types";
 
 /**
  * Component types for the CRM-driven model (see MODEL_DRAFT.md). Types and declarative data only.
- * Nothing imports this file yet, so it changes no behavior. Step 2 moves CoAssist onto it.
+ * The machine does not read this file. recipe.ts validates recipes against it, and the tests run it.
  *
  * The idea: define components once, then let the demo author wire them into a scenario.
  * The system does not decide which scenarios exist. It rejects combinations that cannot work.
@@ -16,7 +16,10 @@ export type ModuleLane = "system" | "patient";
 
 export type ModuleId =
   | "enrollment"
+  | "pa_notification"
+  | "cash_offer"
   | "financial_assistance"
+  | "provider_transfer"
   | "pharmacy_selection"
   | "scheduling"
   | "payment"
@@ -29,19 +32,19 @@ export type TriageModuleId = "pharmacy_selection" | "scheduling" | "payment" | "
 export type StepTrigger = "system" | "agent" | "patient";
 
 /**
- * What a module needs and what it sets. A key names a field on `WorkflowData`. Modules that gate
- * on another module use `needsModules` so a recipe with the wrong order fails a test.
+ * What a module needs and what it sets. Keys are labels, not `WorkflowData` fields, so a module can be
+ * declared before the machine knows about it. `fork:<id>` means the recipe passes through that fork.
  */
 export interface ModuleContract {
   id: ModuleId;
   lane: ModuleLane;
-  /** Data that must be set before the module can run. */
+  /** Keys that must be provided by the source, a fork, or a module earlier in the recipe. */
   needs: string[];
-  /** Modules that must appear earlier in the recipe. Can depend on props, see `needsModulesWhen`. */
+  /** Modules that must appear earlier in the recipe. */
   needsModules?: ModuleId[];
-  /** Extra module needs that apply only for certain props. */
-  needsModulesWhen?: { props: Record<string, unknown>; modules: ModuleId[] }[];
-  /** Data the module sets when it completes. */
+  /** Modules that must appear somewhere in the recipe, in any order, when the props match. */
+  requiresModulesWhen?: { props: Record<string, unknown>; modules: ModuleId[] }[];
+  /** Keys the module provides once it runs. */
   sets: string[];
   /** Steps the module adds to the tracker. Tracking shows the steps of the modules that ran. */
   trackerSteps: string[];
@@ -54,7 +57,7 @@ export interface ModuleSpec<Props extends Record<string, unknown> = Record<strin
 }
 
 export type FinancialAssistanceVariant = "pap" | "copay";
-export type PaymentMethod = "retail" | "mail_order";
+export type PaymentMethod = "retail" | "mail_order" | "self_pay";
 
 export interface FinancialAssistanceProps extends Record<string, unknown> {
   /** `pap` ends in Free. `copay` is a reduced price. */
@@ -62,9 +65,9 @@ export interface FinancialAssistanceProps extends Record<string, unknown> {
 }
 
 export interface PaymentProps extends Record<string, unknown> {
-  price: number;
-  /** `mail_order` requires `scheduling` earlier in the recipe. */
-  method: PaymentMethod;
+  price?: number;
+  /** Leave it out when the patient picks live. `mail_order` requires `scheduling` somewhere in the recipe. */
+  method?: PaymentMethod;
 }
 
 /**
@@ -89,6 +92,8 @@ export interface EnteringForkExit extends ForkExit {
  */
 export type TriageRule = "required" | "forbidden" | "optional";
 
+export type TriageExitId = "commercial" | "non_commercial" | "transfer";
+
 /**
  * A Triage exit. Triage runs after coverage resolves and chooses the path, not the payer.
  * Commercial coverage is the BI result, so the exit is pre-selected from the BI exit.
@@ -99,16 +104,40 @@ export interface TriageExit extends ForkExit {
   defaults?: TriageModuleId[];
 }
 
+/** What a source gives every recipe that starts from it. */
+export interface SourceDef {
+  id: SourceId;
+  intake: "erx" | "fax" | "esign";
+  /** Keys available before any module runs. */
+  provides: string[];
+}
+
 /**
- * A scenario as a recipe: a source, one pick per fork, and the modules that run, in order.
- * Pure data. A sales rep's request becomes one of these with no new code.
+ * A scenario as a recipe: a source, the forks it passes through, the picks it starts with, and the
+ * modules that run, in order. Pure data. A sales rep's request becomes one of these with no new code.
  */
 export interface ScenarioRecipe {
   source: SourceId;
-  /** One exit per fork id. A choice that names no declared exit fails the brand test (rule 14). */
+  /** Ids of the forks the scenario passes through. Each provides `fork:<id>` to the modules after it. */
+  forks: string[];
+  /** The starting pick per fork id. A choice that names no declared exit fails the brand test (rule 14). */
   choices: Record<string, string>;
+  /** The Triage exit, when the recipe sets one. The validator checks the module list against its rules. */
+  triage?: TriageExitId;
   modules: ModuleSpec[];
 }
+
+/** Sources defined so far. The rest arrive as each source moves onto the recipe (steps 4 and later). */
+export const SOURCES: Partial<Record<SourceId, SourceDef>> = {
+  coassist: { id: "coassist", intake: "erx", provides: ["referralReceived"] },
+};
+
+/** Triage rules per exit. Tracking is always required. Transfer forbids scheduling and payment. */
+export const TRIAGE_EXIT_RULES: Record<TriageExitId, Record<TriageModuleId, TriageRule>> = {
+  commercial: { pharmacy_selection: "optional", scheduling: "optional", payment: "optional", tracking: "required" },
+  non_commercial: { pharmacy_selection: "optional", scheduling: "optional", payment: "optional", tracking: "required" },
+  transfer: { pharmacy_selection: "optional", scheduling: "forbidden", payment: "forbidden", tracking: "required" },
+};
 
 /** The module catalog. Tracker steps are labels to confirm with the presenter. */
 export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
@@ -119,12 +148,33 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     sets: ["consentVerified"],
     trackerSteps: ["Enrolled"],
   },
+  pa_notification: {
+    id: "pa_notification",
+    lane: "patient",
+    needs: ["consentVerified", "fork:bi"],
+    sets: ["paNotified"],
+    trackerSteps: ["Decision confirmed by patient"],
+  },
+  cash_offer: {
+    id: "cash_offer",
+    lane: "patient",
+    needs: ["fork:bi"],
+    sets: ["cashOffered"],
+    trackerSteps: ["Cash offer sent"],
+  },
   financial_assistance: {
     id: "financial_assistance",
     lane: "patient",
-    needs: ["assistanceEntry"],
-    sets: ["assistanceApplied", "assistanceOutcome"],
+    needs: ["paNotified"],
+    sets: ["assistanceApplied"],
     trackerSteps: ["Assistance applied"],
+  },
+  provider_transfer: {
+    id: "provider_transfer",
+    lane: "patient",
+    needs: ["fork:bi"],
+    sets: ["providerTransferred"],
+    trackerSteps: ["Provider notified", "Transfer confirmed"],
   },
   pharmacy_selection: {
     id: "pharmacy_selection",
@@ -143,8 +193,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
   payment: {
     id: "payment",
     lane: "patient",
-    needs: ["pharmacy", "price"],
-    needsModulesWhen: [{ props: { method: "mail_order" }, modules: ["scheduling"] }],
+    needs: ["consentVerified"],
+    requiresModulesWhen: [{ props: { method: "mail_order" }, modules: ["scheduling"] }],
     sets: ["paymentVerified"],
     trackerSteps: ["Payment received"],
   },
