@@ -12,10 +12,7 @@ import { BRAND } from "@/brand";
  * Copay's retail address matches the demo patient's home in Orlando, FL.
  */
 export interface CoassistContent {
-  /** What BI finds for DTP and Copay. Only "coverage_found" means a PA is required. DME takes its result from the BI event. */
-  biResult: "coverage_found" | "no_coverage";
-  /** How the PA resolves once the agent opens the PA stage. DME always approves. */
-  paOutcome: "approved" | "denied";
+  // What BI finds and how the PA resolves are the `bi` and `pa` forks (forks.ts). The scenario's `choices` pick them.
   retail: Pharmacy;
   mailOrder: Pharmacy;
   selfPay: Pharmacy;
@@ -42,9 +39,8 @@ const TRANSFER_PHARMACY: Pharmacy = BRAND.program.transferPartner ?? {
 export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
   intake: "erx",
+  choices: { bi: "coverage_found", pa: "approved" },
   content: {
-    biResult: "coverage_found",
-    paOutcome: "approved",
     retail: { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" },
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
@@ -55,9 +51,8 @@ export const COA_DTP: ScenarioDefinition<CoassistContent> = {
 export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Copay",
   intake: "erx",
+  choices: { bi: "coverage_found", pa: "approved" },
   content: {
-    biResult: "coverage_found",
-    paOutcome: "approved",
     retail: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
@@ -70,10 +65,8 @@ export const COA_DME: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DME",
   intake: "erx",
   // The story: pharmacy coverage. A demo in the brand file or the presenter can pick another branch.
-  choices: { bi: "pharmacy_covered" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   content: {
-    biResult: "coverage_found",
-    paOutcome: "approved",
     retail: COA_DTP.content.retail,
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,

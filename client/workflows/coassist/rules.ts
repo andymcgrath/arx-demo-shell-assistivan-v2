@@ -15,7 +15,7 @@
 import type { WorkflowData } from "@/engine/types";
 import type { Rule } from "@/engine/workflow/types";
 import { exitFor } from "@/engine/workflow/forks";
-import { DME_BI_FORK } from "./forks";
+import { PA_FORK, biForkFor } from "./forks";
 import type { CoassistContent } from "./scenarios";
 
 type CoaRule = Rule<any, CoassistContent>;
@@ -91,22 +91,15 @@ export const COASSIST_RULES: CoaRule[] = [
     emit: { portal: "analytics", step: 6 },
   },
   {
+    // One BI resolves to the exit the scenario's `bi` fork picked (forks.ts). An event that carries a result (DTP and
+    // Copay) or the two benefit statuses (DME) still wins, so a replay or a test can force one.
     on: "COMPLETE_BI",
-    scenarios: [...DTP_COPAY],
-    when: (d) => d.biStatus === "running",
-    set: (_d, e, s) => ({ biStatus: "complete", biResult: e.result ?? s.content.biResult }),
-    emit: { portal: "analytics", step: 7 },
-    // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA checks the BI result.
-    then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
-  },
-  {
-    // DME: one BI resolves to one of three coverage outcomes. The `bi` fork's choice sets the outcome.
-    // An event that carries the two statuses still wins, so a replay or a test can force one.
-    on: "COMPLETE_BI",
-    scenarios: ["CoA_DME"],
     when: (d) => d.biStatus === "running",
     set: (d, e) => {
-      const chosen = exitFor(DME_BI_FORK, d).data;
+      const chosen = exitFor(biForkFor(d.flowType), d).data;
+      // DTP and Copay exits carry a result. Only `coverage_found` means a PA is required.
+      if (chosen.pharmacyBenefitStatus === undefined) return { biStatus: "complete", biResult: e.result ?? chosen.biResult };
+      // DME: one BI resolves to one of four coverage outcomes. Their exits carry the two benefit statuses.
       const pharmacy = e.pharmacyBenefitStatus ?? chosen.pharmacyBenefitStatus;
       const medical = e.medicalBenefitStatus ?? chosen.medicalBenefitStatus;
       return {
@@ -124,7 +117,8 @@ export const COASSIST_RULES: CoaRule[] = [
       { portal: "analytics", step: 7 },
       { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: dmeNeitherCovered },
     ],
-    // Only "pharmacy covered, medical not" needs a PA. SUBMIT_PA ignores the other outcomes.
+    // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA checks the BI result:
+    // DTP and Copay need `coverage_found`, and DME needs "pharmacy covered, medical not". It ignores the rest.
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
   },
 
@@ -132,29 +126,18 @@ export const COASSIST_RULES: CoaRule[] = [
   // The CRM reports "the agent is looking at this stage" (VIEW_STAGE) and "left it" (LEAVE_STAGE).
   // The machine owns the delay and the outcome. Leaving the stage cancels a pending reveal.
   {
+    // The BI result lands after a delay once the agent opens the BI stage. The `bi` fork's exit decides it. DME's stage
+    // event may also carry the statuses the presenter picked on the CRM, which COMPLETE_BI prefers.
     on: "VIEW_STAGE",
     snapshot: false,
-    scenarios: [...DTP_COPAY],
     when: (d, e) => e.stage === "BI" && d.biStatus === "running",
     then: {
       trigger: "agent",
       id: "bi-reveal",
       after: REVEAL_MS,
-      send: (_d, _e, s) => ({ type: "COMPLETE_BI", result: s.content.biResult }),
-    },
-  },
-  {
-    // DME: the presenter picks the BI outcome on the CRM and the stage view carries it.
-    on: "VIEW_STAGE",
-    snapshot: false,
-    scenarios: ["CoA_DME"],
-    when: (d, e) => e.stage === "BI" && d.biStatus === "running",
-    then: {
-      trigger: "agent",
-      id: "bi-reveal",
-      after: REVEAL_MS,
-      send: (_d, e) => ({
+      send: (d, e) => ({
         type: "COMPLETE_BI",
+        result: exitFor(biForkFor(d.flowType), d).data.biResult,
         pharmacyBenefitStatus: e.pharmacyBenefitStatus,
         medicalBenefitStatus: e.medicalBenefitStatus,
       }),
@@ -168,7 +151,8 @@ export const COASSIST_RULES: CoaRule[] = [
       trigger: "agent",
       id: "pa-decision",
       after: REVEAL_MS,
-      send: (_d, _e, s) => ({ type: s.content.paOutcome === "denied" ? "DENY_PA" : "APPROVE_PA" }),
+      // The `pa` fork's exit decides the outcome. DME pins `approved`.
+      send: (d) => ({ type: exitFor(PA_FORK, d).id === "denied" ? "DENY_PA" : "APPROVE_PA" }),
     },
   },
   {

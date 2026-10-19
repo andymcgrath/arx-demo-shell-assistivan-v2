@@ -151,7 +151,7 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
   pa_notification: {
     id: "pa_notification",
     lane: "patient",
-    needs: ["consentVerified", "fork:bi"],
+    needs: ["consentVerified", "fork:pa"],
     sets: ["paNotified"],
     trackerSteps: ["Decision confirmed by patient"],
   },

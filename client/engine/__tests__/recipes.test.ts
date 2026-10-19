@@ -3,6 +3,9 @@ import { MODULE_CONTRACTS, type ScenarioRecipe } from "@/engine/workflow/compone
 import { recipeProblems } from "@/engine/workflow/recipe";
 import { COASSIST_RECIPES } from "@/workflows/coassist/recipes";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
+import { forksForScenario } from "@/engine/workflow/forks";
+import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import type { FlowType } from "@/engine/types";
 
 /**
  * Recipes are data, so a headless test can check them. These tests cover the recipe validator and
@@ -17,10 +20,17 @@ const recipe = (over: Partial<ScenarioRecipe>): ScenarioRecipe => ({
   ...over,
 });
 
+const forksFor = (flowType: string) => forksForScenario(COASSIST_FORKS, flowType as FlowType);
+
 describe("CoAssist recipes", () => {
   for (const [flowType, r] of Object.entries(COASSIST_RECIPES)) {
-    it(`${flowType} is a valid recipe`, () => {
-      expect(recipeProblems(r)).toEqual([]);
+    it(`${flowType} is a valid recipe, and its choices name declared exits`, () => {
+      expect(recipeProblems(r, forksFor(flowType))).toEqual([]);
+    });
+
+    it(`${flowType}: the recipe's choices match the scenario's defaults`, () => {
+      const scenario = ALL_SCENARIOS.find((s) => s.flowType === flowType)!;
+      expect(r.choices).toEqual(scenario.choices);
     });
   }
 
@@ -30,15 +40,54 @@ describe("CoAssist recipes", () => {
     }
   });
 
-  it("a recipe's starting choices name declared forks and exits", () => {
-    const forks = new Map(COASSIST_FORKS.map((f) => [f.id, f]));
-    for (const r of Object.values(COASSIST_RECIPES)) {
-      for (const [forkId, exitId] of Object.entries(r.choices)) {
-        const fork = forks.get(forkId);
-        expect(fork, `fork ${forkId}`).toBeDefined();
-        expect(fork!.exits.map((e) => e.id)).toContain(exitId);
-      }
-    }
+  it("every recipe passes through the bi and pa forks", () => {
+    for (const r of Object.values(COASSIST_RECIPES)) expect(r.forks).toEqual(["bi", "pa"]);
+  });
+
+  it("DME pins the PA to approved", () => {
+    expect(COASSIST_RECIPES.CoA_DME.choices.pa).toBe("approved");
+  });
+});
+
+describe("recipeProblems and forks", () => {
+  const dtpForks = forksFor("CoA_DTP");
+  const passthrough = { forks: ["bi", "pa"], choices: { bi: "coverage_found", pa: "approved" } };
+
+  it("needs the pa fork for pa_notification", () => {
+    const problems = recipeProblems(recipe({ forks: ["bi"], modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }] }));
+    expect(problems).toContain('pa_notification needs "fork:pa", and nothing before it provides it');
+  });
+
+  it("rejects a pick of denied without a module that handles a denial", () => {
+    const denied = { ...passthrough, choices: { bi: "coverage_found", pa: "denied" } };
+    const without = recipe({ ...denied, modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }] });
+    expect(recipeProblems(without, dtpForks)).toContain('fork "pa" exit "denied" requires cash_offer in the recipe');
+
+    const withCashOffer = recipe({ ...denied, modules: [{ id: "enrollment" }, { id: "pa_notification" }, { id: "cash_offer" }, { id: "tracking" }] });
+    expect(recipeProblems(withCashOffer, dtpForks)).toEqual([]);
+  });
+
+  it("rejects a choice that names no declared fork or exit", () => {
+    const badExit = recipe({ ...passthrough, choices: { pa: "maybe" } });
+    expect(recipeProblems(badExit, dtpForks)).toContain('fork "pa" has no exit "maybe"');
+
+    const badFork = recipe({ ...passthrough, choices: { nope: "x" } });
+    expect(recipeProblems(badFork, dtpForks)).toContain('choice names fork "nope", which is not declared for this scenario');
+  });
+
+  it("rejects a fork the scenario does not declare", () => {
+    const problems = recipeProblems(recipe({ forks: ["bi", "appeal"], modules: [{ id: "enrollment" }, { id: "tracking" }] }), dtpForks);
+    expect(problems).toContain('fork "appeal" is not declared for this scenario');
+  });
+
+  it("uses the BI fork that belongs to the scenario", () => {
+    // A DME exit is not an exit of the DTP fork, and the reverse.
+    expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "pharmacy_covered" } }), dtpForks)).toContain(
+      'fork "bi" has no exit "pharmacy_covered"',
+    );
+    expect(recipeProblems(recipe({ ...passthrough, choices: { bi: "coverage_found" } }), forksFor("CoA_DME"))).toContain(
+      'fork "bi" has no exit "coverage_found"',
+    );
   });
 });
 

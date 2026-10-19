@@ -1,4 +1,6 @@
+import type { FlowType } from "@/engine/types";
 import type { ForkDefinition, StageEvent } from "@/engine/workflow/types";
+import { forkApplies } from "@/engine/workflow/forks";
 
 /**
  * CoAssist forks. A fork is a point where the story has a default branch and named alternatives.
@@ -122,4 +124,59 @@ export const DME_BI_FORK: ForkDefinition = {
   ],
 };
 
-export const COASSIST_FORKS: ForkDefinition[] = [DME_BI_FORK];
+/**
+ * BI for DTP and Copay. The result decides whether a PA is needed: only `coverage_found` submits one.
+ * The story picks it. No presenter button, so the demo's behavior is the same as before the fork existed.
+ * `no_coverage` is reachable by event only. The patient app has no screens for it yet, so a recipe that picks
+ * it must include `cash_offer`.
+ */
+export const STANDARD_BI_FORK: ForkDefinition = {
+  id: "bi",
+  label: "Benefits investigation result",
+  chooser: "story",
+  scenarios: ["CoA_DTP", "CoA_Copay"],
+  resolved: (d) => d.biStatus === "complete",
+  exits: [
+    {
+      id: "coverage_found",
+      label: "Coverage found",
+      description: "Coverage is found and a PA is required.",
+      data: { biResult: "coverage_found" },
+    },
+    {
+      id: "no_coverage",
+      label: "No coverage",
+      description: "No coverage is found. No PA is submitted.",
+      data: { biResult: "no_coverage" },
+      requires: ["cash_offer"],
+    },
+  ],
+};
+
+/**
+ * The PA decision, the same fork for every CoAssist scenario. The story picks it, so the decision lands when the
+ * agent opens the PA stage. DME declares it too and pins `approved`. Its rules do not handle a denial yet, so
+ * `denied` requires `cash_offer`. Step 2.4 gives that module the denial rules.
+ */
+export const PA_FORK: ForkDefinition = {
+  id: "pa",
+  label: "Prior authorization decision",
+  chooser: "story",
+  resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
+  exits: [
+    { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },
+    {
+      id: "denied",
+      label: "Denied",
+      description: "The PA is denied and the patient gets a cash offer.",
+      data: { paStatus: "denied" },
+      requires: ["cash_offer"],
+    },
+  ],
+};
+
+export const COASSIST_FORKS: ForkDefinition[] = [DME_BI_FORK, STANDARD_BI_FORK, PA_FORK];
+
+/** The BI fork that applies to a scenario. DME has its own, so this reads the declarations and not the flow type. */
+export const biForkFor = (flowType: FlowType): ForkDefinition =>
+  COASSIST_FORKS.find((f) => f.id === "bi" && forkApplies(f, flowType)) ?? STANDARD_BI_FORK;

@@ -6,6 +6,7 @@ import {
   type ScenarioRecipe,
   type TriageModuleId,
 } from "./components";
+import type { ForkDefinition } from "./types";
 
 /**
  * Pure checks for a scenario recipe. No React, no store, no machine. A recipe that fails here cannot work,
@@ -17,8 +18,10 @@ import {
  * - `needsModules` appear earlier, and `requiresModulesWhen` appear somewhere
  * - tracking comes last
  * - the Triage exit's rules: required modules are present, forbidden ones are absent
+ * - when `forks` is passed (the forks that apply to this scenario): every fork the recipe names is declared,
+ *   every choice names a declared exit, and the recipe includes the modules that exit `requires`
  */
-export function recipeProblems(recipe: ScenarioRecipe): string[] {
+export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[]): string[] {
   const problems: string[] = [];
   const source = SOURCES[recipe.source];
   if (!source) return [`source "${recipe.source}" is not defined yet`];
@@ -59,6 +62,27 @@ export function recipeProblems(recipe: ScenarioRecipe): string[] {
     for (const [id, rule] of Object.entries(rules) as [TriageModuleId, string][]) {
       if (rule === "required" && !ids.includes(id)) problems.push(`triage "${recipe.triage}" requires ${id}`);
       if (rule === "forbidden" && ids.includes(id)) problems.push(`triage "${recipe.triage}" forbids ${id}`);
+    }
+  }
+
+  if (forks) {
+    for (const id of recipe.forks) {
+      if (!forks.some((f) => f.id === id)) problems.push(`fork "${id}" is not declared for this scenario`);
+    }
+    for (const [forkId, exitId] of Object.entries(recipe.choices)) {
+      const fork = forks.find((f) => f.id === forkId);
+      if (!fork) {
+        problems.push(`choice names fork "${forkId}", which is not declared for this scenario`);
+        continue;
+      }
+      const exit = fork.exits.find((e) => e.id === exitId);
+      if (!exit) {
+        problems.push(`fork "${forkId}" has no exit "${exitId}"`);
+        continue;
+      }
+      for (const m of exit.requires ?? []) {
+        if (!ids.includes(m as ModuleId)) problems.push(`fork "${forkId}" exit "${exitId}" requires ${m} in the recipe`);
+      }
     }
   }
 

@@ -57,6 +57,12 @@ export interface ForkExit {
    * branch sends its own events, so the list changes when the presenter or the demo changes branch.
    */
   stages?: ForkStage[];
+  /**
+   * Module ids a recipe must include to pick this exit (see `recipeProblems`). A recipe that picks `denied`
+   * without a module that handles a denial fails a test, not a demo. Module ids are plain strings here so
+   * this file does not import the component catalog.
+   */
+  requires?: string[];
 }
 
 /**

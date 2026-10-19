@@ -39,7 +39,18 @@ Each sub-step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed o
 
 **2.1 Recipes as data.** Add a recipe for each scenario, using today's behavior. Add the three modules above to the catalog. Add `recipeProblems()`, a pure validator for needs and sets order and Triage rules. Add a headless test that validates all three recipes and rejects a bad order. No machine change.
 
-**2.2 BI and PA forks for every scenario.** Declare `bi` and `pa` forks for DTP and Copay. Move `content.biResult` and `content.paOutcome` into scenario `choices`. Collapse the paired `COMPLETE_BI`, `SUBMIT_PA`, and `VIEW_STAGE` rules into fork-driven ones. Demos in brand files keep working because the brand test only checks that choices name declared exits.
+**2.2 BI and PA forks for every scenario.** Declare `bi` and `pa` forks for all three scenarios, DME included, with no exceptions. Move `content.biResult` and `content.paOutcome` into scenario `choices`. The DME recipe pins `pa` to `approved` and locks it. Collapse the paired `COMPLETE_BI`, `SUBMIT_PA`, and `VIEW_STAGE` rules into fork-driven ones. `pa_notification` needs `fork:pa` in every recipe, and the DME recipe lists `pa`. This reverses the 2.1 exception. Demos in brand files keep working because the brand test only checks that choices name declared exits.
+
+The recipe decides which exit a fork walks. DME's `pa` fork declares `approved` and `denied`, and the DME recipe pins `approved`. Two small additions support this:
+
+- A fork exit can name the modules it needs (`requires`). `pa.denied` requires `cash_offer`. `recipeProblems()` rejects a recipe that picks `denied` without one, so a bad combination fails a test and not a demo.
+- Locking a fork per recipe is not needed yet. The new forks use `chooser: "story"`, which already means no presenter button. A per-recipe lock waits until a presenter should pick `bi` or `pa` on DTP.
+
+Known gap, closed in 2.4: DME's rules still ignore `DENY_PA`, so `requires: ["cash_offer"]` passes for a DME recipe that picks `denied` while the machine would not follow it. Nothing picks it today. Module-owned rules in 2.4 remove the gap.
+
+DTP and Copay stage ladders stay hard-coded in `coassistLadders.ts` for now. Only DME's ladder reads its fork.
+
+Because no DME behavior is added, there is no separate DME denial sub-step. Once modules own their screens (2.5), a DME recipe with `cash_offer` gets the denial routing without a new rule.
 
 **2.3 The patient-chosen fork.** Declare a `pricing` fork with `chooser: "patient"`. DTP exits are `retail`, `mail_order`, and `self_pay`. Copay exits are `copay_then_retail`, `copay_then_mail_order`, and `retail`. The fork replaces the three `SELECT_SELF_PAY` rules and the pricing rule.
 
@@ -59,6 +70,6 @@ Each sub-step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed o
 
 ## Decisions needed
 
-1. Patient-chosen pricing: a `chooser: "patient"` fork (recommended) or fixed by the recipe.
-2. Tag granularity: one tag per sub-step (recommended) or one tag for all of step 2.
+1. Patient-chosen pricing (decided: a `chooser: "patient"` fork).
+2. Tag granularity: one tag per sub-step (decided: one tag per sub-step, `refactor/23` onward).
 3. Starting point: 2.1 first (recommended, no behavior change).

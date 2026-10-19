@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ctx, startFlow } from "./harness";
+import { SimulatedClock, ctx, startFlow } from "./harness";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ALL_FORKS } from "@/workflows/forks";
 import { choiceProblems, exitFor } from "@/engine/workflow/forks";
@@ -57,7 +57,7 @@ describe("DME pharmacy transfer branch", () => {
 describe("DME benefits investigation fork", () => {
   it("starts on the story's default branch", () => {
     const actor = startFlow("CoA_DME");
-    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered" });
+    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
     enrollThroughBiRunning(actor);
     expect(data(actor).biStatus).toBe("running");
     actor.send({ type: "COMPLETE_BI" } as any);
@@ -96,7 +96,7 @@ describe("DME benefits investigation fork", () => {
     const actor = startFlow("CoA_DME");
     actor.send({ type: "CHOOSE", fork: "bi", exit: "nonsense" } as any);
     actor.send({ type: "CHOOSE", fork: "nope", exit: "pharmacy_covered" } as any);
-    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered" });
+    expect(data(actor).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
   });
 
   it("keeps the choice through RESET, and RESET can change it", () => {
@@ -107,7 +107,7 @@ describe("DME benefits investigation fork", () => {
     expect(data(actor).biStatus).toBe("none");
 
     actor.send({ type: "RESET", choices: { bi: "no_coverage", bogus: "x" } } as any);
-    expect(data(actor).choices).toEqual({ bi: "no_coverage" });
+    expect(data(actor).choices).toEqual({ bi: "no_coverage", pa: "approved" });
   });
 
   it("lets an event that carries the statuses force an outcome (ladders and golden paths)", () => {
@@ -120,10 +120,63 @@ describe("DME benefits investigation fork", () => {
 
 describe("forks on other flows", () => {
   it("leaves flows without forks alone", () => {
-    const actor = startFlow("CoA_DTP");
+    const actor = startFlow("Fax_QS_PA_Approved");
     expect(data(actor).choices).toEqual({});
     actor.send({ type: "CHOOSE", fork: "bi", exit: "no_coverage" } as any);
     expect(data(actor).choices).toEqual({});
+  });
+});
+
+describe("BI and PA forks on DTP and Copay", () => {
+  const PA_FLOWS = ["CoA_DTP", "CoA_Copay"] as const;
+  const REVEAL_MS = 3000;
+
+  for (const flow of PA_FLOWS) {
+    it(`${flow}: starts on coverage found and an approved PA`, () => {
+      expect(data(startFlow(flow)).choices).toEqual({ bi: "coverage_found", pa: "approved" });
+    });
+
+    it(`${flow}: a BI with no result takes the exit the fork picked`, () => {
+      const covered = startFlow(flow);
+      enrollThroughBiRunning(covered);
+      covered.send({ type: "COMPLETE_BI" } as any);
+      expect(data(covered)).toMatchObject({ biResult: "coverage_found", paStatus: "submitted" });
+
+      const none = startFlow(flow, { choices: { bi: "no_coverage" } });
+      enrollThroughBiRunning(none);
+      none.send({ type: "COMPLETE_BI" } as any);
+      expect(data(none)).toMatchObject({ biResult: "no_coverage", paStatus: "none" });
+    });
+
+    it(`${flow}: an event that carries a result still wins over the fork`, () => {
+      const actor = startFlow(flow);
+      enrollThroughBiRunning(actor);
+      actor.send({ type: "COMPLETE_BI", result: "no_coverage" } as any);
+      expect(data(actor)).toMatchObject({ biResult: "no_coverage", paStatus: "none" });
+    });
+
+    it(`${flow}: the pa fork decides what opening the PA stage does`, () => {
+      for (const [exit, status] of [["approved", "approved"], ["denied", "denied"]] as const) {
+        const clock = new SimulatedClock();
+        const actor = startFlow(flow, { clock, choices: { pa: exit } });
+        enrollThroughBiRunning(actor);
+        actor.send({ type: "COMPLETE_BI" } as any);
+        actor.send({ type: "VIEW_STAGE", stage: "PA" } as any);
+        clock.increment(REVEAL_MS);
+        expect(data(actor).paStatus).toBe(status);
+      }
+    });
+  }
+
+  it("CoA_DME: the pa fork is declared and pinned to approved", () => {
+    const clock = new SimulatedClock();
+    const actor = startFlow("CoA_DME", { clock });
+    expect(data(actor).choices.pa).toBe("approved");
+    enrollThroughBiRunning(actor);
+    actor.send({ type: "COMPLETE_BI" } as any);
+    actor.send({ type: "VIEW_STAGE", stage: "PA" } as any);
+    clock.increment(REVEAL_MS);
+    expect(data(actor).paStatus).toBe("approved");
   });
 });
 
@@ -137,7 +190,12 @@ describe("fork declarations", () => {
   it("report choices that name no real fork or exit", () => {
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "no_coverage" })).toEqual([]);
     expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "nonsense" })).toHaveLength(1);
-    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "no_coverage" })).toHaveLength(1);
+    // Each scenario has its own BI fork. A DME exit means nothing on DTP, and the reverse.
+    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "no_coverage" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { bi: "pharmacy_covered" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_DME", { bi: "coverage_found" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_DME", { pa: "denied" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "Fax_QS_PA_Approved", { bi: "no_coverage" })).toHaveLength(1);
   });
 
   it("have a default that names a real exit, for every scenario", () => {
