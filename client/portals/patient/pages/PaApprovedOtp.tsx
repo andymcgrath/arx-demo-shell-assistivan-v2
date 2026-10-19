@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
+import { useWorkflowDispatch, useWorkflowActor } from "@/engine/WorkflowProvider";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 
 /**
  * PA Approved OTP — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
@@ -8,20 +9,18 @@ import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider"
  * iAssist.ts's updatePaApprovedOtpVerified). WF1 (Fax_QS_PA_Approved) never
  * routes here. CoA_Coverage Scenario 1 also routes here now (see PaApprovedSms.tsx
  * and workflows/coassist/'s paApprovedSmsVerified state) — fully generic UI, no
- * drug-specific copy, so the only coverage-specific wrinkle is where "Continue"
- * sends the patient next (see validateAndSubmit below).
+ * drug-specific copy.
  *
  * A second identity check after PA approval, separate from the original
  * enrollment OTP (OTPVerification.tsx, untouched — this is a dedicated
  * screen so WF1's onboarding OTP can't be affected by anything here).
- * Dispatches VERIFY_PA_APPROVED_OTP and continues to Benefit Pricing
- * (CoA_DTP/iAssist) or Network Pharmacy Selection (CoA_Coverage).
+ * Dispatches VERIFY_PA_APPROVED_OTP and continues to whatever screen the workflow derives next (Benefit Pricing,
+ * Network Pharmacy Selection, or the transfer confirmation).
  */
 export default function PaApprovedOtp() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
-  const { workflowData } = usePersonaState('patient');
-  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
+  const actor = useWorkflowActor();
 
   const [otpInput, setOtpInput] = useState("");
   const [error, setError] = useState("");
@@ -51,7 +50,10 @@ export default function PaApprovedOtp() {
   const validateAndSubmit = (code: string) => {
     if (code === correctOTP) {
       dispatch("VERIFY_PA_APPROVED_OTP", { portal: "patient" });
-      navigate(isCoverageFlow ? "/network-pharmacy-selection" : "/benefit-pricing");
+      // The workflow decides what follows the code: the pricing menu, the network pharmacy pick, the transfer
+      // confirmation for an assigned pharmacy, or a pinned pick. The screens that follow are "sticky", so the
+      // state-driven navigation would not move the patient off a wrong guess.
+      navigate(derivePatientRoute(actor.getSnapshot().context));
     } else {
       setError("That code didn't match. Please try again or request a new one.");
       setOtpInput("");
