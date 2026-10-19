@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { createActor, SimulatedClock } from "xstate";
 import type { FlowType } from "@/engine/types";
 import { forksForScenario } from "@/engine/workflow/forks";
-import { routeFor } from "@/engine/workflow/screens";
+import { routeFor, rulesFor, screenMapProblems } from "@/engine/workflow/screens";
 import { coassistMachine } from "@/workflows/coassist";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
@@ -15,7 +15,7 @@ import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
  * The first matching route rule wins. Moving the route rules into module slots (PLAN_STEP2.md, 2.5) may reorder
  * rules that can never match together, so the recorded order is not the proof. This is: for each scenario, walk many
  * event sequences through the real machine, and at every state compare the route the screen map gives with a
- * reference that tries the rules in the order recorded in __fixtures__/rules/coassist-screens.json (the order
+ * reference that tries the rules in the order frozen in __fixtures__/rules/coassist-route-order.json (the order
  * before the move). Any state where they disagree is a patient landing on the wrong screen.
  *
  * Each walk picks only events the machine accepts, so it gets deep. Fork pins are random per walk. The walk is
@@ -74,14 +74,27 @@ function referenceRoute(order: string[], data: any): string {
   return COASSIST_SCREENS.fallback;
 }
 
+// The order before the move, frozen. Never re-record it: it is the reference the slot spine is held to.
 const fixture = JSON.parse(
-  fs.readFileSync(path.join(process.cwd(), "client/engine/__tests__/__fixtures__/rules/coassist-screens.json"), "utf8"),
+  fs.readFileSync(path.join(process.cwd(), "client/engine/__tests__/__fixtures__/rules/coassist-route-order.json"), "utf8"),
 );
 
 describe("CoAssist route equivalence", () => {
+  it("applies the same rules to each scenario as the frozen order lists", () => {
+    // Scope replaced the `scenarios` lists. Each scenario must still get exactly the rules it had.
+    for (const flow of FLOWS) {
+      const now = rulesFor(COASSIST_SCREENS, flow as FlowType).map((r) => r.id).sort();
+      expect(now).toEqual([...fixture.scenarios[flow]].sort());
+    }
+  });
+
+  it("has no screen map problems", () => {
+    expect(screenMapProblems(COASSIST_SCREENS)).toEqual([]);
+  });
+
   for (const flow of FLOWS) {
     it(`${flow}: the screen map routes every reachable state as the recorded order does`, () => {
-      const recordedOrder: string[] = fixture.scenarios[flow].route.map((s: string) => s.split(" -> ")[0]);
+      const recordedOrder: string[] = fixture.scenarios[flow];
       const forks = forksForScenario(COASSIST_FORKS, flow as FlowType);
       const mismatches: string[] = [];
       const matched = new Set<string>();
@@ -104,8 +117,12 @@ describe("CoAssist route equivalence", () => {
           const expected = referenceRoute(recordedOrder, data);
           states++;
           if (route !== expected) mismatches.push(`walk ${walk} step ${step}: got ${route}, recorded order gives ${expected}`);
-          const winner = COASSIST_SCREENS.rules.find((r) => recordedOrder.includes(r.id!) && (!r.when || r.when(data)));
-          if (winner) matched.add(winner.id!);
+          const byId = new Map(COASSIST_SCREENS.rules.map((r) => [r.id, r]));
+          const winner = recordedOrder.find((id) => {
+            const r = byId.get(id)!;
+            return !r.when || r.when(data);
+          });
+          if (winner) matched.add(winner);
 
           const options = EVENTS.filter((e) => snapshot.can(e as any));
           if (!options.length) break;

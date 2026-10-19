@@ -130,6 +130,8 @@ Shared helpers (`inFulfillmentTail`, `assignment`, `prePicked`, `pricingExit`) m
 
 **2.5a (done).** Every one of the 42 route rules has an id, and `coassist-screens.json` records, per scenario, the route rules in the order they are tried, the menu, and the sticky screens.
 
+**2.5b (done).** Screens and route rules live in `workflows/coassist/modules/screens/<module>.ts`. `modules/slots.ts` declares 13 slots (gate, awaiting, transfer, pa_notice, pricing, pharmacy, shortcut, cash_offer, address, date, payment, tracking, fallback) and the menu group order. Every `scenarios:` filter became a `scope`: `STANDARD_BI` (fork `bi`, exit `coverage_found`) for DTP and Copay, `DME_BI` (exit `pharmacy_covered`) for DME, `{fork:"pricing"}`, `{fork:"copay"}`, or a module and variant. Menu screens are scoped by module, so a recipe without `scheduling` drops those screens. `coassist-route-order.json` freezes the old order. The walk test holds the new one to it, and fails when I move `shortcut` after `tracking`. `coassist-screens.json` changed in route order only. Menu and sticky are identical.
+
 **What the recorded order shows.** The first match wins, and the modules interleave in the order a patient meets them. Module runs, in route order:
 
 | Scenario | Runs |

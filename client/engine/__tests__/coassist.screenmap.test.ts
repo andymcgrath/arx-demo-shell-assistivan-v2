@@ -7,8 +7,9 @@ import { expectMatchesFixture } from "./harness";
  * The CoAssist screen map, recorded per scenario.
  *
  * The first matching route rule wins, so the order of the rules a scenario sees decides which screen a patient lands
- * on. Moving the rules into module files (PLAN_STEP2.md, 2.5) must not reorder or re-scope them. This test records,
- * for each scenario:
+ * on. Since 2.5b the rules live in module files and run slot by slot. Which rules each scenario gets must not change
+ * without a fixture diff, and `coassist.routes.test.ts` proves the order still routes every reachable state the same
+ * way. This test records, for each scenario:
  *
  * - `route`: the route rules in the order they are tried, each as `id -> path`
  * - `menu`: the hamburger menu
