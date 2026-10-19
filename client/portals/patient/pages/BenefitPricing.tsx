@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, Store, Truck, Sparkles } from "lucide-react";
-import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
@@ -152,6 +154,20 @@ const COPAY_POST_ENROLL_OPTIONS: PricingOption[] = [
 
 export default function BenefitPricing() {
   const { workflowData } = usePersonaState('patient');
+  const navigate = useNavigate();
+  const actor = useWorkflowActor();
+
+  // A recipe or demo can pin the pricing pick (workflows/coassist/forks.ts). The rules apply it when the PA approval
+  // is verified, or route to the offer screen for a pick the patient must confirm (self-pay). Either way there is
+  // no menu to show. Go to the screen the data says comes next. This runs only for a pinned pick. Opening the
+  // screen from the menu after a live pick still shows the menu.
+  const pinned = !!workflowData.choices?.pricing;
+  const target = pinned ? derivePatientRoute(actor.getSnapshot().context) : "/benefit-pricing";
+  const skipMenu = pinned && target !== "/benefit-pricing";
+  useEffect(() => {
+    if (skipMenu) navigate(target, { replace: true });
+  }, [skipMenu, target, navigate]);
+  if (skipMenu) return null;
 
   // CoA_Copay is the only flow where Copay isn't a third mutually-exclusive
   // pricing tier alongside Retail/Mail — see this file's header comment.

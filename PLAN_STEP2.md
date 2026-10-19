@@ -54,7 +54,11 @@ Because no DME behavior is added, there is no separate DME denial sub-step. Once
 
 **2.3 The patient-chosen forks.** See "2.3 design" below. DTP and Copay only. DME is out: its pricing is set by the BI exit and the cash-offer path, so there is no patient pick to model.
 
-**2.3b Pre-picked pricing (optional, new behavior).** A recipe or demo that pins `pricing` skips the menu and applies the pick when the PA approval OTP verifies. DME's pharmacy transfer already works this way through `pharmacyAssigned`. One new fixture, reviewed. This is what lets a sales rep ask for "skip the pricing screen."
+**2.3b Pre-picked pricing (new behavior).** A recipe or demo that pins `pricing` or `copay` in `choices` skips the menu. The pick applies when the PA approval verifies, on both paths: the OTP, and the consent shortcut when the PA was approved first. DME's pharmacy transfer already works this way through `pharmacyAssigned`. This is what lets a sales rep ask for "skip the pricing screen." A pinned Retail uses the scenario's default retail pharmacy. Brand demos pin through their `choices`, and the brand test already validates them against the declared exits.
+
+Browser testing changed one rule. A pinned self-pay lands on the self-pay offer and the patient accepts it there. A fork exit can carry `confirm: true`: a pin pre-selects it and routes to its own screen, and the rules apply it only when the patient accepts. Retail, Mail Order, and `copay: enroll` apply on their own. Pinning Mail Order skips the Retail-or-Mail-Order choosing step, so `copay: enroll` plus `pricing: mail_order` is valid but unrealistic for a demo. The test demo for it was removed.
+
+The one UI change: `/benefit-pricing` is a sticky screen and `PaApprovedOtp` navigates there by hand, so `BenefitPricing.tsx` redirects to the route the data says comes next, but only when the pricing pick is pinned. Opening the screen from the menu after a live pick still shows the menu. Menu generation from the recipe (2.5) will later hide screens a pin skips.
 
 **2.4 Rules per module.** Split `rules.ts` into one fragment per module. The factory assembles them from the recipe, in spine order. A test checks that the assembled order for each event matches today's order. DME's `SELECT_PHARMACY` must stay ahead of the generic one.
 

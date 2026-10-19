@@ -1,6 +1,7 @@
 import type { FlowType } from "@/engine/types";
 import type { ScreenMap } from "@/engine/workflow/screens";
 import { COASSIST_FLOWS } from "./scenarios";
+import { pricingPinNeedsConfirm } from "./forks";
 
 /**
  * CoAssist patient screens: the order the patient sees them, and the hamburger menu.
@@ -82,6 +83,12 @@ export const COASSIST_SCREENS: ScreenMap = {
       path: "/pa-approved-otp",
       scenarios: PA_FLOWS,
       when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
+    },
+    // A pin on an exit the patient must confirm (the self-pay offer) skips the menu and lands on that screen.
+    {
+      path: "/copay-enroll",
+      scenarios: [DTP],
+      when: (d) => d.paStatus === "approved" && d.paApprovedOtpVerified && d.pricingOption === null && pricingPinNeedsConfirm(d),
     },
     {
       path: "/benefit-pricing",

@@ -50,6 +50,34 @@
       "flow": "PrES_PAP",
       "label": "8. PrES PAP",
       "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
+    },
+    {
+      "id": "coa-dtp-mail-order",
+      "flow": "CoA_DTP",
+      "label": "Test: DTP, mail order",
+      "description": "Pinned pricing. After the PA approval code the patient skips the pricing menu and goes to the delivery address.",
+      "choices": { "pricing": "mail_order" }
+    },
+    {
+      "id": "coa-dtp-self-pay",
+      "flow": "CoA_DTP",
+      "label": "Test: DTP, self-pay",
+      "description": "Pinned pricing. The patient skips the pricing menu and lands on the self-pay offer. Accepting it goes to the delivery address.",
+      "choices": { "pricing": "self_pay" }
+    },
+    {
+      "id": "coa-copay-enrolled",
+      "flow": "CoA_Copay",
+      "label": "Test: Copay, pre-enrolled",
+      "description": "Pinned copay enrollment. The patient skips the enroll screen and picks Retail or Mail Order at the reduced price.",
+      "choices": { "copay": "enroll" }
+    },
+    {
+      "id": "coa-copay-retail",
+      "flow": "CoA_Copay",
+      "label": "Test: Copay, retail",
+      "description": "Pinned pricing. The Rx goes to the default retail pharmacy and the patient lands on the order tracker.",
+      "choices": { "pricing": "retail" }
     }
   ],
   "manufacturer": {

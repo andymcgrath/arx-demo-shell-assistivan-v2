@@ -253,6 +253,106 @@ describe("patient-chosen pricing forks on DTP and Copay", () => {
   });
 });
 
+/**
+ * Pinned patient picks. A recipe or a demo puts `copay` or `pricing` in `choices`. The pick applies when the
+ * PA approval is verified, so the patient skips the menu. With no pin, the menu shows as before.
+ */
+describe("pinned patient picks", () => {
+  const route = (actor: ReturnType<typeof startFlow>) => derivePatientRoute(ctx(actor) as any);
+  const startPinned = (flow: "CoA_DTP" | "CoA_Copay", choices?: Record<string, string>) => {
+    const actor = startFlow(flow, choices ? { choices } : {});
+    enrollThroughBiRunning(actor);
+    for (const type of ["COMPLETE_BI", "APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP"]) actor.send({ type } as any);
+    return actor;
+  };
+
+  it("shows the menu when nothing is pinned", () => {
+    for (const flow of ["CoA_DTP", "CoA_Copay"] as const) {
+      const actor = startPinned(flow);
+      expect(data(actor).pricingOption).toBeNull();
+      expect(route(actor)).toBe("/benefit-pricing");
+    }
+  });
+
+  it("DTP: a pinned mail order skips the menu and names the mail-order pharmacy", () => {
+    const actor = startPinned("CoA_DTP", { pricing: "mail_order" });
+    expect(data(actor)).toMatchObject({ pricingOption: "mail_order", selectedPharmacy: { name: "FutureScripts Home Delivery" } });
+    expect(route(actor)).toBe("/delivery-address");
+    expect(actor.getSnapshot().can({ type: "SELECT_PRICING_OPTION", option: "retail" } as any)).toBe(false);
+  });
+
+  it("DTP: a pinned self-pay lands on the offer, and accepting it picks self-pay", () => {
+    const actor = startPinned("CoA_DTP", { pricing: "self_pay" });
+    // The pin pre-selects the exit. The patient still accepts the offer, so nothing is applied yet.
+    expect(data(actor).pricingOption).toBeNull();
+    expect(route(actor)).toBe("/copay-enroll");
+
+    actor.send({ type: "SELECT_SELF_PAY" } as any);
+    expect(data(actor)).toMatchObject({ pricingOption: "self_pay", selectedPharmacy: { name: "CoAssist Pharmacy" } });
+    expect(route(actor)).toBe("/delivery-address");
+  });
+
+  it("DTP: a pinned self-pay lands on the offer when the PA was approved before the patient consented", () => {
+    const actor = startFlow("CoA_DTP", { choices: { pricing: "self_pay" } });
+    for (const type of ["REFERRAL_RECEIVED", "COMPLETE_BI", "APPROVE_PA", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT"]) {
+      actor.send({ type } as any);
+    }
+    expect(data(actor).pricingOption).toBeNull();
+    expect(route(actor)).toBe("/copay-enroll");
+  });
+
+  it("DTP: applies when the PA was approved before the patient consented", () => {
+    const actor = startFlow("CoA_DTP", { choices: { pricing: "retail" } });
+    for (const type of ["REFERRAL_RECEIVED", "COMPLETE_BI", "APPROVE_PA", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT"]) {
+      actor.send({ type } as any);
+    }
+    expect(data(actor).pricingOption).toBe("retail");
+    expect(route(actor)).toBe("/delivery-address");
+  });
+
+  it("Copay: pinning enroll alone enrolls the patient and leaves the Retail or Mail Order pick", () => {
+    const actor = startPinned("CoA_Copay", { copay: "enroll" });
+    expect(data(actor)).toMatchObject({ copayEnrolled: true, pricingOption: null });
+    expect(route(actor)).toBe("/benefit-pricing");
+  });
+
+  it("Copay: enroll plus mail order goes straight to the delivery address", () => {
+    const actor = startPinned("CoA_Copay", { copay: "enroll", pricing: "mail_order" });
+    expect(data(actor)).toMatchObject({ copayEnrolled: true, pricingOption: "mail_order" });
+    expect(route(actor)).toBe("/delivery-address");
+    expect(pickedExit(forksForScenario(ALL_FORKS, "CoA_Copay").find((f) => f.id === "copay")!, data(actor))?.id).toBe("enroll");
+  });
+
+  it("Copay: a pinned Retail uses the default retail pharmacy and ends at the tracker", () => {
+    const actor = startPinned("CoA_Copay", { pricing: "retail" });
+    expect(data(actor)).toMatchObject({ pricingOption: "retail", selectedPharmacy: { name: "CVS Pharmacy #3795" } });
+    expect(route(actor)).toBe("/order-tracker");
+  });
+
+  it("keeps the pin through RESET, and applies it again on the replay", () => {
+    const actor = startPinned("CoA_DTP", { pricing: "mail_order" });
+    actor.send({ type: "RESET" } as any);
+    expect(data(actor).choices.pricing).toBe("mail_order");
+    expect(data(actor).pricingOption).toBeNull();
+
+    enrollThroughBiRunning(actor);
+    for (const type of ["COMPLETE_BI", "APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP"]) actor.send({ type } as any);
+    expect(data(actor).pricingOption).toBe("mail_order");
+  });
+
+  it("drops a pin that names no exit of the scenario's fork", () => {
+    expect(data(startFlow("CoA_Copay", { choices: { pricing: "self_pay" } })).choices.pricing).toBeUndefined();
+    expect(data(startFlow("CoA_DME", { choices: { pricing: "retail", copay: "enroll" } })).choices).toEqual({ bi: "pharmacy_covered", pa: "approved" });
+  });
+
+  it("lets a brand demo pin the picks through its choices", () => {
+    expect(choiceProblems(ALL_FORKS, "CoA_DTP", { pricing: "retail" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_Copay", { copay: "enroll", pricing: "mail_order" })).toEqual([]);
+    expect(choiceProblems(ALL_FORKS, "CoA_Copay", { pricing: "self_pay" })).toHaveLength(1);
+    expect(choiceProblems(ALL_FORKS, "CoA_DME", { pricing: "retail" })).toHaveLength(1);
+  });
+});
+
 describe("fork declarations", () => {
   it("say how to read the pick for every patient-chosen fork", () => {
     for (const fork of ALL_FORKS.filter((f) => f.chooser === "patient")) {

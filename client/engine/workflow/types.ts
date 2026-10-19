@@ -63,6 +63,12 @@ export interface ForkExit {
    * this file does not import the component catalog.
    */
   requires?: string[];
+  /**
+   * A pin on this exit pre-selects it but does not apply it. The route goes to the exit's own screen, and the
+   * patient accepts it there (for example the self-pay offer). Exits without it apply the moment the PA approval
+   * verifies, and the patient skips the menu.
+   */
+  confirm?: boolean;
 }
 
 /**

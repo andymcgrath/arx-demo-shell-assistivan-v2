@@ -14,7 +14,7 @@
  */
 import type { WorkflowData } from "@/engine/types";
 import type { ForkExit, Rule } from "@/engine/workflow/types";
-import { exitFor } from "@/engine/workflow/forks";
+import { exitFor, forkApplies } from "@/engine/workflow/forks";
 import { COPAY_FORK, PA_FORK, biForkFor, pricingForkFor } from "./forks";
 import type { CoassistContent } from "./scenarios";
 
@@ -62,6 +62,20 @@ const pricingPick = (exit: ForkExit, s: { content: CoassistContent }) => ({
   selectedPharmacy: s.content[PRICING_PHARMACY[exit.id]],
 });
 
+/**
+ * A recipe or a demo can pin the patient's picks (`choices.copay`, `choices.pricing`). They apply the moment the PA
+ * approval is verified, so the patient skips the menu, the same way an assigned pharmacy skips selection. A pin that
+ * names no real exit was dropped when the run started. With no pin this returns nothing, so the menu shows as before.
+ * A pinned Retail uses the scenario's default retail pharmacy. The patient did not choose a store.
+ * An exit marked `confirm` (the self-pay offer) is not applied here. The route sends the patient to its screen,
+ * and accepting it there sends SELECT_SELF_PAY.
+ */
+function prePicked(d: WorkflowData, s: { content: CoassistContent }): Partial<WorkflowData> {
+  const enroll = forkApplies(COPAY_FORK, d.flowType) && d.choices?.copay === "enroll" ? COPAY_FORK.exits.find((e) => e.id === "enroll")!.data : {};
+  const exit = d.choices?.pricing ? pricingExit(d, d.choices.pricing) : undefined;
+  return { ...enroll, ...(exit && !exit.confirm ? pricingPick(exit, s) : {}) };
+}
+
 /** How long the CRM shows a stage as "working" before the result lands. */
 const REVEAL_MS = 3000;
 
@@ -95,7 +109,9 @@ export const COASSIST_RULES: CoaRule[] = [
     when: (d) => d.otpVerified && d.consentStatus === "pending",
     set: (d, _e, s) => ({
       consentStatus: "confirmed",
-      ...(d.paStatus === "approved" ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true, ...assignment(d, s) } : {}),
+      ...(d.paStatus === "approved"
+        ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true, ...assignment(d, s), ...prePicked(d, s) }
+        : {}),
     }),
     emit: { portal: "patient", step: 5 },
   },
@@ -229,7 +245,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     on: "VERIFY_PA_APPROVED_OTP",
     when: (d) => d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
-    set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignment(d, s) }),
+    set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignment(d, s), ...prePicked(d, s) }),
     emit: { portal: "patient", step: 9 },
   },
 

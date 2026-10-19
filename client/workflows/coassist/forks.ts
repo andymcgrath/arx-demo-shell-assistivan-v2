@@ -191,7 +191,14 @@ export const DTP_PRICING_FORK: ForkDefinition = {
   exits: [
     { id: "retail", label: "Retail", description: "Fill at a retail pharmacy.", data: { pricingOption: "retail" } },
     { id: "mail_order", label: "Mail Order", description: "Ship from the mail-order pharmacy.", data: { pricingOption: "mail_order" } },
-    { id: "self_pay", label: "Self-pay", description: "Cash pay through CoAssist's own pharmacy.", data: { pricingOption: "self_pay" } },
+    {
+      id: "self_pay",
+      label: "Self-pay",
+      description: "Cash pay through CoAssist's own pharmacy. The patient accepts the offer first.",
+      data: { pricingOption: "self_pay" },
+      // A pin lands the patient on the offer screen. Accepting it is what picks self-pay.
+      confirm: true,
+    },
   ],
 };
 
@@ -233,6 +240,10 @@ export const COASSIST_FORKS: ForkDefinition[] = [
   COPAY_FORK,
   COPAY_PRICING_FORK,
 ];
+
+/** True when a pin names a pricing exit the patient still has to confirm on its own screen (the self-pay offer). */
+export const pricingPinNeedsConfirm = (d: { flowType: FlowType; choices?: Record<string, string> }): boolean =>
+  !!pricingForkFor(d.flowType)?.exits.find((e) => e.id === d.choices?.pricing)?.confirm;
 
 /** The pricing fork that applies to a scenario, or undefined when it has none (DME). */
 export const pricingForkFor = (flowType: FlowType): ForkDefinition | undefined =>
