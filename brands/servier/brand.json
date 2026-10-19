@@ -6,13 +6,31 @@
     {
       "id": "fax-qs-pa-approved",
       "flow": "Fax_QS_PA_Approved",
-      "label": "1. Standard",
+      "label": "1. Standard Enrollment",
       "description": "Standard enrollment with fax quick-start and PA approval"
+    },
+    {
+      "id": "fax-pap-audit",
+      "flow": "Fax_PAP_Audit",
+      "label": "2. Patient Assistance",
+      "description": "Patient assistance program workflow with income-qualification audit"
+    },
+    {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "3. CoAssist Direct to Patient",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+    },
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "4. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
     },
     {
       "id": "coa-pharmacy-transfer",
       "flow": "CoA_Coverage",
-      "label": "2. Pharmacy Transfer",
+      "label": "5. CoAssist Admin Only",
       "description": "BI finds pharmacy coverage, so a PA is required and starts on its own. The PA is approved. The patient does not choose a pharmacy and sees transfer details.",
       "choices": {
         "bi": "pharmacy_transfer",
