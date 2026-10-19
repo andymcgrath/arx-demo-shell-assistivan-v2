@@ -44,6 +44,7 @@ export function createInitialWorkflowData(
     infusionDate: null,
     dmeProviderTransferStatus: "none",
     pharmacyBenefitStatus: "none",
+    pharmacyAssigned: false,
     medicalBenefitStatus: "none",
     cashOfferSmsSent: false,
     cashOfferSmsVerified: false,

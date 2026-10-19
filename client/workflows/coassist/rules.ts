@@ -39,6 +39,10 @@ export function deriveBiResult(
 const dmeNeitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";
 
+/** A scenario that assigns the pharmacy hands the Rx over as soon as the PA approval is verified. No patient choice. */
+const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
+  d.pharmacyAssigned ? { pricingOption: "retail" as const, selectedPharmacy: s.content.transferPharmacy } : {};
+
 const DTP_COPAY = ["CoA_DTP", "CoA_Copay"] as const;
 
 /** How long the CRM shows a stage as "working" before the result lands. */
@@ -72,9 +76,9 @@ export const COASSIST_RULES: CoaRule[] = [
     // exist for a patient who is away when the decision lands.
     on: "CONFIRM_CONSENT",
     when: (d) => d.otpVerified && d.consentStatus === "pending",
-    set: (d) => ({
+    set: (d, _e, s) => ({
       consentStatus: "confirmed",
-      ...(d.paStatus === "approved" ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true } : {}),
+      ...(d.paStatus === "approved" ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true, ...assignment(d, s) } : {}),
     }),
     emit: { portal: "patient", step: 5 },
   },
@@ -110,6 +114,8 @@ export const COASSIST_RULES: CoaRule[] = [
         pharmacyBenefitStatus: pharmacy,
         medicalBenefitStatus: medical,
         biResult: deriveBiResult(pharmacy, medical),
+        // The pharmacy_transfer exit: pharmacy covers, so the Rx goes to an assigned pharmacy, not the patient's pick.
+        pharmacyAssigned: pharmacy === "covered" && medical !== "covered" && !!chosen.pharmacyAssigned,
         // Neither covered: the cash-offer SMS goes out automatically.
         cashOfferSmsSent: pharmacy === "not_covered" && medical === "not_covered",
       };
@@ -222,7 +228,7 @@ export const COASSIST_RULES: CoaRule[] = [
   {
     on: "VERIFY_PA_APPROVED_OTP",
     when: (d) => d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
-    set: () => ({ paApprovedOtpVerified: true }),
+    set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignment(d, s) }),
     emit: { portal: "patient", step: 9 },
   },
 
@@ -296,7 +302,8 @@ export const COASSIST_RULES: CoaRule[] = [
   },
   {
     on: "SELECT_PHARMACY",
-    when: inFulfillmentTail,
+    // An assigned pharmacy (transfer branch) is not the patient's to change.
+    when: (d) => !d.pharmacyAssigned && inFulfillmentTail(d),
     set: (_d, e) => ({ selectedPharmacy: e.pharmacy }),
     emit: { portal: "crm", step: 5 },
   },

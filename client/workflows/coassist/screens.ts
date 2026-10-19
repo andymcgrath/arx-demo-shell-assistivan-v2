@@ -50,6 +50,7 @@ export const COASSIST_SCREENS: ScreenMap = {
 
     { path: "/dme-transfer-sms", label: "Transfer SMS", group: "Provider transfer", scenarios: [DME] },
     { path: "/dme-provider-transfer", label: "DME Provider Transfer", group: "Provider transfer", scenarios: [DME], sticky: true },
+    { path: "/pharmacy-transfer", label: "Pharmacy Transfer", group: "Provider transfer", scenarios: [DME], sticky: true },
 
     { path: "/delivery-address", label: "Delivery Address", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
     { path: "/delivery-date", label: "Delivery Date", group: "{program} order", scenarios: ORDER_FLOWS, sticky: true },
@@ -124,6 +125,8 @@ export const COASSIST_SCREENS: ScreenMap = {
       scenarios: [DME],
       when: (d) => d.pharmacyBenefitStatus === "covered" && d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
     },
+    // The scenario assigns the pharmacy: the patient goes from the OTP straight to the transfer confirmation.
+    { path: "/pharmacy-transfer", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pharmacyAssigned && d.paApprovedOtpVerified },
     { path: "/network-pharmacy-selection", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" && d.pricingOption === null },
     { path: "/order-tracker", scenarios: [DME], when: (d) => d.pharmacyBenefitStatus === "covered" },
 

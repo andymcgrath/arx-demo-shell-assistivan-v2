@@ -76,6 +76,11 @@ export interface BrandConfig {
     assets: BrandAssets;
     colors: BrandColors;
     educationVideo?: { title: string; description: string; thumbnail: string; embedUrl: string };
+    /**
+     * Where a transfer sends the patient: the pharmacy in the `pharmacy_transfer` branch. Its name and contact details
+     * show on the patient's transfer confirmation and in the CRM. Optional. A brand with none uses a placeholder.
+     */
+    transferPartner?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
   };
   chatbotIcon: string;
   favicon?: string;

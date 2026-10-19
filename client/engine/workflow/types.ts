@@ -30,6 +30,19 @@ export interface PatientPersona {
   healthConditions: string;
 }
 
+/** An event the presenter's stage jump replays. */
+export interface StageEvent {
+  type: string;
+  portal: string;
+  [field: string]: unknown;
+}
+
+/** One rung of the stage-jump list: a label and the events that land the machine on it from the rung before. */
+export interface ForkStage {
+  label: string;
+  events: StageEvent[];
+}
+
 /** One branch of a fork. */
 export interface ForkExit {
   id: string;
@@ -38,6 +51,12 @@ export interface ForkExit {
   description?: string;
   /** Fields this branch sets on `WorkflowData` when the fork resolves. */
   data: Partial<WorkflowData>;
+  /**
+   * The story after the fork resolves on this branch, one rung per stage. The stage-jump list for a
+   * flow with a fork is the fork's `stagesBefore` followed by the selected branch's `stages`. Each
+   * branch sends its own events, so the list changes when the presenter or the demo changes branch.
+   */
+  stages?: ForkStage[];
 }
 
 /**
@@ -53,10 +72,11 @@ export interface ForkDefinition {
   scenarios?: FlowType[];
   exits: ForkExit[];
   /**
-   * Events that take a fresh run to the point where this fork is about to resolve. The presenter's
-   * "switch branch" control resets, applies the choice, then sends these. It is the story up to the fork.
+   * The rungs of the stage-jump list before the fork resolves, the same for every branch. Their events,
+   * in order, take a fresh run to the point where the fork is about to resolve. "Switch branch" resets,
+   * applies the choice, then sends them.
    */
-  leadIn?: { type: string; portal: string; [field: string]: unknown }[];
+  stagesBefore?: ForkStage[];
   /** True once the fork has resolved. A choice can change only before that. After it, reset and replay. */
   resolved: (data: WorkflowData) => boolean;
 }

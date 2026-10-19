@@ -139,6 +139,9 @@ export interface WorkflowData {
    *  'covered' or 'not_covered' together at that point. Stays 'none' for
    *  every other flow. */
   pharmacyBenefitStatus: 'none' | 'covered' | 'not_covered';
+  /** CoA_DME only. True when the scenario assigns the pharmacy (a transfer). The patient does not choose one, and
+   *  goes from the PA approval SMS to the transfer confirmation. Set by the BI fork's exit. */
+  pharmacyAssigned: boolean;
   /** CoA_DME only — see pharmacyBenefitStatus above. When this is 'covered',
    *  it always wins over pharmacyBenefitStatus (Scenario 2, DME provider
    *  transfer), regardless of pharmacyBenefitStatus's value. Stays 'none'

@@ -1,5 +1,6 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
+import { BRAND } from "@/brand";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -18,10 +19,25 @@ export interface CoassistContent {
   retail: Pharmacy;
   mailOrder: Pharmacy;
   selfPay: Pharmacy;
+  /** The pharmacy a scenario hands the Rx to when it assigns one (the BI fork's `pharmacy_transfer` exit). */
+  transferPharmacy: Pharmacy;
 }
 
 const MAIL_ORDER: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
 const SELF_PAY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
+
+/**
+ * The pharmacy a transfer hands the Rx to. It comes from the brand file (`program.transferPartner`) so the name and
+ * phone number are the client's. A brand with none falls back to the placeholder retail pharmacy.
+ */
+const TRANSFER_PHARMACY: Pharmacy = BRAND.program.transferPartner ?? {
+  name: "CVS Pharmacy #3795",
+  address: "210 N Orange Ave",
+  city: "Orlando",
+  state: "FL",
+  zip: "32801",
+  phone: "(407) 555-0142",
+};
 
 export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
@@ -32,6 +48,7 @@ export const COA_DTP: ScenarioDefinition<CoassistContent> = {
     retail: { name: "CVS Pharmacy #3795", address: "1450 Riverside Drive", city: "Fairview", state: "TX", zip: "75069", phone: "(972) 555-0142" },
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
+    transferPharmacy: TRANSFER_PHARMACY,
   },
 };
 
@@ -44,6 +61,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
     retail: { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" },
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
+    transferPharmacy: TRANSFER_PHARMACY,
   },
 };
 
@@ -59,6 +77,7 @@ export const COA_DME: ScenarioDefinition<CoassistContent> = {
     retail: COA_DTP.content.retail,
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
+    transferPharmacy: TRANSFER_PHARMACY,
   },
 };
 

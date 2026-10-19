@@ -3,6 +3,8 @@ import { coassistStageEvents } from "@/shell/coassistLadders";
 import { iassistStageEvents } from "@/shell/iassistLadders";
 import { faxStageEvents } from "@/shell/faxLadders";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
+import { forkStageList } from "@/engine/workflow/forks";
+import { DME_BI_FORK } from "@/workflows/coassist/forks";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
@@ -24,6 +26,39 @@ const LADDERS = [
   { flowType: "Fax_PAP_Audit", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
   { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
 ] as const;
+
+describe("DME stage jump follows the selected branch", () => {
+  for (const exit of DME_BI_FORK.exits) {
+    it(`${exit.id}: every rung lands and the list matches the branch`, () => {
+      withFrozenClock(() => {
+        const choices = { bi: exit.id };
+        const list = forkStageList(DME_BI_FORK, { choices });
+        // Rungs before the fork, then this branch's rungs.
+        expect(list.map((s) => s.label)).toEqual([
+          ...DME_BI_FORK.stagesBefore!.map((s) => s.label),
+          ...exit.stages!.map((s) => s.label),
+        ]);
+        for (const { stage } of list) {
+          const actor = startFlow("CoA_DME", { choices });
+          const records = runSteps(actor, coassistStageEvents("CoA_DME", stage, choices));
+          expect(records.filter((r) => !r.accepted).map((r) => r.event)).toEqual([]);
+          if (stage === list.length) {
+            const { workflowData: d } = ctx(actor);
+            expect(d.choices.bi).toBe(exit.id);
+            expect(d.medicalBenefitStatus).toBe(exit.data.medicalBenefitStatus);
+            expect(d.pharmacyBenefitStatus).toBe(exit.data.pharmacyBenefitStatus);
+          }
+          actor.stop();
+        }
+      });
+    });
+  }
+
+  it("the branches have different lists", () => {
+    const labels = DME_BI_FORK.exits.map((e) => forkStageList(DME_BI_FORK, { choices: { bi: e.id } }).map((s) => s.label).join("|"));
+    expect(new Set(labels).size).toBe(DME_BI_FORK.exits.length);
+  });
+});
 
 describe("stage ladders (jump to stage)", () => {
   for (const { flowType, stages: stageNumbers, events } of LADDERS) {

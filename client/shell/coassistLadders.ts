@@ -13,36 +13,14 @@
  * 6 filling, 7 shipped, 8 delivered.
  *
  * DTP and Copay: pricing defaults to Retail, a quick jump rather than a
- * scenario picker. CoA_DME takes pharmacyBenefitStatus and
- * medicalBenefitStatus on COMPLETE_BI. Stage 4 defaults to Scenario 1
- * (pharmacy covered). Index.tsx's BIR-0431 toggle buttons are the real way
- * to switch DME scenarios; they share dmeBiCompleteEvents() below so the two
- * cannot drift. Scenario 1 has no address or date step, so stage 5 ends at
- * the pharmacy pick and stage 6 goes straight to FILL_RX.
+ * scenario picker. CoA_DME reads its stages from the BI fork
+ * (workflows/coassist/forks.ts), so the list and the events follow the
+ * selected branch. The branch's stage count differs: covered by both stops
+ * at the provider transfer.
  */
 
-import { ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
-
-export interface DmeBiScenario {
-  pharmacyBenefitStatus: "covered" | "not_covered";
-  medicalBenefitStatus: "covered" | "not_covered";
-}
-
-/** Scenario 1: Pharmacy Coverage. The default for every CoA_DME entry point into the replay. */
-export const DME_SCENARIO_1_PHARMACY_COVERAGE: DmeBiScenario = {
-  pharmacyBenefitStatus: "covered",
-  medicalBenefitStatus: "not_covered",
-};
-
-export const DME_SCENARIO_2_COVERED_BY_BOTH: DmeBiScenario = {
-  pharmacyBenefitStatus: "covered",
-  medicalBenefitStatus: "covered",
-};
-
-export const DME_SCENARIO_3_NO_COVERAGE: DmeBiScenario = {
-  pharmacyBenefitStatus: "not_covered",
-  medicalBenefitStatus: "not_covered",
-};
+import { DME_BI_FORK, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
+import { forkStageEvents } from "@/engine/workflow/forks";
 
 export interface LadderEvent {
   type: string;
@@ -55,40 +33,25 @@ const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): 
 // One list, shared with the DME benefits-investigation fork's lead-in (workflows/coassist/forks.ts).
 const IDENTITY: LadderEvent[] = ENROLL_AND_VERIFY;
 
-const DME_DEFAULT_PHARMACY = { name: "CVS Pharmacy #3795", address: "210 N Orange Ave", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-0142" };
+/**
+ * Every event to send, in order, to land a RESET actor on `stage`. Stage 1 is the reset itself.
+ * CoA_DME reads its stages from the BI fork (workflows/coassist/forks.ts), so `choices` selects the branch.
+ * Without `choices`, it takes the scenario's default branch.
+ */
+export function coassistStageEvents(
+  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME",
+  stage: number,
+  choices: Record<string, string> = {},
+): LadderEvent[] {
+  if (flowType === "CoA_DME") return forkStageEvents(DME_BI_FORK, { choices }, stage);
 
-/** REFERRAL_RECEIVED through COMPLETE_BI for a DME scenario, on an already-RESET actor. */
-export function dmeBiCompleteEvents(scenario: DmeBiScenario = DME_SCENARIO_1_PHARMACY_COVERAGE): LadderEvent[] {
-  // BI starts on its own when REFERRAL_RECEIVED lands (workflows/coassist/rules.ts), so there is no RUN_BI.
-  return [...IDENTITY, dmeCompleteBi(scenario)];
-}
-
-function dmeCompleteBi(scenario: DmeBiScenario): LadderEvent {
-  return ev("COMPLETE_BI", "crm", {
-    pharmacyBenefitStatus: scenario.pharmacyBenefitStatus,
-    medicalBenefitStatus: scenario.medicalBenefitStatus,
-  });
-}
-
-/** Every event to send, in order, to land a RESET actor on `stage` (2 to 8). Stage 1 is the reset itself. */
-export function coassistStageEvents(flowType: "CoA_DTP" | "CoA_Copay" | "CoA_DME", stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;
 
   if (upTo(2)) out.push(...IDENTITY);
   // Stage 3 (BI running) needs no event: REFERRAL_RECEIVED starts BI, and COMPLETE_BI submits the PA when one is required.
 
-  if (flowType === "CoA_DME") {
-    if (upTo(4)) out.push(dmeCompleteBi(DME_SCENARIO_1_PHARMACY_COVERAGE));
-    if (upTo(5)) {
-      out.push(
-        ev("APPROVE_PA", "crm"),
-        ev("VERIFY_PA_APPROVED_SMS", "patient"),
-        ev("VERIFY_PA_APPROVED_OTP", "patient"),
-        ev("SELECT_PHARMACY", "patient", { pharmacy: DME_DEFAULT_PHARMACY }),
-      );
-    }
-  } else {
+  {
     if (upTo(4)) {
       out.push(
         ev("COMPLETE_BI", "crm", { result: "coverage_found" }),

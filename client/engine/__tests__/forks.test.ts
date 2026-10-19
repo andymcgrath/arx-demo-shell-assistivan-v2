@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ctx, startFlow } from "./harness";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ALL_FORKS } from "@/workflows/forks";
 import { choiceProblems, exitFor } from "@/engine/workflow/forks";
 import { DME_BI_FORK } from "@/workflows/coassist/forks";
@@ -15,6 +16,43 @@ const data = (actor: ReturnType<typeof startFlow>) => ctx(actor).workflowData as
 const enrollThroughBiRunning = (actor: ReturnType<typeof startFlow>) => {
   for (const type of IDENTITY) actor.send({ type } as any);
 };
+
+describe("DME pharmacy transfer branch", () => {
+  const start = () => {
+    const actor = startFlow("CoA_DME", { choices: { bi: "pharmacy_transfer" } });
+    enrollThroughBiRunning(actor);
+    return actor;
+  };
+
+  it("submits the PA on its own and assigns the pharmacy after the approval OTP", () => {
+    const actor = start();
+    actor.send({ type: "COMPLETE_BI" } as any);
+    expect(data(actor)).toMatchObject({ pharmacyBenefitStatus: "covered", pharmacyAssigned: true, paStatus: "submitted" });
+    actor.send({ type: "APPROVE_PA" } as any);
+    actor.send({ type: "VERIFY_PA_APPROVED_SMS" } as any);
+    expect(data(actor).selectedPharmacy).toBeNull();
+    actor.send({ type: "VERIFY_PA_APPROVED_OTP" } as any);
+    expect(data(actor).selectedPharmacy?.name).toBeTruthy();
+    expect(derivePatientRoute(ctx(actor) as any)).toBe("/pharmacy-transfer");
+  });
+
+  it("ignores a patient pharmacy pick once one is assigned", () => {
+    const actor = start();
+    for (const type of ["COMPLETE_BI", "APPROVE_PA", "VERIFY_PA_APPROVED_SMS", "VERIFY_PA_APPROVED_OTP"]) {
+      actor.send({ type } as any);
+    }
+    const assigned = data(actor).selectedPharmacy;
+    actor.send({ type: "SELECT_PHARMACY", pharmacy: { name: "Other Pharmacy" } } as any);
+    expect(data(actor).selectedPharmacy).toEqual(assigned);
+  });
+
+  it("leaves the default branch with a patient choice", () => {
+    const actor = startFlow("CoA_DME");
+    enrollThroughBiRunning(actor);
+    actor.send({ type: "COMPLETE_BI" } as any);
+    expect(data(actor).pharmacyAssigned).toBe(false);
+  });
+});
 
 describe("DME benefits investigation fork", () => {
   it("starts on the story's default branch", () => {

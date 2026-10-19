@@ -6,6 +6,7 @@ import { getWorkflowActor, switchWorkflow } from "@/engine/actorSingleton";
 import { useDemoStore } from "@/store/demoStore";
 import type { BrandDemo } from "@/brand/schema";
 import type { ForkDefinition } from "@/engine/workflow/types";
+import { forkLeadIn } from "@/engine/workflow/forks";
 
 /** True when the running machine already has every choice the demo asks for. */
 function hasChoices(demo: BrandDemo): boolean {
@@ -33,7 +34,7 @@ export function restartAtFork(fork: ForkDefinition, exitId: string): void {
   useDemoStore.getState().resetDemo();
   const actor = getWorkflowActor();
   actor.send({ type: "RESET", choices: { [fork.id]: exitId } } as any);
-  for (const event of fork.leadIn ?? []) actor.send(event as any);
+  for (const event of forkLeadIn(fork)) actor.send(event as any);
 }
 
 /** Selects a demo: remembers it, switches to its flow, and applies its choices. */

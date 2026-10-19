@@ -1,5 +1,5 @@
 import type { FlowType, WorkflowData } from "@/engine/types";
-import type { ForkDefinition, ForkExit } from "./types";
+import type { ForkDefinition, ForkExit, StageEvent } from "./types";
 
 /** Pure helpers for forks. No React and no store, so rules, the factory, the UI, and tests share them. */
 
@@ -18,6 +18,29 @@ export function exitFor(fork: ForkDefinition, data: Pick<WorkflowData, "choices"
   const picked = data.choices?.[fork.id];
   return fork.exits.find((e) => e.id === picked) ?? fork.exits[0];
 }
+
+export interface StageItem {
+  /** 1-based. Stage 1 is the reset itself. */
+  stage: number;
+  label: string;
+  events: StageEvent[];
+}
+
+/** The stage-jump list for a flow with a fork: the rungs before the fork, then the selected branch's rungs. */
+export function forkStageList(fork: ForkDefinition, data: Pick<WorkflowData, "choices">): StageItem[] {
+  const rungs = [...(fork.stagesBefore ?? []), ...(exitFor(fork, data).stages ?? [])];
+  return rungs.map((rung, i) => ({ stage: i + 1, label: rung.label, events: rung.events }));
+}
+
+/** Every event to send, in order, to land a RESET machine on `stage`. Stage 1 sends nothing. */
+export function forkStageEvents(fork: ForkDefinition, data: Pick<WorkflowData, "choices">, stage: number): StageEvent[] {
+  return forkStageList(fork, data)
+    .filter((s) => s.stage <= stage)
+    .flatMap((s) => s.events);
+}
+
+/** The events that take a fresh run to the point where the fork is about to resolve. */
+export const forkLeadIn = (fork: ForkDefinition): StageEvent[] => (fork.stagesBefore ?? []).flatMap((s) => s.events);
 
 /** Problems with a set of choices for one scenario. Empty when every choice names a real fork and exit. */
 export function choiceProblems(
