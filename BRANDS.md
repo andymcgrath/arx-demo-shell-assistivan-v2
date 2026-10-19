@@ -120,7 +120,7 @@ Some brand and drug names still sit in source (patient copy, sample patients, th
 
 ## Pharmacy transfer and the Brand Lab Demos tab
 
-`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to the `pharmacy_transfer` exit of the CoA_Coverage `bi` fork. The patient does not pick a pharmacy on that branch. When the brand names no partner, a placeholder pharmacy shows.
+`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to every `bi` exit that assigns a pharmacy: `pharmacy_transfer` in CoA_Coverage and `medical_pa_required` in iAssist_Medical_Transfer. The patient does not pick a pharmacy on those branches. When the brand names no partner, a placeholder pharmacy (CVS Pharmacy #3795) shows. Add it to `brand.json` by hand: the Brand Lab has no editor for it, and it saves nothing.
 
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 

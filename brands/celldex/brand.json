@@ -56,7 +56,7 @@
       "accent": "#59b47d",
       "action": "#ef4162",
       "surfaces": {
-        "confirmation": "accent"
+        "confirmation": "brand"
       },
       "source": "https://celldex.com/"
     }
