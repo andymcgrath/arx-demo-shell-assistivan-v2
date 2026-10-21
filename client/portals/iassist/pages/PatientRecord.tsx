@@ -11,6 +11,7 @@ import { BRAND } from "@/brand";
 import { usePatientStore } from "@/store/patientStore";
 import PatientRecordSidebar from "../components/PatientRecordSidebar";
 import CopayClaimModal from "../components/CopayClaimModal";
+import CopayClaimDetail from "../components/CopayClaimDetail";
 import CopayOnFile from "../components/CopayOnFile";
 import DocumentLinks, { downloadAll } from "../components/DocumentLinks";
 import { useRecipeModule } from "@/hooks/useRecipeModule";
@@ -38,6 +39,7 @@ export default function PatientRecord() {
   const canClaim = workflowData.copayEnrolled && workflowData.paStatus === "approved";
   const [claimOpen, setClaimOpen] = useState(false);
   const [toast, setToast] = useState(false);
+  const [openClaimId, setOpenClaimId] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(false), 6000);
@@ -144,7 +146,7 @@ export default function PatientRecord() {
                   </tr>
                 )}
                 {claims.map((c) => (
-                  <tr key={c.id} className="border-b border-[#F0F0F0]">
+                  <tr key={c.id} onClick={() => setOpenClaimId(c.id)} className="border-b border-[#F0F0F0] cursor-pointer hover:bg-[#EEF9F9]">
                     <td className="py-4">
                       <p className="font-semibold text-[#1D1D1D]">Copay claim {c.id}</p>
                       <p className="text-[#1D1D1D]">Date of service {ymdToMdy(c.dateOfService)}</p>
@@ -163,6 +165,9 @@ export default function PatientRecord() {
           </section>
         </div>
       </div>
+      {openClaimId && claims.find((c) => c.id === openClaimId) && (
+        <CopayClaimDetail claim={claims.find((c) => c.id === openClaimId)!} onClose={() => setOpenClaimId(null)} />
+      )}
       {claimOpen && <CopayClaimModal onClose={(didSubmit) => { setClaimOpen(false); if (didSubmit) setToast(true); }} />}
       {toast && (
         <div role="status" className="fixed top-5 right-5 z-50 bg-[#1D1D1D] text-white rounded-lg shadow-lg px-4 py-3 text-sm flex items-start gap-3 max-w-sm">

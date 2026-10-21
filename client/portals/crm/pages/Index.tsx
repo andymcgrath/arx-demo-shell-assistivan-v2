@@ -18,7 +18,8 @@ import { PAYER } from "../payerFacts";
 import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
 import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
 import { BRAND } from "@/brand";
-import { copayBalance } from "@/portals/iassist/data/copayProgram";
+import { caseDocuments } from "@/brand/caseDocuments";
+import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX } from "@/portals/iassist/data/copayProgram";
 import {
   ChevronDown,
   ChevronRight,
@@ -818,7 +819,18 @@ export default function Index() {
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   // Related Documents: the enrollment form (fax flows), the brand's PA form (non-PAP flows), and the
   // Summary of Benefits once the PA is approved.
-  const relatedDocuments: RelatedDocument[] = [
+  // An HCP-administered case (eMedBV in iAssist) shows the same documents iAssist and the Field portal show.
+  const sharedCaseDocs = scenarioHasModule(flowType, "benefit_verification")
+    ? caseDocuments(workflowData, scenarioHasModule(flowType, "financial_assistance")).map((c): RelatedDocument => ({
+        fileId: c.id,
+        fileName: c.name,
+        dateReceived: formatShortDate(dateFromToday(0)),
+        type: c.type,
+        pages: c.pages,
+        href: c.file,
+      }))
+    : null;
+  const relatedDocuments: RelatedDocument[] = sharedCaseDocs ?? [
     ...(isFaxFlow ? FAX_DOCUMENTS : []),
     ...(PA_FORM_DOCUMENT && !isPapFlow ? [PA_FORM_DOCUMENT] : []),
     ...sobDocuments,
@@ -898,6 +910,9 @@ export default function Index() {
   const [programPharmacy, setProgramPharmacy] = useState<PharmacyOption | null>(null);
   const [dispenserPharmacy, setDispenserPharmacy] = useState<PharmacyOption | null>(null);
   const [activeCaseTab, setActiveCaseTab] = useState("summary");
+  // Copay is its own tab only when the recipe has a copay module.
+  const caseTabs = isBuyAndBill ? [CASE_TABS[0], CASE_TABS[1], { id: "copay", label: "Copay" }, ...CASE_TABS.slice(2)] : CASE_TABS;
+  const copayClaimsNow = workflowData.copayClaims ?? [];
   const [activeRightTab, setActiveRightTab] = useState("quick-answers");
   const [caseSummaryCollapsed, setCaseSummaryCollapsed] = useState(false);
   const [stagesCollapsed, setStagesCollapsed] = useState(false);
@@ -3585,7 +3600,7 @@ export default function Index() {
           </div>
           {/* Row 2: Case Navigation Tabs */}
           <div className="border-b border-[#dddbda] flex bg-white overflow-x-auto">
-            {CASE_TABS.map((tab) => (
+            {caseTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveCaseTab(tab.id)}
@@ -3933,6 +3948,50 @@ export default function Index() {
                 </table>
               </div>
             </div>
+          ) : activeCaseTab === "copay" ? (
+            <div className="p-4 space-y-4">
+              <div className="border border-[#dddbda] rounded overflow-hidden">
+                <div className="px-3 py-2 border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]" style={{ background: "#f3f3f3" }}>Copay Enrollment</div>
+                {copayEnrolled ? (
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
+                    <div>
+                      <FieldRow label="Program" value={BRAND.program.name} />
+                      <FieldRow label="Member ID" value={copayMemberId(patientName, BRAND.program.name)} />
+                      <FieldRow label="Status" value="Active" />
+                    </div>
+                    <div>
+                      <FieldRow label="Effective" value={formatShortDate(workflowData.copayEnrolledAt ? new Date(workflowData.copayEnrolledAt) : dateFromToday(0))} />
+                      <FieldRow label="Annual maximum" value={`$${COPAY_ANNUAL_MAX.toLocaleString("en-US")}.00`} />
+                      <FieldRow label="Remaining balance" value={`$${copayBalance(workflowData).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-[13px] text-[#706e6b] text-center">Not enrolled. The HCP enrolls the patient in iAssist.</div>
+                )}
+              </div>
+              <div className="border border-[#dddbda] rounded overflow-hidden">
+                <div className="flex justify-between px-3 py-2 border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]" style={{ background: "#f3f3f3" }}>
+                  <span>Copay Claims</span><span className="text-[12px] font-normal text-[#706e6b]">{copayClaimsNow.length} record{copayClaimsNow.length !== 1 ? "s" : ""}</span>
+                </div>
+                {copayClaimsNow.length === 0 ? (
+                  <div className="p-6 text-[13px] text-[#706e6b] text-center">No claims filed.</div>
+                ) : (
+                  <table className="w-full text-[12px]">
+                    <thead><tr className="text-left text-[#706e6b]"><th className="px-3 py-2 font-normal">Claim</th><th className="px-3 py-2 font-normal">Date of service</th><th className="px-3 py-2 font-normal">Submitted</th><th className="px-3 py-2 font-normal">Status</th></tr></thead>
+                    <tbody>
+                      {copayClaimsNow.map((c) => (
+                        <tr key={c.id} className="border-t border-[#dddbda]">
+                          <td className="px-3 py-2"><SfLink>{c.id}</SfLink></td>
+                          <td className="px-3 py-2">{c.dateOfService}</td>
+                          <td className="px-3 py-2">{c.submittedAt.slice(0, 10)}</td>
+                          <td className="px-3 py-2">{c.status === "in_review" ? "In review" : c.status === "paid" ? "Paid" : "Rejected"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
           ) : activeCaseTab === "tasks" ? (
             <div className="p-4">
               <div className="border border-[#dddbda] rounded overflow-hidden">
@@ -4000,7 +4059,7 @@ export default function Index() {
             </div>
           ) : (
             <div className="p-8 text-[13px] text-[#706e6b] text-center">
-              No {CASE_TABS.find((t) => t.id === activeCaseTab)?.label} records found.
+              No {caseTabs.find((t) => t.id === activeCaseTab)?.label} records found.
             </div>
           )}
         </>

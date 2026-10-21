@@ -21,11 +21,11 @@ Flow type `iAssist_Buy_And_Bill`. Picks: `bi: medical_buy_and_bill`, `pa: approv
    - Status cards fill in as steps finish, under a progress bar.
    - The copay card shows the program, member ID, effective date, and remaining balance.
    - History lists the submission and its documents. Names open a sample PDF. Download All Files works.
-7. **The HCP files a copay claim.** The modal is locked to the open patient: prescriber, date of service, CMS-1500, EOB. A confirmation modal follows, then a toast. History gets a row marked In review. The balance does not change until the program approves the claim.
+7. **The HCP files a copay claim.** A History row opens the claim detail. The CRM Copay tab and the Field Related tab show the enrollment and claims. The modal is locked to the open patient: prescriber, date of service, CMS-1500, EOB. A confirmation modal follows, then a toast. History gets a row marked In review. The balance does not change until the program approves the claim.
 
 ## Field portal
 
-- Related tab: a Patient Journey table (Enrolled, Benefits Investigation, PA Initiated, PA Approved, Copay Enrolled).
+- Related tab: Copay Enrollment and Copay Claims tables, the shared case documents, and a Patient Journey table (Enrolled, Benefits Investigation, PA Initiated, PA Approved, Copay Enrolled).
 - Related Docs: the enrollment form and the summary of benefits. Display only, since no upload exists.
 - Emails: eMedBV and copay enrollment send none. The copay claim sends one.
 
@@ -42,3 +42,9 @@ Flow type `iAssist_Buy_And_Bill`. Picks: `bi: medical_buy_and_bill`, `pa: approv
 ## Tests
 
 `iassist.buyandbill.test.ts`, golden path `iassist-buy-and-bill`, and the ladder fixture `ladders/iAssist_Buy_And_Bill.json`.
+
+## Shared documents and CRM details
+
+- One list, `caseDocuments`, feeds iAssist, the CRM Related Documents tab, and the Field Related tab. Documents appear as the case reaches each step.
+- The CRM benefits panel sections (Information, Pharmacy Benefits, Medical Benefits) collapse from the chevron.
+- The CRM Copay tab shows program, member ID, status, dates, remaining balance, and claims. It appears only for scenarios with the copay module.

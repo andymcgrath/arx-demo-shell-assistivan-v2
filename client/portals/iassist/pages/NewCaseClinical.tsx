@@ -170,6 +170,8 @@ export default function NewCaseClinical() {
 
   // Diagnosis search box — transient, not persisted (query text, not an answer)
   const [icdSearch, setIcdSearch] = useState("");
+  // Edit link on the read-only diagnosis opens the search. Transient, like the query text.
+  const [editingIcd, setEditingIcd] = useState(false);
 
   const filteredIcd = icdSearch.trim()
     ? ICD10_GROUPS
@@ -218,46 +220,63 @@ export default function NewCaseClinical() {
             {/* Diagnosis */}
             <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
               <h2 className="text-base font-semibold text-[#1D1D1D]">Diagnosis</h2>
-              <Field label="ICD-10 Code with Diagnosis">
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
-                  <input
-                    value={icdSearch}
-                    onChange={(e) => setIcdSearch(e.target.value)}
-                    placeholder="Search for a diagnosis or ICD-10 code"
-                    className={`${inputCls} pl-9`}
-                  />
+              {/* A diagnosis is set, so it shows as read-only. Edit opens the search to assign another code. */}
+              {clinical.selectedIcd && !editingIcd ? (
+                <div>
+                  <span className="text-sm font-semibold text-[#1D1D1D] mb-1.5 block">ICD-10 Code with Diagnosis</span>
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E8E8E8] bg-[#F8F8F8] px-3 py-2.5">
+                    <span className="text-sm text-[#1D1D1D]">{clinical.selectedIcd}</span>
+                    <button type="button" onClick={() => setEditingIcd(true)} className="text-sm font-semibold text-[#007178] hover:underline flex-shrink-0">
+                      Edit
+                    </button>
+                  </div>
                 </div>
-              </Field>
-              {icdSearch && (
-                <div className="border border-[#D9D9D9] rounded-lg divide-y divide-[#F0F0F0] max-h-72 overflow-auto">
-                  {filteredIcd.length === 0 && <p className="p-3 text-xs text-[#999]">No matches found</p>}
-                  {filteredIcd.map((g) => (
-                    <div key={g.category}>
-                      <p className="px-3 pt-2 pb-1 text-xs font-semibold text-[#6F7276] bg-[#F8F8F8]">{g.category}</p>
-                      {g.codes.map((c) => (
-                        <button
-                          key={c.code}
-                          type="button"
-                          onClick={() => {
-                            setClinical({ selectedIcd: `${c.code} — ${c.label}` });
-                            setIcdSearch("");
-                          }}
-                          className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
-                        >
-                          <span className="font-semibold">{c.code}</span> — {c.label}
-                        </button>
+              ) : (
+                <>
+                  <Field label="ICD-10 Code with Diagnosis">
+                    <div className="relative">
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
+                      <input
+                        autoFocus={editingIcd}
+                        value={icdSearch}
+                        onChange={(e) => setIcdSearch(e.target.value)}
+                        placeholder="Search for a diagnosis or ICD-10 code"
+                        className={`${inputCls} pl-9`}
+                      />
+                    </div>
+                  </Field>
+                  {icdSearch && (
+                    <div className="border border-[#D9D9D9] rounded-lg divide-y divide-[#F0F0F0] max-h-72 overflow-auto">
+                      {filteredIcd.length === 0 && <p className="p-3 text-xs text-[#999]">No matches found</p>}
+                      {filteredIcd.map((g) => (
+                        <div key={g.category}>
+                          <p className="px-3 pt-2 pb-1 text-xs font-semibold text-[#6F7276] bg-[#F8F8F8]">{g.category}</p>
+                          {g.codes.map((c) => (
+                            <button
+                              key={c.code}
+                              type="button"
+                              onClick={() => {
+                                setClinical({ selectedIcd: `${c.code} — ${c.label}` });
+                                setIcdSearch("");
+                                setEditingIcd(false);
+                              }}
+                              className="block w-full text-left px-3 py-2 text-sm text-[#1D1D1D] hover:bg-[#EEF9F9]"
+                            >
+                              <span className="font-semibold">{c.code}</span> — {c.label}
+                            </button>
+                          ))}
+                        </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              )}
-              {clinical.selectedIcd ? (
-                <p className="text-sm text-[#1D1D1D]">
-                  <span className="font-semibold">Selected: </span>{clinical.selectedIcd}
-                </p>
-              ) : (
-                <p className="text-xs text-[#999]">ICD-10 Code Skipped</p>
+                  )}
+                  {clinical.selectedIcd ? (
+                    <button type="button" onClick={() => { setEditingIcd(false); setIcdSearch(""); }} className="text-sm font-semibold text-[#6F7276] hover:underline">
+                      Cancel
+                    </button>
+                  ) : (
+                    <p className="text-xs text-[#999]">ICD-10 Code Skipped</p>
+                  )}
+                </>
               )}
               <Field label="Date of Diagnosis" optional>
                 <input type="date" value={clinical.diagnosisDate} onChange={(e) => setClinical({ diagnosisDate: e.target.value })} className={inputCls} />

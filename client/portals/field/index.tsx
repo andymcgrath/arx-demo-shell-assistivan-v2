@@ -16,7 +16,9 @@ import {
   type FieldSPShipment,
   type FieldComment,
 } from "@/store/fieldStore";
+import { BRAND } from "@/brand";
 import { usePatientStore } from "@/store/patientStore";
+import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX, money } from "@/portals/iassist/data/copayProgram";
 import { useDemoState } from "@/hooks/useDemoState";
 import {
   getLiveWorkItems,
@@ -31,6 +33,8 @@ import {
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { scenarioHasModule } from "@/workflows/scenarios";
+import { caseDocuments } from "@/brand/caseDocuments";
+import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { BrandDocument } from "@/brand/schema";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
@@ -189,6 +193,7 @@ function getCalendarCategory(c: Case): CalendarCategory {
 
 export default function FieldPortal() {
   const { state, events } = useDemoState("Field");
+  const { workflowData: workflowDataNow } = usePersonaState("field");
   const demoState = useDemoStore();
   const patientState = usePatientStore();
 
@@ -1842,6 +1847,35 @@ export default function FieldPortal() {
                       ])}
                     />
 
+                    {livePatient && isBuyAndBill && (
+                      <>
+                        <RelatedTable
+                          title="Copay Enrollment"
+                          count={workflowDataNow.copayEnrolled ? 1 : 0}
+                          columns={["Program", "Member ID", "Status", "Effective Date", "Annual Max", "Remaining Balance"]}
+                          rows={workflowDataNow.copayEnrolled ? [[
+                            BRAND.program.name,
+                            copayMemberId(patientState.patientName, BRAND.program.name),
+                            "Active",
+                            workflowDataNow.copayEnrolledAt ? workflowDataNow.copayEnrolledAt.slice(0, 10) : "---",
+                            money(COPAY_ANNUAL_MAX),
+                            money(copayBalance(workflowDataNow)),
+                          ]] : []}
+                        />
+                        <RelatedTable
+                          title="Copay Claims"
+                          count={(workflowDataNow.copayClaims ?? []).length}
+                          columns={["Claim Id", "Date of Service", "Submitted", "Status"]}
+                          rows={(workflowDataNow.copayClaims ?? []).map((c) => [
+                            c.id,
+                            c.dateOfService,
+                            c.submittedAt.slice(0, 10),
+                            c.status === "in_review" ? "In review" : c.status === "paid" ? "Paid" : "Rejected",
+                          ])}
+                        />
+                      </>
+                    )}
+
                     <RelatedTable
                       title="Patient Authorizations"
                       count={patientAuths.length}
@@ -1892,19 +1926,15 @@ export default function FieldPortal() {
                 const enrollmentForm = enrollmentFormDocument();
                 const paForm = paFormDocument();
                 const docs: { fileId: string; doc: BrandDocument; type: string; pages: string; received: string }[] = [
-                  ...(isLivePatient && isBuyAndBill
-                    ? [
-                        { fileId: "DOC-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) },
-                        { fileId: "DOC-2026-00432", doc: summaryOfBenefitsDocument(), type: "Summary of Benefits", pages: "2", received: daysFromToday(-3) },
-                      ]
-                    : []),
-                  ...(isLivePatient && isFreeDrug
-                    ? [
-                        { fileId: "DOC-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) },
-                        ...(state.pap_status === "active"
-                          ? [{ fileId: "DOC-2026-00432", doc: { file: "/docs/free-drug-application.pdf", fileName: "Free_Drug_Application.pdf" }, type: "Free Drug Application", pages: "1", received: daysFromToday(-1) }]
-                          : []),
-                      ]
+                  // HCP-administered cases (Buy and Bill, free drug) show the one list iAssist and the CRM show.
+                  ...(isLivePatient && (isBuyAndBill || isFreeDrug)
+                    ? caseDocuments(workflowDataNow, isFreeDrug).map((c) => ({
+                        fileId: c.id,
+                        doc: { file: c.file, fileName: c.name },
+                        type: c.type,
+                        pages: String(c.pages),
+                        received: daysFromToday(0),
+                      }))
                     : []),
                   ...(isLivePatient && isFaxFlow
                     ? [{ fileId: "FAX-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) }]

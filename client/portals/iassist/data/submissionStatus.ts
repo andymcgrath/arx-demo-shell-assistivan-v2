@@ -3,7 +3,7 @@
  * run it. The cards, documents, and PA details follow the machine. Nothing here is stored.
  */
 import type { WorkflowData } from "@/engine/types";
-import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
+import { caseDocuments } from "@/brand/caseDocuments";
 
 export type CardState = "done" | "pending" | "idle";
 
@@ -118,18 +118,9 @@ export interface SubmissionDocument {
   file: string;
 }
 
-/** Files on the submission, in the order they appear. A file exists once its step has happened. */
+/** Files on the submission, in the order they appear. The list is shared with the CRM and the Field portal (brand/caseDocuments.ts). */
 export function deriveDocuments(d: WorkflowData, freeDrug = false): SubmissionDocument[] {
-  const docs: SubmissionDocument[] = [];
-  if (d.enrollmentStatus !== "none") docs.push({ name: "EnrollmentForm.pdf", file: enrollmentFormDocument().file });
-  if (d.consentStatus === "confirmed") docs.push({ name: "ConsentForm.pdf", file: "/docs/consent-form.pdf" });
-  if (d.medbvStatus === "complete" && !freeDrug) docs.push({ name: "SummaryOfBenefits.pdf", file: summaryOfBenefitsDocument().file });
-  if (freeDrug && d.papStatus === "active") docs.push({ name: "FreeDrugApplication.pdf", file: "/docs/free-drug-application.pdf" });
-  if (d.paStatus === "submitted" || d.paStatus === "approved" || d.paStatus === "denied") {
-    docs.push({ name: "PriorAuthorizationForm.pdf", file: paFormDocument()?.file ?? "/docs/prior-authorization-form.pdf" });
-  }
-  if (d.paStatus === "approved") docs.push({ name: "PAApprovalNotice.pdf", file: "/docs/pa-approval-notice.pdf" });
-  return docs;
+  return caseDocuments(d, freeDrug).map(({ name, file }) => ({ name, file }));
 }
 
 /** What the submission covers, for the History row. */

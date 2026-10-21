@@ -4,7 +4,8 @@
  * `panels: ["benefits"]` in its recipe.
  */
 import { FieldRow, SfLink, SF_SECTION_BG } from "./SfPrimitives";
-import { ChevronDown } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { PAYER } from "../payerFacts";
 
 export interface BenefitsPanelProps {
@@ -21,6 +22,27 @@ export interface BenefitsPanelProps {
   onOpenProductDetail: () => void;
 }
 
+/** A benefit section whose header chevron collapses and expands the body. */
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(true);
+  const Chevron = open ? ChevronDown : ChevronRight;
+  return (
+    <div className="border border-[#dddbda] rounded">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 text-left ${open ? "border-b border-[#dddbda]" : ""}`}
+        style={{ background: SF_SECTION_BG }}
+      >
+        <Chevron size={14} className="text-[#706e6b]" />
+        <span className="text-[12px] font-semibold text-[#3e3e3c]">{title}</span>
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 export function BenefitsPanel(props: BenefitsPanelProps) {
   const { patientName, drugName, caseNumber, biComplete, pharmacyBenefitStatus, medicalBenefitStatus, paRequired, transferProvider, onOpenProductDetail } = props;
   // The PA belongs to the benefit that covers the order: medical when it covers, otherwise pharmacy.
@@ -30,11 +52,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
         <div className="flex-1 min-w-0 p-4 space-y-4">
           {/* Information — case-level fields only; pharmacy-specific
               fields moved into the two benefit sections below. */}
-          <div className="border border-[#dddbda] rounded">
-            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-              <ChevronDown size={14} className="text-[#706e6b]" />
-              <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-            </div>
+          <Section title="Information">
             <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
               <div>
                 <FieldRow label="Patient" value={patientName} isLink />
@@ -50,14 +68,10 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="External Comments" value="" />
               </div>
             </div>
-          </div>
+          </Section>
 
           {/* Pharmacy Benefits */}
-          <div className="border border-[#dddbda] rounded">
-            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-              <ChevronDown size={14} className="text-[#706e6b]" />
-              <span className="text-[12px] font-semibold text-[#3e3e3c]">Pharmacy Benefits</span>
-            </div>
+          <Section title="Pharmacy Benefits">
             <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
               <div>
                 <FieldRow label="Record Type" value="Pharmacy" />
@@ -76,14 +90,10 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="PA Required?" value={!biComplete ? "" : paOn === "pharmacy" ? "Yes" : "No"} />
               </div>
             </div>
-          </div>
+          </Section>
 
           {/* Medical Benefits */}
-          <div className="border border-[#dddbda] rounded">
-            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-              <ChevronDown size={14} className="text-[#706e6b]" />
-              <span className="text-[12px] font-semibold text-[#3e3e3c]">Medical Benefits</span>
-            </div>
+          <Section title="Medical Benefits">
             <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
               <div>
                 <FieldRow label="Record Type" value="Medical" />
@@ -104,7 +114,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 )}
               </div>
             </div>
-          </div>
+          </Section>
         </div>
 
         {/* Right: two stacked Product Coverage cards */}

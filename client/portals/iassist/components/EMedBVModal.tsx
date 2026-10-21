@@ -31,7 +31,7 @@ export default function EMedBVModal({ covered = true, onClose }: { covered?: boo
           <X size={20} />
         </button>
 
-          !covered ? (
+          {!covered ? (
           <div className="p-8 space-y-6">
             <h2 className="text-xl font-semibold text-[#1D1D1D]">Here is what we found</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -92,7 +92,7 @@ export default function EMedBVModal({ covered = true, onClose }: { covered?: boo
               </button>
             </div>
           </div>
-          )
+          )}
       </div>
     </div>
   );

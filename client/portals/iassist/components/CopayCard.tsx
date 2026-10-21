@@ -3,11 +3,14 @@
  * on the card. Expanded it shows the program status, the card, the benefit period, spend, and transactions.
  * Not enrolled: it offers enrollment (the HCP enrolls the patient, so the patient takes no action).
  */
-import { useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { BRAND } from "@/brand";
 import CopayCardArt from "./CopayCardArt";
 import { benefitPeriod, COPAY_ANNUAL_MAX, money, spendOnCard, type CopayTransaction } from "../data/copayProgram";
+
+/** How long enrollment shows as working before the patient is enrolled. */
+const ENROLL_MS = 3000;
 
 export default function CopayCard({
   enrolled,
@@ -21,6 +24,17 @@ export default function CopayCard({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  // Enrolling takes a moment, as it does in the other enrollment flows. The event fires when the wait ends.
+  const [enrolling, setEnrolling] = useState(false);
+  useEffect(() => {
+    if (!enrolling) return;
+    const t = setTimeout(() => {
+      onEnroll?.();
+      setEnrolling(false);
+    }, ENROLL_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrolling]);
   const spend = spendOnCard(transactions);
   const balance = COPAY_ANNUAL_MAX - spend;
 
@@ -53,11 +67,19 @@ export default function CopayCard({
               <p className="text-sm text-[#6F7276]">
                 The patient has commercial coverage and may qualify for the copay program. Enroll them here. They do not need to do anything.
               </p>
-              {onEnroll && (
-                <button type="button" onClick={onEnroll} className="bg-[#007178] text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-[#03656B]">
+              {onEnroll && (enrolling ? (
+                <div className="space-y-2 max-w-sm" aria-live="polite">
+                  <p className="text-sm text-[#1D1D1D] flex items-center gap-2"><Loader2 size={16} className="animate-spin text-[#007178]" /> Enrolling in the copay program...</p>
+                  <div className="h-2 rounded-full bg-[#E8E8E8] overflow-hidden">
+                    <div className="h-full bg-[#007178] copay-enroll-bar" style={{ animation: `copay-enroll ${ENROLL_MS}ms linear forwards` }} />
+                  </div>
+                  <style>{`@keyframes copay-enroll { from { width: 0% } to { width: 100% } }`}</style>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setEnrolling(true)} className="bg-[#007178] text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-[#03656B]">
                   Enroll in copay
                 </button>
-              )}
+              ))}
             </div>
           ) : (
             <>
