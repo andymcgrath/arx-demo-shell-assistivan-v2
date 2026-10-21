@@ -14,7 +14,7 @@ Flow type `iAssist_Buy_And_Bill`. Picks: `bi: medical_buy_and_bill`, `pa: approv
    - Prior authorization: the payer details, diagnosis, treatment plan, and reason for prescribing prefill. The letter of medical necessity shows an upload when the answer is Yes.
    - Buy and Bill: the HCP enrolls the patient in copay. The office comes from the site-of-care list. Submit needs eMedBV and copay done.
 2. **Submitting is the referral.** No Rx and no order go out. BI starts on its own.
-3. **The patient gets a text.** They verify the text and the code, consent, then confirm household size and income. The enrollment screen says benefits are being checked.
+3. **The patient gets a text.** They verify the text and the code, consent, then confirm household size and income. A 3 second credit check runs, then a "You are qualified" screen. Got it lands on the home screen. The enrollment screen says benefits are being checked.
 4. **The CRM runs BI, then the PA.** The agent opens the BI stage and the result lands in about 3 seconds: medical benefit covered, PA required. The PA starts on its own. The agent opens the PA stage and it approves in about 3 seconds. Financial Assistance shows copay enrolled by the HCP, with the remaining balance.
 5. **The patient is told.** They verify the PA-approved text and code. The final screen says they are approved, their prescriber is informed, and they should contact the office to confirm the injection date.
 6. **The HCP sees the result in iAssist.** Open the patient from the dashboard.
