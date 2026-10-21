@@ -20,6 +20,33 @@
       "flow": "iAssist_Medical_Transfer",
       "label": "3. iAssist Medical Transfer",
       "description": "The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Rx transfers to an assigned pharmacy with no payment or scheduling"
+    },
+    {
+      "id": "iassist-buy-and-bill",
+      "flow": "iAssist_Buy_And_Bill",
+      "label": "4. iAssist Buy and Bill",
+      "description": "The HCP buys and bills under the medical benefit. eMedBV, a medical PA, and HCP-enrolled copay, with a copay claim after approval. No pharmacy, payment, or delivery. The patient consents by text and confirms household income in the patient app",
+      "choices": {
+        "consent": "patient_text"
+      }
+    },
+    {
+      "id": "iassist-buy-and-bill-hcp-consent",
+      "flow": "iAssist_Buy_And_Bill",
+      "label": "5. iAssist Buy and Bill, HCP captures consent",
+      "description": "The same Buy and Bill story, but the HCP captures consent and household income on the iAssist form, so the patient app asks for neither",
+      "choices": {
+        "consent": "hcp_signs"
+      }
+    },
+    {
+      "id": "iassist-buy-and-bill-free-drug",
+      "flow": "iAssist_Buy_And_Bill_PAP",
+      "label": "6. iAssist Buy and Bill, Free Drug",
+      "description": "eMedBV finds no medical coverage, so there is no PA or copay. The patient applies for the free drug program, and approval sends the drug to the site of care. The patient pays nothing",
+      "choices": {
+        "bi": "no_coverage"
+      }
     }
   ],
   "manufacturer": {
@@ -67,6 +94,13 @@
       "state": "FL",
       "zip": "32806",
       "phone": "(407) 555-3006"
+    },
+    "indication": {
+      "name": "Chronic spontaneous urticaria",
+      "icd10": "L50.1",
+      "icd10Label": "Idiopathic urticaria",
+      "currentTreatment": "H1 antihistamine at up to four times the standard dose. Symptoms persist.",
+      "rationale": "Chronic spontaneous urticaria with symptoms that persist despite H1 antihistamine therapy. Requesting {drug} for control of itch and hives."
     }
   },
   "chatbotIcon": "https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da",

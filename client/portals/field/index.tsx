@@ -29,7 +29,8 @@ import {
   KEANU_SITE_OF_CARE_FACTS,
 } from "@/engine/WorkflowEngine";
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
-import { enrollmentFormDocument, paFormDocument } from "@/brand/documents";
+import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
+import { scenarioHasModule } from "@/workflows/scenarios";
 import type { BrandDocument } from "@/brand/schema";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
@@ -211,6 +212,7 @@ export default function FieldPortal() {
   const [calendarView, setCalendarView] = useState<"Month" | "Week" | "Day" | "List">("Month");
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
+  const isBuyAndBill = scenarioHasModule(state.flow_type, "copay");
   const isPapFlow = state.flow_type === "Fax_PAP_Audit" || state.flow_type === "PrES_PAP";
   const [viewedDoc, setViewedDoc] = useState<BrandDocument | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
@@ -1701,8 +1703,30 @@ export default function FieldPortal() {
                 const patientAuths = allAuthorizations.filter((a) => a.patientId === pid);
                 const patientShipments = allShipments.filter((s) => s.patientId === pid);
 
+                // Buy and Bill: the patient's journey, aligned to the CRM stages. The live patient only.
+                const journey: [string, string][] = pid === "AS-164543" && isBuyAndBill
+                  ? [
+                      ["Enrolled", state.enrollment_status === "enrolled" ? "Complete" : "Not started"],
+                      ["Benefits Investigation", state.bi_status === "complete" ? "Complete" : state.bi_status === "running" ? "In progress" : "Not started"],
+                      ["PA Initiated", state.pa_status === "none" ? "Not started" : "Complete"],
+                      ["PA Approved", state.pa_status === "approved" ? "Complete" : state.pa_status === "denied" ? "Denied" : state.pa_status === "none" ? "Not started" : "Pending"],
+                      ["Copay Enrolled", state.copay_enrolled ? "Complete" : "Not started"],
+                    ]
+                  : [];
+
                 return (
                   <div>
+                    {journey.length > 0 && (
+                      <RelatedTable
+                        title="Patient Journey"
+                        count={journey.length}
+                        columns={["Stage", "Status"]}
+                        rows={journey.map(([stage, status]) => [
+                          stage,
+                          <span key="s" className={status === "Complete" ? "text-emerald-700 font-medium" : status === "Denied" ? "text-red-700 font-medium" : "text-slate-500"}>{status}</span>,
+                        ])}
+                      />
+                    )}
                     <RelatedTable
                       title="Tasks"
                       count={patientTasks.length}
@@ -1857,6 +1881,12 @@ export default function FieldPortal() {
                 const enrollmentForm = enrollmentFormDocument();
                 const paForm = paFormDocument();
                 const docs: { fileId: string; doc: BrandDocument; type: string; pages: string; received: string }[] = [
+                  ...(isLivePatient && isBuyAndBill
+                    ? [
+                        { fileId: "DOC-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) },
+                        { fileId: "DOC-2026-00432", doc: summaryOfBenefitsDocument(), type: "Summary of Benefits", pages: "2", received: daysFromToday(-3) },
+                      ]
+                    : []),
                   ...(isLivePatient && isFaxFlow
                     ? [{ fileId: "FAX-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) }]
                     : []),

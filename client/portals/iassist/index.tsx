@@ -17,6 +17,15 @@ import NewCaseInsurance from "./pages/NewCaseInsurance";
 import NewCaseClinical from "./pages/NewCaseClinical";
 import NewCasePA from "./pages/NewCasePA";
 import NewCaseRx from "./pages/NewCaseRx";
+import NewCaseBuyAndBill from "./pages/NewCaseBuyAndBill";
+import PatientRecord from "./pages/PatientRecord";
+import PatientSubmission from "./pages/PatientSubmission";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
+
+/** Step 6. A recipe with eMedBV (`benefit_verification`: Buy and Bill, with or without copay) replaces the Rx step with the Buy and Bill step. */
+function RxStep() {
+  return useRecipeModule("benefit_verification") ? <NewCaseBuyAndBill /> : <NewCaseRx />;
+}
 
 export default function IAssistPortal() {
   return (
@@ -29,7 +38,9 @@ export default function IAssistPortal() {
         <Route path="/new-case/insurance" element={<NewCaseInsurance />} />
         <Route path="/new-case/clinical" element={<NewCaseClinical />} />
         <Route path="/new-case/pa" element={<NewCasePA />} />
-        <Route path="/new-case/rx" element={<NewCaseRx />} />
+        <Route path="/new-case/rx" element={<RxStep />} />
+        <Route path="/patient" element={<PatientRecord />} />
+        <Route path="/patient/submission" element={<PatientSubmission />} />
       </Routes>
     </PortalRouter>
   );

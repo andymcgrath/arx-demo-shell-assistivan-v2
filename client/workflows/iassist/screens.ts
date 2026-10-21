@@ -1,8 +1,9 @@
 import type { ScreenMap } from "@/engine/workflow/screens";
 import { IASSIST_FORKS } from "./forks";
-import { IA_MEDICAL_TRANSFER, IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IASSIST_FLOWS } from "./scenarios";
+import { IA_BUY_AND_BILL_PAP, IA_BUY_AND_BILL, IA_MEDICAL_TRANSFER, IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IASSIST_FLOWS } from "./scenarios";
 import { APPEAL_ROUTES, APPEAL_SCREENS } from "./modules/screens/appeal";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
+import { FINANCIAL_ASSISTANCE_ROUTES, FINANCIAL_ASSISTANCE_SCREENS } from "./modules/screens/financial_assistance";
 import { PA_NOTIFICATION_ROUTES, PA_NOTIFICATION_SCREENS } from "./modules/screens/pa_notification";
 import { PHARMACY_SELECTION_ROUTES, PHARMACY_SELECTION_SCREENS } from "./modules/screens/pharmacy_selection";
 import { PAYMENT_ROUTES, PAYMENT_SCREENS } from "./modules/screens/payment";
@@ -27,13 +28,14 @@ export const IASSIST_SCREENS: ScreenMap = {
   hidden: ["/lock-screen"],
   slots: IASSIST_SLOTS,
   groups: IASSIST_GROUPS,
-  scenarioDefs: [IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IA_MEDICAL_TRANSFER],
+  scenarioDefs: [IA_PA_APPROVED, IA_PA_DENIED_APPEAL, IA_MEDICAL_TRANSFER, IA_BUY_AND_BILL, IA_BUY_AND_BILL_PAP],
   forks: IASSIST_FORKS,
 
   screens: [
     ...ENROLLMENT_SCREENS,
     ...PA_NOTIFICATION_SCREENS,
     ...SPINE_SCREENS,
+    ...FINANCIAL_ASSISTANCE_SCREENS,
     ...APPEAL_SCREENS,
     ...PHARMACY_SELECTION_SCREENS,
     ...SCHEDULING_SCREENS,
@@ -43,6 +45,7 @@ export const IASSIST_SCREENS: ScreenMap = {
 
   rules: [
     ...ENROLLMENT_ROUTES,
+    ...FINANCIAL_ASSISTANCE_ROUTES,
     ...APPEAL_ROUTES,
     ...SPINE_ROUTES,
     ...PA_NOTIFICATION_ROUTES,

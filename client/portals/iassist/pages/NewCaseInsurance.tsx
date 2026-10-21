@@ -12,12 +12,17 @@
  * demo-only toggle so a presenter can show any of the three without waiting
  * on a fake timer.
  */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { X, Plus, Trash2, Search } from "lucide-react";
+import { X, Plus, Trash2, Search, CheckCircle2 } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, type ManualInsurance } from "@/store/caseWizardStore";
+import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
+import EMedBVModal from "../components/EMedBVModal";
+import MedBVCard from "../components/MedBVCard";
+import { medbvCovered } from "../data/medbvResult";
 
 type SearchState = "searching" | "found" | "none";
 type InsuranceKind = "medical" | "pharmacy";
@@ -212,6 +217,15 @@ export default function NewCaseInsurance() {
   const setSelectedInsurance = useCaseWizardStore((s) => s.setSelectedInsurance);
   const { searchState, preferredId, manualInsurances, notInsured } = insurance;
 
+  // Buy and Bill: the HCP verifies the medical benefit with eMedBV before moving on. A recipe with the module says so.
+  const selectedInsurance = useCaseWizardStore((s) => s.selectedInsurance);
+  const medbvModule = useRecipeModule("benefit_verification");
+  const { workflowData } = usePersonaState("provider");
+  const dispatch = useWorkflowDispatch();
+  const [medbvOpen, setMedbvOpen] = useState(false);
+  const medbvDone = workflowData.medbvStatus === "complete";
+  const nextBlocked = !!medbvModule && !medbvDone;
+
   // Carry whichever insurance is actually selected forward to caseWizardStore
   // so Step 5's Payer details section can prefill from it instead of being a
   // disconnected free-text section.
@@ -372,6 +386,17 @@ export default function NewCaseInsurance() {
               </section>
             )}
 
+            {medbvModule && (
+              <MedBVCard
+                done={medbvDone}
+                covered={medbvCovered(workflowData.choices?.bi)}
+                canRun={!!selectedInsurance}
+                onRun={() => dispatch("RUN_MEDBV", { portal: "provider" })}
+                onViewResults={() => setMedbvOpen(true)}
+              />
+            )}
+            {medbvOpen && <EMedBVModal covered={medbvCovered(workflowData.choices?.bi)} onClose={() => setMedbvOpen(false)} />}
+
             <div className="flex justify-between pb-8">
               <button
                 onClick={() => navigate("/new-case/medication")}
@@ -381,7 +406,8 @@ export default function NewCaseInsurance() {
               </button>
               <button
                 onClick={() => navigate("/new-case/clinical")}
-                className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors"
+                disabled={nextBlocked}
+                className="bg-[#007178] text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-[#03656B] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next
               </button>

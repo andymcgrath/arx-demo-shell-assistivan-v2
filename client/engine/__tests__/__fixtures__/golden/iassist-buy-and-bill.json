@@ -1,0 +1,223 @@
+{
+  "flowType": "iAssist_Buy_And_Bill",
+  "steps": [
+    {
+      "event": "RUN_MEDBV",
+      "accepted": true,
+      "route": "/lock-screen",
+      "changed": {
+        "medbvStatus": "complete"
+      },
+      "newEvents": [
+        {
+          "eventType": "RUN_MEDBV",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "ENROLL_COPAY",
+      "accepted": true,
+      "route": "/lock-screen",
+      "changed": {
+        "copayEnrolled": true,
+        "copayEnrolledAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "ENROLL_COPAY",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "REFERRAL_RECEIVED",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true,
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "REFERRAL_RECEIVED",
+          "portal": "crm",
+          "workflowStep": 1
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/confirm-income",
+      "changed": {
+        "enrollmentAcknowledged": true,
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_INCOME",
+      "payload": {
+        "householdSize": "2",
+        "householdIncome": "62000"
+      },
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "incomeStatus": "verified",
+        "householdSize": "2",
+        "householdIncome": "62000"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_INCOME",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "paStatus": "submitted",
+        "biStatus": "complete",
+        "biResult": "coverage_found",
+        "paRequired": true,
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z",
+        "pharmacyBenefitStatus": "not_covered",
+        "medicalBenefitStatus": "covered"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        },
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "APPROVE_PA",
+      "accepted": true,
+      "route": "/pa-approved-sms",
+      "changed": {
+        "paStatus": "approved",
+        "dispatchStatus": "pending_selection",
+        "paApprovedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "APPROVE_PA",
+          "portal": "provider",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_SMS",
+      "accepted": true,
+      "route": "/pa-approved-otp",
+      "changed": {
+        "paApprovedSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_OTP",
+      "accepted": true,
+      "route": "/approved-contact-physician",
+      "changed": {
+        "paApprovedOtpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_OTP",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SUBMIT_COPAY_CLAIM",
+      "payload": {
+        "dateOfService": "2026-01-20"
+      },
+      "accepted": true,
+      "route": "/approved-contact-physician",
+      "changed": {
+        "copayClaims": [
+          {
+            "id": "CLM-1001",
+            "dateOfService": "2026-01-20",
+            "status": "in_review",
+            "submittedAt": "2026-01-15T12:00:00.000Z"
+          }
+        ]
+      },
+      "newEvents": [
+        {
+          "eventType": "SUBMIT_COPAY_CLAIM",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,9 @@ import { ArrowRight, ChevronRight, BookOpen, CreditCard } from "lucide-react";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
+import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { MapPin } from "lucide-react";
 
 export default function PAApproved() {
   const navigate = useNavigate();
@@ -18,7 +21,9 @@ export default function PAApproved() {
   // your insurance" headline reads like a non sequitur right after the
   // patient was told PA was denied, so this flow gets its own headline that
   // closes that loop instead of silently reusing WF1's copy.
-  const isIAssistPap = flowType === "iAssist_PAP";
+  // Free drug (Buy and Bill PAP) is the other scenario that sends the drug to a site of care. Its recipe says so.
+  const freeDrug = useFreeDrug();
+  const isIAssistPap = flowType === "iAssist_PAP" || freeDrug;
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -36,7 +41,7 @@ export default function PAApproved() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                {isIAssistPap ? "Great news! Your appeal was approved" : `Great news! ${PROGRAM.drugDisplayName} is covered by your insurance`}
+                {freeDrug ? "Great news! You were approved for the free drug program" : isIAssistPap ? "Great news! Your appeal was approved" : `Great news! ${PROGRAM.drugDisplayName} is covered by your insurance`}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
                 <span className="text-lg font-bold text-arx-link">Rx</span>
@@ -44,10 +49,22 @@ export default function PAApproved() {
             </div>
 
             <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-              {isIAssistPap
+              {freeDrug
+                ? `Your ${PROGRAM.drugDisplayName} will go to your doctor's office at no cost to you. Now choose an appointment date that works for you.`
+                : isIAssistPap
                 ? "Now let's get your infusion scheduled. Choose a date that works for you."
                 : "Now we can arrange for delivery. Complete a short form and choose a delivery date that works for you."}
             </p>
+
+            {freeDrug && (
+              <div className="flex items-start gap-2 rounded-xl border border-arx-borders bg-arx-sky/20 px-4 py-3 mb-5">
+                <MapPin className="w-4 h-4 text-arx-link flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-arx-slate">{KEANU_SITE_OF_CARE_FACTS.facilityName}</p>
+                  <p className="text-xs text-arx-body-copy">{KEANU_SITE_OF_CARE_FACTS.address}, {KEANU_SITE_OF_CARE_FACTS.city}, {KEANU_SITE_OF_CARE_FACTS.state} {KEANU_SITE_OF_CARE_FACTS.zip}</p>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => {
@@ -55,7 +72,7 @@ export default function PAApproved() {
               }}
               className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors"
             >
-              <span>{isIAssistPap ? "Schedule infusion" : "Schedule delivery now"}</span>
+              <span>{freeDrug ? "Choose appointment date" : isIAssistPap ? "Schedule infusion" : "Schedule delivery now"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

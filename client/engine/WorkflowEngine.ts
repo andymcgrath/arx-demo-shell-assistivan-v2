@@ -375,6 +375,12 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   // (the CRM action that sends it) still falls through to the default case
   // below, where its existing email case already lives.
   'VERIFY_PROVIDER_TRANSFER_SMS',
+  // iAssist Buy and Bill: HCP-side steps inside iAssist. The referral email
+  // that follows already tells the FRM about the case.
+  'RUN_MEDBV',
+  'ENROLL_COPAY',
+  // iAssist Buy and Bill: the patient's household income confirmation follows consent, which already has an email.
+  'CONFIRM_INCOME',
 ]);
 
 function formatSentAt(iso: string): string {
@@ -537,6 +543,20 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Task: Prior Authorization Requested',
           });
         }
+        break;
+
+      // iAssist Buy and Bill: the HCP filed a copay claim from the patient record.
+      case 'SUBMIT_COPAY_CLAIM':
+        emails.push({
+          ...base,
+          subject: `Copay Claim Submitted - ${patientName}`,
+          bodyParagraphs: [
+            `${prescriberName} submitted a copay claim for ${patientName}'s injection.`,
+            `The claim shows In review. No action is needed on this case.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
         break;
 
       // CoA_Coverage only — CoAssist hands the case to Advanced Diabetes Supply,

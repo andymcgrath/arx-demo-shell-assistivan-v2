@@ -12,12 +12,14 @@
  * a checkbox multi-select with a freeform "Other" option (displayed
  * comma-joined), and paired short inputs. All three are represented below.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { X, Upload, Search } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore } from "@/store/caseWizardStore";
+import { indicationDiagnosis } from "@/brand/indication";
+import FileDropzone from "../components/FileDropzone";
 
 // Full ICD-10 reference list surfaced by the diagnosis search below, grouped
 // by clinical area. "Other" holds the original three demo codes this step
@@ -159,6 +161,13 @@ export default function NewCaseClinical() {
   const clinical = useCaseWizardStore((s) => s.clinical);
   const setClinical = useCaseWizardStore((s) => s.setClinical);
 
+  // A brand with an indication starts on its diagnosis, so every screen shows the same one. The HCP can still search.
+  useEffect(() => {
+    const dx = indicationDiagnosis();
+    if (dx && !clinical.selectedIcd) setClinical({ selectedIcd: dx });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Diagnosis search box — transient, not persisted (query text, not an answer)
   const [icdSearch, setIcdSearch] = useState("");
 
@@ -263,15 +272,9 @@ export default function NewCaseClinical() {
 
             {/* Documents */}
             <section className="bg-white rounded-xl p-6 space-y-3" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
-              <h2 className="text-base font-semibold text-[#1D1D1D]">Documents</h2>
-              <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
-                <Upload size={22} className="mx-auto text-[#999] mb-2" />
-                <p className="text-sm text-[#6F7276]">
-                  Drag and drop file here, or{" "}
-                  <span className="text-[#007178] font-semibold cursor-pointer hover:underline">upload it here</span>
-                </p>
-                <p className="text-xs text-[#999] mt-1">Files must be 19MB or less and in JPG, PNG, or PDF format</p>
-              </div>
+              <h2 className="text-base font-semibold text-[#1D1D1D]">Supporting documents <span className="text-xs font-normal text-[#999]">Optional</span></h2>
+              <p className="text-sm text-[#6F7276]">Chart notes, recent lab results, or other clinical records that support the diagnosis.</p>
+              <FileDropzone files={clinical.documents ?? []} onChange={(names) => setClinical({ documents: names })} sampleFiles={["ChartNotes.pdf"]} />
             </section>
 
             <div className="flex justify-between pb-8">

@@ -8,6 +8,7 @@ import type { IaRoute } from "../slots";
 
 const APPROVED = { module: "pa_notification" } as const;
 const APPEAL = { module: "appeal" } as const;
+const PAP = { module: "financial_assistance", props: { variant: "pap" } } as const;
 
 /** What the patient has finished before the appeal flow stops asking: the appeal skips onboarding once filed. */
 const assumeConsent = (d: { appealStatus: string; consentStatus: string }) => d.appealStatus !== "none" && d.consentStatus === "pending";
@@ -18,6 +19,8 @@ export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true },
   { path: "/otp-verification", label: "OTP Verification", group: "Enrollment" },
   { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment" },
+  // Buy and Bill, patient consent by text: the patient confirms household size and income after consenting.
+  { path: "/confirm-income", label: "Confirm Household Income", group: "Enrollment", scope: { fork: "consent", exit: "patient_text" }, skipped: (d) => d.choices?.consent !== "patient_text" },
   { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment", sticky: true },
 ];
 
@@ -28,8 +31,13 @@ export const ENROLLMENT_ROUTES: IaRoute[] = [
   { id: "enrollment.sms.appeal", slot: "gate", path: "/sms-message", scope: APPEAL, when: (d) => !d.otpVerified && !assumeConsent(d) && d.enrollmentInviteSent && !d.smsVerified },
   { id: "enrollment.lock_screen.appeal", slot: "gate", path: "/lock-screen", scope: APPEAL, when: (d) => !d.otpVerified && !assumeConsent(d) && !d.smsVerified },
   { id: "enrollment.otp.appeal", slot: "gate", path: "/otp-verification", scope: APPEAL, when: (d) => !d.otpVerified && !assumeConsent(d) },
+  { id: "enrollment.sms.pap", slot: "gate", path: "/sms-message", scope: PAP, when: (d) => !d.otpVerified && d.enrollmentInviteSent && !d.smsVerified },
+  { id: "enrollment.lock_screen.pap", slot: "gate", path: "/lock-screen", scope: PAP, when: (d) => !d.otpVerified && !d.smsVerified },
+  { id: "enrollment.otp.pap", slot: "gate", path: "/otp-verification", scope: PAP, when: (d) => !d.otpVerified },
+  { id: "enrollment.confirm_details.pap", slot: "gate", path: "/confirm-details", scope: PAP, when: (d) => d.consentStatus === "pending" },
   { id: "enrollment.confirm_details.approved", slot: "gate", path: "/confirm-details", scope: APPROVED, when: (d) => d.consentStatus === "pending" },
   { id: "enrollment.confirm_details.appeal", slot: "gate", path: "/confirm-details", scope: APPEAL, when: (d) => d.consentStatus === "pending" && !assumeConsent(d) },
+  { id: "enrollment.confirm_income", slot: "gate", path: "/confirm-income", scope: { fork: "consent", exit: "patient_text" }, when: (d) => d.choices?.consent === "patient_text" && d.consentStatus === "confirmed" && d.incomeStatus === "none" },
   // BI has not started. It starts with the referral, so this is a moment only.
   { id: "enrollment.waiting_for_bi", slot: "started", path: "/enrollment-complete", when: (d) => d.consentStatus === "confirmed" && d.biStatus === "none" },
 ];

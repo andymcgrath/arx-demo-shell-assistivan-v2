@@ -1,7 +1,7 @@
 /**
  * Pharmacy selection. `crm` lets the agent change the dispensing pharmacy once a price is chosen. `site_of_care` is where the appeal sends the Rx.
  */
-import type { IaRule } from "./shared";
+import { siteOfCareUnlocked, type IaRule } from "./shared";
 
 export const PHARMACY_SELECTION_RULES: IaRule[] = [
   {
@@ -18,7 +18,7 @@ export const PHARMACY_SELECTION_RULES: IaRule[] = [
     id: "pharmacy_selection.select_pharmacy.site_of_care",
     on: "SELECT_PHARMACY",
     scope: { module: "pharmacy_selection", props: { variant: "site_of_care" } },
-    when: (d) => d.appealStatus !== "none" && d.pharmacyStatus === "none",
+    when: (d) => siteOfCareUnlocked(d) && d.pharmacyStatus === "none",
     set: (_d, e) => ({ selectedPharmacy: e.pharmacy ?? null, dispatchStatus: "selected" }),
     emit: { portal: "crm", step: 5 },
   },

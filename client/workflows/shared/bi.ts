@@ -50,6 +50,13 @@ export const BI_EXITS = {
     data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "covered", paRequired: true, pharmacyAssigned: true },
     requires: ["pharmacy_selection:assigned"],
   },
+  medical_buy_and_bill: {
+    label: "Medical Coverage, Buy and Bill",
+    description:
+      "The medical benefit covers it and a PA is required. The HCP buys and bills the drug, so no pharmacy is assigned and nothing ships to the patient. Copay is enrolled by the HCP.",
+    data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "covered", paRequired: true },
+    requires: ["benefit_verification", "copay"],
+  },
   no_coverage: {
     label: "No Coverage (Cash)",
     description: "Neither benefit covers it. No PA is submitted.",

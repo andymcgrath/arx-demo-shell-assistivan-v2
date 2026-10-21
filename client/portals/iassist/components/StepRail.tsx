@@ -20,7 +20,7 @@ const STEPS: { step: CaseStep; label: string; Icon: LucideIcon }[] = [
   { step: 6, label: "Rx", Icon: FileText },
 ];
 
-export default function StepRail({ current }: { current: CaseStep }) {
+export default function StepRail({ current, lastLabel }: { current: CaseStep; lastLabel?: string }) {
   return (
     <nav
       aria-label="Case creation steps"
@@ -32,7 +32,7 @@ export default function StepRail({ current }: { current: CaseStep }) {
         return (
           <div
             key={step}
-            title={label}
+            title={step === 6 && lastLabel ? lastLabel : label}
             aria-current={isActive ? "step" : undefined}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
               isActive

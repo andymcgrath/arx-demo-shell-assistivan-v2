@@ -15,28 +15,21 @@
  * a mode switcher — consistent with this app's existing pattern of letting
  * the presenter pick which state to show (e.g. the shell's stage-jump menu).
  */
+import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/store/caseWizardStore";
-import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
+import { SITES_OF_CARE, siteByName } from "../data/sitesOfCare";
 
 const FORM_OPTIONS = ["Tablet", "Capsule", "Oral Solution", "Injection", "Infusion"];
 
 const LDD_PHARMACIES = ["Accredo", "Amber", "Centerwell", "CVS", "Maxor", "Optum", "Walgreens"];
 
-// Keanu's real site (from KEANU_SITE_OF_CARE_FACTS — the same source of truth
-// CRM's Office Dispense dropdown and Step 1's Site of Care summary read from,
-// see WorkflowEngine.ts) leads the list; the rest are mocked decoy clinics so
-// the dropdown doesn't look suspiciously short next to the other two modes.
-const SITE_OF_CARE_OPTIONS = [
-  KEANU_SITE_OF_CARE_FACTS.facilityName,
-  "Westgate Infusion Clinic",
-  "Orlando Health Infusion Center",
-  "AdventHealth Infusion Suite",
-  "Lake Eola Ambulatory Infusion",
-];
+// Sites of care come from one list (data/sitesOfCare.ts), shared with the Buy and Bill step. Picking one fills its
+// HOPD NPI and TIN, which the HCP can still edit.
 
 // A 2-result "search" wasn't worth the UI — this is a straight preferred-
 // pharmacy dropdown instead, same pattern as the Limited Distribution list.
@@ -62,6 +55,21 @@ export default function NewCaseMedication() {
   const navigate = useNavigate();
   const med = useCaseWizardStore((s) => s.medication);
   const setMedication = useCaseWizardStore((s) => s.setMedication);
+
+  function chooseSite(name: string) {
+    const site = siteByName(name);
+    setMedication({ siteOfCare: name, hopdNpi: site?.hopdNpi ?? "", tin: site?.tin ?? "" });
+  }
+
+  // Buy and Bill: the HCP buys the drug, so the site of care is the one choice here. Start there, on the patient's site.
+  const buyAndBill = !!useRecipeModule("benefit_verification");
+  useEffect(() => {
+    if (buyAndBill && !med.siteOfCare) {
+      const site = SITES_OF_CARE[0];
+      setMedication({ pharmacyMode: "soc", siteOfCare: site.name, hopdNpi: site.hopdNpi, tin: site.tin });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyAndBill]);
 
   function handleMedicationChange(value: string) {
     const codes = MEDICATION_CODES[value];
@@ -191,16 +199,16 @@ export default function NewCaseMedication() {
                 <div className="space-y-4">
                   <div className="bg-[#FFF7ED] border border-[#FDE7C7] rounded-lg p-3 text-xs text-[#92400E] flex gap-2">
                     <Info size={14} className="flex-shrink-0 mt-0.5" />
-                    Site of Care applies only to buy-and-bill products (e.g. SYFOVRE).
+                    Site of Care applies only to buy-and-bill products.
                   </div>
                   <Field label="Single NDC Medication Name">
                     <input value={med.medication} disabled className={`${inputCls} bg-neutral-50 text-[#6F7276]`} />
                   </Field>
                   <Field label="Site of Care">
-                    <select value={med.siteOfCare} onChange={(e) => setMedication({ siteOfCare: e.target.value })} className={`${inputCls} appearance-none`}>
+                    <select value={med.siteOfCare} onChange={(e) => chooseSite(e.target.value)} className={`${inputCls} appearance-none`}>
                       <option value="">Select</option>
-                      {SITE_OF_CARE_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{s}</option>
+                      {SITES_OF_CARE.map((s) => (
+                        <option key={s.name} value={s.name}>{s.name}</option>
                       ))}
                     </select>
                   </Field>

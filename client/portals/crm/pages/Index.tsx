@@ -16,7 +16,9 @@ import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } fro
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { PAYER } from "../payerFacts";
 import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
-import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
+import { BRAND } from "@/brand";
+import { copayBalance } from "@/portals/iassist/data/copayProgram";
 import {
   ChevronDown,
   ChevronRight,
@@ -829,7 +831,10 @@ export default function Index() {
   // SITES_OF_CARE; Patient Preferred/Payer Mandated/Program Mandated stay on
   // the standard pharmacyOptions list since those still describe a
   // hypothetical outside pharmacy the case COULD have used.
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  // Free drug (Buy and Bill PAP): the recipe's `financial_assistance` module with eMedBV. Like the appeal scenario, it
+  // sends the drug to a site of care, so it shares the site-of-care screens below.
+  const isFreeDrug = scenarioHasModule(flowType, "financial_assistance") && scenarioHasModule(flowType, "benefit_verification");
+  const isIAssistPapFlow = flowType === "iAssist_PAP" || isFreeDrug;
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
@@ -838,6 +843,8 @@ export default function Index() {
   // doesn't apply to it at all.
   const isCoverageFlow = flowType === "CoA_Coverage";
   // The scenario's recipe says whether the CRM shows the benefits panel.
+  // Buy and Bill: the recipe's `copay` module swaps in a four-stage list. No appeals, triage, or order stages.
+  const isBuyAndBill = scenarioHasModule(flowType, "copay");
   const showBenefitsPanel = !!ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.panels?.includes("benefits");
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
@@ -1177,7 +1184,74 @@ export default function Index() {
     ? "Pharmacy Benefit Covered"
     : "No Coverage Found — Cash Pay Offered";
 
-  const STAGES_LIVE: Stage[] = isCoverageFlow
+  // Buy and Bill. BI is the medical benefit (eMedBV already ran in iAssist). Financial Assistance is the copay the HCP
+  // enrolled there. Appeals are skipped because the PA is approved, and nothing triages or ships.
+  const copayEnrolledOn = workflowData.copayEnrolledAt ? new Date(workflowData.copayEnrolledAt) : new Date();
+  const copayYear = copayEnrolledOn.getFullYear();
+  const buyAndBillStages: Stage[] = [
+    eaStage,
+    biStatus === "complete"
+      ? { ...biStage, statusDetail: "Medical benefit covered (buy and bill); prior authorization required" }
+      : biStage,
+    paStage,
+    copayEnrolled
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "Complete",
+          statusDetail: "Copay enrolled by the HCP in iAssist",
+          isComplete: true,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Copay Program` },
+            { label: "Remaining Balance", value: `$${copayBalance(workflowData).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+            { label: "Effective Date", value: copayEnrolledOn.toLocaleDateString() },
+            { label: "Program Approval Date", value: copayEnrolledOn.toLocaleDateString() },
+            { label: "Expiration Date", value: new Date(copayYear, 11, 31).toLocaleDateString() },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: copayEnrolledOn.toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : { ...faStage, statusDetail: "Awaiting copay enrollment" },
+  ];
+
+  // Free drug (PAP). eMedBV found no coverage, so there is no PA and no copay. Financial Assistance is the application the
+  // patient completes. Approval triages the drug to the site of care, and the last stage is the order status.
+  const papApproved = workflowData.papStatus === "active";
+  const freeDrugStages: Stage[] = [
+    eaStage,
+    biStatus === "complete" ? { ...biStage, statusDetail: "No medical coverage found; free drug program" } : biStage,
+    papApproved
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "Complete",
+          statusDetail: "Free drug application approved",
+          isComplete: true,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` },
+            { label: "Credit Check Consent", value: workflowData.creditCheckConsented ? "Yes" : null },
+            { label: "Household Size", value: workflowData.householdSize ?? null },
+            { label: "Annual Household Income", value: workflowData.householdIncome ? `$${Number(workflowData.householdIncome).toLocaleString("en-US")}` : null },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: dateFromToday(0).toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : papSmsSent
+      ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "In Progress", statusDetail: "Application update sent. Awaiting the patient's credit check consent and income", isComplete: false, isNotStarted: false, fields: [{ label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` }, { label: "Income Verification", value: "Pending" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: biStatus === "complete" ? "Sending the application update" : "Awaiting BI result", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Income Verification", value: null }], lastUpdated: null, lastUpdatedAgo: null },
+    { ...tpStage, name: "Triage to Site of Care" },
+    { ...psStage, name: "Order Status" },
+  ];
+
+  const STAGES_LIVE: Stage[] = isFreeDrug
+    ? freeDrugStages
+    : isBuyAndBill
+    ? buyAndBillStages
+    : isCoverageFlow
     ? [
         // Same "active, waiting on something automatic" treatment as
         // isCoaFlow's eaStage below — SMS/consent is sent automatically for

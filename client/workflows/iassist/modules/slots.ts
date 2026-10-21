@@ -12,12 +12,18 @@ export const IASSIST_SLOTS = [
   "started",
   /** The appeal was approved: the result, then the infusion date. */
   "appeal_result",
+  /** Free drug (PAP) approved: the site of care, the appointment date, then delivered. */
+  "pap_approved",
+  /** Free drug (PAP): the application update, the credit check and income. */
+  "pap_apply",
   /** The PA was denied. */
   "denied",
   /** Waiting on the PA decision. */
   "waiting",
   /** PA approved: SMS and OTP again. */
   "pa_notice",
+  /** Buy and Bill: the PA is approved and verified. The patient is told to contact the prescriber. */
+  "hcp_approved",
   /** The Rx goes to an assigned pharmacy. The patient has nothing to choose. */
   "transfer",
   "pricing",
@@ -31,7 +37,7 @@ export const IASSIST_SLOTS = [
 export type IassistSlot = (typeof IASSIST_SLOTS)[number];
 
 /** The menu groups, in the order a patient meets them. */
-export const IASSIST_GROUPS = ["Enrollment", "Prior authorization", "Pricing", "Pharmacy transfer", "{program} order"] as const;
+export const IASSIST_GROUPS = ["Enrollment", "Free drug application", "Prior authorization", "Pricing", "Pharmacy transfer", "{program} order"] as const;
 
 /** An iAssist route rule. It names its id, its slot, and (when it is not for every scenario) its scope. */
 export type IaRoute = ScreenRule & { id: string; slot: IassistSlot };

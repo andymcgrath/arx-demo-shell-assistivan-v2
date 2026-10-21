@@ -1,9 +1,11 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
 export default function EnrollmentComplete() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
+  const hcpAdministered = !!useRecipeModule("copay");
 
   // CoA_Copay (WF4) Mail Order path only — this screen is a one-time
   // "Thanks! Your details were received" stop right after the delivery
@@ -58,7 +60,9 @@ export default function EnrollmentComplete() {
           </h1>
 
           <p className="text-arx-on-hero/90 text-sm leading-relaxed mb-4">
-            We can now begin processing your prescription. This usually takes less than 2 business days.
+            {hcpAdministered
+              ? "We're now checking your benefits and starting your prior authorization. This usually takes less than 2 business days."
+              : "We can now begin processing your prescription. This usually takes less than 2 business days."}
           </p>
           <p className="text-arx-on-hero/90 text-sm leading-relaxed mb-10">
             No further action is needed at this time. We'll notify you as soon as there's an update.

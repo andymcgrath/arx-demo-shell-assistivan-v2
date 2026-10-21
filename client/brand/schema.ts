@@ -67,6 +67,20 @@ export interface BrandDemo {
   choices?: Record<string, string>;
 }
 
+/** The diagnosis a brand's drug treats, with the clinical wording the iAssist forms prefill. */
+export interface BrandIndication {
+  /** Plain name, for example "Chronic spontaneous urticaria". */
+  name: string;
+  /** ICD-10-CM code. Representative for the demo: confirm with a coder before real use. */
+  icd10: string;
+  /** The code's official description. */
+  icd10Label: string;
+  /** Prefills "Current Treatment Plan" on the PA. */
+  currentTreatment: string;
+  /** Prefills "Reason for Prescribing" on the PA. `{drug}` becomes the drug display name. */
+  rationale: string;
+}
+
 export interface BrandConfig {
   /** Folder name under `brands/`. Equals the `BRAND` env value. */
   slug: string;
@@ -102,6 +116,11 @@ export interface BrandConfig {
      * Where a transfer sends the patient: the pharmacy in the `pharmacy_transfer` branch. Its name and contact details
      * show on the patient's transfer confirmation and in the CRM. Optional. A brand with none uses a placeholder.
      */
+    /**
+     * What the drug treats. The iAssist diagnosis, the PA form, and the eMedBV summary read it, so every screen shows
+     * one diagnosis. Optional. A brand with none leaves the diagnosis for the HCP to pick.
+     */
+    indication?: BrandIndication;
     transferPartner?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
   };
   chatbotIcon: string;

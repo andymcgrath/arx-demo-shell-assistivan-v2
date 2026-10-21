@@ -5,6 +5,7 @@ import { useChatContext } from "@/portals/patient/components/ChatContext";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
@@ -33,7 +34,9 @@ export default function MedicationDelivered() {
   // rich-message attachment on AppointmentConfirmation.tsx's SMS screen —
   // moved here since it's ongoing appointment info the patient should be
   // able to come back to, not part of a one-time text message.
-  const isIAssistPap = workflowData.flowType === 'iAssist_PAP';
+  const freeDrug = useFreeDrug();
+  const noun = freeDrug ? 'Injection' : 'Infusion';
+  const isIAssistPap = workflowData.flowType === 'iAssist_PAP' || freeDrug;
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
   // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
@@ -61,12 +64,12 @@ export default function MedicationDelivered() {
             <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
               <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-white" />
-                <span className="text-sm font-semibold text-white">Infusion Appointment</span>
+                <span className="text-sm font-semibold text-white">{noun} Appointment</span>
               </div>
               <div className="p-5 space-y-3">
                 <div>
                   <p className="text-base font-bold text-arx-slate">{formatInfusionDate(workflowData.infusionDate)}</p>
-                  <p className="text-xs text-arx-body-copy">Infusion visit</p>
+                  <p className="text-xs text-arx-body-copy">{noun} visit</p>
                 </div>
 
                 <div className="flex items-start gap-2">

@@ -253,3 +253,57 @@ describe("Triage rules", () => {
     expect(recipeProblems(r)).toEqual([]);
   });
 });
+
+describe("iAssist Buy and Bill recipe", () => {
+  const forks = forksForScenario(ALL_FORKS, "iAssist_Buy_And_Bill");
+  const base = IASSIST_RECIPES.iAssist_Buy_And_Bill;
+  const without = (id: string) => ({ ...base, modules: base.modules.filter((m) => m.id !== id) });
+
+  it("is valid, and has no pharmacy, scheduling, payment, or tracking", () => {
+    expect(recipeProblems(base, forks)).toEqual([]);
+    const ids = base.modules.map((m) => m.id);
+    for (const id of ["pharmacy_selection", "scheduling", "payment", "tracking"]) expect(ids).not.toContain(id);
+  });
+
+  it("shows the benefits panel, and picks the Buy and Bill BI exit with an approved PA", () => {
+    expect(base.panels).toEqual(["benefits"]);
+    expect(base.choices).toEqual({ bi: "medical_buy_and_bill", pa: "approved", consent: "patient_text" });
+  });
+
+  it("rejects a copay enrollment before the benefits are verified", () => {
+    const swapped = { ...base, modules: [base.modules[1], base.modules[0], ...base.modules.slice(2)] };
+    expect(recipeProblems(swapped, forks)).toContain('copay needs "benefitsVerified", and nothing before it provides it');
+  });
+
+  it("rejects a copay claim with no copay enrollment", () => {
+    expect(recipeProblems(without("copay"), forks)).toContain('copay_claim needs "copayEnrolled", and nothing before it provides it');
+  });
+
+  it("rejects the Buy and Bill exit without eMedBV or copay in the recipe", () => {
+    expect(recipeProblems(without("benefit_verification"), forks)).toContain(
+      'fork "bi" exit "medical_buy_and_bill" requires benefit_verification in the recipe',
+    );
+    expect(recipeProblems(without("copay"), forks)).toContain('fork "bi" exit "medical_buy_and_bill" requires copay in the recipe');
+  });
+});
+
+describe("iAssist Buy and Bill, free drug (PAP) recipe", () => {
+  const forks = forksForScenario(ALL_FORKS, "iAssist_Buy_And_Bill_PAP");
+  const base = IASSIST_RECIPES.iAssist_Buy_And_Bill_PAP;
+  const without = (id: string) => ({ ...base, modules: base.modules.filter((m) => m.id !== id) });
+
+  it("is valid, with no copay, PA, or payment", () => {
+    expect(recipeProblems(base, forks)).toEqual([]);
+    const ids = base.modules.map((m) => m.id);
+    for (const id of ["copay", "copay_claim", "pa_notification", "payment"]) expect(ids).not.toContain(id);
+  });
+
+  it("picks the no coverage BI exit, and passes through the bi fork only", () => {
+    expect(base.choices).toEqual({ bi: "no_coverage" });
+    expect(forks.map((f) => f.id)).toEqual(["bi"]);
+  });
+
+  it("rejects the no coverage exit without financial assistance", () => {
+    expect(recipeProblems(without("financial_assistance"), forks)).toContain('fork "bi" exit "no_coverage" requires financial_assistance in the recipe');
+  });
+});

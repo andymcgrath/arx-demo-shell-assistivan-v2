@@ -302,6 +302,186 @@
         "/pharmacy-transfer",
         "/medication-delivered"
       ]
+    },
+    "iAssist_Buy_And_Bill": {
+      "route": [
+        "enrollment.sms.approved -> /sms-message",
+        "enrollment.lock_screen.approved -> /lock-screen",
+        "enrollment.otp.approved -> /otp-verification",
+        "enrollment.confirm_details.approved -> /confirm-details",
+        "enrollment.confirm_income -> /confirm-income",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "spine.pa_denied -> /pa-denied",
+        "spine.waiting -> /",
+        "pa_notification.sms -> /pa-approved-sms",
+        "pa_notification.otp -> /pa-approved-otp",
+        "pa_notification.contact_physician -> /approved-contact-physician"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Confirm Household Income",
+              "path": "/confirm-income"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Approved SMS",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "PA Approved OTP",
+              "path": "/pa-approved-otp"
+            },
+            {
+              "label": "Approved, Contact Your Physician",
+              "path": "/approved-contact-physician"
+            },
+            {
+              "label": "PA Denied",
+              "path": "/pa-denied"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
+        "/approved-contact-physician"
+      ]
+    },
+    "iAssist_Buy_And_Bill_PAP": {
+      "route": [
+        "enrollment.sms.pap -> /sms-message",
+        "enrollment.lock_screen.pap -> /lock-screen",
+        "enrollment.otp.pap -> /otp-verification",
+        "enrollment.confirm_details.pap -> /confirm-details",
+        "enrollment.waiting_for_bi -> /enrollment-complete",
+        "financial_assistance.tracker -> /medication-delivered",
+        "financial_assistance.approved -> /pa-approved",
+        "financial_assistance.waiting -> /enrollment-complete",
+        "financial_assistance.update_sms -> /pap-update-sms",
+        "financial_assistance.update_otp -> /pap-update-otp",
+        "financial_assistance.income -> /income-qualification",
+        "spine.pa_denied -> /pa-denied",
+        "spine.waiting -> /"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Free drug application",
+          "items": [
+            {
+              "label": "Application Update SMS",
+              "path": "/pap-update-sms"
+            },
+            {
+              "label": "Application Update Code",
+              "path": "/pap-update-otp"
+            },
+            {
+              "label": "Credit Check and Income",
+              "path": "/income-qualification"
+            },
+            {
+              "label": "Approved: Site of Care and Appointment",
+              "path": "/pa-approved"
+            },
+            {
+              "label": "Appointment Date",
+              "path": "/infusion-date"
+            },
+            {
+              "label": "Appointment Confirmation",
+              "path": "/appointment-confirmation"
+            }
+          ]
+        },
+        {
+          "group": "Prior authorization",
+          "items": [
+            {
+              "label": "PA Denied",
+              "path": "/pa-denied"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/infusion-date",
+        "/appointment-confirmation",
+        "/medication-delivered"
+      ]
     }
   }
 }

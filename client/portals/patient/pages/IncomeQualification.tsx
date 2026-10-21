@@ -6,6 +6,9 @@ import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { useChatContext } from "@/portals/patient/components/ChatContext";
 import { CHATBOT_ICON, PROGRAM } from "@/portals/patient/config/branding";
 import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
+import { useCaseWizardStore } from "@/store/caseWizardStore";
+import { MANUFACTURER } from "@/portals/patient/config/branding";
 
 const HOUSEHOLD_SIZES = ["1", "2", "3", "4", "5", "6", "7", "8+"];
 
@@ -21,13 +24,18 @@ export default function IncomeQualification() {
   const incomeStatus = workflowData.incomeStatus;
   const { openChat } = useChatContext();
 
-  const [householdSize, setHouseholdSize] = useState("");
-  const [incomeRaw, setIncomeRaw] = useState("");
+  // Free drug (Buy and Bill PAP): the HCP already entered the household in iAssist, so the patient confirms it. The
+  // credit check consent comes with the application.
+  const freeDrug = useFreeDrug();
+  const hcpEntered = useCaseWizardStore((s) => s.patient);
+  const [householdSize, setHouseholdSize] = useState(freeDrug ? hcpEntered.householdSize : "");
+  const [incomeRaw, setIncomeRaw] = useState(freeDrug ? hcpEntered.householdIncome.replace(/\D/g, "") : "");
+  const [creditConsent, setCreditConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
 
   const incomeDisplay = formatIncome(incomeRaw);
-  const canSubmit = householdSize !== "" && incomeRaw !== "";
+  const canSubmit = householdSize !== "" && incomeRaw !== "" && (!freeDrug || creditConsent);
 
   function handleIncomeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "");
@@ -44,7 +52,7 @@ export default function IncomeQualification() {
   }
 
   function handleConfirm() {
-    dispatch('VERIFY_INCOME', { portal: 'patient' });
+    dispatch('VERIFY_INCOME', { portal: 'patient', householdSize, householdIncome: incomeRaw });
   }
 
   if (incomeStatus === "verified") {
@@ -183,6 +191,15 @@ export default function IncomeQualification() {
             </div>
             <p className="text-xs text-arx-inactive mt-1.5">Include all sources of income for your household</p>
           </div>
+
+          {freeDrug && (
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={creditConsent} onChange={(e) => setCreditConsent(e.target.checked)} className="mt-1 w-4 h-4 flex-shrink-0 accent-arx-primary" />
+              <span className="text-xs leading-relaxed text-arx-body-copy">
+                I authorize {MANUFACTURER.name} to check my credit profile and other sources for my income and financial status. It is used only to decide my eligibility for the free drug program. I can cancel this authorization in writing at any time.
+              </span>
+            </label>
+          )}
 
           <button
             onClick={handleSubmit}

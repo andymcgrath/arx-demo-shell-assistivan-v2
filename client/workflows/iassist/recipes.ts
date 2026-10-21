@@ -60,8 +60,54 @@ export const IA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
   ],
 };
 
+/**
+ * Buy and Bill: the HCP buys the drug and bills the medical benefit. The HCP runs eMedBV and enrolls the patient in
+ * copay in iAssist, then submits an enrollment with no Rx. The CRM runs BI, then the PA, in order. The PA is
+ * approved, the patient is told to contact the physician, and the HCP sees the patient record and can file a copay
+ * claim. No pharmacy, scheduling, payment, or tracking: the HCP orders from their own wholesaler.
+ */
+export const IA_BUY_AND_BILL_RECIPE: ScenarioRecipe = {
+  source: "iassist",
+  forks: ["bi", "pa", "consent"],
+  choices: { bi: "medical_buy_and_bill", pa: "approved", consent: "patient_text" },
+  panels: ["benefits"],
+  modules: [
+    { id: "benefit_verification", props: { benefit: "medical" } },
+    { id: "copay", props: { enrolledBy: "hcp" } },
+    { id: "enrollment", props: { variant: "no_rx" } },
+    { id: "pa_notification", props: { variant: "hcp_administered" } },
+    { id: "patient_record" },
+    { id: "copay_claim" },
+  ],
+};
+
+/**
+ * Buy and Bill, free drug (PAP). eMedBV finds no medical coverage, so no PA starts and copay does not apply. The patient
+ * gets an application update, agrees to the credit check, and confirms household size and income. Approval sends the
+ * free drug to the site of care: the CRM triages it, the patient picks an appointment date, and the order is tracked.
+ * The patient pays nothing and sees no pricing. `approved` is the only outcome today. A scenario that wants a denial
+ * adds a `pap` fork exit and a module that handles it.
+ */
+export const IA_BUY_AND_BILL_PAP_RECIPE: ScenarioRecipe = {
+  source: "iassist",
+  forks: ["bi"],
+  choices: { bi: "no_coverage" },
+  panels: ["benefits"],
+  modules: [
+    { id: "benefit_verification", props: { benefit: "medical" } },
+    { id: "enrollment", props: { variant: "no_rx" } },
+    { id: "financial_assistance", props: { variant: "pap" } },
+    { id: "patient_record" },
+    { id: "scheduling", props: { variant: "infusion" } },
+    { id: "pharmacy_selection", props: { variant: "site_of_care" } },
+    { id: "tracking" },
+  ],
+};
+
 export const IASSIST_RECIPES = {
   iAssist_PA_Approved: IA_PA_APPROVED_RECIPE,
   iAssist_PAP: IA_PA_DENIED_APPEAL_RECIPE,
   iAssist_Medical_Transfer: IA_MEDICAL_TRANSFER_RECIPE,
+  iAssist_Buy_And_Bill: IA_BUY_AND_BILL_RECIPE,
+  iAssist_Buy_And_Bill_PAP: IA_BUY_AND_BILL_PAP_RECIPE,
 } as const;
