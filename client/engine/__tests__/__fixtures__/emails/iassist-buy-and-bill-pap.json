@@ -39,13 +39,13 @@
     "eventType": "COMPLETE_BI",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Prior Authorization Needed - Test Patient (Non-Formulary)",
+    "subject": "No Medical Coverage Found - Test Patient",
     "bodyParagraphs": [
-      "Benefits investigation found Test Patient's medication is not on the payer's standard formulary. Dr. Test needs to submit a prior authorization.",
-      "The Prior Authorization task is now open on this patient's case."
+      "Benefits investigation found no medical coverage for Test Patient. No Prior Authorization task will open on this case.",
+      "Test Patient will receive the free drug program application by text."
     ],
-    "linkedItemId": "LIVE-PA-SUBMISSION-REQUIRED",
-    "linkedItemLabel": "View Task: Prior Authorization Requested"
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
   },
   {
     "eventType": "SEND_PAP_SMS",

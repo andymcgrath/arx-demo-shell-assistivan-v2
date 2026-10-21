@@ -213,6 +213,8 @@ export default function FieldPortal() {
   const [showQuickView, setShowQuickView] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const isBuyAndBill = scenarioHasModule(state.flow_type, "copay");
+  // Free drug (PAP): eMedBV with the `financial_assistance` module. No PA or copay, and the drug goes to the site of care.
+  const isFreeDrug = scenarioHasModule(state.flow_type, "financial_assistance") && scenarioHasModule(state.flow_type, "benefit_verification");
   const isPapFlow = state.flow_type === "Fax_PAP_Audit" || state.flow_type === "PrES_PAP";
   const [viewedDoc, setViewedDoc] = useState<BrandDocument | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
@@ -1712,6 +1714,15 @@ export default function FieldPortal() {
                       ["PA Approved", state.pa_status === "approved" ? "Complete" : state.pa_status === "denied" ? "Denied" : state.pa_status === "none" ? "Not started" : "Pending"],
                       ["Copay Enrolled", state.copay_enrolled ? "Complete" : "Not started"],
                     ]
+                  : pid === "AS-164543" && isFreeDrug
+                  ? [
+                      ["Enrolled", state.enrollment_status === "enrolled" ? "Complete" : "Not started"],
+                      ["Benefits Investigation", state.bi_status === "complete" ? "Complete" : state.bi_status === "running" ? "In progress" : "Not started"],
+                      ["Financial Assistance", state.pap_status === "active" ? "Complete" : state.bi_status === "complete" ? "In progress" : "Not started"],
+                      ["Triage to Site of Care", state.dispatch_status === "selected" || state.dispatch_status === "dispatched" ? "Complete" : "Not started"],
+                      ["Appointment", state.infusion_date ? "Complete" : "Not started"],
+                      ["Order Status", state.pharmacy_status === "delivered" ? "Complete" : state.pharmacy_status === "none" ? "Not started" : "In progress"],
+                    ]
                   : [];
 
                 return (
@@ -1885,6 +1896,14 @@ export default function FieldPortal() {
                     ? [
                         { fileId: "DOC-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) },
                         { fileId: "DOC-2026-00432", doc: summaryOfBenefitsDocument(), type: "Summary of Benefits", pages: "2", received: daysFromToday(-3) },
+                      ]
+                    : []),
+                  ...(isLivePatient && isFreeDrug
+                    ? [
+                        { fileId: "DOC-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) },
+                        ...(state.pap_status === "active"
+                          ? [{ fileId: "DOC-2026-00432", doc: { file: "/docs/free-drug-application.pdf", fileName: "Free_Drug_Application.pdf" }, type: "Free Drug Application", pages: "1", received: daysFromToday(-1) }]
+                          : []),
                       ]
                     : []),
                   ...(isLivePatient && isFaxFlow

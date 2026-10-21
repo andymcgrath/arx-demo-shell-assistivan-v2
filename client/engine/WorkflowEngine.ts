@@ -483,6 +483,18 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemId: LIVE_CASE_ID,
             linkedItemLabel: 'View Case',
           });
+        } else if (flowType === 'iAssist_Buy_And_Bill_PAP' && biResult === 'no_coverage') {
+          // iAssist Buy and Bill free drug: no medical coverage, so no PA. The patient is applying for the free drug program.
+          emails.push({
+            ...base,
+            subject: `No Medical Coverage Found - ${patientName}`,
+            bodyParagraphs: [
+              `Benefits investigation found no medical coverage for ${patientName}. No Prior Authorization task will open on this case.`,
+              `${patientName} will receive the free drug program application by text.`,
+            ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
+          });
         } else if (isCoverageFlow && biResult === 'coverage_found') {
           // CoA_Coverage Scenario 1 — pharmacy benefit covered, medical not. This
           // outcome now requires a real Prior Authorization, mirroring

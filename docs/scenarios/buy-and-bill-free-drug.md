@@ -31,9 +31,14 @@ Enrolled, Benefits Investigation (no coverage, free drug program), Financial Ass
 
 Approved is the only outcome today. A scenario that wants a denial adds an exit to a new `pap` fork and a module that handles it. The recipe check fails any pick that no module handles.
 
+## Field portal
+
+- Related tab: a Patient Journey table (Enrolled, Benefits Investigation, Financial Assistance, Triage to Site of Care, Appointment, Order Status).
+- Related Docs: the enrollment form, then the free drug application once approved. Display only.
+- Emails: BI sends "No Medical Coverage Found" with no PA task. The application update and the income submission each send one. eMedBV sends none.
+
 ## Not built yet
 
-- Field portal stages for this scenario. The Patient Journey table covers demo 4 only.
 - A consent fork for this scenario. The patient always consents by text.
 
 ## Tests

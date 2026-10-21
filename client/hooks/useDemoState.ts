@@ -40,6 +40,8 @@ export interface DemoState {
   qs_status: "none" | "active" | "discontinued";
   pap_status: "none" | "active" | "audit_pending" | "discontinued";
   pharmacy_status: "none" | "processing" | "ready" | "shipped" | "delivered";
+  /** Where the order stands before it ships. `selected` means a pharmacy or site of care was picked. */
+  dispatch_status: string;
   workflow_step: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   updated_at: string;
   updated_by: Portal | "system" | null;
@@ -73,6 +75,7 @@ function toSnakeCaseShape(w: WorkflowData): DemoState {
     qs_status:         (w as any).qsStatus ?? "none",
     pap_status:        (w as any).papStatus ?? "none",
     pharmacy_status:   w.pharmacyStatus,
+    dispatch_status:   (w as any).dispatchStatus ?? "none",
     workflow_step:     ((w as any).workflowStep ?? 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7,
     updated_at:        (w as any).updatedAt ?? new Date().toISOString(),
     updated_by:        (w as any).updatedBy ?? "System",
