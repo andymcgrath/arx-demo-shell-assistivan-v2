@@ -1,5 +1,6 @@
 /** Salesforce-style primitives the CRM pages share. */
-import { Pencil } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
 
 export const SF_BLUE = "#0070d2";
 export const SF_SECTION_BG = "#f3f3f3";
@@ -29,6 +30,27 @@ export function FieldRow({ label, value, isLink, onEdit }: { label: string; valu
           <Pencil size={12} className="text-[#706e6b]" />
         </button>
       )}
+    </div>
+  );
+}
+
+/** A benefit section whose header chevron collapses and expands the body. */
+export function Section({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(true);
+  const Chevron = open ? ChevronDown : ChevronRight;
+  return (
+    <div className="border border-[#dddbda] rounded">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 text-left ${open ? "border-b border-[#dddbda]" : ""}`}
+        style={{ background: SF_SECTION_BG }}
+      >
+        <Chevron size={14} className="text-[#706e6b]" />
+        <span className="text-[12px] font-semibold text-[#3e3e3c]">{title}</span>
+      </button>
+      {open && children}
     </div>
   );
 }

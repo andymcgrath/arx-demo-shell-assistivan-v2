@@ -160,7 +160,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     return [];
   }
 
-  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP';
+  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP' || input.flowType === 'iAssist_Buy_And_Bill_PAP';
 
   const items: LiveWorkItem[] = [
     {

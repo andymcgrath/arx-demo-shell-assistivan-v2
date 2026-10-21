@@ -15,7 +15,7 @@ import type { FlowType } from "@/engine/types";
 import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { PAYER } from "../payerFacts";
-import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
+import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
 import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
 import { BRAND } from "@/brand";
 import { caseDocuments } from "@/brand/caseDocuments";
@@ -2107,11 +2107,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2126,14 +2122,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2152,14 +2144,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2169,7 +2157,7 @@ export default function Index() {
                       <FieldRow label="Auth Decision (Fax #)" value="Denied" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Info Box */}
                 <div className="border-l-4 p-4 rounded" style={{ borderColor: "#F59E0B", background: "#FEF3C7" }}>
@@ -2247,11 +2235,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2266,14 +2250,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2292,14 +2272,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2309,7 +2285,7 @@ export default function Index() {
                       <FieldRow label="Auth Decision (Fax #)" value="Denied" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Info Box — reacts live to appealStatus (iAssist_PAP/WF5's
                     own field, see workflows/iassist/rules.ts); every other flow
@@ -2400,11 +2376,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2419,14 +2391,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2445,14 +2413,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${dateFromToday(0).toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section (if applicable) */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2462,7 +2426,7 @@ export default function Index() {
                       <FieldRow label="Auth Approval (Fax #" value="Approved" />
                     </div>
                   </div>
-                </div>
+                </Section>
               </div>
 
               {/* Right: Approval Status Panel */}
@@ -2531,11 +2495,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2550,14 +2510,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Appeal Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Appeal Information</span>
-                  </div>
+                <Section title="Appeal Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Appeal Number" value="APL-2026-000842" />
@@ -2580,7 +2536,7 @@ export default function Index() {
                       <FieldRow label="HCP Notified" value="Sarah Chen, MD — notified via email" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
                   <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved — Fulfillment Continuing</p>
@@ -2687,11 +2643,7 @@ export default function Index() {
                     other flow keeps the original single "Information" box. */}
                 {isIAssistFlow ? (
                   <>
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Patient Details</span>
-                      </div>
+                    <Section title="Patient Details">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Patient" value={patientName} isLink />
@@ -2705,13 +2657,9 @@ export default function Index() {
                           <FieldRow label="Rank" value="Primary" />
                         </div>
                       </div>
-                    </div>
+                    </Section>
 
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Insurance Information</span>
-                      </div>
+                    <Section title="Insurance Information">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Insurance Plan Type" value={PAYER.planType} />
@@ -2731,13 +2679,9 @@ export default function Index() {
                           <FieldRow label="Medical Member ID" value={PAYER.memberId} />
                         </div>
                       </div>
-                    </div>
+                    </Section>
 
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Member Information</span>
-                      </div>
+                    <Section title="Member Information">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Medical Insurance Effective Date" value={PAYER.effectiveDate} />
@@ -2748,14 +2692,10 @@ export default function Index() {
                           <FieldRow label="Relationship to Subscriber" value="Self" />
                         </div>
                       </div>
-                    </div>
+                    </Section>
                   </>
                 ) : (
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2788,7 +2728,7 @@ export default function Index() {
                       <FieldRow label="External Comments Long" value="" />
                     </div>
                   </div>
-                </div>
+                </Section>
                 )}
 
                 {/* BI Referral Pharmacies table — shown only after Triage stage starts */}
@@ -3495,11 +3435,7 @@ export default function Index() {
             {/* Left: Information */}
             <div className="flex-1 min-w-0 p-4 space-y-4">
               {/* Information section */}
-              <div className="border border-[#dddbda] rounded">
-                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                  <ChevronDown size={14} className="text-[#706e6b]" />
-                  <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                </div>
+              <Section title="Information">
                 <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                   <div>
                     <FieldRow label="Product" value={drugName} isLink />
@@ -3518,7 +3454,7 @@ export default function Index() {
                     <FieldRow label="Internal Comments" value="" />
                   </div>
                 </div>
-              </div>
+              </Section>
             </div>
 
             {/* Right: Quick Info Panel */}
