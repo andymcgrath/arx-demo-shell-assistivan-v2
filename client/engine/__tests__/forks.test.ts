@@ -8,7 +8,7 @@ import { ALL_SCENARIOS } from "@/workflows/scenarios";
 
 /**
  * Forks: a point where a scenario has a default branch and named alternatives.
- * The pick lives in workflowData.choices. See REFACTOR_AUDIT.md, "Journeys, forks, and demos".
+ * The pick lives in workflowData.choices. See docs/REFACTOR_AUDIT.md, "Journeys, forks, and demos".
  */
 const IDENTITY = ["REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT"];
 

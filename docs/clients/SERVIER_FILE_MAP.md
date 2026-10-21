@@ -12,7 +12,7 @@ Servier has no `extends`, so it inherits nothing from `assistivan`. A field miss
 | `public/brands/servier/servier-logo-color.svg` | Header logo and chatbot icon |
 | `public/brands/servier/servier-logo-white.svg` | Logo on dark backgrounds |
 | `public/brands/servier/favicon.jpeg` | Browser tab icon |
-| `BRANDS.md` | How brand files work, including the demos and transfer sections |
+| `docs/BRANDS.md` | How brand files work, including the demos and transfer sections |
 | `brands/_template/brand.json` | Every field a brand can set |
 
 ## What brand.json sets
@@ -87,4 +87,4 @@ Git tag `refactor/37-servier-golden-path` marks when this demo got its golden pa
 - **Empty program assets.** `program.assets` logos and `educationVideo` are blank.
 - **Placeholder legal links.** Terms, safety, and prescribing URLs are `#`. Copyright is empty.
 - **Stray file.** `public/brands/servier/.DS_Store` should not be committed.
-- **Stale doc line.** `BRANDS.md` still says the CRM shows branch buttons for any presenter fork (Demos section). The presenter has no branch buttons, so delete that line.
+- **Stale doc line.** `docs/BRANDS.md` still says the CRM shows branch buttons for any presenter fork (Demos section). The presenter has no branch buttons, so delete that line.

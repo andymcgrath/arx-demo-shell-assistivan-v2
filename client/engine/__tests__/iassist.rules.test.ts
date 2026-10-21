@@ -9,7 +9,7 @@ import { expectMatchesFixture } from "./harness";
  * The iAssist rule table, recorded by id. Same idea as coassist.rules.test.ts.
  *
  * XState takes the first matching rule per event, and a rule's scope decides who gets it. Moving rules into module
- * files (PLAN_STEP4.md, 4.3) must not reorder them or re-scope them. This test records two things:
+ * files (docs/plans/PLAN_STEP4.md, 4.3) must not reorder them or re-scope them. This test records two things:
  *
  * - `order`: the rule ids for each event, in the order the machine tries them
  * - `applies`: for each rule id, the scenarios it applies to

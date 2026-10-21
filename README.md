@@ -134,7 +134,7 @@ Reset before each run-through so the audience isn't confused by stage numbers le
 
 ## Where to go next
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** — how the demo is actually built: the XState workflow machines, the (deliberately thin) Zustand shell store, and how to add a new workflow or portal.
-- **[BRANDS.md](./BRANDS.md)** — how a client's brand works: the brand file, colors, demos, documents, and the `BRAND` setting for each Netlify site.
-- **[REFACTOR_AUDIT.md](./REFACTOR_AUDIT.md)** — why the platform is built around workflows, scenarios, and brand data.
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — how the demo is actually built: the XState workflow machines, the (deliberately thin) Zustand shell store, and how to add a new workflow or portal.
+- **[BRANDS.md](./docs/BRANDS.md)** — how a client's brand works: the brand file, colors, demos, documents, and the `BRAND` setting for each Netlify site.
+- **[REFACTOR_AUDIT.md](./docs/REFACTOR_AUDIT.md)** — why the platform is built around workflows, scenarios, and brand data.
 - **[docs/archive/](./docs/archive/)** — obsolete notes from before the XState refactor (the consistency system, the order store). Kept for history only.

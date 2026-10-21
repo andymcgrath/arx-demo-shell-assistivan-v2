@@ -9,7 +9,7 @@ import { expectMatchesFixture } from "./harness";
  * The CoAssist rule table, recorded by id.
  *
  * XState takes the first matching rule per event, and a rule's `scenarios` filter decides who gets it. Moving rules
- * into module files (PLAN_STEP2.md, 2.4) must not reorder them or re-scope them. This test records two things:
+ * into module files (docs/plans/PLAN_STEP2.md, 2.4) must not reorder them or re-scope them. This test records two things:
  *
  * - `order`: the rule ids for each event, in the order the machine tries them
  * - `applies`: for each rule id, the scenarios it applies to

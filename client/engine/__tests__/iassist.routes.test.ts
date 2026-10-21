@@ -12,7 +12,7 @@ import { IASSIST_SCREENS } from "@/workflows/iassist/screens";
 /**
  * iAssist route equivalence, proven by behavior (same idea as coassist.routes.test.ts).
  *
- * The first matching route rule wins. Moving the route rules into module slots (PLAN_STEP4.md, step B) may reorder
+ * The first matching route rule wins. Moving the route rules into module slots (docs/plans/PLAN_STEP4.md, step B) may reorder
  * rules that can never match together, so the recorded order is not the proof. This is: for each scenario, walk many
  * event sequences through the real machine, and at every state compare the route the screen map gives with a
  * reference that tries the rules in the order frozen in __fixtures__/rules/iassist-route-order.json (the order

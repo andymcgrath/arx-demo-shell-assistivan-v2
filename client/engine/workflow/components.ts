@@ -1,7 +1,7 @@
 import type { ForkExit } from "./types";
 
 /**
- * Component types for the CRM-driven model (see MODEL_DRAFT.md). Types and declarative data only.
+ * Component types for the CRM-driven model (see docs/plans/MODEL_DRAFT.md). Types and declarative data only.
  * The machine does not read this file. recipe.ts validates recipes against it, and the tests run it.
  *
  * The idea: define components once, then let the demo author wire them into a scenario.

@@ -12,7 +12,7 @@ import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 /**
  * Route equivalence, proven by behavior.
  *
- * The first matching route rule wins. Moving the route rules into module slots (PLAN_STEP2.md, 2.5) may reorder
+ * The first matching route rule wins. Moving the route rules into module slots (docs/plans/PLAN_STEP2.md, 2.5) may reorder
  * rules that can never match together, so the recorded order is not the proof. This is: for each scenario, walk many
  * event sequences through the real machine, and at every state compare the route the screen map gives with a
  * reference that tries the rules in the order frozen in __fixtures__/rules/coassist-route-order.json (the order
