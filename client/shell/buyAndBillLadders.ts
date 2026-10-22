@@ -59,7 +59,7 @@ export function freeDrugStageEvents(stage: number): LadderEvent[] {
   if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
   if (upTo(4)) out.push(ev("COMPLETE_BI", "crm"), ev("SEND_PAP_SMS", "crm"));
   if (upTo(5)) out.push(ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient"), ev("VERIFY_INCOME", "patient", { householdSize: "2", householdIncome: "62000" }));
-  if (upTo(6)) out.push(ev("APPROVE_PAP", "crm"));
+  if (upTo(6)) out.push(ev("APPROVE_PAP", "crm"), ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient"));
   if (upTo(7)) {
     const date = new Date();
     date.setDate(date.getDate() + 7);

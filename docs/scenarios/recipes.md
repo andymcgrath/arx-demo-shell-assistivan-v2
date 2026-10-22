@@ -70,7 +70,7 @@ The `pa` and `consent` forks do not apply to this flow. The patient consents by 
 |---|---|---|
 | `benefit_verification` | `benefit: medical` | The eMedBV run. It shows no coverage and no copay card. |
 | `enrollment` | `variant: no_rx` | The referral with no Rx, plus the patient's text, code, and consent. |
-| `financial_assistance` | `variant: pap` | The application update text, the credit check and household income, the "application received" screen, and the CRM approval. |
+| `financial_assistance` | `variant: pap` | The application update text, the credit check and household income, the "application received" screen, the CRM approval, and the approval text and code. |
 | `patient_record` | none | The iAssist patient record, with the free drug application and appointment cards. |
 | `scheduling` | `variant: infusion` | The patient's appointment date and the text confirmation. |
 | `pharmacy_selection` | `variant: site_of_care` | The agent's triage to the site of care. Allowed only after approval and the appointment date. |
@@ -88,15 +88,16 @@ The `pa` and `consent` forks do not apply to this flow. The patient consents by 
 | 6 | Patient verifies the update text and code | `VERIFY_PAP_SMS`, `VERIFY_PAP_OTP` | patient | `financial_assistance` | |
 | 7 | Patient agrees to the credit check and confirms household income. The screen says "Application received". | `VERIFY_INCOME` | patient | `financial_assistance` | |
 | 8 | The agent clicks Approve Application in the Financial Assistance stage | `APPROVE_PAP` | agent | `financial_assistance` | |
-| 9 | Patient sees the approval and picks an appointment date | `PATIENT_SELECTS_INFUSION_DATE` | patient | `scheduling` | |
-| 10 | The agent triages the Rx to the site of care | `SELECT_PHARMACY` | agent | `pharmacy_selection` | |
-| 11 | The dispensing pharmacy starts the order about 2 seconds later | `FILL_RX` | system | `tracking` | |
-| 12 | The agent marks it received, shipped, then delivered | `READY_RX`, `SHIP_RX`, `DELIVER_RX` | agent | `tracking` | |
+| 9 | Patient taps the approval text and enters the code | `VERIFY_PA_APPROVED_SMS`, `VERIFY_PA_APPROVED_OTP` | patient | `financial_assistance` | |
+| 10 | Patient sees the approval and picks an appointment date | `PATIENT_SELECTS_INFUSION_DATE` | patient | `scheduling` | |
+| 11 | The agent triages the Rx to the site of care | `SELECT_PHARMACY` | agent | `pharmacy_selection` | |
+| 12 | The dispensing pharmacy starts the order about 2 seconds later | `FILL_RX` | system | `tracking` | |
+| 13 | The agent marks it received, shipped, then delivered | `READY_RX`, `SHIP_RX`, `DELIVER_RX` | agent | `tracking` | |
 
 Notes:
 
 - Step 4 can run before step 3 finishes.
-- Step 10 is rejected until step 9 is done.
+- Step 10 is rejected until step 9 is done. Step 11 is rejected until step 10 is done.
 - A denied outcome is not built. It would add a `pap` fork exit and a block that handles it. The recipe check fails any pick that no block handles.
 
 ## What differs between the two

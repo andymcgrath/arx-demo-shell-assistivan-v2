@@ -9,7 +9,8 @@ export const SCHEDULING_RULES: IaRule[] = [
     id: "scheduling.patient_selects_infusion_date",
     on: "PATIENT_SELECTS_INFUSION_DATE",
     scope: { module: "scheduling", props: { variant: "infusion" } },
-    when: (d) => d.appealStatus === "approved" || d.papStatus === "active",
+    // Free drug: the patient verifies the approval text and code first.
+    when: (d) => d.appealStatus === "approved" || (d.papStatus === "active" && d.paApprovedOtpVerified),
     set: (_d, e) => ({ infusionDate: e.date ?? null }),
     emit: { portal: "patient", step: 9 },
   },

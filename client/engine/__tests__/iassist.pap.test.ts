@@ -103,6 +103,10 @@ describe("Buy and Bill free drug ordering", () => {
       expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(false);
       expect(accepts(actor, DATE)).toBe(false);
       runSteps(actor, [{ type: "APPROVE_PAP" }]);
+      // The patient verifies the approval text and code before the date.
+      expect(accepts(actor, DATE)).toBe(false);
+      expect(accepts(actor, { type: "VERIFY_PA_APPROVED_OTP" })).toBe(false);
+      runSteps(actor, [{ type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }]);
       // The agent triages after the patient confirms the date.
       expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(false);
       expect(accepts(actor, { type: "FILL_RX" })).toBe(false);
@@ -116,7 +120,7 @@ describe("Buy and Bill free drug ordering", () => {
   it("ignores the PAP events in the Buy and Bill scenario with coverage", () => {
     withFrozenClock(() => {
       const actor = startFlow("iAssist_Buy_And_Bill");
-      for (const step of [{ type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, INCOME, { type: "APPROVE_PAP" }]) expect(accepts(actor, step as Step)).toBe(false);
+      for (const step of [{ type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, INCOME, { type: "APPROVE_PAP" }, { type: "VERIFY_PA_APPROVED_SMS" }]) expect(accepts(actor, step as Step)).toBe(false);
     });
   });
 });

@@ -11,9 +11,10 @@ Flow type `iAssist_Buy_And_Bill_PAP`. Pick: `bi: no_coverage`. It is its own sce
 3. **The patient verifies the update text and its code.** They land on one screen with household size and income, prefilled from what the HCP entered, and the credit check consent. The review page asks them to confirm and submit.
 4. **The patient sees "Application received."** It says the team will review the application and contact them with next steps. It does not say approved.
 5. **The CRM agent approves.** The Financial Assistance stage shows In Review with the credit check consent, household size, and income. The agent clicks **Approve Application** in the stage header. It is an agent step, not a timer.
-6. **The patient sees the approval screen.** It says they are approved and shows the site-of-care address. They pick an appointment date and read the text confirmation. The wording says "injection", not "infusion".
-7. **The agent triages to the site of care** in the Triage stage. Choose Pharmacy stays disabled until the patient confirms the date. The patient's tracker then says the drug is on its way to Community Allergy and Immunology Practice.
-8. **The dispensing pharmacy starts the order** about 2 seconds after triage (`system` step). Order Status then shows the agent three buttons in turn: Mark as Received at Pharmacy, Mark as Shipped, and Mark as Delivered.
+6. **The patient gets a text.** It says the application was approved. They tap the link and enter the code, the same two beats the PA-approved notice uses.
+7. **The patient sees the approval screen.** It says they are approved and shows the site-of-care address. They pick an appointment date and read the text confirmation. The wording says "injection", not "infusion".
+8. **The agent triages to the site of care** in the Triage stage. Choose Pharmacy stays disabled until the patient confirms the date. The patient's tracker then says the drug is on its way to Community Allergy and Immunology Practice.
+9. **The dispensing pharmacy starts the order** about 2 seconds after triage (`system` step). Order Status then shows the agent three buttons in turn: Mark as Received at Pharmacy, Mark as Shipped, and Mark as Delivered.
 
 ## CRM stages
 

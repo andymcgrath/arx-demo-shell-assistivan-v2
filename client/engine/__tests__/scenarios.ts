@@ -330,7 +330,7 @@ export const SCENARIOS: Scenario[] = [
       { type: "COMPLETE_BI" },
       { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
       { type: "VERIFY_INCOME", householdSize: "2", householdIncome: "62000" },
-      { type: "APPROVE_PAP" },
+      { type: "APPROVE_PAP" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" },
       { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" },
       { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
