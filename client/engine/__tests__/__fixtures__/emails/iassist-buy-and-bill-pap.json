@@ -70,28 +70,6 @@
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "VERIFY_PA_APPROVED_SMS",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Verify Pa Approved Sms - Test Patient",
-    "bodyParagraphs": [
-      "Verify Pa Approved Sms occurred for Test Patient."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
-    "eventType": "VERIFY_PA_APPROVED_OTP",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Verify Pa Approved Otp - Test Patient",
-    "bodyParagraphs": [
-      "Verify Pa Approved Otp occurred for Test Patient."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
     "eventType": "PATIENT_SELECTS_INFUSION_DATE",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
