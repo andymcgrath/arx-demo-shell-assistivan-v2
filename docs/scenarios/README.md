@@ -1,12 +1,13 @@
 # Buy and Bill scenarios
 
-Three demos run the Buy and Bill story on the iAssist workflow. The HCP buys the drug and bills the medical benefit, so nothing ships to the patient except in the free drug demo, where the drug goes to the site of care.
+Two demos run the Buy and Bill story on the iAssist workflow. The HCP buys the drug and bills the medical benefit, so nothing ships to the patient except in the free drug demo, where the drug goes to the site of care.
 
 | Demo | Flow | Fork picks | Page |
 |---|---|---|---|
 | 4. iAssist Buy and Bill | `iAssist_Buy_And_Bill` | `bi: medical_buy_and_bill`, `consent: patient_text` | [buy-and-bill.md](buy-and-bill.md) |
-| 5. iAssist Buy and Bill, HCP captures consent | `iAssist_Buy_And_Bill` | `consent: hcp_signs` | [buy-and-bill-hcp-consent.md](buy-and-bill-hcp-consent.md) |
-| 6. iAssist Buy and Bill, Free Drug | `iAssist_Buy_And_Bill_PAP` | `bi: no_coverage` | [buy-and-bill-free-drug.md](buy-and-bill-free-drug.md) |
+| 5. iAssist Buy and Bill, Free Drug | `iAssist_Buy_And_Bill_PAP` | `bi: no_coverage` | [buy-and-bill-free-drug.md](buy-and-bill-free-drug.md) |
+
+The commercial demo (4) uses the `consent` fork with the pick `patient_text`. The fork also declares `hcp_signs` (the HCP captures consent and household income in iAssist). No demo uses it, because the meeting settled on consent by text. A brand can add a demo with `choices: { consent: "hcp_signs" }` to bring it back.
 
 Run any of them with `BRAND=celldex pnpm dev`. The presenter never picks a branch live. Each outcome is a demo in `brands/celldex/brand.json`.
 

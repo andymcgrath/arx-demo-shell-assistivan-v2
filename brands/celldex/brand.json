@@ -25,25 +25,16 @@
       "id": "iassist-buy-and-bill",
       "flow": "iAssist_Buy_And_Bill",
       "label": "4. iAssist Buy and Bill",
-      "description": "The HCP buys and bills under the medical benefit. eMedBV, a medical PA, and HCP-enrolled copay, with a copay claim after approval. No pharmacy, payment, or delivery. The patient consents by text and confirms household income in the patient app",
+      "description": "The HCP buys and bills under the medical benefit. eMedBV, a medical PA, and HCP-enrolled copay, with a copay claim after approval. No pharmacy, payment, or delivery. The patient consents by text and is told next steps",
       "choices": {
         "consent": "patient_text"
       }
     },
     {
-      "id": "iassist-buy-and-bill-hcp-consent",
-      "flow": "iAssist_Buy_And_Bill",
-      "label": "5. iAssist Buy and Bill, HCP captures consent",
-      "description": "The same Buy and Bill story, but the HCP captures consent and household income on the iAssist form, so the patient app asks for neither",
-      "choices": {
-        "consent": "hcp_signs"
-      }
-    },
-    {
       "id": "iassist-buy-and-bill-free-drug",
       "flow": "iAssist_Buy_And_Bill_PAP",
-      "label": "6. iAssist Buy and Bill, Free Drug",
-      "description": "eMedBV finds no medical coverage, so there is no PA or copay. The patient applies for the free drug program, and approval sends the drug to the site of care. The patient pays nothing",
+      "label": "5. iAssist Buy and Bill, Free Drug",
+      "description": "eMedBV finds no medical coverage, so there is no PA or copay. The patient applies for the free drug program and a CRM agent approves it. The patient confirms an appointment date, then the drug ships to the site of care. The patient pays nothing",
       "choices": {
         "bi": "no_coverage"
       }
