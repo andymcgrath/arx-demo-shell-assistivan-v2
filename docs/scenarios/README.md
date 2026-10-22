@@ -13,6 +13,8 @@ Run any of them with `BRAND=celldex pnpm dev`. The presenter never picks a branc
 
 All data is representative. The drug is not yet approved, so the ICD-10 code (L50.1, idiopathic urticaria) and every price are placeholders. Have a coder confirm the code before real use.
 
+To read a recipe step by step, with its blocks and fork picks, see [recipes.md](recipes.md).
+
 ## Shared building blocks
 
 - **eMedBV (`benefit_verification`):** the HCP runs it on the Insurance step after entering insurance. A progress bar (about 2.7 seconds) runs, then the results open.
