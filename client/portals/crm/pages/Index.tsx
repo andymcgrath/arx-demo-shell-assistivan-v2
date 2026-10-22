@@ -19,6 +19,7 @@ import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components
 import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
 import { BRAND } from "@/brand";
 import { caseDocuments } from "@/brand/caseDocuments";
+import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
 import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX } from "@/portals/iassist/data/copayProgram";
 import {
   ChevronDown,
@@ -913,6 +914,8 @@ export default function Index() {
   // Copay is its own tab only when the recipe has a copay module.
   const caseTabs = isBuyAndBill ? [CASE_TABS[0], CASE_TABS[1], { id: "copay", label: "Copay" }, ...CASE_TABS.slice(2)] : CASE_TABS;
   const copayClaimsNow = workflowData.copayClaims ?? [];
+  const [openCopayClaimId, setOpenCopayClaimId] = useState<string | null>(null);
+  const openCopayClaim = copayClaimsNow.find((c) => c.id === openCopayClaimId) ?? null;
   const [activeRightTab, setActiveRightTab] = useState("quick-answers");
   const [caseSummaryCollapsed, setCaseSummaryCollapsed] = useState(false);
   const [stagesCollapsed, setStagesCollapsed] = useState(false);
@@ -3952,9 +3955,9 @@ export default function Index() {
                     <tbody>
                       {copayClaimsNow.map((c) => (
                         <tr key={c.id} className="border-t border-[#dddbda]">
-                          <td className="px-3 py-2"><SfLink>{c.id}</SfLink></td>
-                          <td className="px-3 py-2">{c.dateOfService}</td>
-                          <td className="px-3 py-2">{c.submittedAt.slice(0, 10)}</td>
+                          <td className="px-3 py-2"><SfLink onClick={() => setOpenCopayClaimId(c.id)}>{c.id}</SfLink></td>
+                          <td className="px-3 py-2">{ymdToMdy(c.dateOfService)}</td>
+                          <td className="px-3 py-2">{ymdToMdy(c.submittedAt.slice(0, 10))}</td>
                           <td className="px-3 py-2">{c.status === "in_review" ? "In review" : c.status === "paid" ? "Paid" : "Rejected"}</td>
                         </tr>
                       ))}
@@ -4033,6 +4036,45 @@ export default function Index() {
               No {caseTabs.find((t) => t.id === activeCaseTab)?.label} records found.
             </div>
           )}
+        </>
+      )}
+
+      {/* Copay claim detail: opens from a claim number on the Copay tab. */}
+      {openCopayClaim && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setOpenCopayClaimId(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-white border border-[#dddbda] rounded shadow-xl pointer-events-auto" style={{ width: 520, maxHeight: "90vh" }}>
+              <div className="px-5 py-3 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
+                <span className="text-[14px] font-semibold text-[#3e3e3c]">Copay Claim {openCopayClaim.id}</span>
+                <button onClick={() => setOpenCopayClaimId(null)} className="text-[#706e6b] hover:text-[#3e3e3c] text-[18px] leading-none" aria-label="Close">×</button>
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 px-5 py-2">
+                <div>
+                  <FieldRow label="Claim Number" value={openCopayClaim.id} />
+                  <FieldRow label="Status" value={openCopayClaim.status === "in_review" ? "In review" : openCopayClaim.status === "paid" ? "Paid" : "Rejected"} />
+                  <FieldRow label="Patient" value={patientName} />
+                  <FieldRow label="Program" value={BRAND.program.name} />
+                </div>
+                <div>
+                  <FieldRow label="Member ID" value={copayMemberId(patientName, BRAND.program.name)} />
+                  <FieldRow label="Benefit Type" value="Medical drug" />
+                  <FieldRow label="Date of Service" value={ymdToMdy(openCopayClaim.dateOfService)} />
+                  <FieldRow label="Submitted" value={`${ymdToMdy(openCopayClaim.submittedAt.slice(0, 10))} via iAssist`} />
+                </div>
+              </div>
+              <div className="px-5 pb-3">
+                <div className="text-[12px] text-[#706e6b] mb-1">Documents</div>
+                <div className="flex gap-4 text-[13px]">
+                  <a href="/docs/cms-1500.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>CMS-1500</a>
+                  <a href="/docs/eob.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>EOB</a>
+                </div>
+              </div>
+              <div className="px-5 py-3 border-t border-[#dddbda] flex justify-end">
+                <button onClick={() => setOpenCopayClaimId(null)} className="px-4 py-1.5 border border-[#dddbda] rounded text-[13px] font-semibold text-[#3e3e3c] hover:bg-[#f3f3f3]">Close</button>
+              </div>
+            </div>
+          </div>
         </>
       )}
 

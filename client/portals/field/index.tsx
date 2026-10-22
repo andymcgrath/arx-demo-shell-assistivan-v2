@@ -18,6 +18,7 @@ import {
 } from "@/store/fieldStore";
 import { BRAND } from "@/brand";
 import { usePatientStore } from "@/store/patientStore";
+import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
 import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX, money } from "@/portals/iassist/data/copayProgram";
 import { useDemoState } from "@/hooks/useDemoState";
 import {
@@ -1868,8 +1869,8 @@ export default function FieldPortal() {
                           columns={["Claim Id", "Date of Service", "Submitted", "Status"]}
                           rows={(workflowDataNow.copayClaims ?? []).map((c) => [
                             c.id,
-                            c.dateOfService,
-                            c.submittedAt.slice(0, 10),
+                            ymdToMdy(c.dateOfService),
+                            ymdToMdy(c.submittedAt.slice(0, 10)),
                             c.status === "in_review" ? "In review" : c.status === "paid" ? "Paid" : "Rejected",
                           ])}
                         />
