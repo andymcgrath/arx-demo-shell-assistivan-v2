@@ -172,7 +172,7 @@
     {
       "event": "APPROVE_PAP",
       "accepted": true,
-      "route": "/pa-approved",
+      "route": "/pa-approved-sms",
       "changed": {
         "dispatchStatus": "pending_selection",
         "papStatus": "active"
@@ -182,6 +182,36 @@
           "eventType": "APPROVE_PAP",
           "portal": "patient",
           "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_SMS",
+      "accepted": true,
+      "route": "/pa-approved-otp",
+      "changed": {
+        "paApprovedSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_OTP",
+      "accepted": true,
+      "route": "/pa-approved",
+      "changed": {
+        "paApprovedOtpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_OTP",
+          "portal": "patient",
+          "workflowStep": 9
         }
       ]
     },

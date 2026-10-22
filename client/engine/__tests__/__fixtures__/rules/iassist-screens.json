@@ -388,6 +388,8 @@
         "enrollment.otp.pap -> /otp-verification",
         "enrollment.confirm_details.pap -> /confirm-details",
         "enrollment.waiting_for_bi -> /enrollment-complete",
+        "financial_assistance.approved_sms -> /pa-approved-sms",
+        "financial_assistance.approved_otp -> /pa-approved-otp",
         "financial_assistance.tracker -> /medication-delivered",
         "financial_assistance.approved -> /pa-approved",
         "financial_assistance.waiting -> /enrollment-complete",
@@ -444,6 +446,14 @@
               "path": "/income-qualification"
             },
             {
+              "label": "Approval Text",
+              "path": "/pa-approved-sms"
+            },
+            {
+              "label": "Approval Code",
+              "path": "/pa-approved-otp"
+            },
+            {
               "label": "Approved: Site of Care and Appointment",
               "path": "/pa-approved"
             },
@@ -479,6 +489,8 @@
       "sticky": [
         "/phone-verification",
         "/enrollment-complete",
+        "/pa-approved-sms",
+        "/pa-approved-otp",
         "/infusion-date",
         "/appointment-confirmation",
         "/medication-delivered"

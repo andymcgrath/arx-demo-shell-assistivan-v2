@@ -113,10 +113,12 @@
       "payment.verify_payment"
     ],
     "VERIFY_PA_APPROVED_OTP": [
-      "pa_notification.verify_otp"
+      "pa_notification.verify_otp",
+      "financial_assistance.verify_approved_otp"
     ],
     "VERIFY_PA_APPROVED_SMS": [
-      "pa_notification.verify_sms"
+      "pa_notification.verify_sms",
+      "financial_assistance.verify_approved_sms"
     ],
     "VERIFY_SMS": [
       "enrollment.verify_sms"
@@ -202,6 +204,12 @@
       "iAssist_Buy_And_Bill_PAP"
     ],
     "financial_assistance.send_update": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_approved_otp": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_approved_sms": [
       "iAssist_Buy_And_Bill_PAP"
     ],
     "financial_assistance.verify_income": [

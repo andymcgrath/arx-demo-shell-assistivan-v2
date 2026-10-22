@@ -412,6 +412,8 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
 
   for (const event of events) {
     if (NON_EMAIL_EVENT_TYPES.has(event.event_type)) continue;
+    // Free drug: the approval text and code are the patient's steps, like the application update text and code above.
+    if (flowType === 'iAssist_Buy_And_Bill_PAP' && (event.event_type === 'VERIFY_PA_APPROVED_SMS' || event.event_type === 'VERIFY_PA_APPROVED_OTP')) continue;
 
     const base = {
       id: event.id,
