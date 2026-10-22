@@ -6,7 +6,7 @@
 import { CheckCircle2, X } from "lucide-react";
 import { usePatientStore } from "@/store/patientStore";
 import { useCaseWizardStore } from "@/store/caseWizardStore";
-import { MEDBV_RESULT as RESULT, money } from "../data/medbvResult";
+import { MEDBV_RESULT as RESULT, medbvDrug, money } from "../data/medbvResult";
 
 function Bar({ label, limit, met }: { label: string; limit: number; met: number }) {
   return (
@@ -39,7 +39,7 @@ export default function EMedBVModal({ covered = true, onClose }: { covered?: boo
                 <div key={label} className="border border-[#D9D9D9] rounded-xl p-4">
                   <p className="text-sm text-[#6F7276]">Not covered</p>
                   <p className="text-sm font-semibold text-[#1D1D1D] mt-2">{label}, {code}</p>
-                  <p className="text-xs mt-1 text-[#6F7276]">The medical benefit does not cover buy and bill for this service.</p>
+                  <p className="text-xs mt-1 text-[#6F7276]">The medical benefit does not cover {medbvDrug()}.</p>
                 </div>
               ))}
             </div>
@@ -59,7 +59,7 @@ export default function EMedBVModal({ covered = true, onClose }: { covered?: boo
             <h2 className="text-xl font-semibold text-[#1D1D1D]">Here are the prices we found</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="border border-[#D9D9D9] rounded-xl p-4">
-                <p className="text-sm text-[#6F7276] flex items-center gap-1"><CheckCircle2 size={14} className="text-[#007178]" /> Buy and bill covered</p>
+                <p className="text-sm text-[#6F7276] flex items-center gap-1"><CheckCircle2 size={14} className="text-[#007178]" /> {medbvDrug()} covered</p>
                 <p className="text-sm font-semibold text-[#1D1D1D] mt-2">Product, {RESULT.product.code}</p>
                 <p className="text-3xl text-[#1D1D1D] my-1">{RESULT.product.coinsurance}</p>
                 <p className="text-xs text-[#6F7276]">Coinsurance</p>

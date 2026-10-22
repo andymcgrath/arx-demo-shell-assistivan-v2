@@ -1,3 +1,5 @@
+import { BRAND } from "@/brand";
+
 /**
  * The eMedBV result the demo shows, and the one-line summary the Insurance step displays once it has run.
  * Representative values, not a live payer response.
@@ -20,12 +22,15 @@ export const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFract
 /** The story's BI pick says whether the medical benefit covers it. Only `no_coverage` does not. */
 export const medbvCovered = (biChoice: string | undefined) => biChoice !== "no_coverage";
 
+/** The brand's drug name, so the copy never hard-codes a medication. */
+export const medbvDrug = () => BRAND.program.drugDisplayName;
+
 export const medbvHeadline = (covered: boolean) =>
-  covered ? "eMedBV complete. Buy and bill covered, prior authorization required." : "eMedBV complete. No medical coverage found.";
+  covered ? `eMedBV complete. ${medbvDrug()} covered, prior authorization required.` : "eMedBV complete. No medical coverage found.";
 
 /** One line: what is covered, what the patient pays, and whether a PA is needed. */
 export function medbvSummary(covered = true): string {
-  if (!covered) return "The medical benefit does not cover buy and bill for this product. The patient may qualify for the free drug program.";
+  if (!covered) return `The medical benefit does not cover ${medbvDrug()}. The patient may qualify for the free drug program.`;
   const r = MEDBV_RESULT;
   const d = r.deductible[0];
   return `Product ${r.product.code}: ${r.product.coinsurance} coinsurance, PA ${r.product.paRequired ? "required" : "not required"}. Administration ${r.administration.code}: ${r.administration.copay} copay, PA ${r.administration.paRequired ? "required" : "not required"}. Deductible ${money(d.met)} of ${money(d.limit).replace(".00", "")} met.`;

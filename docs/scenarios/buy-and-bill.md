@@ -9,7 +9,7 @@ Flow type `iAssist_Buy_And_Bill`. Picks: `bi: medical_buy_and_bill`, `pa: approv
 1. **The HCP starts in iAssist.**
    - Patient information: consent is set to Via Text. The HCP only acknowledges that the patient will get a message. The PHI authorization and the Income Verification block are hidden, because the patient handles both in the patient app.
    - Medication: the Site of Care tab starts on the patient's site, Community Allergy and Immunology Practice. Picking another site fills its HOPD NPI and TIN.
-   - Insurance: after the HCP selects or adds insurance, Run eMedBV shows a progress bar, then the results. The card shows a check, "eMedBV complete. Buy and bill covered, prior authorization required.", and a one-line summary of the result.
+   - Insurance: after the HCP selects or adds insurance, Run eMedBV shows a progress bar, then the results. The card shows a check, "eMedBV complete. {drug name} covered, prior authorization required." The drug name comes from the brand file, not the code, and a one-line summary of the result.
    - Clinical: the diagnosis starts on the brand's indication. Supporting documents are optional.
    - Prior authorization: a medical benefit form (for example "BlueCross BlueShield Medical Benefit"). The payer details, diagnosis, treatment plan, and reason for prescribing prefill. The letter of medical necessity shows an upload when the answer is Yes.
    - Buy and Bill: the HCP enrolls the patient in copay. The office comes from the site-of-care list. Submit needs eMedBV and copay done.

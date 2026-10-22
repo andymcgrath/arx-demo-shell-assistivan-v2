@@ -33,7 +33,7 @@
     {
       "id": "iassist-buy-and-bill-free-drug",
       "flow": "iAssist_Buy_And_Bill_PAP",
-      "label": "5. iAssist Buy and Bill, Free Drug",
+      "label": "5. iAssist Buy and Bill, Free Product",
       "description": "eMedBV finds no medical coverage, so there is no PA or copay. The patient applies for the free drug program and a CRM agent approves it. The patient confirms an appointment date, then the drug ships to the site of care. The patient pays nothing",
       "choices": {
         "bi": "no_coverage"
