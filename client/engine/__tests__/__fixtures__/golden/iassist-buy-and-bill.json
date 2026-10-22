@@ -87,7 +87,7 @@
     {
       "event": "CONFIRM_CONSENT",
       "accepted": true,
-      "route": "/confirm-income",
+      "route": "/",
       "changed": {
         "enrollmentAcknowledged": true,
         "consentStatus": "confirmed"
@@ -95,27 +95,6 @@
       "newEvents": [
         {
           "eventType": "CONFIRM_CONSENT",
-          "portal": "patient",
-          "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "CONFIRM_INCOME",
-      "payload": {
-        "householdSize": "2",
-        "householdIncome": "62000"
-      },
-      "accepted": true,
-      "route": "/",
-      "changed": {
-        "incomeStatus": "verified",
-        "householdSize": "2",
-        "householdIncome": "62000"
-      },
-      "newEvents": [
-        {
-          "eventType": "CONFIRM_INCOME",
           "portal": "patient",
           "workflowStep": 5
         }

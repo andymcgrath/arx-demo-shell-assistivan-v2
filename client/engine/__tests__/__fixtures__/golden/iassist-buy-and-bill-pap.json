@@ -154,10 +154,8 @@
         "householdIncome": "62000"
       },
       "accepted": true,
-      "route": "/pa-approved",
+      "route": "/income-qualification",
       "changed": {
-        "dispatchStatus": "pending_selection",
-        "papStatus": "active",
         "incomeStatus": "verified",
         "creditCheckConsented": true,
         "householdSize": "2",
@@ -166,41 +164,24 @@
       "newEvents": [
         {
           "eventType": "VERIFY_INCOME",
-          "portal": "patient",
+          "portal": "crm",
           "workflowStep": 8
         }
       ]
     },
     {
-      "event": "SELECT_PHARMACY",
-      "payload": {
-        "pharmacy": {
-          "name": "Test Pharmacy",
-          "address": "1 Main St",
-          "city": "Orlando",
-          "state": "FL",
-          "zip": "32801",
-          "phone": "(555) 555-0100"
-        }
-      },
+      "event": "APPROVE_PAP",
       "accepted": true,
       "route": "/pa-approved",
       "changed": {
-        "dispatchStatus": "selected",
-        "selectedPharmacy": {
-          "name": "Test Pharmacy",
-          "address": "1 Main St",
-          "city": "Orlando",
-          "state": "FL",
-          "zip": "32801",
-          "phone": "(555) 555-0100"
-        }
+        "dispatchStatus": "pending_selection",
+        "papStatus": "active"
       },
       "newEvents": [
         {
-          "eventType": "SELECT_PHARMACY",
-          "portal": "crm",
-          "workflowStep": 5
+          "eventType": "APPROVE_PAP",
+          "portal": "patient",
+          "workflowStep": 8
         }
       ]
     },
@@ -219,6 +200,39 @@
           "eventType": "PATIENT_SELECTS_INFUSION_DATE",
           "portal": "patient",
           "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SELECT_PHARMACY",
+      "payload": {
+        "pharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "accepted": true,
+      "route": "/medication-delivered",
+      "changed": {
+        "dispatchStatus": "selected",
+        "selectedPharmacy": {
+          "name": "Test Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(555) 555-0100"
+        }
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_PHARMACY",
+          "portal": "crm",
+          "workflowStep": 5
         }
       ]
     },

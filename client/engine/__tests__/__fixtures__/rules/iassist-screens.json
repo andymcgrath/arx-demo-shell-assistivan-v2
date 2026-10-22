@@ -394,6 +394,7 @@
         "financial_assistance.update_sms -> /pap-update-sms",
         "financial_assistance.update_otp -> /pap-update-otp",
         "financial_assistance.income -> /income-qualification",
+        "financial_assistance.received -> /income-qualification",
         "spine.pa_denied -> /pa-denied",
         "spine.waiting -> /"
       ],
@@ -439,7 +440,7 @@
               "path": "/pap-update-otp"
             },
             {
-              "label": "Credit Check and Income",
+              "label": "Credit Check, Income, and Application Received",
               "path": "/income-qualification"
             },
             {

@@ -6,6 +6,9 @@
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
+    "APPROVE_PAP": [
+      "financial_assistance.approve"
+    ],
     "COMPLETE_BI": [
       "spine.complete_bi"
     ],
@@ -193,6 +196,9 @@
       "iAssist_PAP",
       "iAssist_Medical_Transfer",
       "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.approve": [
       "iAssist_Buy_And_Bill_PAP"
     ],
     "financial_assistance.send_update": [

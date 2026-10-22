@@ -32,11 +32,11 @@
   {
     "stage": 5,
     "ignored": [],
-    "route": "/pa-approved",
+    "route": "/income-qualification",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
-    "dispatchStatus": "pending_selection",
+    "dispatchStatus": "none",
     "pharmacyStatus": "none"
   },
   {
@@ -46,11 +46,21 @@
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
-    "dispatchStatus": "selected",
+    "dispatchStatus": "pending_selection",
     "pharmacyStatus": "none"
   },
   {
     "stage": 7,
+    "ignored": [],
+    "route": "/medication-delivered",
+    "biStatus": "complete",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "pending_selection",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 8,
     "ignored": [],
     "route": "/medication-delivered",
     "biStatus": "complete",

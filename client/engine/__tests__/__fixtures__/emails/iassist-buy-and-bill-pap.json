@@ -70,17 +70,6 @@
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "SELECT_PHARMACY",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Specialty Pharmacy Selected - Test Patient",
-    "bodyParagraphs": [
-      "AssistRx selected the specialty pharmacy that will fill the prescription for Test Patient."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
     "eventType": "PATIENT_SELECTS_INFUSION_DATE",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
@@ -92,6 +81,17 @@
     ],
     "linkedItemId": "LIVE-INFUSION-SCHEDULED",
     "linkedItemLabel": "View Task: Infusion Appointment Scheduled"
+  },
+  {
+    "eventType": "SELECT_PHARMACY",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Specialty Pharmacy Selected - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx selected the specialty pharmacy that will fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
   },
   {
     "eventType": "FILL_RX",

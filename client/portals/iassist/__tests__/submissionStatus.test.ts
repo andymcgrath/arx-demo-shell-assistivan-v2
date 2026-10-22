@@ -37,9 +37,12 @@ describe("iAssist patient view status", () => {
   it("closes the loop when the patient consents by text and confirms income", () => {
     const base = { enrollmentStatus: "enrolled", choices: { consent: "patient_text" } };
     expect(card(d(base), "enrollment").body).toContain("consent by text");
-    const consented = d({ ...base, consentStatus: "confirmed", incomeStatus: "none" });
+    // A recipe without `income: "confirm"` never asks, so there is nothing to wait on.
+    const noIncomeStep = d({ ...base, consentStatus: "confirmed", incomeStatus: "none" });
+    expect(card(noIncomeStep, "enrollment").body).not.toContain("household income");
+    const consented = d({ ...base, consentStatus: "confirmed", incomeStatus: "none", householdRequested: true });
     expect(card(consented, "enrollment").body).toContain("Waiting on household income");
-    const done = d({ ...base, consentStatus: "confirmed", incomeStatus: "verified", householdSize: "2", householdIncome: "62000" });
+    const done = d({ ...base, consentStatus: "confirmed", incomeStatus: "verified", householdRequested: true, householdSize: "2", householdIncome: "62000" });
     expect(card(done, "enrollment").body).toContain("Household of 2, income $62,000, confirmed");
   });
 });
