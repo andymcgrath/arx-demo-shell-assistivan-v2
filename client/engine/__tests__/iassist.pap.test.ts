@@ -64,27 +64,51 @@ describe("Buy and Bill free drug ordering", () => {
     });
   });
 
-  it("approves the application with the credit check and the household answers", () => {
+  it("receives the application with the credit check and the household answers, and waits for the agent", () => {
     withFrozenClock(() => {
       const { actor, data } = start();
       runSteps(actor, [...TO_BI, { type: "COMPLETE_BI" }, { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, INCOME]);
-      expect(data().papStatus).toBe("active");
+      expect(data().incomeStatus).toBe("verified");
+      expect(data().papStatus).toBe("none");
       expect(data().creditCheckConsented).toBe(true);
       expect([data().householdSize, data().householdIncome]).toEqual(["2", "62000"]);
       expect(accepts(actor, INCOME)).toBe(false);
     });
   });
 
-  it("unlocks the site of care only after approval: triage, then the appointment date, then fulfillment", () => {
+  it("approves only when the CRM agent says so, and only a received application", () => {
+    withFrozenClock(() => {
+      const { actor, data } = start();
+      runSteps(actor, [...TO_BI, { type: "COMPLETE_BI" }, { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }]);
+      expect(accepts(actor, { type: "APPROVE_PAP" })).toBe(false);
+      runSteps(actor, [INCOME]);
+      expect(data().papStatus).toBe("none");
+      expect(data().dispatchStatus).toBe("none");
+      runSteps(actor, [{ type: "APPROVE_PAP" }]);
+      expect(data().papStatus).toBe("active");
+      expect(data().dispatchStatus).toBe("pending_selection");
+      expect(accepts(actor, { type: "APPROVE_PAP" })).toBe(false);
+    });
+  });
+
+  it("unlocks the site of care only after approval: the appointment date, then triage, then fulfillment", () => {
     withFrozenClock(() => {
       const { actor, data } = start();
       const pharmacy = { name: "Orlando Site of Care", address: "1414 Kuhl Ave", city: "Orlando", state: "FL", zip: "32806", phone: "(407) 555-3006" };
+      const DATE = { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" } as Step;
       runSteps(actor, [...TO_BI, { type: "COMPLETE_BI" }, { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }]);
       expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(false);
-      expect(accepts(actor, { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" })).toBe(false);
+      expect(accepts(actor, DATE)).toBe(false);
       runSteps(actor, [INCOME]);
+      expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(false);
+      expect(accepts(actor, DATE)).toBe(false);
+      runSteps(actor, [{ type: "APPROVE_PAP" }]);
+      // The agent triages after the patient confirms the date.
+      expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(false);
       expect(accepts(actor, { type: "FILL_RX" })).toBe(false);
-      runSteps(actor, [{ type: "SELECT_PHARMACY", pharmacy } as Step, { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" }, { type: "FILL_RX" }]);
+      runSteps(actor, [DATE]);
+      expect(accepts(actor, { type: "SELECT_PHARMACY", pharmacy } as Step)).toBe(true);
+      runSteps(actor, [{ type: "SELECT_PHARMACY", pharmacy } as Step, { type: "FILL_RX" }]);
       expect(data().pharmacyStatus).toBe("processing");
     });
   });
@@ -92,7 +116,7 @@ describe("Buy and Bill free drug ordering", () => {
   it("ignores the PAP events in the Buy and Bill scenario with coverage", () => {
     withFrozenClock(() => {
       const actor = startFlow("iAssist_Buy_And_Bill");
-      for (const step of [{ type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, INCOME]) expect(accepts(actor, step as Step)).toBe(false);
+      for (const step of [{ type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" }, INCOME, { type: "APPROVE_PAP" }]) expect(accepts(actor, step as Step)).toBe(false);
     });
   });
 });

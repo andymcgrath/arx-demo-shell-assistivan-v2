@@ -313,7 +313,6 @@ export const SCENARIOS: Scenario[] = [
     steps: [
       { type: "RUN_MEDBV" }, { type: "ENROLL_COPAY" },
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
-      { type: "CONFIRM_INCOME", householdSize: "2", householdIncome: "62000" },
       { type: "COMPLETE_BI" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SUBMIT_COPAY_CLAIM", dateOfService: "2026-01-20" },
     ],
@@ -321,7 +320,7 @@ export const SCENARIOS: Scenario[] = [
 
   {
     // Buy and Bill, free drug (PAP). eMedBV finds no coverage, so no PA and no copay. The patient verifies the application
-    // update, agrees to the credit check and confirms income. Approval sends the free drug to the site of care.
+    // update, agrees to the credit check and confirms income. The CRM agent approves the application, the patient picks a date, then the agent triages to the site of care.
     name: "iassist-buy-and-bill-pap",
     endsAt: "delivered",
     flowType: "iAssist_Buy_And_Bill_PAP",
@@ -331,8 +330,9 @@ export const SCENARIOS: Scenario[] = [
       { type: "COMPLETE_BI" },
       { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
       { type: "VERIFY_INCOME", householdSize: "2", householdIncome: "62000" },
-      { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
+      { type: "APPROVE_PAP" },
       { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" },
+      { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
       ...fulfillment,
     ],
   },

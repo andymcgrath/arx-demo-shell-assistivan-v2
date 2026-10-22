@@ -1,7 +1,7 @@
 /**
  * Enrollment: the referral, the patient's SMS, OTP, and consent. BI starts with the referral and does not wait for them.
  */
-import { consentByHcp, consentByPatient, hcpEnrollsCopay, hcpPreparesFirst, type IaRule } from "./shared";
+import { asksHousehold, consentByHcp, consentByPatient, hcpEnrollsCopay, hcpPreparesFirst, type IaRule } from "./shared";
 
 export const ENROLLMENT_RULES: IaRule[] = [
   // ── Referral and patient onboarding ────────────────────────────────
@@ -12,7 +12,7 @@ export const ENROLLMENT_RULES: IaRule[] = [
     // Buy and Bill: the HCP runs eMedBV and enrolls the patient in copay first, then submits.
     when: (d, _e, s) => d.enrollmentStatus === "none" && (!hcpPreparesFirst(s) || (d.medbvStatus === "complete" && (d.copayEnrolled || !hcpEnrollsCopay(s)))),
     // `hcp_signs`: the HCP captured consent and income on the form, so the patient has nothing to consent to.
-    set: (d) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(consentByHcp(d) ? { consentStatus: "confirmed" as const, incomeStatus: "verified" as const } : {}) }),
+    set: (d, _e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(asksHousehold(s) ? { householdRequested: true } : {}), ...(consentByHcp(d) ? { consentStatus: "confirmed" as const, incomeStatus: "verified" as const } : {}) }),
     emit: { portal: "crm", step: 1 },
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },
@@ -67,7 +67,7 @@ export const ENROLLMENT_RULES: IaRule[] = [
     id: "enrollment.confirm_income",
     on: "CONFIRM_INCOME",
     scope: { fork: "consent", exit: "patient_text" },
-    when: (d) => consentByPatient(d) && d.consentStatus === "confirmed" && d.incomeStatus === "none",
+    when: (d) => consentByPatient(d) && !!d.householdRequested && d.consentStatus === "confirmed" && d.incomeStatus === "none",
     set: (_d, e) => ({ incomeStatus: "verified", householdSize: String(e.householdSize ?? ""), householdIncome: String(e.householdIncome ?? "") }),
     emit: { portal: "patient", step: 5 },
   },

@@ -65,14 +65,16 @@ export default function IncomeQualification() {
             </div>
             <div className="flex items-center gap-3 mb-3">
               <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "#16a34a" }} />
-              <h2 className="text-xl font-bold leading-snug text-arx-slate">You're eligible!</h2>
+              <h2 className="text-xl font-bold leading-snug text-arx-slate">{freeDrug ? "Application received" : "You're eligible!"}</h2>
             </div>
             <p className="text-sm leading-relaxed text-arx-body-copy mb-5">
-              Based on your household information, you qualify for the {PROGRAM.drugDisplayName} free drug program. Your application has been submitted and is being reviewed.
+              {freeDrug
+                ? `We've received your ${PROGRAM.drugDisplayName} free drug application. Our team is reviewing it and will contact you with next steps.`
+                : `Based on your household information, you qualify for the ${PROGRAM.drugDisplayName} free drug program. Your application has been submitted and is being reviewed.`}
             </p>
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5">
               <p className="text-sm font-semibold text-green-800">Application submitted</p>
-              <p className="text-xs text-green-700 mt-0.5">We'll notify you once your eligibility has been confirmed and your medication is ready to ship.</p>
+              <p className="text-xs text-green-700 mt-0.5">{freeDrug ? "No action is needed right now. We'll message you when there's an update." : "We'll notify you once your eligibility has been confirmed and your medication is ready to ship."}</p>
             </div>
             <button
               onClick={openChat}
@@ -98,11 +100,13 @@ export default function IncomeQualification() {
 
             <div className="flex items-center gap-3 mb-3">
               <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "#16a34a" }} />
-              <h2 className="text-xl font-bold leading-snug text-arx-slate">You qualify!</h2>
+              <h2 className="text-xl font-bold leading-snug text-arx-slate">{freeDrug ? "Review your application" : "You qualify!"}</h2>
             </div>
 
             <p className="text-sm leading-relaxed text-arx-body-copy mb-5">
-              Great news — based on the information you provided, you appear to be eligible for the {PROGRAM.drugDisplayName} free drug program. Since this medication is provided at no cost, no insurance is required.
+              {freeDrug
+                ? `Confirm your answers and submit. Our team will review your ${PROGRAM.drugDisplayName} free drug application and contact you with next steps.`
+                : `Great news — based on the information you provided, you appear to be eligible for the ${PROGRAM.drugDisplayName} free drug program. Since this medication is provided at no cost, no insurance is required.`}
             </p>
 
             <div className="bg-arx-sky/20 border border-arx-sky rounded-xl px-4 py-3 mb-5 space-y-1.5">
@@ -114,10 +118,12 @@ export default function IncomeQualification() {
                 <span className="text-arx-body-copy">Annual income</span>
                 <span className="font-semibold text-arx-slate">{incomeDisplay}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-arx-body-copy">Eligibility result</span>
-                <span className="font-semibold" style={{ color: "#16a34a" }}>Eligible</span>
-              </div>
+              {!freeDrug && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-arx-body-copy">Eligibility result</span>
+                  <span className="font-semibold" style={{ color: "#16a34a" }}>Eligible</span>
+                </div>
+              )}
             </div>
 
             <button

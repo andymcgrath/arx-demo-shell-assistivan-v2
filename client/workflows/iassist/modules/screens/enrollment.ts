@@ -20,7 +20,7 @@ export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/otp-verification", label: "OTP Verification", group: "Enrollment" },
   { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment" },
   // Buy and Bill, patient consent by text: the patient confirms household size and income after consenting.
-  { path: "/confirm-income", label: "Confirm Household Income", group: "Enrollment", scope: { fork: "consent", exit: "patient_text" }, skipped: (d) => d.choices?.consent !== "patient_text" },
+  { path: "/confirm-income", label: "Confirm Household Income", group: "Enrollment", scope: { fork: "consent", exit: "patient_text" }, skipped: (d) => d.choices?.consent !== "patient_text" || !d.householdRequested },
   { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment", sticky: true },
 ];
 
@@ -37,7 +37,7 @@ export const ENROLLMENT_ROUTES: IaRoute[] = [
   { id: "enrollment.confirm_details.pap", slot: "gate", path: "/confirm-details", scope: PAP, when: (d) => d.consentStatus === "pending" },
   { id: "enrollment.confirm_details.approved", slot: "gate", path: "/confirm-details", scope: APPROVED, when: (d) => d.consentStatus === "pending" },
   { id: "enrollment.confirm_details.appeal", slot: "gate", path: "/confirm-details", scope: APPEAL, when: (d) => d.consentStatus === "pending" && !assumeConsent(d) },
-  { id: "enrollment.confirm_income", slot: "gate", path: "/confirm-income", scope: { fork: "consent", exit: "patient_text" }, when: (d) => d.choices?.consent === "patient_text" && d.consentStatus === "confirmed" && d.incomeStatus === "none" },
+  { id: "enrollment.confirm_income", slot: "gate", path: "/confirm-income", scope: { fork: "consent", exit: "patient_text" }, when: (d) => d.choices?.consent === "patient_text" && !!d.householdRequested && d.consentStatus === "confirmed" && d.incomeStatus === "none" },
   // BI has not started. It starts with the referral, so this is a moment only.
   { id: "enrollment.waiting_for_bi", slot: "started", path: "/enrollment-complete", when: (d) => d.consentStatus === "confirmed" && d.biStatus === "none" },
 ];

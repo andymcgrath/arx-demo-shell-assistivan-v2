@@ -533,7 +533,7 @@ export default function FieldPortal() {
     territory: "Florida",
     region: "Southeast",
     primaryPrescriber: "Dr. Sarah Chen",
-    primarySOC: "Orlando SOC",
+    primarySOC: "Community Allergy and Immunology Practice",
     consentExpiration: consentStatus === "confirmed" ? daysFromToday(700) : "---",
     enrollmentDate: daysFromToday(0),
     homePhone: patientState.phone,

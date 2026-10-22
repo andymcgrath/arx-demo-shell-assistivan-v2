@@ -13,6 +13,7 @@
  * waiting on a fake timer or a real search index.
  */
 import { useState } from "react";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
 import { useNavigate } from "@/lib/portalRouter";
 import { X, Search, Star, Upload, AlertTriangle, Loader2 } from "lucide-react";
 import StepRail from "../components/StepRail";
@@ -28,6 +29,14 @@ const SAMPLE_FORMS = [
   "Express Scripts National Medical Benefit",
   "OptumRx Texas Pharmacy Benefit",
   "BlueCross BlueShield Pharmacy Benefit",
+];
+
+// Buy and Bill (the recipe has eMedBV): the drug bills under the medical benefit, so the PA uses a medical benefit form.
+const MEDICAL_FORMS = [
+  "BlueCross BlueShield Medical Benefit",
+  "CVS Caremark New York Medical Benefit",
+  "Express Scripts National Medical Benefit",
+  "OptumRx Texas Medical Benefit",
 ];
 
 // Maps the payer selected in Step 3 (Insurance) to its matching PA form, so
@@ -126,9 +135,13 @@ export default function NewCasePA() {
   // form" (pa.formOverride) wins; otherwise it's derived from the payer via
   // PAYER_FORM_MAP, falling back to a generic "<payer> Pharmacy Benefit"
   // guess for payers without a mapped form (e.g. manually-entered insurance).
+  const medical = !!useRecipeModule("benefit_verification");
+  const forms = medical ? MEDICAL_FORMS : SAMPLE_FORMS;
   const derivedForm = selectedInsurance
-    ? PAYER_FORM_MAP[selectedInsurance.payer] ?? `${selectedInsurance.payer} Pharmacy Benefit`
-    : SAMPLE_FORMS[0];
+    ? medical
+      ? `${selectedInsurance.payer} Medical Benefit`
+      : PAYER_FORM_MAP[selectedInsurance.payer] ?? `${selectedInsurance.payer} Pharmacy Benefit`
+    : forms[0];
   // Diagnosis selected back in Step 4 (Clinical) — prefills Diagnosis /
   // Treatment Start Date below the same way.
   const clinical = useCaseWizardStore((s) => s.clinical);
@@ -147,8 +160,8 @@ export default function NewCasePA() {
   const derivedTreatmentStart = clinical.diagnosisDate ? isoDateToMmddyyyy(clinical.diagnosisDate) : "";
 
   const filteredForms = formSearch.trim()
-    ? SAMPLE_FORMS.filter((f) => f.toLowerCase().includes(formSearch.toLowerCase()))
-    : SAMPLE_FORMS;
+    ? forms.filter((f) => f.toLowerCase().includes(formSearch.toLowerCase()))
+    : forms;
 
   return (
     <div className="iassist-portal min-h-screen bg-[#F8F8F8] flex font-['Open_Sans']">

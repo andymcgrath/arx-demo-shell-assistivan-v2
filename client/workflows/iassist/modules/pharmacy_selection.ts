@@ -18,7 +18,8 @@ export const PHARMACY_SELECTION_RULES: IaRule[] = [
     id: "pharmacy_selection.select_pharmacy.site_of_care",
     on: "SELECT_PHARMACY",
     scope: { module: "pharmacy_selection", props: { variant: "site_of_care" } },
-    when: (d) => siteOfCareUnlocked(d) && d.pharmacyStatus === "none",
+    // Free drug: the agent triages after the patient confirms the appointment date. An appeal triages any time.
+    when: (d) => siteOfCareUnlocked(d) && d.pharmacyStatus === "none" && (d.papStatus !== "active" || d.infusionDate !== null),
     set: (_d, e) => ({ selectedPharmacy: e.pharmacy ?? null, dispatchStatus: "selected" }),
     emit: { portal: "crm", step: 5 },
   },

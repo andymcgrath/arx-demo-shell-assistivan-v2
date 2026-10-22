@@ -135,6 +135,8 @@ export interface WorkflowData {
   householdIncome?: string;
   /** iAssist Buy and Bill free drug (PAP): the patient agreed to the credit check with the income application. */
   creditCheckConsented?: boolean;
+  /** iAssist Buy and Bill: the recipe asks the patient to confirm household size and income after consenting. Set at the referral. */
+  householdRequested?: boolean;
   /** Fax and e-sign workflows: the CRM agent sent the patient their invite text (INVITE). The patient cannot verify before this. */
   patientInvited?: boolean;
   /** iAssist_PAP (WF5) only: the infusion date the patient picks once the

@@ -28,7 +28,7 @@ export function buyAndBillStageEvents(stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;
   if (upTo(2)) out.push(ev("RUN_MEDBV", "provider"), ev("ENROLL_COPAY", "provider"), ev("REFERRAL_RECEIVED", "provider"));
-  if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"), ev("CONFIRM_INCOME", "patient", { householdSize: "2", householdIncome: "62000" }));
+  if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
   if (upTo(4)) out.push(ev("COMPLETE_BI", "crm"), ev("APPROVE_PA", "crm"));
   if (upTo(5)) out.push(ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient"));
   if (upTo(6)) out.push(ev("SUBMIT_COPAY_CLAIM", "provider", { dateOfService: new Date().toISOString().slice(0, 10) }));
@@ -36,16 +36,17 @@ export function buyAndBillStageEvents(stage: number): LadderEvent[] {
 }
 
 // ── Free drug (PAP): eMedBV finds no coverage, so no PA and no copay. ──
-// 2 HCP submitted (eMedBV, referral), 3 patient enrolled, 4 BI back with no coverage, 5 free drug approved (update text,
-// credit check and income), 6 triaged to the site of care, 7 appointment scheduled (the terminal stage).
+// 2 HCP submitted (eMedBV, referral), 3 patient enrolled, 4 BI back with no coverage, 5 application received (update text,
+// credit check and income), 6 the CRM agent approves, 7 appointment scheduled, 8 triaged to the site of care (the terminal stage).
 export const FREE_DRUG_STAGE_LABELS = [
   "Referral Received",
   "HCP Submitted (eMedBV)",
   "Patient Enrolled",
   "BI Complete (No Coverage)",
-  "Free Drug Approved",
-  "Triage to Site of Care",
+  "Application Received",
+  "Free Drug Approved (CRM)",
   "Appointment Scheduled",
+  "Triage to Site of Care",
 ];
 
 /** True for the free drug scenario: its recipe lists `financial_assistance` with the `pap` variant. */
@@ -58,7 +59,14 @@ export function freeDrugStageEvents(stage: number): LadderEvent[] {
   if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
   if (upTo(4)) out.push(ev("COMPLETE_BI", "crm"), ev("SEND_PAP_SMS", "crm"));
   if (upTo(5)) out.push(ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient"), ev("VERIFY_INCOME", "patient", { householdSize: "2", householdIncome: "62000" }));
-  if (upTo(6)) {
+  if (upTo(6)) out.push(ev("APPROVE_PAP", "crm"));
+  if (upTo(7)) {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    date.setHours(9, 0, 0, 0);
+    out.push(ev("PATIENT_SELECTS_INFUSION_DATE", "patient", { date: date.toISOString() }));
+  }
+  if (upTo(8)) {
     out.push(
       ev("SELECT_PHARMACY", "crm", {
         pharmacy: {
@@ -71,12 +79,6 @@ export function freeDrugStageEvents(stage: number): LadderEvent[] {
         },
       }),
     );
-  }
-  if (upTo(7)) {
-    const date = new Date();
-    date.setDate(date.getDate() + 7);
-    date.setHours(9, 0, 0, 0);
-    out.push(ev("PATIENT_SELECTS_INFUSION_DATE", "patient", { date: date.toISOString() }));
   }
   return out;
 }

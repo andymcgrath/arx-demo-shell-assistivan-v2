@@ -37,7 +37,7 @@ export function formatDate(iso: string | null | undefined): string {
 
 /** When the patient consented by text, they also confirmed household size and income in the patient app. */
 function incomeNote(d: WorkflowData): string {
-  if (d.choices?.consent !== "patient_text") return "";
+  if (d.choices?.consent !== "patient_text" || !d.householdRequested) return "";
   if (d.incomeStatus !== "verified" || !d.householdIncome) return " Waiting on household income.";
   const income = `$${Number(d.householdIncome).toLocaleString("en-US")}`;
   return ` Household of ${d.householdSize}, income ${income}, confirmed.`;
@@ -48,6 +48,8 @@ function deriveFreeDrugCards(d: WorkflowData, firstName: string, enrollment: Sta
   const approved = d.papStatus === "active";
   const application: StatusCard = approved
     ? { key: "application", title: "Free drug application", state: "done", body: `${firstName} was approved for the free drug program. Credit check and household income confirmed.` }
+    : d.incomeStatus === "verified"
+      ? { key: "application", title: "Free drug application", state: "pending", body: `${firstName} submitted the application with the credit check and household income. It is in review and waiting on approval.` }
     : d.biStatus === "complete"
       ? { key: "application", title: "Free drug application", state: "pending", body: `No medical coverage was found. Waiting on ${firstName} to finish the free drug application.` }
       : d.biStatus === "running"

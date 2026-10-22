@@ -14,7 +14,7 @@ const GROUP = "Free drug application";
 export const FINANCIAL_ASSISTANCE_SCREENS: Screen[] = [
   { path: "/pap-update-sms", label: "Application Update SMS", group: GROUP, scope: PAP },
   { path: "/pap-update-otp", label: "Application Update Code", group: GROUP, scope: PAP },
-  { path: "/income-qualification", label: "Credit Check and Income", group: GROUP, scope: PAP },
+  { path: "/income-qualification", label: "Credit Check, Income, and Application Received", group: GROUP, scope: PAP },
   { path: "/pa-approved", label: "Approved: Site of Care and Appointment", group: GROUP, scope: PAP },
   { path: "/infusion-date", label: "Appointment Date", group: GROUP, scope: PAP, sticky: true },
   { path: "/appointment-confirmation", label: "Appointment Confirmation", group: GROUP, scope: PAP, sticky: true },
@@ -29,4 +29,6 @@ export const FINANCIAL_ASSISTANCE_ROUTES: IaRoute[] = [
   { id: "financial_assistance.update_sms", slot: "pap_apply", path: "/pap-update-sms", scope: PAP, when: (d) => !d.papSmsVerified },
   { id: "financial_assistance.update_otp", slot: "pap_apply", path: "/pap-update-otp", scope: PAP, when: (d) => !d.papOtpVerified },
   { id: "financial_assistance.income", slot: "pap_apply", path: "/income-qualification", scope: PAP, when: (d) => d.incomeStatus !== "verified" },
+  // Application received: the patient waits on the CRM agent's approval. The same screen shows the received message.
+  { id: "financial_assistance.received", slot: "pap_apply", path: "/income-qualification", scope: PAP, when: (d) => d.papStatus !== "active" },
 ];

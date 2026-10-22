@@ -29,6 +29,13 @@ export const hcpPreparesFirst = (scenario: { recipe?: { modules: { id: string }[
 export const consentByPatient = (d: WorkflowData) => d.choices?.consent === "patient_text";
 export const consentByHcp = (d: WorkflowData) => d.choices?.consent === "hcp_signs";
 
+/**
+ * True when the recipe's `enrollment` module has `income: "confirm"`: after consenting by text, the patient confirms household
+ * size and income. Leave the prop out for a commercially covered patient, who goes straight to the confirmation page.
+ */
+export const asksHousehold = (scenario: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }) =>
+  !!scenario.recipe?.modules.some((m) => m.id === "enrollment" && m.props?.income === "confirm");
+
 /** True when the HCP enrolls the patient in copay before the submission (a recipe with the `copay` module). */
 export const hcpEnrollsCopay = (scenario: { recipe?: { modules: { id: string }[] } }) =>
   !!scenario.recipe?.modules.some((m) => m.id === "copay");

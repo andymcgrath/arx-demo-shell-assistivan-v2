@@ -54,6 +54,9 @@ export default function MedicationDelivered() {
     workflowData.pharmacyBenefitStatus === 'covered' &&
     workflowData.medicalBenefitStatus !== 'covered';
   const drugName = PROGRAM.drugDisplayName || PROGRAM.name;
+  // Free drug: the CRM agent triages the Rx after the patient confirms the date. Until then the patient waits on the shipment.
+  const facility = KEANU_SITE_OF_CARE_FACTS.facilityName;
+  const sentToFacility = freeDrug && workflowData.dispatchStatus !== "pending_selection" && workflowData.dispatchStatus !== "none";
 
   return (
     <main className="flex-grow pt-5 pb-8 relative">
@@ -102,10 +105,14 @@ export default function MedicationDelivered() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                {isCoverageNetworkPharmacyFlow ? `Your ${drugName} has been sent to the pharmacy.` : "Your medication has arrived!"}
+                {isCoverageNetworkPharmacyFlow
+                  ? `Your ${drugName} has been sent to the pharmacy.`
+                  : freeDrug
+                  ? sentToFacility ? `Your ${drugName} is on its way to ${facility}` : "Your appointment is confirmed"
+                  : "Your medication has arrived!"}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
-                <span className="text-xl">{isCoverageNetworkPharmacyFlow ? "📍" : "🚚"}</span>
+                <span className="text-xl">{isCoverageNetworkPharmacyFlow ? "📍" : freeDrug && !sentToFacility ? "📅" : "🚚"}</span>
               </div>
             </div>
 
@@ -115,6 +122,12 @@ export default function MedicationDelivered() {
                   Before you start, review the step-by-step guide to learn how to insert your sensor and get connected.
                 </p>
               </>
+            ) : freeDrug ? (
+              <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
+                {sentToFacility
+                  ? `Your care team triaged your prescription and it is shipping to ${facility}. It will be there for your appointment. Nothing else is needed from you.`
+                  : `We'll let you know as soon as your ${drugName} ships to ${facility}.`}
+              </p>
             ) : (
               <>
                 <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">It's time to get ready for your first dose.</p>

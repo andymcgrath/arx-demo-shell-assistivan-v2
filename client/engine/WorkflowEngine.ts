@@ -283,7 +283,7 @@ export const KEANU_SITE_OF_CARE_FACTS = {
   // patientStore.ts) is 123 Main Street, Orlando, FL 32801. His site of
   // care needs to be somewhere he'd realistically drive to for an
   // infusion, not a facility 900+ miles away in a different state.
-  facilityName: 'Orlando SOC',
+  facilityName: 'Community Allergy and Immunology Practice',
   npi: '1699006677',
   contactName: 'Priya Sandhu',
   contactPhone: '(407) 555-3006',
@@ -381,6 +381,8 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   'ENROLL_COPAY',
   // iAssist Buy and Bill: the patient's household income confirmation follows consent, which already has an email.
   'CONFIRM_INCOME',
+  // Free drug: the CRM agent approves the application. The patient is told in the app.
+  'APPROVE_PAP',
 ]);
 
 function formatSentAt(iso: string): string {

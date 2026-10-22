@@ -1117,7 +1117,7 @@ export default function Index() {
   // there's no separate Rx Processing/Shipped/Delivered chain to wait on.
   const tpStage: Stage = isIAssistPapFlow
     ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
-      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: isFreeDrug && workflowData.infusionDate === null ? "Awaiting the patient's appointment date" : "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     // CoA_Copay Retail/Mail Order, and now CoA_Coverage Scenario 1 too
     // (isCoverageRetailFlow — see that flag's own comment above) — see
@@ -1244,6 +1244,24 @@ export default function Index() {
           statusLabel: "Complete",
           statusDetail: "Free drug application approved",
           isComplete: true,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` },
+            { label: "Credit Check Consent", value: workflowData.creditCheckConsented ? "Yes" : null },
+            { label: "Household Size", value: workflowData.householdSize ?? null },
+            { label: "Annual Household Income", value: workflowData.householdIncome ? `$${Number(workflowData.householdIncome).toLocaleString("en-US")}` : null },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: dateFromToday(0).toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : workflowData.incomeStatus === "verified"
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "In Review",
+          statusDetail: "Application received. Review and approve",
+          isComplete: false,
           isNotStarted: false,
           fields: [
             { label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` },
@@ -2956,7 +2974,9 @@ export default function Index() {
                     ) : (
                       <button
                         onClick={() => setPharmacyModalOpen(true)}
-                        className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                        disabled={isFreeDrug && workflowData.infusionDate === null}
+                        title={isFreeDrug && workflowData.infusionDate === null ? "Triage after the patient confirms the appointment date." : undefined}
+                        className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: FC_BLUE }}
                       >
                         Choose Pharmacy
@@ -3319,6 +3339,21 @@ export default function Index() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Check Status
                 </button>
+              )}
+              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.incomeStatus === "verified" && workflowData.papStatus !== "active" && (
+                <button
+                  onClick={() => dispatch('APPROVE_PAP', { portal: 'crm' })}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: FC_BLUE }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Approve Application
+                </button>
+              )}
+              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.papStatus === "active" && (
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                  Approved
+                </span>
               )}
               {activeStage.id === "PA-14274" && paStatus === "approved" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>

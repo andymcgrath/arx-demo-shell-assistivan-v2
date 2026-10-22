@@ -87,7 +87,7 @@
     "subject": "Infusion Appointment Scheduled - Test Patient",
     "bodyParagraphs": [
       "Test Patient scheduled their infusion appointment for Tuesday, February 10, 2026.",
-      "Site of Care: Orlando SOC, 1414 Kuhl Ave, Orlando, Florida 32806 ((407) 555-3006).",
+      "Site of Care: Community Allergy and Immunology Practice, 1414 Kuhl Ave, Orlando, Florida 32806 ((407) 555-3006).",
       "No further action is needed — the patient has already received an appointment confirmation."
     ],
     "linkedItemId": "LIVE-INFUSION-SCHEDULED",

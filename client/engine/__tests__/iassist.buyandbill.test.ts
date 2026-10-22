@@ -122,17 +122,14 @@ describe("Buy and Bill ordering", () => {
       });
     });
 
-    it("patient_text: the patient confirms income after consent, and only then", () => {
+    it("patient_text: a commercially covered patient confirms no income. The recipe leaves `income: \"confirm\"` out", () => {
       withFrozenClock(() => {
         const { actor, data } = startWith("patient_text");
         runSteps(actor, [...PREPARED, { type: "REFERRAL_RECEIVED" }]);
         expect(data().consentStatus).toBe("pending");
-        expect(accepts(actor, INCOME)).toBe(false);
         runSteps(actor, IDENTITY);
-        expect(accepts(actor, INCOME)).toBe(true);
-        runSteps(actor, [INCOME]);
-        expect(data().incomeStatus).toBe("verified");
-        expect([data().householdSize, data().householdIncome]).toEqual(["2", "62000"]);
+        expect(data().consentStatus).toBe("confirmed");
+        expect(data().householdRequested).toBeUndefined();
         expect(accepts(actor, INCOME)).toBe(false);
       });
     });
