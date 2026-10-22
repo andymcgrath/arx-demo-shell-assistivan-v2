@@ -26,7 +26,7 @@ export default function ApprovedContactPhysician() {
           </p>
         </div>
 
-        <p className="text-arx-on-hero/90 text-body leading-snug">No further action is needed from you at this time.</p>
+        <p className="text-arx-on-hero/90 text-body leading-snug">No further action is needed from you at this time. You will be notified of next steps.</p>
       </div>
     </main>
   );

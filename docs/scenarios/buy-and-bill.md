@@ -16,7 +16,7 @@ Flow type `iAssist_Buy_And_Bill`. Picks: `bi: medical_buy_and_bill`, `pa: approv
 2. **Submitting is the referral.** No Rx and no order go out. BI starts on its own.
 3. **The patient gets a text.** They verify the text and the code, consent, then land on the enrollment screen. It says benefits are being checked and they will be notified of next steps. A commercially covered patient confirms no household size or income. A recipe that wants the step sets `income: "confirm"` on its `enrollment` module. The patient then confirms household size and income, a 3 second credit check runs, and a "You are qualified" screen follows.
 4. **The CRM runs BI, then the PA.** The agent opens the BI stage and the result lands in about 3 seconds: medical benefit covered, PA required. The PA starts on its own. The agent opens the PA stage and it approves in about 3 seconds. Financial Assistance shows copay enrolled by the HCP, with the remaining balance.
-5. **The patient is told.** They verify the PA-approved text and code. The final screen says they are approved, their prescriber is informed, and they should contact the office to confirm the injection date.
+5. **The patient is told.** They verify the PA-approved text and code. The final screen says they are approved, their prescriber is informed, and they should contact the office to confirm the injection date. It ends with "You will be notified of next steps."
 6. **The HCP sees the result in iAssist.** Open the patient from the dashboard.
    - Status cards fill in as steps finish, under a progress bar.
    - The copay card shows the program, member ID, effective date, and remaining balance.
