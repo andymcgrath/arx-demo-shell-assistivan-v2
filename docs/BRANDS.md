@@ -96,7 +96,7 @@ The build merges it over the parent. Objects merge field by field. Arrays and va
 - `id` is unique in the brand. `flow` is a real flow id. `label` is what the client sees.
 - `choices` maps a fork id to an exit id. Forks are declared in `client/workflows/<workflow>/forks.ts`. A demo can only pick declared exits, so a typo fails the brand test instead of building a bad path. Leave out a fork to take the scenario's default.
 - Selecting a demo switches to its flow. If the running flow is on different branches, it restarts with the demo's. Otherwise it keeps its progress. Reset restarts the selected demo.
-- The CRM also shows branch buttons for any presenter fork, so a presenter can switch branch mid-demo.
+- The presenter never picks a branch live. To show another outcome, pick another demo from the dropdown.
 - To show one flow several ways, list it more than once with different `choices`. The brand test rejects two demos with the same flow and choices.
 
 ## Images stay with their client

@@ -151,6 +151,20 @@ Not done yet:
 - `netlify.toml` pins `NODE_VERSION = "22.14.0"`.
 - Still to do by hand: `pnpm remove @netlify/blobs @netlify/functions` (updates the lockfile), then commit `package.json` and `pnpm-lock.yaml`.
 
+### Steps 14 to 58: assets, journeys, recipes, and client demos (tags `refactor/14-asset-isolation` to `refactor/58-free-drug-approval-text`)
+
+Summarized from the tag messages on 27 Oct 2026. The type-error baseline held at 2 throughout. Tests grew from 211 (step 15) to 583 (step 58).
+
+- **14 to 16, 20, 21: brand build.** Asset isolation (a build keeps only the active brand's images), brand tokens with the brand, accent, and action color split, and the dev-only `/brand-lab` page.
+- **17 to 19, 48: forks and demos.** Forks and demos became platform concepts, with a fork-aware stage-jump ladder. A fresh machine starts on the selected demo's branches. The journeys branch merged to `main` (571 tests).
+- **22 to 34: CoAssist as recipes.** Component types and recipes as data. BI, PA, pricing, and copay became forks. Rules got ids, moved into module files, and take their scope from recipes and forks. Screen route rules got ids and moved into modules. A composition proof and scenario end-state tests followed.
+- **35 to 38: iAssist as recipes.** Recipes, forks, and rule modules for iAssist, plus a Servier pharmacy-transfer golden path.
+- **39 to 47: coverage and medical transfer.** The DME special case became a generic CoAssist `bi` fork, and `CoA_DME` became `CoA_Coverage`. A shared BI component, a benefits panel, and iAssist assigned pharmacy led to the iAssist and CoAssist medical transfer scenarios. Exit `requires` can name a module variant.
+- **49, 50: brand documents and cleanup.** Per-brand PDFs and a PA form viewer. Dead scripts and the Promote env removed. Documentation moved into `docs/`.
+- **51 to 58: client demo content.** Buy-and-bill free-drug field and approval text, shared documents and copay views, income and credit check, collapsible stage sections, and notes from the 10/21 call. Steps 54 and 55 were tagged before a full test run, so rerun `pnpm test` on those tags before relying on them as restore points.
+
+The "Not yet done" items from step 01 are done: auto-advance timers run in the machines as `after` transitions, PA preconditions are enforced, and screen order comes from `screens.ts`.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

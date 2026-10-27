@@ -1,5 +1,7 @@
 # Plan: generic coverage fork and CoA_Coverage
 
+Status: done (tags `refactor/39` to `refactor/41`). Kept for history.
+
 Remove the DME special case. The coverage outcomes (pharmacy, transfer, medical, none) belong to any Rx, not one scenario.
 
 ## Decisions

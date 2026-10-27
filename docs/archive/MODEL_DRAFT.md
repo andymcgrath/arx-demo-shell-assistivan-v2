@@ -1,6 +1,6 @@
 # CRM-driven model: draft v2
 
-Status: draft for review. Nothing in `CLAUDE.md` or the code has changed.
+Status: superseded. The model is now `CLAUDE.md` rules 1 to 14 and the code. Kept for history.
 
 ## Principle
 

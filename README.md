@@ -1,6 +1,6 @@
 # ArxConnect demo: a beginner's guide
 
-This guide explains what this demo is, how to run it, and what each of the 7 built-in workflows shows. It's written for anyone who needs to run or present the demo, not just developers.
+This guide explains what this demo is, how to run it, and what each built-in scenario shows. It's written for anyone who needs to run or present the demo, not just developers.
 
 ## What this demo actually is
 
@@ -21,6 +21,7 @@ Nothing here touches a real database. All data lives in your browser's session f
 | Field | The field team's task list: patients, site-of-care visits, and shipments tied to the active case. |
 | Workforce | Call center dashboards: team performance, quality scores, and KPIs. Not tied to the active case. |
 | Analytics | A placeholder for a future reporting view. No live data yet. |
+| Client | A copy of the HUB / CRM tab for one client. Hidden unless the brand turns it on and the flow is an iAssist flow. |
 | Rules | A Salesforce-style "Product Mgmt" app for building automation rules, such as "file an appeal automatically when a PA is denied." |
 
 ## Getting started
@@ -43,16 +44,16 @@ Open `http://localhost:8080`. You'll land on the HUB tab.
 
 Two controls matter most, both in the header:
 
-- **Flow dropdown** — picks which of the 7 workflows is active. Switching flows resets the case to that workflow's starting point and opens its correct starting portal automatically.
+- **Demo dropdown** — picks which demo is active. Each client's brand file lists its own demos, so the list differs by client. A demo is a scenario plus the outcome it starts with. Switching demos resets the case to the starting point and opens the correct starting portal. Use the dropdown to show another outcome; there are no branch buttons mid-demo.
 - **Reset** — clears the current case back to the beginning. Use it between run-throughs so you're not explaining leftover state from the last one.
 
 The step bar under the header shows exactly where the active case stands, stage by stage, for whichever workflow is running. Click any stage in the reset menu to jump straight to it instead of clicking through every step live.
 
 A **Config** drawer lets you show or hide portals when you want a two- or three-portal split view, and toggle behavior like auto-advance and undo support.
 
-## The 7 workflows
+## The scenarios
 
-Every workflow follows the same patient, Keanu Dixon, through a different real-world scenario. Pick the one that matches the story you need to tell.
+The platform has four workflows (Standard, PAP, CoAssist, iAssist) and ten scenarios that run on them. Every scenario follows the same patient, Keanu Dixon, through a different real-world story. The numbers below match the default `assistivan` brand's dropdown. Other brands pick and reorder their own list. The stage lists below are the originals; the stage bar in the app is the current source of truth.
 
 ### 1. Standard — standard referral, insurance covers it
 
@@ -88,7 +89,13 @@ Stages: Referral Received → Patient Enrolled → Benefits Investigation → Pr
 
 Same shape as CoAssist DTP, with one more choice at the pricing step: a Copay Program that lowers what the patient pays at retail or mail order, instead of switching them to cash pay outright. Today this flow runs the same stages as CoAssist DTP; the copay option is layered onto the same pricing screen.
 
-### 5. iAssist — internal case intake, PA approved
+### 5. CoAssist Coverage — benefits decide the path
+
+**Starts in:** Provider
+
+Runs on the CoAssist workflow. What the benefits check finds decides the outcome: the pharmacy benefit covers it, the Rx transfers to a partner pharmacy, the medical benefit covers it, or there is no coverage and the patient pays cash. Each outcome is its own demo in the dropdown. Servier's "CoAssist Admin Only" demo, for example, starts on the pharmacy transfer outcome.
+
+### 6. iAssist — internal case intake, PA approved
 
 **Starts in:** iAssist
 
@@ -98,23 +105,27 @@ Stages: Referral Received → eRx Submitted (benefits check complete, PA submitt
 
 Use this one to demo iAssist's case-creation screens, not just the downstream fulfillment.
 
-### 6. iAssist Appeal — PA denied, then appealed
+### 7. iAssist Appeal — PA denied, then appealed
 
 **Starts in:** iAssist
 
-Same case-intake flow as #5, but the payer denies the prior authorization instead of approving it. An appeal gets filed, and once it's approved, fulfillment moves forward anyway.
+Same case-intake flow as #6, but the payer denies the prior authorization instead of approving it. An appeal gets filed, and once it's approved, fulfillment moves forward anyway.
 
 Stages: Referral Received → eRx Submitted → Patient Enrolled → PA Denied → Appeal Filed → Triage to Pharmacy (Keanu to Facility).
 
-This is the one built to pair with the Rules portal: create and activate the rule named "Initiate Appeal, Upon PA Denial," and the appeal files itself the moment the denial happens, instead of a hub agent doing it by hand. Use #5 and #6 back to back to contrast a clean approval against a denial that needs intervention, then show the Rules portal automating that intervention.
+This is the one built to pair with the Rules portal: create and activate the rule named "Initiate Appeal, Upon PA Denial," and the appeal files itself the moment the denial happens, instead of a hub agent doing it by hand. Use #6 and #7 back to back to contrast a clean approval against a denial that needs intervention, then show the Rules portal automating that intervention.
 
-### 7. PrES PAP — provider e-signature intake (early build)
+### 8. PrES PAP — provider e-signature intake (legacy)
 
 **Starts in:** Provider
 
-A provider starts the referral by signing it electronically instead of faxing it in, and the patient goes through the same income-qualification and PAP enrollment as workflow #2. The actual e-signature capture screens aren't built yet, so this flow currently reuses the PAP workflow's steps end to end. Treat it as a placeholder for where that intake experience is headed, not a finished story.
+A provider starts the referral by signing it electronically instead of faxing it in, and the patient goes through the same income-qualification and PAP enrollment as workflow #2. The e-signature capture screens aren't built, so this scenario reuses the PAP workflow's steps end to end. It is a legacy scenario: it stays working and tested, and gets no new features.
 
 Stages: Referral Received → Patient Enrolled → Benefits Investigation → PAP Enrolled → Triage to Pharmacy → Rx Processing → Rx Shipped → Medication Delivered.
+
+## Medical transfer scenarios
+
+Two client-demo scenarios, `CoA_Medical_Transfer` (CoAssist source) and `iAssist_Medical_Transfer` (iAssist source), cover a drug the medical benefit pays for. A prior authorization is required. A health care provider administers the drug (buy and bill), so the Rx transfers to an assigned site of care or pharmacy. There is no payment or scheduling step. Celldex and Servier brands list them as demos.
 
 ## Quick reference
 
@@ -124,17 +135,20 @@ Stages: Referral Received → Patient Enrolled → Benefits Investigation → PA
 | 2 | PAP | HUB / CRM | No insurance, free-goods program, later audited |
 | 3 | CoAssist DTP | Provider | Cash-pay option alongside the insurance path |
 | 4 | CoAssist Copay | Provider | Adds a copay-assistance pricing option |
-| 5 | iAssist | iAssist | Internal case intake, PA approved |
-| 6 | iAssist Appeal | iAssist | PA denied, appeal filed and approved |
-| 7 | PrES PAP | Provider | E-signature intake (placeholder), PAP path |
+| 5 | CoAssist Coverage | Provider | Benefits decide the path: pharmacy, transfer, medical, or cash |
+| 6 | iAssist | iAssist | Internal case intake, PA approved |
+| 7 | iAssist Appeal | iAssist | PA denied, appeal filed and approved |
+| 8 | PrES PAP | Provider | E-signature intake (legacy), PAP path |
+| n/a | CoAssist Medical Transfer | Provider | Medical benefit, PA required, Rx transfers to a site of care |
+| n/a | iAssist Medical Transfer | iAssist | Medical benefit, PA required, Rx transfers to an assigned pharmacy |
 
 ## Tips for presenting
 
-Reset before each run-through so the audience isn't confused by stage numbers left over from the last demo. Use the stage-jump menu to skip ahead when you only need to show one part of a flow, rather than clicking through every step live. If you're short on time, workflows #1 and #6 cover the two most distinct stories: the standard path, and a denial that needs an automated response.
+Reset before each run-through so the audience isn't confused by stage numbers left over from the last demo. Use the stage-jump menu to skip ahead when you only need to show one part of a flow, rather than clicking through every step live. If you're short on time, scenarios #1 and #7 cover the two most distinct stories: the standard path, and a denial that needs an automated response.
 
 ## Where to go next
 
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — how the demo is actually built: the XState workflow machines, the (deliberately thin) Zustand shell store, and how to add a new workflow or portal.
 - **[BRANDS.md](./docs/BRANDS.md)** — how a client's brand works: the brand file, colors, demos, documents, and the `BRAND` setting for each Netlify site.
 - **[REFACTOR_AUDIT.md](./docs/REFACTOR_AUDIT.md)** — why the platform is built around workflows, scenarios, and brand data.
-- **[docs/archive/](./docs/archive/)** — obsolete notes from before the XState refactor (the consistency system, the order store). Kept for history only.
+- **[docs/archive/](./docs/archive/)** — obsolete notes from before the XState refactor (the consistency system, the order store) and finished refactor plans. Kept for history only.

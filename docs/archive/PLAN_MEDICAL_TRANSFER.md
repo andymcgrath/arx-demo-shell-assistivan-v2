@@ -1,5 +1,7 @@
 # Plan: shared BI component and the iAssist medical transfer scenario
 
+Status: done through the iAssist medical transfer (tags `refactor/42` to `refactor/46`). Its rule 7 follow-up moved to `docs/plans/PLAN_RULE7_CLEANUP.md`.
+
 The goal is to build a scenario from components and configuration, not from new code per client. The first use is a client demo: an iAssist source, BI with a medical benefit, a PA, copay as data, and a Triage transfer (HCP-administered, Buy & Bill).
 
 Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag each green step `refactor/NN-short-name`. Read every fixture diff before recording.

@@ -1,204 +1,170 @@
-# ARX Demo Shell Architecture
+# ARX Demo Shell architecture
 
-**Core principle:** XState is the single source of truth for all workflow state. Zustand's `demoStore` holds only shell infrastructure: which flow is active and a couple of UI/reset flags. It does not hold patient identity, Rx, or order data anymore.
+**Core principle:** XState is the single source of truth for workflow state. Zustand's `demoStore` holds only shell state: which flow and demo are active, and a few UI and reset flags.
 
-This document reflects the current architecture. An earlier revision described a transitional "XState + Zustand hybrid," where Zustand still held identity fields and action bridges. That stage is gone; everything workflow-related now lives in the XState actor.
+This document describes the code on `main`. `REFACTOR_AUDIT.md` explains why it is built this way and logs each refactor step. `CLAUDE.md` holds the rules.
 
----
+## Vocabulary
 
-## Workflow layer: XState machines
+- **Workflow:** the platform choreography. Which apps take part, which app starts, the stage spine. One machine per workflow. Four exist: Standard, PAP, CoAssist, iAssist.
+- **Scenario:** a variant on a workflow, defined as data. It is the registry id and the `FlowType`. Ten exist.
+- **Module:** a reusable step (payment, pharmacy selection, scheduling, tracking) with its rules, screens, and metadata.
+- **Fork:** a point with a default branch and named exits, declared by the workflow.
+- **Demo:** an entry in the brand file's `demos` list. A scenario plus the fork choices it starts with. It is what the client picks in the dropdown.
+- **Brand:** client identity (names, logos, colors, copy, demos). Separate from workflow and scenario.
 
-**Where:** `client/engine/workflowMachine.ts`, plus one module per newer workflow in `client/workflows/`:
+## Workflows and scenarios
 
-- `coassist/` (CoA_DTP, CoA_Copay, CoA_Coverage) is the reference implementation of the target model (refactor step 01). One machine, built by `client/engine/workflow/createWorkflowMachine.ts` from an ordered rules table (`rules.ts`) and three scenarios as data (`scenarios.ts`). The scenario arrives as XState `input: { flowType }`. The machine has a single state; every precondition is a rule on `workflowData`, so nothing reads state names. `coaDtp.ts`, `coaCopay.ts`, and `workflows/coassist/` no longer exist. Code comments elsewhere that cite them now refer to `coassist/rules.ts`.
-- `iAssist.ts` — iAssist_PA_Approved
-- `iAssistPap.ts` — iAssist_PAP
-- `presPap.ts` — PrES_PAP
+| Workflow | Folder | Scenarios (`FlowType`) |
+|---|---|---|
+| Standard | `client/workflows/standard/` | `Fax_QS_PA_Approved` |
+| PAP | `client/workflows/pap/` | `Fax_PAP_Audit`, `PrES_PAP` (legacy) |
+| CoAssist | `client/workflows/coassist/` | `CoA_DTP`, `CoA_Copay`, `CoA_Coverage`, `CoA_Medical_Transfer` |
+| iAssist | `client/workflows/iassist/` | `iAssist_PA_Approved`, `iAssist_PAP`, `iAssist_Medical_Transfer` |
 
-`Fax_QS_PA_Approved` and `Fax_PAP_Audit` share `workflowMachine.ts` directly (registry id `"enrollment"`) rather than getting their own file. The remaining machines migrate to the factory in later steps.
+`iAssist_PAP` is labeled "iAssist Appeal" in the UI. `PrES_PAP` is a legacy scenario: it stays working and tested, with no new features.
 
-**Responsibility:**
-- Workflow progression and validation
-- Delayed state transitions (auto-approve, auto-ship)
-- Snapshot-based undo/redo
-- Multi-workflow support via `WorkflowRegistry`
+Each workflow folder holds the same pieces:
 
-**Parallel regions (in `workflowMachine.ts`):**
-1. **enrollment** — idle → pending → invited → SMS/OTP verification → consent confirmation
-2. **benefitsInquiry** — idle → submitted → complete
-3. **priorAuth** — idle → submitted → approved/denied (with 3s auto-approve)
-4. **order** — none → processing → shipped → delivered (with 3s auto-ship)
+- `index.ts` builds the machine with `createWorkflowMachine`.
+- `rules.ts` is the ordered rules table: preconditions and automation triggers on `workflowData`.
+- `scenarios.ts` holds each scenario as data: `intake` channel, default `choices`, `recipe`, `content` (pharmacies, prices), and patient overrides.
+- `forks.ts` declares forks and their exits (CoAssist and iAssist).
+- `recipes.ts` lists the ordered modules per scenario (CoAssist and iAssist).
+- `modules/` holds the step modules.
+- `screens.ts` holds the screen catalog and route rules for every app.
+
+Shared pieces live in `client/workflows/shared/` (`bi.ts`, `assignment.ts`, `intake.ts`). `client/workflows/screenMaps.ts` looks up a scenario's screen map.
+
+## Engine
+
+**Factory:** `client/engine/workflow/createWorkflowMachine.ts` turns a rules table, forks, and scenarios into an XState machine. The machine has one state. Every precondition reads `workflowData`, so nothing depends on state names. The scenario enters as XState `input: { flowType }` and stays in `workflowData.flowType`, so saved snapshots restore with it.
+
+Supporting files in `client/engine/workflow/`:
+
+| File | Purpose |
+|---|---|
+| `types.ts` | `Rule`, `ScenarioDefinition`, `WorkflowDefinition`, `ForkDefinition` |
+| `baseData.ts` | Shared initial `WorkflowData` |
+| `components.ts` | Module contracts (what each needs and sets) and sources |
+| `recipe.ts` | `recipeProblems()`: validates module order against the contracts |
+| `forks.ts` | Pure fork helpers: `exitFor`, `forkStageList`, `choiceProblems` |
+| `scope.ts` | Scopes a rule or screen to a module or fork instead of a hand-written scenario list |
+| `screens.ts` | Screen catalog and route-rule types, `routeFor`, `menuFor` |
+
+**Preconditions and automation:** a rule allows an event only when a condition holds. An automation trigger fires an event after a delay (`after`) when a condition holds. Triggers are marked `system` or `agent`. The BI result, PA decision, and appeal all fire from the machine, not from React `setTimeout` effects. The CRM only sends `VIEW_STAGE` and `LEAVE_STAGE`.
+
+**Intake channel:** `erx`, `fax`, or `esign`. It defaults from the workflow and a scenario may override it. On `erx`, a PA starts on its own once BI completes and says one is required. On `fax`, an email asks the provider and the provider's submission starts the PA.
+
+**Undo:** each machine keeps up to 20 snapshots. The CoAssist scenarios do not handle `UNDO` (pinned by `client/engine/__tests__/__fixtures__/undo/`).
 
 **Context:**
+
 ```typescript
 interface MachineContext {
-  workflowData: WorkflowData;   // All workflow progression fields (enrollment, PA, pharmacy, pricing, etc.)
+  workflowData: WorkflowData;   // All progression fields, including `choices` (fork picks)
   events: DemoEvent[];          // Audit trail
   _snapshots: MachineContext[]; // Undo history
 }
 ```
 
-**Auto-advance timers (correction, 17 Oct 2026):** these do NOT live in the machines. No machine defines an `after` transition. The timers are `setTimeout` calls in React effects, mainly `client/portals/crm/pages/Index.tsx`:
-- BI completes 3 seconds after the agent opens the BI tab (and picks the BI result, including the Coverage scenario)
-- PA resolves 3 seconds after the agent opens the PA tab (approve, or deny for `iAssist_PAP`)
-- Appeal is filed 2.5 seconds after PA denial when the Rules portal appeal rule is active
+### Runtime wiring
 
-There are 51 `setTimeout` calls across the portals in total. The refactor moves the scenario-relevant ones into the machines so scenarios can be tested headless.
+- **`WorkflowRegistry.ts`** registers each machine under its `FlowType`. CoAssist registers one machine four times, iAssist three, PAP two. Exposes `registerWorkflow`, `getWorkflow`, `listWorkflows`.
+- **`actorSingleton.ts`** holds the module-level actor. `switchWorkflow(flowType)` snapshots the outgoing flow, then starts or restores the new one. `resetCurrentWorkflowActor()` resets the active flow. `resetAllWorkflowSnapshots()` wipes every flow's progress.
+- **`WorkflowProvider.tsx`** gives React the actor: `useWorkflowActor`, `useSwitchWorkflow`, `useActiveWorkflowId`, `usePersonaState(portal)`, `useWorkflowDispatch`.
+- **`WorkflowEngine.ts`** holds `derivePatientRoute(context)`. It looks up the scenario's screen map and returns the first matching route rule.
+- **`snapshotChoices.ts`** drops a saved session whose fork choices disagree with the selected demo.
+- **`stageInspectorConfig.ts`** configures the stage inspector.
 
-**Undo:** `UNDO` is handled by `Fax_*`, `iAssist_*`, and `PrES_PAP`. `CoA_DTP`, `CoA_Copay`, and `CoA_Coverage` do not handle it (pinned by `client/engine/__tests__/__fixtures__/undo/`).
+## Screen order
 
----
+Each workflow owns screen order for every app in `workflows/<name>/screens.ts`: a catalog in menu order, and route rules (screen plus condition, first match wins). Modules contribute screens. A scenario may add, skip, or replace entries. The patient route, the CRM stage list, and the patient hamburger menu all derive from it. Do not hand-edit an `if` chain or a per-flow menu list.
 
-## Shell infrastructure: Zustand (`client/store/demoStore.ts`)
+## Forks and demos
 
-Holds exactly three things:
+A fork has a default branch and named exits. Each exit carries the data it sets, the modules it requires, and its stage-jump rungs. Who chooses (story or patient) is part of the declaration. The pick lives in `workflowData.choices`.
 
-- `flowType` — which workflow is active; drives which XState machine `actorSingleton.ts` switches to
-- `enrollmentFormTabOpen` — CRM UI tab state
-- `resetNonce` — bumped on every `resetDemo()` call; portals with their own navigation guards (like the patient portal's `StateDrivenNav`) watch this to force-navigate back to the correct screen on reset
+The presenter never picks a branch. Each outcome is a demo: an entry in `brands/<slug>/brand.json` naming a flow and its starting choices. The brand test rejects any choice that names no declared exit. `client/shell/flowOptions.ts` exposes `BRAND.demos` as the dropdown (`DEMO_OPTIONS`).
 
-Persisted to `sessionStorage` so a page refresh restores the active flow. On restore, `DemoShell`'s mount effect calls `switchWorkflow()` to match the actor to the persisted `flowType`.
+## Shell
 
-There are no identity fields, no action-bridge functions, and no `_snapshot()` method on this store. Undo/redo, identity, and every other workflow field live in the XState actor's `MachineContext` instead.
+- **`DemoShell.tsx`** hosts the portals: header, portal tabs, one to three panels, the demo dropdown, reset, and the stage-jump menu. `FLOW_START_PORTAL` maps each `FlowType` to its opening portal.
+- **Stage ladders** (`coassistLadders.ts`, `faxLadders.ts`, `iassistLadders.ts`, `transferLadders.ts`) are pure modules that list the events to replay for each stage jump. Tests use the same modules.
+- **`DemoConfigurator.tsx`** is the runtime drawer: portal visibility, auto-advance, undo, progress display.
+- **`demos.ts`** starts and restarts a demo: it applies the demo's fork choices to the machine.
 
----
+### Portals
 
-### State management infrastructure
+`client/portals/`: `crm`, `client` (a copy of the CRM tab that can diverge; shown only when a brand sets `showClientTab` and the flow is an iAssist flow), `patient`, `provider`, `iassist`, `field`, `insights` (tab label "Analytics", a placeholder), `analytics` (tab label "Workforce"), and `rules` (Salesforce-style Product Mgmt). Portals never import each other. They share state through the actor and `demoStore`. The provider tab is hidden for iAssist flows and for `Fax_PAP_Audit`. The iAssist tab shows only for iAssist flows.
 
-#### WorkflowRegistry (`client/engine/WorkflowRegistry.ts`)
-Registers every machine directly at module load, keyed by a registry id:
+## Shell state: Zustand
 
-```typescript
-workflowRegistry.registerWorkflow("enrollment", workflowMachine, { ... });
-workflowRegistry.registerWorkflow("CoA_DTP", coassistMachine, { ... });   // one machine, three scenarios
-workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, { ... });
-workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, { ... });
-workflowRegistry.registerWorkflow("iAssist_PA_Approved", iAssistMachine, { ... });
-workflowRegistry.registerWorkflow("iAssist_PAP", iAssistPapMachine, { ... });
-workflowRegistry.registerWorkflow("PrES_PAP", presPapMachine, { ... });
-```
+`client/store/demoStore.ts` holds four things:
 
-There's no separate registration barrel file; `WorkflowRegistry.ts` imports every machine and registers it inline. Exposes `registerWorkflow(id, machine, metadata)`, `getWorkflow(id)`, and `listWorkflows()`.
+- `flowType`: the active scenario. Drives which machine `actorSingleton.ts` runs.
+- `demoId`: the selected brand demo.
+- `enrollmentFormTabOpen`: CRM tab state.
+- `resetNonce`: bumped on every `resetDemo()`. The patient portal's `StateDrivenNav` watches it to navigate back on reset.
 
-#### Actor singleton (`client/engine/actorSingleton.ts`)
-- Module-level actor instance, lazily created on first call
-- `machineIdForFlow(flowType)` maps a `FlowType` to a registry id — every `FlowType` maps to itself except `Fax_QS_PA_Approved`/`Fax_PAP_Audit`, which both map to `"enrollment"`
-- `switchWorkflow(flowType)` snapshots the outgoing machine, then starts (or restores) the actor for the new flow
-- `resetCurrentWorkflowActor()` resets the active flow only; `resetAllWorkflowSnapshots()` wipes every flow's saved progress
-- Active workflow id persisted to `sessionStorage`
+It persists to `sessionStorage`. On restore, `DemoShell` calls `switchWorkflow()` to match the actor. The other files in `client/store/` (`fieldStore.ts`, `rulesPortalStore.ts`, `patientStore.ts`, and similar) hold per-portal data. They hold no workflow state.
 
-#### WorkflowProvider (`client/engine/WorkflowProvider.tsx`)
-React context and hooks for the actor:
-- `useWorkflowActor()` — get the current actor
-- `useSwitchWorkflow()` — switch workflows at runtime
-- `useActiveWorkflowId()` — get the current workflow id
-- `usePersonaState(portal)` — read workflow data and availability for a given portal
-- `useWorkflowDispatch()` — send events to the actor
+## Patient navigation
 
-#### DemoConfigurator (`client/shell/DemoConfigurator.tsx`)
-- Collapsible drawer for runtime demo controls
-- Workflow selector (with auto-reset on switch)
-- Portal visibility toggles (persisted to `sessionStorage`)
-- Behavior flags: auto-advance, undo support, progress display
-- Reset button: `dispatch("RESET")` plus a full `sessionStorage.clear()`
+`StateDrivenNav` (`client/portals/patient/index.tsx`) subscribes to the actor with `useSelector`, computes `derivePatientRoute(snapshot.context)`, and navigates when the target changes.
 
----
+## Brand
 
-## Portal navigation
-
-**Patient portal** (`client/portals/patient/index.tsx`): a `StateDrivenNav` component subscribes directly to the XState actor and navigates on every change, no Zustand involved.
-
-```typescript
-const actor = useWorkflowActor();
-
-const targetRoute = useSelector(
-  actor,
-  (snapshot) => derivePatientRoute(snapshot.context)
-);
-```
-
-**Route derivation** (`derivePatientRoute`, in `client/engine/WorkflowEngine.ts`):
-- Takes the XState `MachineContext` directly: `derivePatientRoute(state: MachineContext): string`
-- Branches on `state.workflowData.flowType` and the rest of `workflowData` (enrollment, SMS, OTP, consent, PA, pharmacy status)
-- Recomputed fresh on every actor state change via `useSelector`
-
-`demoStore`'s `resetNonce` is the one piece of Zustand state this component still reads, purely to force a re-navigate on "Reset All" even if the guard would otherwise leave the current page alone.
-
----
-
-## How to add a new workflow
-
-### 1. Create a machine
-New workflows follow `client/workflows/coassist/`: a rules table, scenarios as data, and `createWorkflowMachine`. The older hand-written shape below is still what `iAssist.ts`, `iAssistPap.ts`, `presPap.ts`, and `workflowMachine.ts` use until they migrate:
-
-```typescript
-export interface MyContext {
-  workflowData: WorkflowData;
-  events: DemoEvent[];
-  _snapshots: MyContext[];
-}
-
-export const myWorkflowMachine = setup({
-  types: { context: {} as MyContext },
-}).createMachine({
-  id: "myWorkflow",
-  context: initialContext,
-  initial: "idle",
-  states: { /* ... */ },
-  on: { UNDO: { actions: "restoreLastSnapshot" }, RESET: { actions: "resetContext" } },
-});
-```
-
-### 2. Add the `FlowType`
-Add the new flow name to the `FlowType` union in `client/engine/types.ts`.
-
-### 3. Register the machine
-In `client/engine/WorkflowRegistry.ts`, import the machine and call `registerWorkflow(id, machine, metadata)` with it, using the same id as the new `FlowType` (unless it should share an existing machine, the way `Fax_QS_PA_Approved`/`Fax_PAP_Audit` share `"enrollment"` — in that case, add the mapping to `machineIdForFlow()` in `actorSingleton.ts` instead of registering a new machine).
-
-### 4. Add it to the flow picker
-Add an entry to `FLOW_OPTIONS` in `client/shell/flowOptions.ts`. This is what actually drives the dropdown in `DemoShell` — it's a separate, deliberately UI-facing list from the registry, so a flow isn't visible in the picker just because it's registered.
-
-### 5. Set its starting portal
-Add an entry to `FLOW_START_PORTAL` in `client/shell/DemoShell.tsx` so switching to (or resetting) the new flow lands on the right opening screen.
-
-### 6. Add portal integration if needed
-Create bridge hooks in `client/hooks/` if a portal needs new actions, and export them from `WorkflowProvider.tsx`.
-
----
+Brand is committed JSON at `brands/<slug>/brand.json`, with images in `public/brands/<slug>/`. The `BRAND` environment variable selects it at build time, one Netlify site per client. Code in `client/brand/` resolves it (`schema.ts`, `resolve.ts`, `theme.ts`, `documents.ts`). See `BRANDS.md`.
 
 ## Data flow
 
 ```
-UI action (e.g. clicking "Approve PA" in the CRM)
+UI action (for example, "Approve PA" in the CRM)
   ↓
 1. useWorkflowDispatch() sends an event to the actor
-2. XState machine validates the transition and updates MachineContext
-   (including snapshotting for undo)
-3. usePersonaState() / useSelector() reads the updated context
-4. Portal re-renders with the new state
-5. derivePatientRoute() recomputes (Patient portal only)
-6. StateDrivenNav navigates if the target route changed
+2. The machine checks the rule's precondition, updates workflowData, snapshots for undo
+3. Automation triggers whose conditions now hold schedule their follow-up events
+4. usePersonaState() or useSelector() reads the new context
+5. Portals re-render
+6. derivePatientRoute() recomputes and StateDrivenNav navigates if the route changed
 ```
 
----
+## Tests
 
-## File index
+Machine tests live in `client/engine/__tests__/`. They drive machines with event lists and assert on `workflowData`, emitted events, and `derivePatientRoute()`. Never assert on internal state names. Expected output lives in `__fixtures__/*.json`. Re-record with `RECORD=1 pnpm test` only after reading the diff.
 
-| File | Purpose |
-|------|---------|
-| `client/engine/workflowMachine.ts` | Shared machine for `Fax_QS_PA_Approved` / `Fax_PAP_Audit` — enrollment + PA + BI + order |
-| `client/workflows/coassist/` | CoAssist workflow: rules table, three scenarios, one machine |
-| `client/engine/workflow/` | Workflow factory: rule and scenario types, shared initial data, `createWorkflowMachine` |
-| `client/workflows/iAssist.ts`, `iAssistPap.ts`, `presPap.ts` | Dedicated machines, not yet migrated |
-| `client/engine/types.ts` | `FlowType`, `WorkflowData`, `MachineContext` shapes |
-| `client/engine/WorkflowRegistry.ts` | Runtime workflow registration |
-| `client/engine/actorSingleton.ts` | Module-level actor instance, flow switching, snapshot persistence |
-| `client/engine/WorkflowProvider.tsx` | React context and hooks for the actor |
-| `client/engine/WorkflowEngine.ts` | `derivePatientRoute()` and persona logic |
-| `client/shell/flowOptions.ts` | `FLOW_OPTIONS` — the flow picker's source of truth |
-| `client/shell/DemoShell.tsx` | Layout, portal tabs, `FLOW_START_PORTAL`, reset/stage-jump menu |
-| `client/shell/DemoConfigurator.tsx` | Runtime configuration drawer |
-| `client/store/demoStore.ts` | Shell infrastructure only: `flowType`, `enrollmentFormTabOpen`, `resetNonce` |
-| `client/portals/patient/index.tsx` | Patient portal with `StateDrivenNav` |
+Each scenario has a headless test. Invariant tests check every precondition, recipe order, route and menu coverage, and fork exits. Brand tests (`client/brand/__tests__/`) check required fields, real flow ids, and declared exits.
 
-For what each of the 7 workflows actually demonstrates, see `README.md`.
+## How to add a scenario
+
+1. Add the flow name to `FlowType` in `client/engine/types.ts`.
+2. Add a `ScenarioDefinition` to the workflow's `scenarios.ts`: `intake`, default `choices`, `recipe`, `content`.
+3. Add a recipe to `recipes.ts` from existing modules. Extract a new module only when two scenarios need it (CLAUDE.md rule 6). `recipeProblems()` fails the test when order is wrong.
+4. Declare a fork in `forks.ts` when the scenario branches. Do not use `scenarios: [...]` filters or `flowType ===` checks.
+5. Add the scenario to the workflow's `index.ts` scenario map, and register it in `WorkflowRegistry.ts`.
+6. Add screens and route rules in `screens.ts`.
+7. Add an entry to `FLOW_START_PORTAL` in `DemoShell.tsx`, and a stage ladder if the scenario needs stage jumps.
+8. Add a demo to each brand's `brand.json` that should show it.
+9. Add a golden-path test and fixture, then run `pnpm test` and `pnpm typecheck:ratchet`.
+
+## How to add a workflow
+
+Only when the apps or the stage spine differ. Create `client/workflows/<name>/` with `index.ts` (call `createWorkflowMachine`), `rules.ts`, `scenarios.ts`, and `screens.ts`. Register each scenario in `WorkflowRegistry.ts`. Then follow the scenario steps above.
+
+## Code layout
+
+| Path | Purpose |
+|---|---|
+| `client/engine/workflow/` | Factory, rule and scenario types, recipes, forks, screens |
+| `client/engine/` | Registry, actor singleton, provider, `derivePatientRoute`, `FlowType` and `WorkflowData` types |
+| `client/workflows/` | One folder per workflow, plus `shared/` |
+| `client/shell/` | `DemoShell`, configurator, stage ladders, demo dropdown |
+| `client/store/` | `demoStore` and per-portal data stores |
+| `client/portals/` | The apps |
+| `client/brand/` | Brand schema, resolver, theme, documents |
+| `client/ui/` | The one shared UI kit |
+| `brands/` | Per-client `brand.json` |
+| `docs/` | This file, `BRANDS.md`, `REFACTOR_AUDIT.md`, `plans/`, `archive/` |
+
+For what each scenario demonstrates, see `README.md`.

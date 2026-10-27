@@ -1,5 +1,7 @@
 # Step 4: iAssist onto the recipe
 
+Status: done (tags `refactor/35` to `refactor/38`). Kept for history.
+
 Source: `MODEL_DRAFT.md` migration plan, step 4. CoAssist is the reference (`PLAN_STEP2.md`). Same rules: behavior-preserving, fixtures prove it, one tag per sub-step, `pnpm test` and `pnpm typecheck:ratchet` green before each.
 
 ## Decision

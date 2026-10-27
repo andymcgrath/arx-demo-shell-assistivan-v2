@@ -1,6 +1,6 @@
 # Step 2 plan: move CoAssist onto the recipe
 
-Status: plan for review. No code has changed.
+Status: done (tags `refactor/23` to `refactor/34`). Kept for history.
 
 Goal: CoAssist's three scenarios (CoA_DTP, CoA_Copay, CoA_DME) become recipes built from components. Behavior stays the same. The nine CoAssist golden-path fixtures, plus the ladder, reset, undo, and email fixtures, prove it. Fixtures must not change in sub-steps 2.1 to 2.5.
 

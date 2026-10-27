@@ -1,5 +1,7 @@
 # Plan: CoAssist medical transfer (Servier)
 
+Status: done (tag `refactor/47`). Its rule 7 follow-up moved to `docs/plans/PLAN_RULE7_CLEANUP.md`.
+
 Same outcome as the iAssist medical transfer: the medical benefit covers it, a PA is required, HCP administered, and the Rx transfers to an assigned site of care. The source is CoAssist this time. The first client is Servier.
 
 Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag each green step `refactor/NN-short-name`. Read every fixture diff before recording.
