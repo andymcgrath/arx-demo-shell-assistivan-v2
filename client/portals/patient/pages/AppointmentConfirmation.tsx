@@ -2,6 +2,7 @@ import { Mic } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
 
 // iAssist_PAP (WF5) only — a one-time "text from the doctor's office" beat
 // (mirrors SMSMessage.tsx's bubble pattern) shown right after InfusionDate.tsx
@@ -24,6 +25,7 @@ export default function AppointmentConfirmation() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('patient');
   const dateStr = formatDate(workflowData.infusionDate);
+  const noun = useFreeDrug() ? "injection" : "infusion";
 
   return (
     <div className="h-full bg-black flex flex-col">
@@ -51,7 +53,7 @@ export default function AppointmentConfirmation() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              Hi Keanu, this is Dr. Chen's office. Your infusion appointment is confirmed for {dateStr} at our {KEANU_SITE_OF_CARE_FACTS.city} site of care. We look forward to seeing you.
+              Hi Keanu, this is Dr. Chen's office. Your {noun} appointment is confirmed for {dateStr} at our {KEANU_SITE_OF_CARE_FACTS.city} site of care. We look forward to seeing you.
             </p>
             {/* Plain in-message link, like a real appointment-reminder text —
                 not a rich attachment card (that content now lives on

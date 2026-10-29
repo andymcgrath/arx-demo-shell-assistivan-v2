@@ -40,6 +40,7 @@ import { biForkFor } from "@/workflows/coassist/forks";
 import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
+import { isBuyAndBillScenario, buyAndBillStageEvents, BUY_AND_BILL_STAGE_LABELS, isFreeDrugScenario, freeDrugStageEvents, FREE_DRUG_STAGE_LABELS } from "./buyAndBillLadders";
 import { faxStageEvents } from "./faxLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
@@ -119,6 +120,8 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // iAssist_PAP (WF5) is a structural clone of WF4 — same starting portal.
   iAssist_PAP: "iassist",
   iAssist_Medical_Transfer: "iassist",
+  iAssist_Buy_And_Bill: "iassist",
+  iAssist_Buy_And_Bill_PAP: "iassist",
   // WF6's shared patient/provider web experience starts on the provider
   // portal's own home screen (PesHome) — the provider is the one who starts
   // a referral, and the role-selection home screen routes from there.
@@ -274,6 +277,23 @@ const STEP_LABELS_IASSIST_PAP = [
   "Prior Authorization",
   "Appeal",
   "Triage to Pharmacy",
+];
+
+// Buy and Bill: the HCP buys and bills, so there is no triage, order, or tracking. The bar ends at the PA decision.
+const STEP_LABELS_BUY_AND_BILL = [
+  "Referral Received",
+  "Patient Enrolled",
+  "Benefits Investigation",
+  "Prior Authorization",
+];
+
+// Free drug (PAP): no PA. The bar ends when the application is approved and the order goes to the site of care.
+const STEP_LABELS_FREE_DRUG = [
+  "Referral Received",
+  "Patient Enrolled",
+  "Benefits Investigation",
+  "Free Drug Application",
+  "Triage to Site of Care",
 ];
 
 // "Copay Enrollment" and "Patient Payment" used to be two separate steps,
@@ -568,6 +588,27 @@ function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaSta
   ];
 }
 
+function computeBuyAndBillStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, paStatus } = workflowData;
+  return [
+    enrollmentStatus !== 'none',     // 1 Referral Received
+    consentStatus === 'confirmed',   // 2 Patient Enrolled
+    biStatus === 'complete',         // 3 Benefits Investigation
+    paStatus === 'approved',         // 4 Prior Authorization
+  ];
+}
+
+function computeFreeDrugStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
+  const { enrollmentStatus, consentStatus, biStatus, papStatus, dispatchStatus } = workflowData;
+  return [
+    enrollmentStatus !== 'none',     // 1 Referral Received
+    consentStatus === 'confirmed',   // 2 Patient Enrolled
+    biStatus === 'complete',         // 3 Benefits Investigation
+    papStatus === 'active',          // 4 Free Drug Application
+    dispatchStatus === 'selected' || dispatchStatus === 'dispatched', // 5 Triage to Site of Care
+  ];
+}
+
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
@@ -602,7 +643,13 @@ function StepBar() {
   // before the fallback STEP_LABELS_COVERAGE bar below, which now only applies
   // to Scenario 3 (neither covered, cash pay).
   const isCoveragePharmacyFlow = isCoverageFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered";
-  const iAssistStepDone = isIAssistPapFlow
+  const isBuyAndBill = isBuyAndBillScenario(flowType);
+  const isFreeDrug = isFreeDrugScenario(flowType);
+  const iAssistStepDone = isBuyAndBill
+    ? computeBuyAndBillStepDone(workflowData)
+    : isFreeDrug
+    ? computeFreeDrugStepDone(workflowData)
+    : isIAssistPapFlow
     ? computeIAssistPapStepDone(workflowData)
     : isIAssistFlow
     ? computeIAssistStepDone(workflowData)
@@ -638,7 +685,9 @@ function StepBar() {
   const paStatus        = workflowData.paStatus;
   const appealStatus    = workflowData.appealStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
-  const STEP_LABELS     = (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
+  const STEP_LABELS     = isBuyAndBill ? STEP_LABELS_BUY_AND_BILL
+    : isFreeDrug ? STEP_LABELS_FREE_DRUG
+    : (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL
     : isCoaFlow ? STEP_LABELS_COA
     : isCoverageMedicalFlow ? STEP_LABELS_COVERAGE_MEDICAL
@@ -1147,6 +1196,18 @@ export default function DemoShell() {
     // Always start with a full reset
     actor.send({ type: 'RESET' });
 
+    // Buy and Bill: the HCP runs eMedBV and enrolls copay before the referral, so it has its own ladder.
+    if (isBuyAndBillScenario(flowType)) {
+      for (const event of buyAndBillStageEvents(stage)) actor.send(event as any);
+      return;
+    }
+
+    // Free drug (PAP): eMedBV finds no coverage, so it has its own ladder too.
+    if (isFreeDrugScenario(flowType)) {
+      for (const event of freeDrugStageEvents(stage)) actor.send(event as any);
+      return;
+    }
+
     // A scenario whose recipe ends in the Triage transfer exit: one ladder, whatever the source.
     if (isTransferScenario(flowType)) {
       for (const event of transferStageEvents(stage)) actor.send(event as any);
@@ -1366,6 +1427,10 @@ export default function DemoShell() {
                       { stage: 5, label: "Appeal Filed" },
                       { stage: 6, label: "Triage to Pharmacy (Keanu to Facility)" },
                     ]
+                    : isBuyAndBillScenario(flowType)
+                    ? BUY_AND_BILL_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
+                    : isFreeDrugScenario(flowType)
+                    ? FREE_DRUG_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
                     : isTransferScenario(flowType)
                     ? TRANSFER_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
                     : isIAssistFlow

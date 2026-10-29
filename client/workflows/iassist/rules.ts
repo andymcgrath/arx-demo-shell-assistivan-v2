@@ -21,6 +21,10 @@ import { PAYMENT_RULES } from "./modules/payment";
 import { PHARMACY_SELECTION_RULES } from "./modules/pharmacy_selection";
 import { SCHEDULING_RULES } from "./modules/scheduling";
 import { TRACKING_RULES } from "./modules/tracking";
+import { BENEFIT_VERIFICATION_RULES } from "./modules/benefit_verification";
+import { FINANCIAL_ASSISTANCE_RULES } from "./modules/financial_assistance";
+import { COPAY_RULES } from "./modules/copay";
+import { COPAY_CLAIM_RULES } from "./modules/copay_claim";
 import type { IaRule } from "./modules/shared";
 
 export const IASSIST_RULES: IaRule[] = [
@@ -32,4 +36,8 @@ export const IASSIST_RULES: IaRule[] = [
   ...PHARMACY_SELECTION_RULES,
   ...SCHEDULING_RULES,
   ...TRACKING_RULES,
+  ...BENEFIT_VERIFICATION_RULES,
+  ...COPAY_RULES,
+  ...COPAY_CLAIM_RULES,
+  ...FINANCIAL_ASSISTANCE_RULES,
 ];

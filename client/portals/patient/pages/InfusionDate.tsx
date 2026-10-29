@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
 
 // iAssist_PAP (WF5) only — this is WF5's replacement for DeliveryDate.tsx.
 // WF5 dispenses "Keanu to facility" rather than shipping through a
@@ -38,6 +39,7 @@ function formatDate(d: Date) {
 export default function InfusionDate() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const noun = useFreeDrug() ? "injection" : "infusion";
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
@@ -52,18 +54,18 @@ export default function InfusionDate() {
     <main className="flex-grow">
         <EnrollmentShell
           icon={<CalendarDays className="w-7 h-7" />}
-          title="Please select an infusion date from the available dates below"
+          title={`Please select an ${noun} date from the available dates below`}
           stepsFilled={2}
           stepsTotal={2}
         >
           <div className="space-y-5">
             <p className="text-sm leading-relaxed text-arx-body-copy">
-              Your infusion appointment must be scheduled within the next 28 days. Appointments are unavailable on weekends, Mondays and certain holidays.
+              Your {noun} appointment must be scheduled within the next 28 days. Appointments are unavailable on weekends, Mondays and certain holidays.
             </p>
 
             <div className="relative">
               <label className="block text-[10px] font-semibold mb-1.5 px-1 text-arx-body-copy">
-                Requested Infusion Date
+                Requested {noun[0].toUpperCase() + noun.slice(1)} Date
               </label>
               <button
                 onClick={() => setOpen(v => !v)}

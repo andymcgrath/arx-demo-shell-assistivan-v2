@@ -19,6 +19,8 @@ const FLOWS: { id: FlowType; label: string }[] = [
   { id: "iAssist_PA_Approved", label: "iAssist (PA approved)" },
   { id: "iAssist_PAP", label: "iAssist appeal" },
   { id: "iAssist_Medical_Transfer", label: "iAssist medical transfer" },
+  { id: "iAssist_Buy_And_Bill", label: "iAssist Buy and Bill" },
+  { id: "iAssist_Buy_And_Bill_PAP", label: "iAssist Buy and Bill, Free Drug" },
   { id: "CoA_Medical_Transfer", label: "CoAssist medical transfer" },
   { id: "PrES_PAP", label: "PrES PAP (legacy)" },
 ];

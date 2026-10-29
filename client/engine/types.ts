@@ -33,7 +33,15 @@ export type PersonaId = 'crm' | 'patient' | 'provider' | 'analytics' | 'field';
 //      ships through the same pipeline as outcome 1.
 // None of the three outcomes ever go through Prior Authorization — that
 // detour is CoA_DTP-only.
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "CoA_Medical_Transfer";
+/** A copay claim an HCP filed in iAssist. A new claim is `in_review`. */
+export interface CopayClaim {
+  id: string;
+  dateOfService: string;
+  status: 'in_review' | 'paid' | 'rejected';
+  submittedAt: string;
+}
+
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "iAssist_Buy_And_Bill" | "iAssist_Buy_And_Bill_PAP" | "CoA_Medical_Transfer";
 
 export interface Pharmacy {
   name: string;
@@ -116,6 +124,19 @@ export interface WorkflowData {
   /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;
+  /** iAssist_Buy_And_Bill only: the HCP ran eMedBV on the medical benefit. Absent in every other flow. */
+  medbvStatus?: 'complete';
+  /** iAssist_Buy_And_Bill only: the copay claims the HCP filed, oldest first. Absent until the first claim. */
+  copayClaims?: CopayClaim[];
+  /** iAssist_Buy_And_Bill only: when the HCP enrolled the patient in copay. */
+  copayEnrolledAt?: string;
+  /** iAssist Buy and Bill, patient consent by text: the household the patient confirmed in the patient app. */
+  householdSize?: string;
+  householdIncome?: string;
+  /** iAssist Buy and Bill free drug (PAP): the patient agreed to the credit check with the income application. */
+  creditCheckConsented?: boolean;
+  /** iAssist Buy and Bill: the recipe asks the patient to confirm household size and income after consenting. Set at the referral. */
+  householdRequested?: boolean;
   /** Fax and e-sign workflows: the CRM agent sent the patient their invite text (INVITE). The patient cannot verify before this. */
   patientInvited?: boolean;
   /** iAssist_PAP (WF5) only: the infusion date the patient picks once the

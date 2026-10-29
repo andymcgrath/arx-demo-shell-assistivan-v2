@@ -5,7 +5,7 @@
  */
 import type { IassistContent } from "../scenarios";
 import type { IaRule } from "./shared";
-import { nowIso, REVEAL_MS, APPEAL_MS } from "./shared";
+import { nowIso, REVEAL_MS, APPEAL_MS, PAP_UPDATE_MS } from "./shared";
 import { resolveBi, submitPaRule } from "../../shared/bi";
 import { exitFor } from "@/engine/workflow/forks";
 import { IASSIST_BI_FORK, IASSIST_PA_FORK } from "../forks";
@@ -33,8 +33,12 @@ export const SPINE_RULES: IaRule[] = [
     when: (d) => d.biStatus === "running",
     set: (d, e) => resolveBi(IASSIST_BI_FORK, d, e),
     emit: { portal: "analytics", step: 7 },
-    // The PA starts when BI returns. SUBMIT_PA checks that the result requires one.
-    then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
+    then: [
+      // The PA starts when BI returns. SUBMIT_PA checks that the result requires one.
+      { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
+      // No coverage: the free drug application update goes out (a scenario with `financial_assistance` handles it).
+      { trigger: "system", id: "pap-update", after: PAP_UPDATE_MS, when: (d) => d.biResult === "no_coverage", send: () => ({ type: "SEND_PAP_SMS" }) },
+    ],
   },
 
   // ── Prior Authorization ────────────────────────────────────────────

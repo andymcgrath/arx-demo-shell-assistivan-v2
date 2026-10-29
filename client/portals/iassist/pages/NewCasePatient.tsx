@@ -20,7 +20,7 @@
  * email/address default from PATIENT_SEED (Keanu Dixon) so this step shows
  * the same patient the user just searched for / selected on the Dashboard.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { Info, X, Plus, Trash2, Upload, CalendarCheck } from "lucide-react";
 import StepRail from "../components/StepRail";
@@ -28,6 +28,7 @@ import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, PRESCRIBER_OPTIONS, type PhoneEntry, type SignSource, type ConsentMethod } from "@/store/caseWizardStore";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { BRAND } from "@/brand";
 
 type SignatureMode = "type" | "draw";
 
@@ -172,6 +173,16 @@ export default function NewCasePatient() {
   const infusionDateLabel = workflowData.infusionDate
     ? new Date(workflowData.infusionDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
     : null;
+
+  // The story picks who captures consent (the `consent` fork). The form always offers every option, so it starts on
+  // the story's pick and the HCP can still click another. A click changes what the form shows, not the story.
+  const storyConsent = usePersonaState("provider").workflowData.choices?.consent;
+  useEffect(() => {
+    if (storyConsent) setPatient({ consentMethod: storyConsent === "patient_text" ? "text" : "now" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storyConsent]);
+  // Text and email: the patient consents in the patient app, so the HCP only acknowledges the message.
+  const patientConsents = patient.consentMethod !== "now";
 
   function updatePhone(id: string, patch: Partial<PhoneEntry>) {
     setPatient({ phones: patient.phones.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
@@ -542,15 +553,18 @@ export default function NewCasePatient() {
                     </div>
                   )}
 
+                  {/* The patient reads and gives this in the patient app, so the HCP form shows it only when the HCP captures it. */}
+                  {!patientConsents && (
                   <div className="bg-[#F8F8F8] border border-[#E8E8E8] rounded-lg p-3 text-xs text-[#6F7276] leading-relaxed">
-                    I authorize [Manufacturer/pharmacy], my healthcare providers, pharmacies and health plans to obtain,
+                    I authorize {BRAND.manufacturer.name}, my healthcare providers, pharmacies and health plans to obtain,
                     review, use and disclose my Protected Health Information (PHI) to the drug manufacturers, their
                     affiliates, contractors, and agents, including their third-party patient support program service
-                    providers and suppliers who provide my medications dispensed by [Manufacturer/pharmacy].
+                    providers and suppliers who provide my medications dispensed by {BRAND.manufacturer.name}.
                   </div>
+                  )}
                   <label className="flex items-center gap-2 text-sm text-[#1D1D1D]">
                     <input type="checkbox" checked={patient.phiAgreed} onChange={(e) => setPatient({ phiAgreed: e.target.checked })} className="accent-[#007178]" />
-                    I agree
+                    {patientConsents ? "I acknowledge that the patient will receive a message to provide consent." : "I agree"}
                   </label>
 
                   {patient.consentMethod === "now" && (
@@ -563,8 +577,8 @@ export default function NewCasePatient() {
               )}
             </section>
 
-            {/* Income Verification */}
-            <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
+            {/* Income Verification: the patient confirms it in the patient app when they consent there. */}
+            {!patientConsents && <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
               <h2 className="text-base font-semibold text-[#1D1D1D]">Income Verification</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Household Size">
@@ -585,7 +599,7 @@ export default function NewCasePatient() {
                   <p className="text-xs text-[#999] mt-1">Files must be 19MB or less and in JPG, PNG, or PDF format</p>
                 </div>
               </div>
-            </section>
+            </section>}
 
             <div className="flex justify-between pb-8">
               <button

@@ -39,6 +39,9 @@ export const END_STATES = {
   provider_transferred: (d: WorkflowData) => d.providerTransferStatus === "notified" && d.providerTransferSmsVerified,
   /** The PA was approved, the patient verified it, and the Rx went to the assigned pharmacy. No fulfillment follows. */
   pharmacy_transferred: (d: WorkflowData) => d.pharmacyAssigned && d.paApprovedOtpVerified && d.selectedPharmacy !== null && d.pharmacyStatus === "none",
+  /** Buy and Bill: the PA was approved and verified, copay was enrolled, and a claim is in review. No pharmacy, nothing ships. */
+  buy_and_bill_claim_filed: (d: WorkflowData) =>
+    d.paStatus === "approved" && d.paApprovedOtpVerified && d.copayEnrolled && (d.copayClaims?.length ?? 0) > 0 && !d.pharmacyAssigned && d.pharmacyStatus === "none",
 } as const;
 
 export type EndState = keyof typeof END_STATES;
@@ -298,6 +301,39 @@ export const SCENARIOS: Scenario[] = [
     steps: [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+    ],
+  },
+
+  {
+    // Buy and Bill. The HCP runs eMedBV and enrolls the patient in copay, then submits. BI completing starts the PA,
+    // which approves, and the patient verifies the approval. The HCP files a copay claim. No pharmacy, nothing ships.
+    name: "iassist-buy-and-bill",
+    endsAt: "buy_and_bill_claim_filed",
+    flowType: "iAssist_Buy_And_Bill",
+    steps: [
+      { type: "RUN_MEDBV" }, { type: "ENROLL_COPAY" },
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" }, { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "SUBMIT_COPAY_CLAIM", dateOfService: "2026-01-20" },
+    ],
+  },
+
+  {
+    // Buy and Bill, free drug (PAP). eMedBV finds no coverage, so no PA and no copay. The patient verifies the application
+    // update, agrees to the credit check and confirms income. The CRM agent approves the application, the patient picks a date, then the agent triages to the site of care.
+    name: "iassist-buy-and-bill-pap",
+    endsAt: "delivered",
+    flowType: "iAssist_Buy_And_Bill_PAP",
+    steps: [
+      { type: "RUN_MEDBV" },
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "VERIFY_INCOME", householdSize: "2", householdIncome: "62000" },
+      { type: "APPROVE_PAP" }, { type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" },
+      { type: "PATIENT_SELECTS_INFUSION_DATE", date: "2026-02-10T15:00:00.000Z" },
+      { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
+      ...fulfillment,
     ],
   },
 

@@ -1,6 +1,8 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { ChevronLeft, Mic } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 // iAssist_PAP (WF5) auto-submits AND auto-resolves BI/PA the moment REFERRAL_RECEIVED
 // fires (see workflows/iassist/rules.ts) — independent of the patient's own
@@ -26,7 +28,11 @@ function getMessageCopy(paStatus: string, appealStatus: string): string {
 export default function SMSMessage() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('patient');
-  const messageCopy = getMessageCopy(workflowData.paStatus, workflowData.appealStatus);
+  // Buy and Bill: the HCP enrolled the patient, and no prescription goes to a pharmacy.
+  const hcpEnrolled = !!useRecipeModule("copay");
+  const messageCopy = hcpEnrolled
+    ? `Welcome! Your prescriber enrolled you in ${PROGRAM.name}. Confirm your details and consent here:`
+    : getMessageCopy(workflowData.paStatus, workflowData.appealStatus);
 
   const handleTapMessage = () => {
     navigate("/phone-verification");

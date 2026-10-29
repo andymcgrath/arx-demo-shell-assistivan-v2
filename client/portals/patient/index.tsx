@@ -62,6 +62,7 @@ import OrderTracker from "./pages/OrderTracker";
 import OrderShipped from "./pages/OrderShipped";
 import MedicationDelivered from "./pages/MedicationDelivered";
 import IncomeQualification from "./pages/IncomeQualification";
+import ConfirmIncome from "./pages/ConfirmIncome";
 import PapIncomeVerification from "./pages/PapIncomeVerification";
 import PapEnrollmentComplete from "./pages/PapEnrollmentComplete";
 import PesHome from "./pages/PesHome";
@@ -77,6 +78,7 @@ import InfusionDate from "./pages/InfusionDate";
 import AppointmentConfirmation from "./pages/AppointmentConfirmation";
 import ProviderTransfer from "./pages/ProviderTransfer";
 import PharmacyTransfer from "./pages/PharmacyTransfer";
+import ApprovedContactPhysician from "./pages/ApprovedContactPhysician";
 import CashOfferSms from "./pages/CashOfferSms";
 import ProviderTransferSms from "./pages/ProviderTransferSms";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
@@ -181,6 +183,7 @@ function PatientRoutes() {
           <Route path="/otp-verification"      element={<OTPVerification />} />
           <Route path="/"                      element={<Index />} />
           <Route path="/confirm-details"       element={<ConfirmDetails />} />
+          <Route path="/confirm-income"        element={<ConfirmIncome />} />
           <Route path="/consent"               element={<Consent />} />
           <Route path="/signature"             element={<Signature />} />
           <Route path="/upload-insurance"      element={<UploadInsurance />} />
@@ -218,6 +221,7 @@ function PatientRoutes() {
           <Route path="/appointment-confirmation" element={<AppointmentConfirmation />} />
           <Route path="/provider-transfer"    element={<ProviderTransfer />} />
           <Route path="/pharmacy-transfer"        element={<PharmacyTransfer />} />
+          <Route path="/approved-contact-physician" element={<ApprovedContactPhysician />} />
           <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
           <Route path="/provider-transfer-sms"         element={<ProviderTransferSms />} />
           <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />

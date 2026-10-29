@@ -16,7 +16,7 @@ import { expectMatchesFixture } from "./harness";
  *
  * An intentional change? Run `RECORD=1 pnpm test`, read the fixture diff, and commit it with the change.
  */
-const FLOWS = ["iAssist_PA_Approved", "iAssist_PAP", "iAssist_Medical_Transfer"] as const;
+const FLOWS = ["iAssist_PA_Approved", "iAssist_PAP", "iAssist_Medical_Transfer", "iAssist_Buy_And_Bill", "iAssist_Buy_And_Bill_PAP"] as const;
 
 const scenarioFor = (flow: (typeof FLOWS)[number]) => ALL_SCENARIOS.find((s) => s.flowType === flow)!;
 

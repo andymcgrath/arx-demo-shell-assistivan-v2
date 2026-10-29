@@ -1,0 +1,141 @@
+[
+  {
+    "eventType": "REFERRAL_RECEIVED",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "New Patient Enrolled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient has been enrolled in the AssistRx Patient Support Program under Dr. Test.",
+      "Review the Missing Information task to confirm what enrollment steps are still outstanding."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "RUN_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Benefits Investigation Started - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx started a benefits investigation for Test Patient under Dr. Test.",
+      "An update will follow once the investigation completes."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "COMPLETE_BI",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "No Medical Coverage Found - Test Patient",
+    "bodyParagraphs": [
+      "Benefits investigation found no medical coverage for Test Patient. No Prior Authorization task will open on this case.",
+      "Test Patient will receive the free drug program application by text."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SEND_PAP_SMS",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Financial Assistance Verification Sent - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx sent an identity verification text to Test Patient for the Free Goods financial assistance program."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "VERIFY_INCOME",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Income Verification Submitted - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient submitted income verification for the financial assistance program review."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "PATIENT_SELECTS_INFUSION_DATE",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Infusion Appointment Scheduled - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient scheduled their infusion appointment for Tuesday, February 10, 2026.",
+      "Site of Care: Community Allergy and Immunology Practice, 1414 Kuhl Ave, Orlando, Florida 32806 ((407) 555-3006).",
+      "No further action is needed — the patient has already received an appointment confirmation."
+    ],
+    "linkedItemId": "LIVE-INFUSION-SCHEDULED",
+    "linkedItemLabel": "View Task: Infusion Appointment Scheduled"
+  },
+  {
+    "eventType": "SELECT_PHARMACY",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Specialty Pharmacy Selected - Test Patient",
+    "bodyParagraphs": [
+      "AssistRx selected the specialty pharmacy that will fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "FILL_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Filled - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy filled the prescription for Test Patient.",
+      "The order is ready for dispatch."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "READY_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Prescription Ready for Fulfillment - Test Patient",
+    "bodyParagraphs": [
+      "The specialty pharmacy verified and is preparing to fill the prescription for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "SHIP_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Shipped - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient's medication has shipped and is expected within 2-3 business days."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  },
+  {
+    "eventType": "DELIVER_RX",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Medication Delivered - Test Patient",
+    "bodyParagraphs": [
+      "Delivery has been confirmed for Test Patient's medication."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
+  }
+]

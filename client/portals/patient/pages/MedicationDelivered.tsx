@@ -5,6 +5,7 @@ import { useChatContext } from "@/portals/patient/components/ChatContext";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
@@ -33,7 +34,9 @@ export default function MedicationDelivered() {
   // rich-message attachment on AppointmentConfirmation.tsx's SMS screen —
   // moved here since it's ongoing appointment info the patient should be
   // able to come back to, not part of a one-time text message.
-  const isIAssistPap = workflowData.flowType === 'iAssist_PAP';
+  const freeDrug = useFreeDrug();
+  const noun = freeDrug ? 'Injection' : 'Infusion';
+  const isIAssistPap = workflowData.flowType === 'iAssist_PAP' || freeDrug;
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
   // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
@@ -51,6 +54,9 @@ export default function MedicationDelivered() {
     workflowData.pharmacyBenefitStatus === 'covered' &&
     workflowData.medicalBenefitStatus !== 'covered';
   const drugName = PROGRAM.drugDisplayName || PROGRAM.name;
+  // Free drug: the CRM agent triages the Rx after the patient confirms the date. Until then the patient waits on the shipment.
+  const facility = KEANU_SITE_OF_CARE_FACTS.facilityName;
+  const sentToFacility = freeDrug && workflowData.dispatchStatus !== "pending_selection" && workflowData.dispatchStatus !== "none";
 
   return (
     <main className="flex-grow pt-5 pb-8 relative">
@@ -61,12 +67,12 @@ export default function MedicationDelivered() {
             <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
               <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-white" />
-                <span className="text-sm font-semibold text-white">Infusion Appointment</span>
+                <span className="text-sm font-semibold text-white">{noun} Appointment</span>
               </div>
               <div className="p-5 space-y-3">
                 <div>
                   <p className="text-base font-bold text-arx-slate">{formatInfusionDate(workflowData.infusionDate)}</p>
-                  <p className="text-xs text-arx-body-copy">Infusion visit</p>
+                  <p className="text-xs text-arx-body-copy">{noun} visit</p>
                 </div>
 
                 <div className="flex items-start gap-2">
@@ -99,10 +105,14 @@ export default function MedicationDelivered() {
 
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                {isCoverageNetworkPharmacyFlow ? `Your ${drugName} has been sent to the pharmacy.` : "Your medication has arrived!"}
+                {isCoverageNetworkPharmacyFlow
+                  ? `Your ${drugName} has been sent to the pharmacy.`
+                  : freeDrug
+                  ? sentToFacility ? `Your ${drugName} is on its way to ${facility}` : "Your appointment is confirmed"
+                  : "Your medication has arrived!"}
               </h2>
               <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-arx-sky">
-                <span className="text-xl">{isCoverageNetworkPharmacyFlow ? "📍" : "🚚"}</span>
+                <span className="text-xl">{isCoverageNetworkPharmacyFlow ? "📍" : freeDrug && !sentToFacility ? "📅" : "🚚"}</span>
               </div>
             </div>
 
@@ -112,6 +122,12 @@ export default function MedicationDelivered() {
                   Before you start, review the step-by-step guide to learn how to insert your sensor and get connected.
                 </p>
               </>
+            ) : freeDrug ? (
+              <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
+                {sentToFacility
+                  ? `Your care team triaged your prescription and it is shipping to ${facility}. It will be there for your appointment. Nothing else is needed from you.`
+                  : `We'll let you know as soon as your ${drugName} ships to ${facility}.`}
+              </p>
             ) : (
               <>
                 <p className="text-sm leading-relaxed mb-2 text-arx-body-copy">It's time to get ready for your first dose.</p>

@@ -87,6 +87,16 @@ workflowRegistry.registerWorkflow("iAssist_Medical_Transfer", iassistMachine, {
   description: "iAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned pharmacy with no payment or scheduling",
 });
 
+workflowRegistry.registerWorkflow("iAssist_Buy_And_Bill", iassistMachine, {
+  label: "iAssist Buy and Bill",
+  description: "iAssist scenario where the HCP buys and bills under the medical benefit. eMedBV, a medical PA, and HCP-enrolled copay, with no pharmacy, payment, or delivery",
+});
+
+workflowRegistry.registerWorkflow("iAssist_Buy_And_Bill_PAP", iassistMachine, {
+  label: "iAssist Buy and Bill, Free Drug",
+  description: "iAssist scenario where eMedBV finds no medical coverage. The patient applies for the free drug program, and approval sends it to the site of care. No PA, copay, or payment",
+});
+
 workflowRegistry.registerWorkflow("PrES_PAP", papMachine, {
   label: "PrES / PAP",
   description: "Provider e-signature intake workflow with PAP income-qualification (foundation placeholder)",

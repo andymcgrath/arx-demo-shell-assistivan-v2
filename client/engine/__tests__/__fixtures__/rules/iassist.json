@@ -6,6 +6,9 @@
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
+    "APPROVE_PAP": [
+      "financial_assistance.approve"
+    ],
     "COMPLETE_BI": [
       "spine.complete_bi"
     ],
@@ -14,7 +17,11 @@
     ],
     "CONFIRM_CONSENT": [
       "enrollment.confirm_consent.approved",
-      "enrollment.confirm_consent.appeal"
+      "enrollment.confirm_consent.appeal",
+      "enrollment.confirm_consent.pap"
+    ],
+    "CONFIRM_INCOME": [
+      "enrollment.confirm_income"
     ],
     "DELIVER_RX": [
       "tracking.deliver_rx"
@@ -24,6 +31,9 @@
     ],
     "DISMISS_WELCOME": [
       "enrollment.dismiss_welcome"
+    ],
+    "ENROLL_COPAY": [
+      "copay.enroll"
     ],
     "FILL_RX": [
       "tracking.fill_rx.delivery",
@@ -58,6 +68,9 @@
     "RUN_BI": [
       "spine.run_bi"
     ],
+    "RUN_MEDBV": [
+      "benefit_verification.run_medbv"
+    ],
     "SELECT_PHARMACY": [
       "pharmacy_selection.select_pharmacy.crm",
       "pharmacy_selection.select_pharmacy.site_of_care"
@@ -68,6 +81,9 @@
     "SELECT_SELF_PAY": [
       "payment.select_self_pay"
     ],
+    "SEND_PAP_SMS": [
+      "financial_assistance.send_update"
+    ],
     "SET_APPEAL_RULE": [
       "appeal.rule_on",
       "appeal.rule_off"
@@ -75,20 +91,34 @@
     "SHIP_RX": [
       "tracking.ship_rx"
     ],
+    "SUBMIT_COPAY_CLAIM": [
+      "copay_claim.submit"
+    ],
     "SUBMIT_PA": [
       "spine.submit_pa"
     ],
+    "VERIFY_INCOME": [
+      "financial_assistance.verify_income"
+    ],
     "VERIFY_OTP": [
       "enrollment.verify_otp"
+    ],
+    "VERIFY_PAP_OTP": [
+      "financial_assistance.verify_update_otp"
+    ],
+    "VERIFY_PAP_SMS": [
+      "financial_assistance.verify_update_sms"
     ],
     "VERIFY_PAYMENT": [
       "payment.verify_payment"
     ],
     "VERIFY_PA_APPROVED_OTP": [
-      "pa_notification.verify_otp"
+      "pa_notification.verify_otp",
+      "financial_assistance.verify_approved_otp"
     ],
     "VERIFY_PA_APPROVED_SMS": [
-      "pa_notification.verify_sms"
+      "pa_notification.verify_sms",
+      "financial_assistance.verify_approved_sms"
     ],
     "VERIFY_SMS": [
       "enrollment.verify_sms"
@@ -118,40 +148,88 @@
     "appeal.view_stage": [
       "iAssist_PAP"
     ],
+    "benefit_verification.run_medbv": [
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "copay.enroll": [
+      "iAssist_Buy_And_Bill"
+    ],
+    "copay_claim.submit": [
+      "iAssist_Buy_And_Bill"
+    ],
     "enrollment.confirm_consent.appeal": [
       "iAssist_PAP"
     ],
     "enrollment.confirm_consent.approved": [
       "iAssist_PA_Approved",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill"
+    ],
+    "enrollment.confirm_consent.pap": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "enrollment.confirm_income": [
+      "iAssist_Buy_And_Bill"
     ],
     "enrollment.dismiss_welcome": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "enrollment.referral_received": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "enrollment.verify_otp": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "enrollment.verify_sms": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.approve": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.send_update": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_approved_otp": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_approved_sms": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_income": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_update_otp": [
+      "iAssist_Buy_And_Bill_PAP"
+    ],
+    "financial_assistance.verify_update_sms": [
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "pa_notification.verify_otp": [
       "iAssist_PA_Approved",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill"
     ],
     "pa_notification.verify_sms": [
       "iAssist_PA_Approved",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill"
     ],
     "payment.patient_pays": [
       "iAssist_PA_Approved"
@@ -169,10 +247,12 @@
       "iAssist_PA_Approved"
     ],
     "pharmacy_selection.select_pharmacy.site_of_care": [
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "scheduling.patient_selects_infusion_date": [
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "scheduling.patient_selects_ship_date": [
       "iAssist_PA_Approved"
@@ -182,73 +262,99 @@
     ],
     "spine.approve_pa": [
       "iAssist_PA_Approved",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill"
     ],
     "spine.complete_bi": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.complete_provider_pa": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.deny_pa": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.leave_stage.bi": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.leave_stage.pa": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.run_bi": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.submit_pa": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.view_stage.bi": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "spine.view_stage.pa": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "tracking.deliver_rx": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "tracking.fill_rx.delivery": [
       "iAssist_PA_Approved"
     ],
     "tracking.fill_rx.site_of_care": [
-      "iAssist_PAP"
+      "iAssist_PAP",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "tracking.ready_rx": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ],
     "tracking.ship_rx": [
       "iAssist_PA_Approved",
       "iAssist_PAP",
-      "iAssist_Medical_Transfer"
+      "iAssist_Medical_Transfer",
+      "iAssist_Buy_And_Bill",
+      "iAssist_Buy_And_Bill_PAP"
     ]
   }
 }

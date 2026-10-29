@@ -1,7 +1,7 @@
 /**
  * Tracking: fulfillment events that move the order tracker.
  */
-import type { IaRule } from "./shared";
+import { siteOfCareUnlocked, type IaRule } from "./shared";
 
 export const TRACKING_RULES: IaRule[] = [
 
@@ -19,7 +19,7 @@ export const TRACKING_RULES: IaRule[] = [
     id: "tracking.fill_rx.site_of_care",
     on: "FILL_RX",
     scope: [{ module: "tracking" }, { module: "scheduling", props: { variant: "infusion" } }],
-    when: (d) => d.appealStatus !== "none" && d.dispatchStatus === "selected" && d.pharmacyStatus === "none",
+    when: (d) => siteOfCareUnlocked(d) && d.dispatchStatus === "selected" && d.pharmacyStatus === "none",
     set: () => ({ pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
     emit: { portal: "field", step: 10 },
   },
