@@ -2994,7 +2994,7 @@ export default function ProviderPortal() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     emailSurfacedRef.current = false;
-    setStep((storeFlowType === 'CoA_DTP' || storeFlowType === 'CoA_Copay' || storeFlowType === 'CoA_Coverage') ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
+    setStep(COASSIST_FLOWS.includes(storeFlowType as FlowType) ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
