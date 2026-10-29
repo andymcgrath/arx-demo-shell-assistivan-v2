@@ -34,50 +34,34 @@
       "description": "Medical-benefit CGM sensor coverage, three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)"
     },
     {
+      "id": "coa-medical-transfer",
+      "flow": "CoA_Medical_Transfer",
+      "label": "6. CoAssist Medical Transfer",
+      "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned site of care and the order ends there"
+    },
+    {
       "id": "iassist-pa-approved",
       "flow": "iAssist_PA_Approved",
-      "label": "6. iAssist",
+      "label": "7. iAssist",
       "description": "Internal iAssist platform workflow with prior authorization approval"
     },
     {
       "id": "iassist-pap",
       "flow": "iAssist_PAP",
-      "label": "7. iAssist Appeal",
+      "label": "8. iAssist Appeal",
       "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    },
+    {
+      "id": "iassist-medical-transfer",
+      "flow": "iAssist_Medical_Transfer",
+      "label": "9. iAssist Medical Transfer",
+      "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned pharmacy and the order ends there"
     },
     {
       "id": "pres-pap",
       "flow": "PrES_PAP",
-      "label": "8. PrES PAP",
+      "label": "10. PrES PAP",
       "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
-    },
-    {
-      "id": "coa-dtp-mail-order",
-      "flow": "CoA_DTP",
-      "label": "Test: DTP, mail order",
-      "description": "Pinned pricing. After the PA approval code the patient skips the pricing menu and goes to the delivery address.",
-      "choices": { "pricing": "mail_order" }
-    },
-    {
-      "id": "coa-dtp-self-pay",
-      "flow": "CoA_DTP",
-      "label": "Test: DTP, self-pay",
-      "description": "Pinned pricing. The patient skips the pricing menu and lands on the self-pay offer. Accepting it goes to the delivery address.",
-      "choices": { "pricing": "self_pay" }
-    },
-    {
-      "id": "coa-copay-enrolled",
-      "flow": "CoA_Copay",
-      "label": "Test: Copay, pre-enrolled",
-      "description": "Pinned copay enrollment. The patient skips the enroll screen and picks Retail or Mail Order at the reduced price.",
-      "choices": { "copay": "enroll" }
-    },
-    {
-      "id": "coa-copay-retail",
-      "flow": "CoA_Copay",
-      "label": "Test: Copay, retail",
-      "description": "Pinned pricing. The Rx goes to the default retail pharmacy and the patient lands on the order tracker.",
-      "choices": { "pricing": "retail" }
     }
   ],
   "manufacturer": {
