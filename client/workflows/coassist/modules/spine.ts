@@ -8,6 +8,7 @@ import type { CoassistContent } from "../scenarios";
 import type { CoaRule } from "./shared";
 import { nowIso, neitherCovered, REVEAL_MS } from "./shared";
 import { assignsWithoutPa, resolveBi, submitPaRule } from "../../shared/bi";
+import { assignedPharmacy } from "../../shared/assignment";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 
@@ -25,12 +26,14 @@ export const SPINE_RULES: CoaRule[] = [
     id: "spine.complete_bi",
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
-    set: (d, e) => {
+    set: (d, e, s) => {
       const fork = biForkFor(d.flowType);
       const bi = resolveBi(fork, d, e);
       // Neither covered: the cash-offer SMS goes out automatically. The free drug program transfer sends none.
       const neither = bi.pharmacyBenefitStatus === "not_covered" && bi.medicalBenefitStatus === "not_covered";
-      return { ...bi, cashOfferSmsSent: neither && !assignsWithoutPa(fork, d) };
+      const noPa = assignsWithoutPa(fork, d);
+      // The free drug program has no PA to wait for, so the dispensing pharmacy is known now. Dispatch waits for income.
+      return { ...bi, cashOfferSmsSent: neither && !noPa, ...(noPa ? assignedPharmacy({ ...d, ...bi }, s) : {}) };
     },
     emit: [
       { portal: "analytics", step: 7 },

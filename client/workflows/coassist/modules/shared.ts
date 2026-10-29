@@ -20,6 +20,12 @@ export const inFulfillmentTail = (d: WorkflowData) =>
 export const neitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";
 
+/**
+ * BI is back, the Rx goes to an assigned pharmacy, and no PA runs: the free drug program transfer. The PA screens never
+ * apply to it. Before BI completes, `paRequired` is not set yet, so this is false and the waiting screen holds.
+ */
+export const assignedWithoutPa = (d: WorkflowData) => d.biStatus === "complete" && d.pharmacyAssigned && !d.paRequired;
+
 /** A scenario that assigns the pharmacy hands the Rx over as soon as the PA approval is verified. No patient choice. */
 export const assignment = (d: WorkflowData, s: { content: CoassistContent }) =>
   d.pharmacyAssigned

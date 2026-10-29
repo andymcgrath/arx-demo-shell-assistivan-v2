@@ -5,6 +5,7 @@ import { recipeProblems } from "@/engine/workflow/recipe";
 import { forksForScenario } from "@/engine/workflow/forks";
 import { BI_FORK, COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COA_COVERAGE_RECIPE, COA_DTP_RECIPE } from "@/workflows/coassist/recipes";
+import { COA_DTP } from "@/workflows/coassist/scenarios";
 import { assignsWithoutPa } from "@/workflows/shared/bi";
 
 /**
@@ -49,6 +50,16 @@ describe("no_coverage_pap exit", () => {
       cashOfferSmsSent: false,
     });
     actor.stop();
+  });
+
+  it("hands the Rx to the scenario's assigned pharmacy as soon as BI completes, only on the free drug program exit", () => {
+    const pap = completeBi({ bi: "no_coverage_pap" });
+    expect(data(pap).selectedPharmacy).toEqual(COA_DTP.content.transferPharmacy);
+    expect(data(pap).dispatchStatus).toBe("none");
+    pap.stop();
+    const transfer = completeBi({ bi: "pharmacy_transfer" }, "CoA_Coverage");
+    expect(data(transfer).selectedPharmacy).toBeNull();
+    transfer.stop();
   });
 
   it("leaves the cash offer alone on the plain no_coverage exit", () => {
