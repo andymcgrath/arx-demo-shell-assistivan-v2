@@ -39,6 +39,7 @@ import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
 import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
+import { scenarioHasModule } from "@/workflows/scenarios";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
 import { isBuyAndBillScenario, buyAndBillStageEvents, BUY_AND_BILL_STAGE_LABELS, isFreeDrugScenario, freeDrugStageEvents, FREE_DRUG_STAGE_LABELS } from "./buyAndBillLadders";
 import { faxStageEvents } from "./faxLadders";
@@ -112,6 +113,7 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
   CoA_Medical_Transfer: "provider",
+  CoA_PAP: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist
@@ -1223,6 +1225,12 @@ export default function DemoShell() {
       return;
     }
 
+    // The free drug program ladder follows the scenario's own `bi` fork rungs, like Coverage's.
+    if (scenarioHasModule(flowType, "pap_transfer")) {
+      for (const event of coassistStageEvents("CoA_PAP", stage, forkChoices)) actor.send(event as any);
+      return;
+    }
+
     // CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage): the ladders live in
     // coassistLadders.ts so the headless tests run the same event lists.
     if (isCoverageFlow || isCoaFlow) {
@@ -1446,6 +1454,8 @@ export default function DemoShell() {
                     // CoA_Coverage: the list comes from the BI fork, so it follows the
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
+                    : scenarioHasModule(flowType, "pap_transfer")
+                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     : isCoverageFlow
                     ? forkStageList(biForkFor("CoA_Coverage"), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one

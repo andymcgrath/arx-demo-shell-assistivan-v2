@@ -49,6 +49,8 @@ export interface ModuleContract {
   needs: string[];
   /** Modules that must appear earlier in the recipe. */
   needsModules?: ModuleId[];
+  /** When both are in the recipe, these come first. A module that may share a recipe with another, in a fixed order. */
+  orderedAfter?: ModuleId[];
   /** Modules that must appear somewhere in the recipe, in any order, when the props match. */
   requiresModulesWhen?: { props: Record<string, unknown>; modules: ModuleId[] }[];
   /** Keys the module provides once it runs. */
@@ -233,6 +235,7 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "income_qualification",
     lane: "patient",
     needs: ["consentVerified", "fork:bi"],
+    orderedAfter: ["pap_transfer"],
     sets: ["incomeVerified"],
     trackerSteps: ["Application update confirmed", "Income verified"],
   },
@@ -240,6 +243,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "pharmacy_selection",
     lane: "patient",
     needs: ["consentVerified"],
+    // The free drug program refers the case and clears income before a pharmacy dispenses.
+    orderedAfter: ["pap_transfer", "income_qualification"],
     sets: ["selectedPharmacy"],
     trackerSteps: ["Pharmacy selected", "Rx transferred"],
   },

@@ -72,6 +72,11 @@ workflowRegistry.registerWorkflow("CoA_Medical_Transfer", coassistMachine, {
   description: "CoAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned site of care with no payment or scheduling",
 });
 
+workflowRegistry.registerWorkflow("CoA_PAP", coassistMachine, {
+  label: "CoAssist No Coverage (Free Drug Program)",
+  description: "CoAssist scenario where BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses. No PA, cash offer, or payment.",
+});
+
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iassistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",

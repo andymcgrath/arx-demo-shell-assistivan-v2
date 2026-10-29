@@ -1,8 +1,10 @@
 import type { ScreenMap } from "@/engine/workflow/screens";
 import { COASSIST_FORKS } from "./forks";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COASSIST_FLOWS } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COASSIST_FLOWS } from "./scenarios";
 import { CASH_OFFER_ROUTES, CASH_OFFER_SCREENS } from "./modules/screens/cash_offer";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
+import { INCOME_QUALIFICATION_ROUTES, INCOME_QUALIFICATION_SCREENS } from "./modules/screens/income_qualification";
+import { PAP_TRANSFER_ROUTES, PAP_TRANSFER_SCREENS } from "./modules/screens/pap_transfer";
 import { PA_NOTIFICATION_ROUTES, PA_NOTIFICATION_SCREENS } from "./modules/screens/pa_notification";
 import { PAYMENT_ROUTES, PAYMENT_SCREENS } from "./modules/screens/payment";
 import { PHARMACY_SELECTION_ROUTES, PHARMACY_SELECTION_SCREENS } from "./modules/screens/pharmacy_selection";
@@ -32,7 +34,7 @@ export const COASSIST_SCREENS: ScreenMap = {
   hidden: ["/lock-screen"],
   slots: COASSIST_SLOTS,
   groups: COASSIST_GROUPS,
-  scenarioDefs: [COA_DTP, COA_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER],
+  scenarioDefs: [COA_DTP, COA_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP],
   forks: COASSIST_FORKS,
 
   screens: [
@@ -40,6 +42,8 @@ export const COASSIST_SCREENS: ScreenMap = {
     ...PA_NOTIFICATION_SCREENS,
     ...CASH_OFFER_SCREENS,
     ...PROVIDER_TRANSFER_SCREENS,
+    ...PAP_TRANSFER_SCREENS,
+    ...INCOME_QUALIFICATION_SCREENS,
     ...SCHEDULING_SCREENS,
     ...PAYMENT_SCREENS,
     ...PHARMACY_SELECTION_SCREENS,
@@ -52,6 +56,8 @@ export const COASSIST_SCREENS: ScreenMap = {
     ...PAYMENT_ROUTES,
     ...PHARMACY_SELECTION_ROUTES,
     ...PROVIDER_TRANSFER_ROUTES,
+    ...PAP_TRANSFER_ROUTES,
+    ...INCOME_QUALIFICATION_ROUTES,
     ...CASH_OFFER_ROUTES,
     ...SCHEDULING_ROUTES,
     ...TRACKING_ROUTES,

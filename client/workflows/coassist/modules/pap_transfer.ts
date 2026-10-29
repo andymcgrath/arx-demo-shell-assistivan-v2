@@ -35,5 +35,7 @@ export const PAP_TRANSFER_RULES: CoaRule[] = [
     when: (d) => d.papTransferSmsSent && !d.papTransferSmsVerified,
     set: () => ({ papTransferSmsVerified: true }),
     emit: { portal: "patient", step: 9 },
+    // The patient support program texts the application update next. The income module's precondition guards it.
+    then: { trigger: "system", send: () => ({ type: "SEND_PAP_SMS" }) },
   },
 ];

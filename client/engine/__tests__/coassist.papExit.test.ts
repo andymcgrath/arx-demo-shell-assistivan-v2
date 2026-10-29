@@ -10,8 +10,8 @@ import { assignsWithoutPa } from "@/workflows/shared/bi";
 
 /**
  * The `no_coverage_pap` exit (docs/plans/PLAN_COA_PAP.md, step 2): neither benefit covers it, no PA, no cash offer, and
- * the Rx goes to an assigned pharmacy through the free drug program. No recipe picks it yet, so these tests pin the
- * catalog entry, the BI result, and the one spine behavior it changes.
+ * the Rx goes to an assigned pharmacy through the free drug program. Only `CoA_PAP` picks it. These tests pin the
+ * catalog entry, the BI result, and the spine behavior it changes, on the other scenarios too.
  */
 const IDENTITY = ["REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT"];
 const data = (actor: ReturnType<typeof startFlow>) => ctx(actor).workflowData as any;

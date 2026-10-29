@@ -42,8 +42,11 @@ describe("CoAssist recipes", () => {
     }
   });
 
-  it("every recipe passes through the bi and pa forks", () => {
-    for (const r of Object.values(COASSIST_RECIPES)) expect(r.forks).toEqual(expect.arrayContaining(["bi", "pa"]));
+  it("every recipe passes through the bi fork, and the pa fork unless no PA runs", () => {
+    for (const [flowType, r] of Object.entries(COASSIST_RECIPES)) {
+      expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" ? ["bi"] : ["bi", "pa"]));
+    }
+    expect(COASSIST_RECIPES.CoA_PAP.forks).not.toContain("pa");
   });
 
   it("DTP and Copay pass through the patient's pricing pick, and Copay through the copay enrollment", () => {

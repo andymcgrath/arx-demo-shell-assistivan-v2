@@ -1,6 +1,6 @@
 /**
  * coassistLadders.ts: the event lists behind the presenter's "jump to stage"
- * menu for the CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage).
+ * menu for the CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage, CoA_Medical_Transfer, CoA_PAP).
  *
  * DemoShell's resetActorToStage RESETs the actor, then sends these events to
  * land on a stage. This module is pure (no store, no actor, no React) so the
@@ -46,12 +46,12 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 export function coassistStageEvents(
-  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer",
+  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP",
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
   if (flowType === "CoA_Medical_Transfer") return transferStageEvents(stage);
-  if (flowType === "CoA_Coverage") return forkStageEvents(biForkFor("CoA_Coverage"), { choices }, stage);
+  if (flowType === "CoA_Coverage" || flowType === "CoA_PAP") return forkStageEvents(biForkFor(flowType), { choices }, stage);
 
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;

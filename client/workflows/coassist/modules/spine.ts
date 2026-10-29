@@ -40,7 +40,11 @@ export const SPINE_RULES: CoaRule[] = [
       { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: (d) => neitherCovered(d) && d.cashOfferSmsSent },
     ],
     // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA ignores it unless the exit requires a PA.
-    then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
+    // The free drug program exit has none, and its referral starts on its own instead. Each is ignored where it does not hold.
+    then: [
+      { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
+      { trigger: "system", send: () => ({ type: "REFER_TO_PSP" }) },
+    ],
   },
   {
     // The BI result lands after a delay once the agent opens the BI stage. The `bi` fork's exit decides it. The stage

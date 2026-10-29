@@ -20,6 +20,8 @@ import { PAYMENT_RULES } from "./modules/payment";
 import { FINANCIAL_ASSISTANCE_RULES } from "./modules/financial_assistance";
 import { CASH_OFFER_RULES } from "./modules/cash_offer";
 import { PROVIDER_TRANSFER_RULES } from "./modules/provider_transfer";
+import { PAP_TRANSFER_RULES } from "./modules/pap_transfer";
+import { INCOME_QUALIFICATION_COA_RULES } from "./modules/income_qualification";
 import { PHARMACY_SELECTION_RULES } from "./modules/pharmacy_selection";
 import { SCHEDULING_RULES } from "./modules/scheduling";
 import { TRACKING_RULES } from "./modules/tracking";
@@ -33,6 +35,8 @@ export const COASSIST_RULES: CoaRule[] = [
   ...FINANCIAL_ASSISTANCE_RULES,
   ...CASH_OFFER_RULES,
   ...PROVIDER_TRANSFER_RULES,
+  ...PAP_TRANSFER_RULES,
+  ...INCOME_QUALIFICATION_COA_RULES,
   ...PHARMACY_SELECTION_RULES,
   ...SCHEDULING_RULES,
   ...TRACKING_RULES,

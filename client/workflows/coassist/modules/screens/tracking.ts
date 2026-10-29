@@ -1,12 +1,13 @@
 /** Tracking: the order tracker, from confirmation to delivery. */
 import type { Screen } from "@/engine/workflow/screens";
 import { neitherCovered } from "../shared";
-import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
+import { PAP_JOURNEY, TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 const SCOPE = { module: "tracking" } as const;
 const COPAY = { fork: "copay" } as const;
 
 export const TRACKING_SCREENS: Screen[] = [
+  { path: "/pap-enrollment-complete", label: "Confirmation", group: "{program} order", scope: PAP_JOURNEY },
   { path: "/order-tracker", label: "Order Tracker", group: "{program} order", scope: SCOPE, sticky: true },
   { path: "/order-shipped", label: "Order Shipped / In Transit", group: "{program} order", scope: SCOPE, sticky: true },
   { path: "/medication-delivered", label: "Medication Delivered", group: "{program} order", scope: SCOPE, sticky: true },
@@ -23,6 +24,12 @@ export const TRACKING_ROUTES: CoaRoute[] = [
   { id: "tracking.shipped", slot: "tracking", path: "/order-shipped", scope: PRICING_JOURNEY, when: (d) => d.pharmacyStatus === "shipped" },
   // The tracker already shows a finished "delivered" state.
   { id: "tracking.delivered", slot: "tracking", path: "/order-tracker", scope: PRICING_JOURNEY, when: (d) => d.pharmacyStatus === "delivered" },
+
+  // The free drug program: nothing more for the patient until the pharmacy fills it.
+  { id: "tracking.pap_confirmation", slot: "tracking", path: "/pap-enrollment-complete", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "none" },
+  { id: "tracking.pap_processing", slot: "tracking", path: "/order-tracker", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready" },
+  { id: "tracking.pap_shipped", slot: "tracking", path: "/order-shipped", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "shipped" },
+  { id: "tracking.pap_delivered", slot: "tracking", path: "/medication-delivered", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "delivered" },
 
   // Coverage, pharmacy covered: the order ends at the tracker.
   { id: "tracking.coverage_pharmacy_covered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => d.pharmacyBenefitStatus === "covered" },

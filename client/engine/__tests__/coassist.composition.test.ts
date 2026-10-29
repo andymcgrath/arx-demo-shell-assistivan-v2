@@ -7,7 +7,7 @@ import { menuPaths, routeFor, routedPaths, type ScreenMap } from "@/engine/workf
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COA_COMMERCIAL_TRANSFER_RECIPE as RECIPE } from "@/workflows/coassist/recipes";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
-import { COA_COPAY, COA_COVERAGE, COA_DTP } from "@/workflows/coassist/scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_PAP } from "@/workflows/coassist/scenarios";
 import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 import { expectMatchesFixture } from "./harness";
 
@@ -31,7 +31,7 @@ const machine = createWorkflowMachine({
   rules: COASSIST_RULES,
   forks: COASSIST_FORKS,
   // DTP and Coverage stay, so the build-time scope check still finds every module some recipe lists.
-  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_Coverage: COA_COVERAGE },
+  scenarios: { CoA_DTP: COA_DTP, CoA_Copay: SCENARIO, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP },
 });
 const screens: ScreenMap = { ...COASSIST_SCREENS, scenarioDefs: [COA_DTP, SCENARIO, COA_COVERAGE] };
 

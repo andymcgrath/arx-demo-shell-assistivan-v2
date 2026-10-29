@@ -17,6 +17,8 @@ export const COASSIST_SLOTS = [
   "awaiting",
   /** Medical benefit covered: the Rx goes to the provider. */
   "transfer",
+  /** No coverage: the application update and the income form for the free drug program. */
+  "income",
   /** PA approved: SMS and OTP again. */
   "pa_notice",
   /** The patient picks Retail, Mail Order, or the self-pay offer. */
@@ -49,6 +51,7 @@ export const COASSIST_GROUPS = [
   "Cash pay",
   "Provider transfer",
   "Patient support program",
+  "Income verification",
   "{program} order",
 ] as const;
 
@@ -61,3 +64,6 @@ export const PRICING_JOURNEY: RuleScope = { fork: "pricing" };
 
 /** `TRANSFER_JOURNEY`: the Rx goes to a network pharmacy, a provider, or a cash offer. Only a recipe with `provider_transfer` has it. */
 export const TRANSFER_JOURNEY: RuleScope = { module: "provider_transfer" };
+
+/** `PAP_JOURNEY`: no coverage, so the patient applies for the free drug program. Only a recipe with `income_qualification` has it. */
+export const PAP_JOURNEY: RuleScope = { module: "income_qualification" };

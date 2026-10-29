@@ -531,6 +531,122 @@
         "/order-shipped",
         "/medication-delivered"
       ]
+    },
+    "CoA_PAP": {
+      "route": [
+        "enrollment.lock_screen -> /lock-screen",
+        "enrollment.sms -> /sms-message",
+        "enrollment.otp -> /otp-verification",
+        "enrollment.confirm_details -> /confirm-details",
+        "pharmacy_selection.assigned_waiting -> /",
+        "pap_transfer.waiting -> /",
+        "pap_transfer.sms -> /pap-transfer-sms",
+        "income_qualification.update_sms -> /pap-update-sms",
+        "income_qualification.update_otp -> /pap-update-otp",
+        "income_qualification.home -> /",
+        "income_qualification.form -> /income-qualification",
+        "scheduling.pap_address -> /delivery-address",
+        "scheduling.pap_date -> /delivery-date",
+        "tracking.pap_confirmation -> /pap-enrollment-complete",
+        "tracking.pap_processing -> /order-tracker",
+        "tracking.pap_shipped -> /order-shipped",
+        "tracking.pap_delivered -> /medication-delivered"
+      ],
+      "menu": [
+        {
+          "label": "Home",
+          "path": "/"
+        },
+        {
+          "group": "Enrollment",
+          "items": [
+            {
+              "label": "SMS Verification",
+              "path": "/sms-message"
+            },
+            {
+              "label": "Phone Verification",
+              "path": "/phone-verification"
+            },
+            {
+              "label": "OTP Verification",
+              "path": "/otp-verification"
+            },
+            {
+              "label": "Confirm Details & Consent",
+              "path": "/confirm-details"
+            },
+            {
+              "label": "Enrollment Complete",
+              "path": "/enrollment-complete"
+            }
+          ]
+        },
+        {
+          "group": "Patient support program",
+          "items": [
+            {
+              "label": "Transfer SMS",
+              "path": "/pap-transfer-sms"
+            }
+          ]
+        },
+        {
+          "group": "Income verification",
+          "items": [
+            {
+              "label": "Application Update SMS",
+              "path": "/pap-update-sms"
+            },
+            {
+              "label": "Application Update Code",
+              "path": "/pap-update-otp"
+            },
+            {
+              "label": "Income Verification",
+              "path": "/income-qualification"
+            }
+          ]
+        },
+        {
+          "group": "{program} order",
+          "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
+            {
+              "label": "Confirmation",
+              "path": "/pap-enrollment-complete"
+            },
+            {
+              "label": "Order Tracker",
+              "path": "/order-tracker"
+            },
+            {
+              "label": "Order Shipped / In Transit",
+              "path": "/order-shipped"
+            },
+            {
+              "label": "Medication Delivered",
+              "path": "/medication-delivered"
+            }
+          ]
+        }
+      ],
+      "sticky": [
+        "/phone-verification",
+        "/enrollment-complete",
+        "/delivery-address",
+        "/delivery-date",
+        "/order-tracker",
+        "/order-shipped",
+        "/medication-delivered"
+      ]
     }
   }
 }

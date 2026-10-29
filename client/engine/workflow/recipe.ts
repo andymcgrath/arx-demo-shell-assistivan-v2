@@ -15,7 +15,7 @@ import type { ForkDefinition } from "./types";
  * What it enforces:
  * - every module exists, and appears once
  * - each module's needs are provided by the source, a fork, or a module earlier in the recipe
- * - `needsModules` appear earlier, and `requiresModulesWhen` appear somewhere
+ * - `needsModules` appear earlier, `orderedAfter` modules come first when present, and `requiresModulesWhen` appear somewhere
  * - tracking comes last
  * - the Triage exit's rules: required modules are present, forbidden ones are absent
  * - when `forks` is passed (the forks that apply to this scenario): every fork the recipe names is declared,
@@ -43,6 +43,9 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
     }
     for (const m of contract.needsModules ?? []) {
       if (!seen.includes(m)) problems.push(`${spec.id} needs ${m} earlier in the recipe`);
+    }
+    for (const m of contract.orderedAfter ?? []) {
+      if (ids.includes(m) && !seen.includes(m)) problems.push(`${spec.id} must come after ${m}`);
     }
     for (const rule of contract.requiresModulesWhen ?? []) {
       const matches = Object.entries(rule.props).every(([k, v]) => spec.props?.[k] === v);

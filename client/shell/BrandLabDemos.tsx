@@ -22,6 +22,7 @@ const FLOWS: { id: FlowType; label: string }[] = [
   { id: "iAssist_Buy_And_Bill", label: "iAssist Buy and Bill" },
   { id: "iAssist_Buy_And_Bill_PAP", label: "iAssist Buy and Bill, Free Drug" },
   { id: "CoA_Medical_Transfer", label: "CoAssist medical transfer" },
+  { id: "CoA_PAP", label: "CoAssist free drug program" },
   { id: "PrES_PAP", label: "PrES PAP (legacy)" },
 ];
 

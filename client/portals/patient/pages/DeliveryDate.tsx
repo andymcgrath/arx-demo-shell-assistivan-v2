@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { scenarioHasModule } from "@/workflows/scenarios";
 
 function isUnavailable(d: Date): boolean {
   const day = d.getDay();
@@ -41,6 +42,8 @@ export default function DeliveryDate() {
   // covered — see workflows/coassist/). Not folded into isCoA above since
   // this flow's PA-driven gates elsewhere in this file don't apply to it.
   const isCoverageFlow = flowType === "CoA_Coverage";
+  // The free drug program in CoAssist: read from the recipe, not the flow id. No payment, and it ends on its own confirmation.
+  const isPapProgram = scenarioHasModule(flowType, "income_qualification");
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
   // isn't payment, and testing confirmed Copay doesn't collect payment
   // through this flow at all, so it now skips /delivery-payment the same
@@ -62,7 +65,7 @@ export default function DeliveryDate() {
   // own Retail/Mail), but self-pay (Scenario 3) does need /delivery-payment
   // — CoA_Coverage's cash-pay scenario is the one path through this screen that
   // actually collects payment here.
-  const skipPayment = isWorkflow1 || isPapFlow
+  const skipPayment = isWorkflow1 || isPapFlow || isPapProgram
     || ((isCoA || isIAssist) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled))
     || (isCoverageFlow && workflowData.pricingOption !== "self_pay");
   const available = getAvailableDates();
@@ -75,7 +78,7 @@ export default function DeliveryDate() {
   // set, so a portal remount falls back to an earlier screen).
   function handleSave() {
     if (!selected) return;
-    if (isCoA || isIAssist || isPapFlow || isCoverageFlow) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    if (isCoA || isIAssist || isPapFlow || isCoverageFlow || isPapProgram) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
     // WF2/WF5 each have their own terminal "nothing more to do" screen
     // (pap-enrollment-complete / pes-confirmation) that derivePatientRoute
     // expects to show once address+date are both done. Routing them through
@@ -84,7 +87,7 @@ export default function DeliveryDate() {
     // StateDrivenNav's guard leaves alone once landed on, so the
     // state-driven correction to the real target route never fires and
     // "Got it" just bounces straight to /order-tracker instead.
-    if (isPapFlow) {
+    if (isPapFlow || isPapProgram) {
       navigate(flowType === "PrES_PAP" ? "/pes-confirmation" : "/pap-enrollment-complete");
       return;
     }

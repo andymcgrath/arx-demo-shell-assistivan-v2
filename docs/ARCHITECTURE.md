@@ -19,7 +19,7 @@ This document describes the code on `main`. `REFACTOR_AUDIT.md` explains why it 
 |---|---|---|
 | Standard | `client/workflows/standard/` | `Fax_QS_PA_Approved` |
 | PAP | `client/workflows/pap/` | `Fax_PAP_Audit`, `PrES_PAP` (legacy) |
-| CoAssist | `client/workflows/coassist/` | `CoA_DTP`, `CoA_Copay`, `CoA_Coverage`, `CoA_Medical_Transfer` |
+| CoAssist | `client/workflows/coassist/` | `CoA_DTP`, `CoA_Copay`, `CoA_Coverage`, `CoA_Medical_Transfer`, `CoA_PAP` |
 | iAssist | `client/workflows/iassist/` | `iAssist_PA_Approved`, `iAssist_PAP`, `iAssist_Medical_Transfer` |
 
 `iAssist_PAP` is labeled "iAssist Appeal" in the UI. `PrES_PAP` is a legacy scenario: it stays working and tested, with no new features.

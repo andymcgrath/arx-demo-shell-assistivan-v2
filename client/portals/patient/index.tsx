@@ -81,6 +81,7 @@ import PharmacyTransfer from "./pages/PharmacyTransfer";
 import ApprovedContactPhysician from "./pages/ApprovedContactPhysician";
 import CashOfferSms from "./pages/CashOfferSms";
 import ProviderTransferSms from "./pages/ProviderTransferSms";
+import PapTransferSms from "./pages/PapTransferSms";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 
@@ -224,6 +225,7 @@ function PatientRoutes() {
           <Route path="/approved-contact-physician" element={<ApprovedContactPhysician />} />
           <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
           <Route path="/provider-transfer-sms"         element={<ProviderTransferSms />} />
+          <Route path="/pap-transfer-sms"              element={<PapTransferSms />} />
           <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />
           <Route path="/pharmacy-selection-confirmation" element={<PharmacySelectionConfirmation />} />
         </Routes>

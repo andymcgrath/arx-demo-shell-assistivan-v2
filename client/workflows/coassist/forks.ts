@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -102,6 +102,26 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
         { label: "No Coverage Confirmed (cash offer SMS sent)", events: [completeBi("not_covered", "not_covered")] },
         { label: "Cash Option Chosen", events: [ev("VERIFY_CASH_OFFER_SMS", "patient"), ev("SELECT_SELF_PAY", "patient")] },
         { label: "Cash Payment Verified", events: [ev("PATIENT_PAYS", "patient"), ev("VERIFY_PAYMENT", "crm")] },
+        { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
+        ...fulfillment("Rx Processing"),
+      ],
+    },
+  },
+  // The free drug program. BI finds no coverage and no PA runs, so the rungs go from the referral to the income form,
+  // then the address and date, then fulfillment.
+  CoA_PAP: {
+    before: [
+      { label: "Referral Received", events: [] },
+      { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
+      { label: "Benefits Investigation", events: [] },
+    ],
+    exits: {
+      no_coverage_pap: [
+        // No statuses on the event: the exit decides. A forced result would drop the assigned pharmacy (resolveBi).
+        { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
+        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
+        { label: "Application Update Confirmed", events: [ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
         { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),
       ],

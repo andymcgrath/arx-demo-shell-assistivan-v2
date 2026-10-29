@@ -9,7 +9,8 @@ export const SCHEDULING_RULES: CoaRule[] = [
     id: "scheduling.patient_sets_address",
     on: "PATIENT_SETS_ADDRESS",
     scope: { module: "scheduling" },
-    when: (d) => d.dispatchStatus === "none" && inFulfillmentTail(d),
+    // `pending_selection`: the free drug program clears the case to dispatch when income verifies.
+    when: (d) => (d.dispatchStatus === "none" || d.dispatchStatus === "pending_selection") && inFulfillmentTail(d),
     set: () => ({ dispatchStatus: "selected" }),
     emit: { portal: "patient", step: 9 },
   },

@@ -88,6 +88,26 @@ export const COA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * BI finds no coverage, and the case transfers to the manufacturer's patient support program. The patient applies for the
+ * free drug program (Fax PAP income form), and an assigned pharmacy dispenses. No PA, no cash offer, no payment: the
+ * `bi` exit `no_coverage_pap` runs none of them, and the recipe lists none. Income is approved only (docs/plans/PLAN_COA_PAP.md).
+ */
+export const COA_PAP_RECIPE: ScenarioRecipe = {
+  source: "coassist",
+  forks: ["bi"],
+  choices: { bi: "no_coverage_pap" },
+  panels: ["benefits"],
+  modules: [
+    { id: "enrollment" },
+    { id: "pap_transfer" },
+    { id: "income_qualification" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "scheduling" },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * The composition proof (step 2.6). Commercial coverage, PA approved, the patient's Retail pick, a pharmacy the
  * patient selects, and the Rx handed over: the order tracker shows it. No `scheduling` and no `payment`.
  *
@@ -112,4 +132,5 @@ export const COASSIST_RECIPES = {
   CoA_Copay: COA_COPAY_RECIPE,
   CoA_Coverage: COA_COVERAGE_RECIPE,
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
+  CoA_PAP: COA_PAP_RECIPE,
 } as const;

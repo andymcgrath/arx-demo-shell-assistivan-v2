@@ -28,6 +28,7 @@ const LADDERS = [
   { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
   { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
   { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => coassistStageEvents("CoA_Medical_Transfer", stage) },
+  { flowType: "CoA_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => coassistStageEvents("CoA_PAP", stage) },
   { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
   { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
   { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => iassistStageEvents("iAssist_Medical_Transfer", stage) },
@@ -87,6 +88,7 @@ const KNOWN_GAPS: Record<string, string[]> = {
   CoA_Coverage: [],
   // `pharmacy_covered` needs no module, so the recipe can pick it, but the scenario has no pricing screens for it.
   CoA_Medical_Transfer: ["pharmacy_covered"],
+  CoA_PAP: [],
 };
 
 describe("stage ladder coverage of the bi fork", () => {
@@ -96,7 +98,7 @@ describe("stage ladder coverage of the bi fork", () => {
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
       const hasRungs = (id: string) =>
-        flowType === "CoA_Coverage"
+        flowType === "CoA_Coverage" || flowType === "CoA_PAP"
           ? !!fork.exits.find((e) => e.id === id)?.stages?.length
           : isTransferScenario(flowType)
           ? TRANSFER_LADDER_EXITS.includes(id)

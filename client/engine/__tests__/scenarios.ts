@@ -349,6 +349,24 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 
+  {
+    // No coverage. BI finds none, so the case transfers to the patient support program (the referral fires on its own).
+    // The patient taps the transfer text, then the application update and its code, enrolls, and verifies income. The
+    // assigned pharmacy dispenses. No PA, cash offer, or payment.
+    name: "coa-pap",
+    endsAt: "delivered",
+    flowType: "CoA_PAP",
+    steps: [
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "VERIFY_PAP_TRANSFER_SMS" },
+      { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
+      ...fulfillment,
+    ],
+  },
+
   // ── Provider e-sign (placeholder, reuses PAP shape) ─────────────────
   {
     name: "pres-pap",

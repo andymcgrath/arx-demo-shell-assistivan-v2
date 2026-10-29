@@ -4,6 +4,7 @@ import InfoCard from "@/portals/patient/components/home/InfoCard";
 import PrescriptionsSection from "@/portals/patient/components/home/PrescriptionsSection";
 import SuggestedSection from "@/portals/patient/components/home/SuggestedSection";
 import { usePersonaState } from "@/engine/WorkflowProvider";
+import { scenarioHasModule } from "@/workflows/scenarios";
 
 export default function Index() {
   const { workflowData } = usePersonaState('patient');
@@ -26,9 +27,10 @@ export default function Index() {
   // the Patient Assistance Program yet — see WorkflowEngine.ts's
   // Fax_PAP_Audit branch (incomeStatus 'none' routes here specifically for
   // this reason) and PapNoInsuranceCard's own header comment.
+  // A CoAssist scenario with the income_qualification module (the free drug program) shows it after BI finds no coverage.
   const showPapNoInsuranceCard =
-    workflowData.flowType === 'Fax_PAP_Audit' &&
-    workflowData.biResult === 'no_insurance' &&
+    ((workflowData.flowType === 'Fax_PAP_Audit' && workflowData.biResult === 'no_insurance') ||
+      (scenarioHasModule(workflowData.flowType, 'income_qualification') && workflowData.biResult === 'no_coverage')) &&
     workflowData.papOtpVerified &&
     workflowData.incomeStatus === 'none';
 

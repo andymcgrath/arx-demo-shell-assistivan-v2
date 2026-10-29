@@ -1,6 +1,6 @@
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import type { ModuleId } from "@/engine/workflow/components";
-import { COA_DTP, COA_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER } from "./coassist/scenarios";
+import { COA_DTP, COA_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP } from "./coassist/scenarios";
 import { IA_BUY_AND_BILL_PAP, IA_BUY_AND_BILL, IA_MEDICAL_TRANSFER, IA_PA_APPROVED, IA_PA_DENIED_APPEAL } from "./iassist/scenarios";
 import { STANDARD_PA_APPROVED } from "./standard/scenarios";
 import { PAP_AUDIT, PAP_PRES } from "./pap/scenarios";
@@ -13,6 +13,7 @@ export const ALL_SCENARIOS: ScenarioDefinition<any>[] = [
   COA_COPAY,
   COA_COVERAGE,
   COA_MEDICAL_TRANSFER,
+  COA_PAP,
   IA_PA_APPROVED,
   IA_PA_DENIED_APPEAL,
   IA_MEDICAL_TRANSFER,

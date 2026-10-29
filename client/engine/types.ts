@@ -41,7 +41,7 @@ export interface CopayClaim {
   submittedAt: string;
 }
 
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "iAssist_Buy_And_Bill" | "iAssist_Buy_And_Bill_PAP" | "CoA_Medical_Transfer";
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "iAssist_Buy_And_Bill" | "iAssist_Buy_And_Bill_PAP" | "CoA_Medical_Transfer" | "CoA_PAP";
 
 export interface Pharmacy {
   name: string;

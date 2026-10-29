@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { MapPin, ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { scenarioHasModule } from "@/workflows/scenarios";
 
 interface AddressForm { address: string; city: string; state: string; zip: string; }
 
@@ -49,6 +50,8 @@ export default function DeliveryAddress() {
   // 1 and Scenario 3 — see workflows/coassist/) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
   const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
+  // The free drug program in CoAssist: read from the recipe, not the flow id.
+  const isPapProgram = scenarioHasModule(workflowData.flowType, "income_qualification");
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
   const valid = form.address && form.city && form.state && form.zip;
   const set = (field: keyof AddressForm) => (v: string) => setForm(prev => ({ ...prev, [field]: v }));
@@ -69,7 +72,7 @@ export default function DeliveryAddress() {
   // Triage tab, this just signals the patient's own part is done.
   function handleContinue() {
     if (!valid) return;
-    if (isCoA || isIAssist || isPapFlow || isCoverageFlow) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (isCoA || isIAssist || isPapFlow || isCoverageFlow || isPapProgram) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
     // workflow once dispatched" treatment (Retail skips this screen
     // entirely; Mail Order still confirms an address, just no ship date —

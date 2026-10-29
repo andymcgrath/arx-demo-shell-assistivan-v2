@@ -1,0 +1,280 @@
+{
+  "flowType": "CoA_PAP",
+  "steps": [
+    {
+      "event": "REFERRAL_RECEIVED",
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true,
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "REFERRAL_RECEIVED",
+          "portal": "crm",
+          "workflowStep": 1
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "accepted": true,
+      "route": "/pap-transfer-sms",
+      "changed": {
+        "biStatus": "complete",
+        "biResult": "no_coverage",
+        "selectedPharmacy": {
+          "name": "CVS Pharmacy #3795",
+          "address": "210 N Orange Ave",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(407) 555-0142"
+        },
+        "pharmacyBenefitStatus": "not_covered",
+        "pharmacyAssigned": true,
+        "medicalBenefitStatus": "not_covered",
+        "papTransferStatus": "referred",
+        "papTransferSmsSent": true
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        },
+        {
+          "eventType": "REFER_TO_PSP",
+          "portal": "crm",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PAP_TRANSFER_SMS",
+      "accepted": true,
+      "route": "/pap-update-sms",
+      "changed": {
+        "papSmsSent": true,
+        "papTransferSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PAP_TRANSFER_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        },
+        {
+          "eventType": "SEND_PAP_SMS",
+          "portal": "crm",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PAP_SMS",
+      "accepted": true,
+      "route": "/pap-update-otp",
+      "changed": {
+        "papSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PAP_SMS",
+          "portal": "patient",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PAP_OTP",
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "papOtpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PAP_OTP",
+          "portal": "patient",
+          "workflowStep": 7
+        }
+      ]
+    },
+    {
+      "event": "START_INCOME_QUALIFICATION",
+      "accepted": true,
+      "route": "/income-qualification",
+      "changed": {
+        "incomeStatus": "pending"
+      },
+      "newEvents": [
+        {
+          "eventType": "START_INCOME_QUALIFICATION",
+          "portal": "patient",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_INCOME",
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "dispatchStatus": "pending_selection",
+        "papStatus": "active",
+        "incomeStatus": "verified"
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_INCOME",
+          "portal": "patient",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/delivery-date",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/pap-enrollment-complete",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "processing",
+        "dispatchStatus": "dispatched"
+      },
+      "newEvents": [
+        {
+          "eventType": "FILL_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "ready"
+      },
+      "newEvents": [
+        {
+          "eventType": "READY_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-shipped",
+      "changed": {
+        "pharmacyStatus": "shipped"
+      },
+      "newEvents": [
+        {
+          "eventType": "SHIP_RX",
+          "portal": "field",
+          "workflowStep": 11
+        }
+      ]
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/medication-delivered",
+      "changed": {
+        "pharmacyStatus": "delivered"
+      },
+      "newEvents": [
+        {
+          "eventType": "DELIVER_RX",
+          "portal": "field",
+          "workflowStep": 12
+        }
+      ]
+    }
+  ]
+}
