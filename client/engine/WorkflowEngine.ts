@@ -160,7 +160,7 @@ export function getLiveWorkItems(input: LiveWorkItemInputs): LiveWorkItem[] {
     return [];
   }
 
-  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP';
+  const isPapFlow = input.flowType === 'Fax_PAP_Audit' || input.flowType === 'PrES_PAP' || input.flowType === 'iAssist_Buy_And_Bill_PAP';
 
   const items: LiveWorkItem[] = [
     {
@@ -283,7 +283,7 @@ export const KEANU_SITE_OF_CARE_FACTS = {
   // patientStore.ts) is 123 Main Street, Orlando, FL 32801. His site of
   // care needs to be somewhere he'd realistically drive to for an
   // infusion, not a facility 900+ miles away in a different state.
-  facilityName: 'Orlando SOC',
+  facilityName: 'Community Allergy and Immunology Practice',
   npi: '1699006677',
   contactName: 'Priya Sandhu',
   contactPhone: '(407) 555-3006',
@@ -375,6 +375,14 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   // (the CRM action that sends it) still falls through to the default case
   // below, where its existing email case already lives.
   'VERIFY_PROVIDER_TRANSFER_SMS',
+  // iAssist Buy and Bill: HCP-side steps inside iAssist. The referral email
+  // that follows already tells the FRM about the case.
+  'RUN_MEDBV',
+  'ENROLL_COPAY',
+  // iAssist Buy and Bill: the patient's household income confirmation follows consent, which already has an email.
+  'CONFIRM_INCOME',
+  // Free drug: the CRM agent approves the application. The patient is told in the app.
+  'APPROVE_PAP',
 ]);
 
 function formatSentAt(iso: string): string {
@@ -404,6 +412,8 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
 
   for (const event of events) {
     if (NON_EMAIL_EVENT_TYPES.has(event.event_type)) continue;
+    // Free drug: the approval text and code are the patient's steps, like the application update text and code above.
+    if (flowType === 'iAssist_Buy_And_Bill_PAP' && (event.event_type === 'VERIFY_PA_APPROVED_SMS' || event.event_type === 'VERIFY_PA_APPROVED_OTP')) continue;
 
     const base = {
       id: event.id,
@@ -477,6 +487,18 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemId: LIVE_CASE_ID,
             linkedItemLabel: 'View Case',
           });
+        } else if (flowType === 'iAssist_Buy_And_Bill_PAP' && biResult === 'no_coverage') {
+          // iAssist Buy and Bill free drug: no medical coverage, so no PA. The patient is applying for the free drug program.
+          emails.push({
+            ...base,
+            subject: `No Medical Coverage Found - ${patientName}`,
+            bodyParagraphs: [
+              `Benefits investigation found no medical coverage for ${patientName}. No Prior Authorization task will open on this case.`,
+              `${patientName} will receive the free drug program application by text.`,
+            ],
+            linkedItemId: LIVE_CASE_ID,
+            linkedItemLabel: 'View Case',
+          });
         } else if (isCoverageFlow && biResult === 'coverage_found') {
           // CoA_Coverage Scenario 1 — pharmacy benefit covered, medical not. This
           // outcome now requires a real Prior Authorization, mirroring
@@ -537,6 +559,20 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
             linkedItemLabel: 'View Task: Prior Authorization Requested',
           });
         }
+        break;
+
+      // iAssist Buy and Bill: the HCP filed a copay claim from the patient record.
+      case 'SUBMIT_COPAY_CLAIM':
+        emails.push({
+          ...base,
+          subject: `Copay Claim Submitted - ${patientName}`,
+          bodyParagraphs: [
+            `${prescriberName} submitted a copay claim for ${patientName}'s injection.`,
+            `The claim shows In review. No action is needed on this case.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
         break;
 
       // CoA_Coverage only — CoAssist hands the case to Advanced Diabetes Supply,

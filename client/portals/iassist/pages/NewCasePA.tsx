@@ -13,9 +13,12 @@
  * waiting on a fake timer or a real search index.
  */
 import { useState } from "react";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
 import { useNavigate } from "@/lib/portalRouter";
 import { X, Search, Star, Upload, AlertTriangle, Loader2 } from "lucide-react";
 import StepRail from "../components/StepRail";
+import FileDropzone from "../components/FileDropzone";
+import { indicationRationale, indicationTreatment } from "@/brand/indication";
 import { IAssistLogo } from "../components/IAssistSidebar";
 import { useCaseWizardStore, isoDateToMmddyyyy } from "@/store/caseWizardStore";
 
@@ -26,6 +29,14 @@ const SAMPLE_FORMS = [
   "Express Scripts National Medical Benefit",
   "OptumRx Texas Pharmacy Benefit",
   "BlueCross BlueShield Pharmacy Benefit",
+];
+
+// Buy and Bill (the recipe has eMedBV): the drug bills under the medical benefit, so the PA uses a medical benefit form.
+const MEDICAL_FORMS = [
+  "BlueCross BlueShield Medical Benefit",
+  "CVS Caremark New York Medical Benefit",
+  "Express Scripts National Medical Benefit",
+  "OptumRx Texas Medical Benefit",
 ];
 
 // Maps the payer selected in Step 3 (Insurance) to its matching PA form, so
@@ -124,9 +135,13 @@ export default function NewCasePA() {
   // form" (pa.formOverride) wins; otherwise it's derived from the payer via
   // PAYER_FORM_MAP, falling back to a generic "<payer> Pharmacy Benefit"
   // guess for payers without a mapped form (e.g. manually-entered insurance).
+  const medical = !!useRecipeModule("benefit_verification");
+  const forms = medical ? MEDICAL_FORMS : SAMPLE_FORMS;
   const derivedForm = selectedInsurance
-    ? PAYER_FORM_MAP[selectedInsurance.payer] ?? `${selectedInsurance.payer} Pharmacy Benefit`
-    : SAMPLE_FORMS[0];
+    ? medical
+      ? `${selectedInsurance.payer} Medical Benefit`
+      : PAYER_FORM_MAP[selectedInsurance.payer] ?? `${selectedInsurance.payer} Pharmacy Benefit`
+    : forms[0];
   // Diagnosis selected back in Step 4 (Clinical) — prefills Diagnosis /
   // Treatment Start Date below the same way.
   const clinical = useCaseWizardStore((s) => s.clinical);
@@ -139,11 +154,14 @@ export default function NewCasePA() {
   const derivedDiagnosis = clinical.selectedIcd.includes("—")
     ? clinical.selectedIcd.split("—")[1]?.trim() ?? ""
     : clinical.selectedIcd;
+  // Optional fields start from the brand's indication. Once the HCP edits one (even to empty), their text wins.
+  const derivedTreatmentPlan = indicationTreatment().slice(0, 210);
+  const derivedReason = indicationRationale();
   const derivedTreatmentStart = clinical.diagnosisDate ? isoDateToMmddyyyy(clinical.diagnosisDate) : "";
 
   const filteredForms = formSearch.trim()
-    ? SAMPLE_FORMS.filter((f) => f.toLowerCase().includes(formSearch.toLowerCase()))
-    : SAMPLE_FORMS;
+    ? forms.filter((f) => f.toLowerCase().includes(formSearch.toLowerCase()))
+    : forms;
 
   return (
     <div className="iassist-portal min-h-screen bg-[#F8F8F8] flex font-['Open_Sans']">
@@ -263,6 +281,14 @@ export default function NewCasePA() {
                     />
                   ))}
                   <YesNoQuestion question="Letter of Medical Necessity" value={pa.lmn} onChange={(v) => setPA({ lmn: v })} />
+                  {pa.lmn === "yes" && (
+                    <FileDropzone
+                      label="Attach the Letter of Medical Necessity"
+                      files={pa.lmnFiles ?? []}
+                      sampleFiles={["LetterOfMedicalNecessity.pdf"]}
+                      onChange={(names) => setPA({ lmnFiles: names })}
+                    />
+                  )}
                 </section>
 
                 <section className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
@@ -305,17 +331,17 @@ export default function NewCasePA() {
                   </Field>
                   <Field label="Current Treatment Plan" optional>
                     <textarea
-                      value={pa.treatmentPlan}
+                      value={pa.treatmentPlan ?? derivedTreatmentPlan}
                       onChange={(e) => setPA({ treatmentPlan: e.target.value.slice(0, 210) })}
                       rows={3}
                       className={`${inputCls} resize-none`}
                       placeholder="Describe the patient's current treatment plan"
                     />
-                    <p className="text-xs text-[#999] text-right mt-1">{pa.treatmentPlan.length}/210</p>
+                    <p className="text-xs text-[#999] text-right mt-1">{(pa.treatmentPlan ?? derivedTreatmentPlan).length}/210</p>
                   </Field>
                   <Field label="Reason for Prescribing" optional>
                     <textarea
-                      value={pa.reasonForPrescribing}
+                      value={pa.reasonForPrescribing ?? derivedReason}
                       onChange={(e) => setPA({ reasonForPrescribing: e.target.value })}
                       rows={3}
                       className={`${inputCls} resize-none`}
@@ -325,15 +351,9 @@ export default function NewCasePA() {
                 </section>
 
                 <section className="bg-white rounded-xl p-6 space-y-3" style={{ boxShadow: "0 0 10px 0 rgba(196,196,196,0.3)" }}>
-                  <h2 className="text-base font-semibold text-[#1D1D1D]">Documents</h2>
-                  <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
-                    <Upload size={22} className="mx-auto text-[#999] mb-2" />
-                    <p className="text-sm text-[#6F7276]">
-                      Drag and drop file here, or{" "}
-                      <span className="text-[#007178] font-semibold cursor-pointer hover:underline">upload it here</span>
-                    </p>
-                    <p className="text-xs text-[#999] mt-1">Files must be 19MB or less and in JPG, PNG, or PDF format</p>
-                  </div>
+                  <h2 className="text-base font-semibold text-[#1D1D1D]">Documents <span className="text-xs font-normal text-[#999]">Optional</span></h2>
+                  <p className="text-sm text-[#6F7276]">Anything the payer asks for with this request, such as chart notes or a payer form.</p>
+                  <FileDropzone files={pa.documents ?? []} onChange={(names) => setPA({ documents: names })} sampleFiles={["PayerAttachment.pdf"]} />
                 </section>
 
                 <div className="flex justify-between pb-8">

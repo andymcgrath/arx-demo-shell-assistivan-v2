@@ -215,6 +215,8 @@ export interface InsuranceData {
 export interface ClinicalData {
   selectedIcd: string;
   diagnosisDate: string;
+  /** Names of the supporting clinical documents (chart notes, labs). Nothing uploads. */
+  documents: string[];
   priorTherapy: "yes" | "no" | "";
   contraindications: "yes" | "no" | "";
 }
@@ -222,11 +224,16 @@ export interface ClinicalData {
 export interface PAData {
   dynamicAnswers: Record<number, "yes" | "no" | "">;
   lmn: "yes" | "no" | "";
+  /** Names of the files attached as the Letter of Medical Necessity. Names only: nothing uploads. */
+  lmnFiles: string[];
+  /** Names of the PA attachments the HCP added. Nothing uploads. */
+  documents: string[];
   contactName: string;
   diagnosis: string;
   treatmentStart: string;
-  treatmentPlan: string;
-  reasonForPrescribing: string;
+  /** null until the HCP edits it, so the brand's indication can prefill it. */
+  treatmentPlan: string | null;
+  reasonForPrescribing: string | null;
   // Set when the user manually picks a form via "Search for another form."
   // Empty means fall back to whatever PAYER_FORM_MAP derives from the
   // insurance selected in Step 3 — see NewCasePA.tsx.
@@ -331,6 +338,7 @@ function buildInitialState() {
   const clinical: ClinicalData = {
     selectedIcd: "",
     diagnosisDate: "",
+    documents: [],
     priorTherapy: "",
     contraindications: "",
   };
@@ -338,11 +346,13 @@ function buildInitialState() {
   const pa: PAData = {
     dynamicAnswers: {},
     lmn: "",
+    lmnFiles: [],
+    documents: [],
     contactName: "",
     diagnosis: "",
     treatmentStart: "",
-    treatmentPlan: "",
-    reasonForPrescribing: "",
+    treatmentPlan: null,
+    reasonForPrescribing: null,
     formOverride: "",
   };
 

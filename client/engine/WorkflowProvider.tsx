@@ -6,6 +6,7 @@ import { useSelector } from '@xstate/react';
 import type { ActorRefFrom } from 'xstate';
 import type { standardMachine } from '@/workflows/standard';
 import { getWorkflowActor, switchWorkflow, getActiveFlowType, useActorStore } from './actorSingleton';
+import { sameWorkflowData } from './workflowDataEqual';
 import type { MachineContext, PersonaId, DemoEvent, WorkflowData, FlowType } from './types';
 import {
   getPersonaActions,
@@ -90,14 +91,7 @@ export function usePersonaState(persona: PersonaId): UsePersonaStateReturn {
   const workflowData = useSelector(
     actor,
     (snapshot) => snapshot.context.workflowData,
-    (a, b) => {
-      for (const key in a) {
-        if (a[key as keyof WorkflowData] !== b[key as keyof WorkflowData]) {
-          return false;
-        }
-      }
-      return true;
-    }
+    sameWorkflowData
   );
   const events = useSelector(
     actor,

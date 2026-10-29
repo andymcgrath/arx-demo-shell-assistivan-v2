@@ -25,6 +25,7 @@ import { useCaseWizardStore, MEDICATION_OPTIONS, MEDICATION_CODES } from "@/stor
 import { StatusDots, StatusBadge } from "../components/StatusIndicators";
 import IAssistSidebar, { IASSIST_TEAL } from "../components/IAssistSidebar";
 import IAssistHeader from "../components/IAssistHeader";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
 
 // Commonly Prescribed row — a second, medication-first way to start a case
 // (vs. the Patients table's patient-first way). Starting from here seeds
@@ -104,6 +105,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
   const setMedication = useCaseWizardStore((s) => s.setMedication);
+  // A scenario with the `patient_record` module opens the patient view when the HCP clicks the live-wired patient.
+  const patientRecord = useRecipeModule("patient_record");
 
   function openCaseWizard() {
     // Starting the wizard from a roster row is this demo's stand-in for
@@ -185,7 +188,7 @@ export default function Dashboard() {
                 {sortedPatients.map((patient) => (
                   <tr
                     key={patient.id}
-                    onClick={openCaseWizard}
+                    onClick={() => (patientRecord && patient.id === "keanu-dixon" && patient.status ? navigate("/patient") : openCaseWizard())}
                     className="border-b border-neutral-300 last:border-b-0 hover:bg-[#EEF9F9] cursor-pointer transition-colors"
                   >
                     <td className="p-4">

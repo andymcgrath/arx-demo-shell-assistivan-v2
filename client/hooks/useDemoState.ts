@@ -29,6 +29,8 @@ export interface DemoState {
   bi_status: "none" | "running" | "complete";
   bi_result: "coverage_found" | "no_coverage" | "no_insurance" | null;
   pa_status: "none" | "submitted" | "approved" | "denied";
+  /** iAssist Buy and Bill: the HCP enrolled the patient in the copay program. */
+  copay_enrolled: boolean;
   // iAssist_PAP (WF5) only — see engine/types.ts's WorkflowData.appealStatus.
   // Stays "none" for every other flow.
   appeal_status: "none" | "initiated" | "approved";
@@ -38,6 +40,8 @@ export interface DemoState {
   qs_status: "none" | "active" | "discontinued";
   pap_status: "none" | "active" | "audit_pending" | "discontinued";
   pharmacy_status: "none" | "processing" | "ready" | "shipped" | "delivered";
+  /** Where the order stands before it ships. `selected` means a pharmacy or site of care was picked. */
+  dispatch_status: string;
   workflow_step: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   updated_at: string;
   updated_by: Portal | "system" | null;
@@ -65,11 +69,13 @@ function toSnakeCaseShape(w: WorkflowData): DemoState {
     bi_status:         w.biStatus as any,
     bi_result:         (w as any).biResult ?? null,
     pa_status:         w.paStatus,
+    copay_enrolled:    !!w.copayEnrolled,
     appeal_status:     w.appealStatus,
     infusion_date:     (w as any).infusionDate ?? null,
     qs_status:         (w as any).qsStatus ?? "none",
     pap_status:        (w as any).papStatus ?? "none",
     pharmacy_status:   w.pharmacyStatus,
+    dispatch_status:   (w as any).dispatchStatus ?? "none",
     workflow_step:     ((w as any).workflowStep ?? 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7,
     updated_at:        (w as any).updatedAt ?? new Date().toISOString(),
     updated_by:        (w as any).updatedBy ?? "System",

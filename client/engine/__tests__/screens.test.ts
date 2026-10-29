@@ -49,7 +49,11 @@ for (const { name, map } of MAPS) describe(`${name} screen list`, () => {
 
       it("keeps the program name out of group titles until render time", () => {
         const groups = menuFor(map, flowType).flatMap((e) => ("group" in e ? [e.group] : []));
-        expect(groups).toContain("{program} order");
+        // The order group belongs to a tracking module. A scenario with no tracking (Buy and Bill) has no order group.
+        const recipe = map.scenarioDefs?.find((s) => s.flowType === flowType)?.recipe;
+        const hasOrderGroup = !recipe || recipe.modules.some((m) => m.id === "tracking");
+        if (hasOrderGroup) expect(groups).toContain("{program} order");
+        else expect(groups).not.toContain("{program} order");
       });
     });
   }

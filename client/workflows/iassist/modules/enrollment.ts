@@ -1,7 +1,7 @@
 /**
  * Enrollment: the referral, the patient's SMS, OTP, and consent. BI starts with the referral and does not wait for them.
  */
-import type { IaRule } from "./shared";
+import { asksHousehold, consentByHcp, consentByPatient, hcpEnrollsCopay, hcpPreparesFirst, type IaRule } from "./shared";
 
 export const ENROLLMENT_RULES: IaRule[] = [
   // ── Referral and patient onboarding ────────────────────────────────
@@ -9,8 +9,10 @@ export const ENROLLMENT_RULES: IaRule[] = [
     // The referral lands and the welcome text goes out in the same moment. BI starts on its own.
     id: "enrollment.referral_received",
     on: "REFERRAL_RECEIVED",
-    when: (d) => d.enrollmentStatus === "none",
-    set: () => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
+    // Buy and Bill: the HCP runs eMedBV and enrolls the patient in copay first, then submits.
+    when: (d, _e, s) => d.enrollmentStatus === "none" && (!hcpPreparesFirst(s) || (d.medbvStatus === "complete" && (d.copayEnrolled || !hcpEnrollsCopay(s)))),
+    // `hcp_signs`: the HCP captured consent and income on the form, so the patient has nothing to consent to.
+    set: (d, _e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(asksHousehold(s) ? { householdRequested: true } : {}), ...(consentByHcp(d) ? { consentStatus: "confirmed" as const, incomeStatus: "verified" as const } : {}) }),
     emit: { portal: "crm", step: 1 },
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },
@@ -49,6 +51,24 @@ export const ENROLLMENT_RULES: IaRule[] = [
     scope: { module: "appeal" },
     when: (d) => d.otpVerified && d.consentStatus === "pending",
     set: () => ({ consentStatus: "confirmed", enrollmentAcknowledged: true }),
+    emit: { portal: "patient", step: 5 },
+  },
+  {
+    // Free drug (PAP): the patient consents to the enrollment, then waits for the application update.
+    id: "enrollment.confirm_consent.pap",
+    on: "CONFIRM_CONSENT",
+    scope: { module: "financial_assistance" },
+    when: (d) => d.otpVerified && d.consentStatus === "pending",
+    set: () => ({ consentStatus: "confirmed", enrollmentAcknowledged: true }),
+    emit: { portal: "patient", step: 5 },
+  },
+  {
+    // `patient_text`: after consent, the patient confirms household size and income in the patient app.
+    id: "enrollment.confirm_income",
+    on: "CONFIRM_INCOME",
+    scope: { fork: "consent", exit: "patient_text" },
+    when: (d) => consentByPatient(d) && !!d.householdRequested && d.consentStatus === "confirmed" && d.incomeStatus === "none",
+    set: (_d, e) => ({ incomeStatus: "verified", householdSize: String(e.householdSize ?? ""), householdIncome: String(e.householdIncome ?? "") }),
     emit: { portal: "patient", step: 5 },
   },
   {

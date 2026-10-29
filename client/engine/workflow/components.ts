@@ -16,6 +16,10 @@ export type ModuleLane = "system" | "patient";
 
 export type ModuleId =
   | "enrollment"
+  | "benefit_verification"
+  | "copay"
+  | "copay_claim"
+  | "patient_record"
   | "pa_notification"
   | "cash_offer"
   | "financial_assistance"
@@ -156,6 +160,35 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     sets: ["consentVerified"],
     trackerSteps: ["Enrolled"],
   },
+  // ── Buy and Bill blocks (HCP side, in iAssist). `system` lane: the patient never sees them. ──
+  benefit_verification: {
+    id: "benefit_verification",
+    lane: "system",
+    needs: ["referralReceived"],
+    sets: ["benefitsVerified"],
+    trackerSteps: ["Benefits verified"],
+  },
+  copay: {
+    id: "copay",
+    lane: "system",
+    needs: ["benefitsVerified"],
+    sets: ["copayEnrolled"],
+    trackerSteps: ["Copay enrolled"],
+  },
+  copay_claim: {
+    id: "copay_claim",
+    lane: "system",
+    needs: ["copayEnrolled", "fork:pa"],
+    sets: ["copayClaimSubmitted"],
+    trackerSteps: [],
+  },
+  patient_record: {
+    id: "patient_record",
+    lane: "system",
+    needs: ["consentVerified"],
+    sets: ["patientRecord"],
+    trackerSteps: [],
+  },
   pa_notification: {
     id: "pa_notification",
     lane: "patient",
@@ -173,7 +206,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
   financial_assistance: {
     id: "financial_assistance",
     lane: "patient",
-    needs: ["paNotified"],
+    // Every entry to assistance comes from a BI result (no coverage, or commercial coverage for a copay).
+    needs: ["fork:bi"],
     sets: ["assistanceApplied"],
     trackerSteps: ["Assistance applied"],
   },

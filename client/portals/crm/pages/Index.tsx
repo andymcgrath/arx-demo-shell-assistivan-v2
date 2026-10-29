@@ -15,8 +15,12 @@ import type { FlowType } from "@/engine/types";
 import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { PAYER } from "../payerFacts";
-import { FieldRow, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
-import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
+import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
+import { BRAND } from "@/brand";
+import { caseDocuments } from "@/brand/caseDocuments";
+import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
+import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX } from "@/portals/iassist/data/copayProgram";
 import {
   ChevronDown,
   ChevronRight,
@@ -816,7 +820,18 @@ export default function Index() {
   const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   // Related Documents: the enrollment form (fax flows), the brand's PA form (non-PAP flows), and the
   // Summary of Benefits once the PA is approved.
-  const relatedDocuments: RelatedDocument[] = [
+  // An HCP-administered case (eMedBV in iAssist) shows the same documents iAssist and the Field portal show.
+  const sharedCaseDocs = scenarioHasModule(flowType, "benefit_verification")
+    ? caseDocuments(workflowData, scenarioHasModule(flowType, "financial_assistance")).map((c): RelatedDocument => ({
+        fileId: c.id,
+        fileName: c.name,
+        dateReceived: formatShortDate(dateFromToday(0)),
+        type: c.type,
+        pages: c.pages,
+        href: c.file,
+      }))
+    : null;
+  const relatedDocuments: RelatedDocument[] = sharedCaseDocs ?? [
     ...(isFaxFlow ? FAX_DOCUMENTS : []),
     ...(PA_FORM_DOCUMENT && !isPapFlow ? [PA_FORM_DOCUMENT] : []),
     ...sobDocuments,
@@ -829,7 +844,10 @@ export default function Index() {
   // SITES_OF_CARE; Patient Preferred/Payer Mandated/Program Mandated stay on
   // the standard pharmacyOptions list since those still describe a
   // hypothetical outside pharmacy the case COULD have used.
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  // Free drug (Buy and Bill PAP): the recipe's `financial_assistance` module with eMedBV. Like the appeal scenario, it
+  // sends the drug to a site of care, so it shares the site-of-care screens below.
+  const isFreeDrug = scenarioHasModule(flowType, "financial_assistance") && scenarioHasModule(flowType, "benefit_verification");
+  const isIAssistPapFlow = flowType === "iAssist_PAP" || isFreeDrug;
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
@@ -838,6 +856,8 @@ export default function Index() {
   // doesn't apply to it at all.
   const isCoverageFlow = flowType === "CoA_Coverage";
   // The scenario's recipe says whether the CRM shows the benefits panel.
+  // Buy and Bill: the recipe's `copay` module swaps in a four-stage list. No appeals, triage, or order stages.
+  const isBuyAndBill = scenarioHasModule(flowType, "copay");
   const showBenefitsPanel = !!ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.panels?.includes("benefits");
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
@@ -891,6 +911,11 @@ export default function Index() {
   const [programPharmacy, setProgramPharmacy] = useState<PharmacyOption | null>(null);
   const [dispenserPharmacy, setDispenserPharmacy] = useState<PharmacyOption | null>(null);
   const [activeCaseTab, setActiveCaseTab] = useState("summary");
+  // Copay is its own tab only when the recipe has a copay module.
+  const caseTabs = isBuyAndBill ? [CASE_TABS[0], CASE_TABS[1], { id: "copay", label: "Copay" }, ...CASE_TABS.slice(2)] : CASE_TABS;
+  const copayClaimsNow = workflowData.copayClaims ?? [];
+  const [openCopayClaimId, setOpenCopayClaimId] = useState<string | null>(null);
+  const openCopayClaim = copayClaimsNow.find((c) => c.id === openCopayClaimId) ?? null;
   const [activeRightTab, setActiveRightTab] = useState("quick-answers");
   const [caseSummaryCollapsed, setCaseSummaryCollapsed] = useState(false);
   const [stagesCollapsed, setStagesCollapsed] = useState(false);
@@ -1095,7 +1120,7 @@ export default function Index() {
   // there's no separate Rx Processing/Shipped/Delivered chain to wait on.
   const tpStage: Stage = isIAssistPapFlow
     ? (dispatchStatus === "pending_selection" || dispatchStatus === "none"
-      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
+      ? { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Pending", statusDetail: isFreeDrug && workflowData.infusionDate === null ? "Awaiting the patient's appointment date" : "Awaiting site of care selection", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null }
       : { id: "TP-14277", name: "Triage to Pharmacy", statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: selectedPharmacy?.name || null }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" })
     // CoA_Copay Retail/Mail Order, and now CoA_Coverage Scenario 1 too
     // (isCoverageRetailFlow — see that flag's own comment above) — see
@@ -1177,7 +1202,92 @@ export default function Index() {
     ? "Pharmacy Benefit Covered"
     : "No Coverage Found — Cash Pay Offered";
 
-  const STAGES_LIVE: Stage[] = isCoverageFlow
+  // Buy and Bill. BI is the medical benefit (eMedBV already ran in iAssist). Financial Assistance is the copay the HCP
+  // enrolled there. Appeals are skipped because the PA is approved, and nothing triages or ships.
+  const copayEnrolledOn = workflowData.copayEnrolledAt ? new Date(workflowData.copayEnrolledAt) : new Date();
+  const copayYear = copayEnrolledOn.getFullYear();
+  const buyAndBillStages: Stage[] = [
+    eaStage,
+    biStatus === "complete"
+      ? { ...biStage, statusDetail: "Medical benefit covered (buy and bill); prior authorization required" }
+      : biStage,
+    paStage,
+    copayEnrolled
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "Complete",
+          statusDetail: "Copay enrolled by the HCP in iAssist",
+          isComplete: true,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Copay Program` },
+            { label: "Remaining Balance", value: `$${copayBalance(workflowData).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+            { label: "Effective Date", value: copayEnrolledOn.toLocaleDateString() },
+            { label: "Program Approval Date", value: copayEnrolledOn.toLocaleDateString() },
+            { label: "Expiration Date", value: new Date(copayYear, 11, 31).toLocaleDateString() },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: copayEnrolledOn.toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : { ...faStage, statusDetail: "Awaiting copay enrollment" },
+  ];
+
+  // Free drug (PAP). eMedBV found no coverage, so there is no PA and no copay. Financial Assistance is the application the
+  // patient completes. Approval triages the drug to the site of care, and the last stage is the order status.
+  const papApproved = workflowData.papStatus === "active";
+  const freeDrugStages: Stage[] = [
+    eaStage,
+    biStatus === "complete" ? { ...biStage, statusDetail: "No medical coverage found; free drug program" } : biStage,
+    papApproved
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "Complete",
+          statusDetail: "Free drug application approved",
+          isComplete: true,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` },
+            { label: "Credit Check Consent", value: workflowData.creditCheckConsented ? "Yes" : null },
+            { label: "Household Size", value: workflowData.householdSize ?? null },
+            { label: "Annual Household Income", value: workflowData.householdIncome ? `$${Number(workflowData.householdIncome).toLocaleString("en-US")}` : null },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: dateFromToday(0).toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : workflowData.incomeStatus === "verified"
+      ? {
+          id: "FA-14276",
+          name: "Financial Assistance",
+          statusLabel: "In Review",
+          statusDetail: "Application received. Review and approve",
+          isComplete: false,
+          isNotStarted: false,
+          fields: [
+            { label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` },
+            { label: "Credit Check Consent", value: workflowData.creditCheckConsented ? "Yes" : null },
+            { label: "Household Size", value: workflowData.householdSize ?? null },
+            { label: "Annual Household Income", value: workflowData.householdIncome ? `$${Number(workflowData.householdIncome).toLocaleString("en-US")}` : null },
+            { label: "Program Denial Reason", value: null },
+          ],
+          lastUpdated: dateFromToday(0).toLocaleDateString(),
+          lastUpdatedAgo: "today",
+        }
+      : papSmsSent
+      ? { id: "FA-14276", name: "Financial Assistance", statusLabel: "In Progress", statusDetail: "Application update sent. Awaiting the patient's credit check consent and income", isComplete: false, isNotStarted: false, fields: [{ label: "Financial Program", value: `${BRAND.program.name} Free Drug Program` }, { label: "Income Verification", value: "Pending" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
+      : { id: "FA-14276", name: "Financial Assistance", statusLabel: "Stage not started", statusDetail: biStatus === "complete" ? "Sending the application update" : "Awaiting BI result", isComplete: false, isNotStarted: true, fields: [{ label: "Financial Program", value: null }, { label: "Income Verification", value: null }], lastUpdated: null, lastUpdatedAgo: null },
+    { ...tpStage, name: "Triage to Site of Care" },
+    { ...psStage, name: "Order Status" },
+  ];
+
+  const STAGES_LIVE: Stage[] = isFreeDrug
+    ? freeDrugStages
+    : isBuyAndBill
+    ? buyAndBillStages
+    : isCoverageFlow
     ? [
         // Same "active, waiting on something automatic" treatment as
         // isCoaFlow's eaStage below — SMS/consent is sent automatically for
@@ -2018,11 +2128,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2037,14 +2143,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2063,14 +2165,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2080,7 +2178,7 @@ export default function Index() {
                       <FieldRow label="Auth Decision (Fax #)" value="Denied" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Info Box */}
                 <div className="border-l-4 p-4 rounded" style={{ borderColor: "#F59E0B", background: "#FEF3C7" }}>
@@ -2158,11 +2256,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2177,14 +2271,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2203,14 +2293,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${new Date().toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2220,7 +2306,7 @@ export default function Index() {
                       <FieldRow label="Auth Decision (Fax #)" value="Denied" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Info Box — reacts live to appealStatus (iAssist_PAP/WF5's
                     own field, see workflows/iassist/rules.ts); every other flow
@@ -2311,11 +2397,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2330,14 +2412,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Prior Authorization Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Prior Authorization Information</span>
-                  </div>
+                <Section title="Prior Authorization Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Authorization Number" value="PA-2026-001234" />
@@ -2356,14 +2434,10 @@ export default function Index() {
                       <FieldRow label="PA Requirement Communicated Date/Time" value={`${dateFromToday(0).toLocaleDateString()}, 10:30 AM`} />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Call Details section (if applicable) */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Call Authorization Details</span>
-                  </div>
+                <Section title="Call Authorization Details">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Prior Authorization Fax #" value="1-800-PA-RECEIVED" />
@@ -2373,7 +2447,7 @@ export default function Index() {
                       <FieldRow label="Auth Approval (Fax #" value="Approved" />
                     </div>
                   </div>
-                </div>
+                </Section>
               </div>
 
               {/* Right: Approval Status Panel */}
@@ -2442,11 +2516,7 @@ export default function Index() {
               {/* Left: Information section */}
               <div className="flex-1 min-w-0 p-4 space-y-4">
                 {/* Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2461,14 +2531,10 @@ export default function Index() {
                       <FieldRow label="Owner" value="Product Owner" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 {/* Appeal Information section */}
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Appeal Information</span>
-                  </div>
+                <Section title="Appeal Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-3 pb-3">
                     <div>
                       <FieldRow label="Appeal Number" value="APL-2026-000842" />
@@ -2491,7 +2557,7 @@ export default function Index() {
                       <FieldRow label="HCP Notified" value="Sarah Chen, MD — notified via email" />
                     </div>
                   </div>
-                </div>
+                </Section>
 
                 <div className="border-l-4 p-4 rounded" style={{ borderColor: "#2e844a", background: "#e8f4ef" }}>
                   <p className="text-[13px] font-semibold mb-2" style={{ color: "#1a4d2a" }}>Appeal Approved — Fulfillment Continuing</p>
@@ -2598,11 +2664,7 @@ export default function Index() {
                     other flow keeps the original single "Information" box. */}
                 {isIAssistFlow ? (
                   <>
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Patient Details</span>
-                      </div>
+                    <Section title="Patient Details">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Patient" value={patientName} isLink />
@@ -2616,13 +2678,9 @@ export default function Index() {
                           <FieldRow label="Rank" value="Primary" />
                         </div>
                       </div>
-                    </div>
+                    </Section>
 
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Insurance Information</span>
-                      </div>
+                    <Section title="Insurance Information">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Insurance Plan Type" value={PAYER.planType} />
@@ -2642,13 +2700,9 @@ export default function Index() {
                           <FieldRow label="Medical Member ID" value={PAYER.memberId} />
                         </div>
                       </div>
-                    </div>
+                    </Section>
 
-                    <div className="border border-[#dddbda] rounded">
-                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                        <ChevronDown size={14} className="text-[#706e6b]" />
-                        <span className="text-[12px] font-semibold text-[#3e3e3c]">Member Information</span>
-                      </div>
+                    <Section title="Member Information">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                         <div>
                           <FieldRow label="Medical Insurance Effective Date" value={PAYER.effectiveDate} />
@@ -2659,14 +2713,10 @@ export default function Index() {
                           <FieldRow label="Relationship to Subscriber" value="Self" />
                         </div>
                       </div>
-                    </div>
+                    </Section>
                   </>
                 ) : (
-                <div className="border border-[#dddbda] rounded">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <ChevronDown size={14} className="text-[#706e6b]" />
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                  </div>
+                <Section title="Information">
                   <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                     <div>
                       <FieldRow label="Patient" value={patientName} isLink />
@@ -2699,7 +2749,7 @@ export default function Index() {
                       <FieldRow label="External Comments Long" value="" />
                     </div>
                   </div>
-                </div>
+                </Section>
                 )}
 
                 {/* BI Referral Pharmacies table — shown only after Triage stage starts */}
@@ -2927,7 +2977,9 @@ export default function Index() {
                     ) : (
                       <button
                         onClick={() => setPharmacyModalOpen(true)}
-                        className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                        disabled={isFreeDrug && workflowData.infusionDate === null}
+                        title={isFreeDrug && workflowData.infusionDate === null ? "Triage after the patient confirms the appointment date." : undefined}
+                        className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: FC_BLUE }}
                       >
                         Choose Pharmacy
@@ -3291,6 +3343,21 @@ export default function Index() {
                   Check Status
                 </button>
               )}
+              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.incomeStatus === "verified" && workflowData.papStatus !== "active" && (
+                <button
+                  onClick={() => dispatch('APPROVE_PAP', { portal: 'crm' })}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: FC_BLUE }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Approve Application
+                </button>
+              )}
+              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.papStatus === "active" && (
+                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
+                  Approved
+                </span>
+              )}
               {activeStage.id === "PA-14274" && paStatus === "approved" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "#e8f4ef", color: "#2e844a" }}>
                   Approved
@@ -3406,11 +3473,7 @@ export default function Index() {
             {/* Left: Information */}
             <div className="flex-1 min-w-0 p-4 space-y-4">
               {/* Information section */}
-              <div className="border border-[#dddbda] rounded">
-                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                  <ChevronDown size={14} className="text-[#706e6b]" />
-                  <span className="text-[12px] font-semibold text-[#3e3e3c]">Information</span>
-                </div>
+              <Section title="Information">
                 <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
                   <div>
                     <FieldRow label="Product" value={drugName} isLink />
@@ -3429,7 +3492,7 @@ export default function Index() {
                     <FieldRow label="Internal Comments" value="" />
                   </div>
                 </div>
-              </div>
+              </Section>
             </div>
 
             {/* Right: Quick Info Panel */}
@@ -3511,7 +3574,7 @@ export default function Index() {
           </div>
           {/* Row 2: Case Navigation Tabs */}
           <div className="border-b border-[#dddbda] flex bg-white overflow-x-auto">
-            {CASE_TABS.map((tab) => (
+            {caseTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveCaseTab(tab.id)}
@@ -3859,6 +3922,50 @@ export default function Index() {
                 </table>
               </div>
             </div>
+          ) : activeCaseTab === "copay" ? (
+            <div className="p-4 space-y-4">
+              <div className="border border-[#dddbda] rounded overflow-hidden">
+                <div className="px-3 py-2 border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]" style={{ background: "#f3f3f3" }}>Copay Enrollment</div>
+                {copayEnrolled ? (
+                  <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
+                    <div>
+                      <FieldRow label="Program" value={BRAND.program.name} />
+                      <FieldRow label="Member ID" value={copayMemberId(patientName, BRAND.program.name)} />
+                      <FieldRow label="Status" value="Active" />
+                    </div>
+                    <div>
+                      <FieldRow label="Effective" value={formatShortDate(workflowData.copayEnrolledAt ? new Date(workflowData.copayEnrolledAt) : dateFromToday(0))} />
+                      <FieldRow label="Annual maximum" value={`$${COPAY_ANNUAL_MAX.toLocaleString("en-US")}.00`} />
+                      <FieldRow label="Remaining balance" value={`$${copayBalance(workflowData).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-[13px] text-[#706e6b] text-center">Not enrolled. The HCP enrolls the patient in iAssist.</div>
+                )}
+              </div>
+              <div className="border border-[#dddbda] rounded overflow-hidden">
+                <div className="flex justify-between px-3 py-2 border-b border-[#dddbda] text-[13px] font-semibold text-[#3e3e3c]" style={{ background: "#f3f3f3" }}>
+                  <span>Copay Claims</span><span className="text-[12px] font-normal text-[#706e6b]">{copayClaimsNow.length} record{copayClaimsNow.length !== 1 ? "s" : ""}</span>
+                </div>
+                {copayClaimsNow.length === 0 ? (
+                  <div className="p-6 text-[13px] text-[#706e6b] text-center">No claims filed.</div>
+                ) : (
+                  <table className="w-full text-[12px]">
+                    <thead><tr className="text-left text-[#706e6b]"><th className="px-3 py-2 font-normal">Claim</th><th className="px-3 py-2 font-normal">Date of service</th><th className="px-3 py-2 font-normal">Submitted</th><th className="px-3 py-2 font-normal">Status</th></tr></thead>
+                    <tbody>
+                      {copayClaimsNow.map((c) => (
+                        <tr key={c.id} className="border-t border-[#dddbda]">
+                          <td className="px-3 py-2"><SfLink onClick={() => setOpenCopayClaimId(c.id)}>{c.id}</SfLink></td>
+                          <td className="px-3 py-2">{ymdToMdy(c.dateOfService)}</td>
+                          <td className="px-3 py-2">{ymdToMdy(c.submittedAt.slice(0, 10))}</td>
+                          <td className="px-3 py-2">{c.status === "in_review" ? "In review" : c.status === "paid" ? "Paid" : "Rejected"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
           ) : activeCaseTab === "tasks" ? (
             <div className="p-4">
               <div className="border border-[#dddbda] rounded overflow-hidden">
@@ -3926,9 +4033,48 @@ export default function Index() {
             </div>
           ) : (
             <div className="p-8 text-[13px] text-[#706e6b] text-center">
-              No {CASE_TABS.find((t) => t.id === activeCaseTab)?.label} records found.
+              No {caseTabs.find((t) => t.id === activeCaseTab)?.label} records found.
             </div>
           )}
+        </>
+      )}
+
+      {/* Copay claim detail: opens from a claim number on the Copay tab. */}
+      {openCopayClaim && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setOpenCopayClaimId(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-white border border-[#dddbda] rounded shadow-xl pointer-events-auto" style={{ width: 520, maxHeight: "90vh" }}>
+              <div className="px-5 py-3 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
+                <span className="text-[14px] font-semibold text-[#3e3e3c]">Copay Claim {openCopayClaim.id}</span>
+                <button onClick={() => setOpenCopayClaimId(null)} className="text-[#706e6b] hover:text-[#3e3e3c] text-[18px] leading-none" aria-label="Close">×</button>
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 px-5 py-2">
+                <div>
+                  <FieldRow label="Claim Number" value={openCopayClaim.id} />
+                  <FieldRow label="Status" value={openCopayClaim.status === "in_review" ? "In review" : openCopayClaim.status === "paid" ? "Paid" : "Rejected"} />
+                  <FieldRow label="Patient" value={patientName} />
+                  <FieldRow label="Program" value={BRAND.program.name} />
+                </div>
+                <div>
+                  <FieldRow label="Member ID" value={copayMemberId(patientName, BRAND.program.name)} />
+                  <FieldRow label="Benefit Type" value="Medical drug" />
+                  <FieldRow label="Date of Service" value={ymdToMdy(openCopayClaim.dateOfService)} />
+                  <FieldRow label="Submitted" value={`${ymdToMdy(openCopayClaim.submittedAt.slice(0, 10))} via iAssist`} />
+                </div>
+              </div>
+              <div className="px-5 pb-3">
+                <div className="text-[12px] text-[#706e6b] mb-1">Documents</div>
+                <div className="flex gap-4 text-[13px]">
+                  <a href="/docs/cms-1500.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>CMS-1500</a>
+                  <a href="/docs/eob.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>EOB</a>
+                </div>
+              </div>
+              <div className="px-5 py-3 border-t border-[#dddbda] flex justify-end">
+                <button onClick={() => setOpenCopayClaimId(null)} className="px-4 py-1.5 border border-[#dddbda] rounded text-[13px] font-semibold text-[#3e3e3c] hover:bg-[#f3f3f3]">Close</button>
+              </div>
+            </div>
+          </div>
         </>
       )}
 

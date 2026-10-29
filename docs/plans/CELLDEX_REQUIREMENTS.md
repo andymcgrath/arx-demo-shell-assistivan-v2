@@ -23,6 +23,39 @@ One workflow. iAssist starts. One default scenario (commercial, covered, PA appr
 - **BI and PA ordering:** The HCP collects everything in iAssist once. The CRM then runs BI and PA automatically, in order. PA waits for a completed BI that says a PA is required. This is rule 11 on the `erx` intake channel: the PA is a `system` step triggered by BI completion. The earlier call notes said "PA submitted through iAssist." Model it as above. The iAssist screens show the PA as initiated, then the CRM carries it.
 - **Last CRM stage (default):** PA Approved.
 
+## Building blocks (scenario: iAssist Buy and Bill)
+
+Branch: `feature/buy-and-bill-demo`. New scenario `iAssist_Buy_And_Bill` on the existing iAssist workflow. It sits beside `iAssist_PA_Approved`, `iAssist_PAP`, and `iAssist_Medical_Transfer`. It is a recipe of modules (see `client/workflows/iassist/recipes.ts`). It adds no machine code, no `flowType ===` checks, and no client names in source.
+
+Note: you wrote "Build and Buy". I read that as Buy and Bill.
+
+| Block | New or reuse | Configurable by | Used by |
+|---|---|---|---|
+| `enrollment` | Reuse | Variant `no_rx`: enrollment form with no prescription or order | Buy and Bill, PAP |
+| `benefit_verification` (medBV modal) | Reuse the BI fork and `benefits` panel | Benefit type (`medical`), result values, PA required | Buy and Bill |
+| `pa_notification` | Reuse | Variant `hcp_administered`: text says contact your physician to confirm the injection date | Buy and Bill |
+| `patient_record` | New | Sections shown (enrollment, buy and bill, prior authorization, documents), notes on or off | Buy and Bill, PAP |
+| `copay` | New | Card display, balance, transaction list, enrolled by `hcp` or in the CRM | Buy and Bill |
+| `copay_claim` | New | Entry button, claim fields, success modal | Buy and Bill |
+| `financial_assistance` | Reuse | Variant `site_of_care`: confirm appointment date and doctor's office | PAP exit of Buy and Bill |
+| `triage` and `tracking` | Reuse | Only the PAP exit includes them | PAP exit |
+
+Rule 6 check: `patient_record` is used by both the default and PAP demos, so extract it. `copay` and `copay_claim` are split so a later program can take the card without the claim flow. Keep them separate modules.
+
+**Forks.** Reuse the BI fork. Default exit: `medical_pa_required`. Alternate exit: `no_coverage`, which requires `financial_assistance`. The PA fork stays `approved`. Do not add presenter buttons.
+
+**Rules (rule 11, 12).**
+- `copay.enroll`: allowed only when the submission exists. Sets `copayEnrolled`.
+- `copay_claim.submit`: allowed only when `copayEnrolled` holds. Appends to the claim history.
+- `pa.start`: `system` step. Fires after BI completes and says a PA is required. Same precondition as every other iAssist scenario.
+- The invariant test must reject `copay_claim.submit` before enrollment.
+
+**Screens (rule 13).** Each module contributes its screens and route rules. The scenario adds `patient_record`, `copay`, and `copay_claim` entries. The menu is generated. A test checks every visited screen appears in the menu.
+
+**Demos.** Add two entries to the Celldex `demos` list: Buy and Bill (default) and Buy and Bill with PAP (`no_coverage`). The existing three demos stay as they are.
+
+**Tests (rule 8).** One headless event list per demo. Default: enrollment, BI complete, PA approved, copay enrolled, claim submitted, ends at PA Approved. PAP: no coverage, financial assistance result, triage, ends at the site-of-care confirmation.
+
 ## Requirements by app
 
 ### iAssist (HCP)
@@ -34,12 +67,14 @@ One workflow. iAssist starts. One default scenario (commercial, covered, PA appr
 5. The submission carries what the CRM needs to run BI, then a medical benefit PA, in order. The HCP does not start the PA separately.
 6. HCP copay enrollment in the flow. Show the copay card, status Active, benefit period, and year-to-date spend. Reference: Figma "Step 6: Buy and Bill Information."
 7. Consent: The HCP cannot sign for the patient. Offer two options: ask us to text the patient for consent, or an in-office attestation checkbox. The demo uses the text.
-8. Patient record. Click into the demo patient to see submission history and attachments: SOB, PA approval notice (auth number and expiration), enrollment form, and PA form.
-9. Copay tab (optional tab on the record). Show balance, claim history, and claim submission. Reference: CRM copay claims search and claim detail screens, plus Figma transaction list.
-    - **Claim modal (Figma):** Fields are prescriber, patient search (or add new patient), date of service, and document upload (CMS-1500 and EOB, JPG, PNG, or PDF, 19MB max). Add-patient fields: first and last name, DOB, sex, zip, email, phone.
-    - **Entry point:** A selection modal asks "What would you like to do for this drug?" with Start Workflow (enrollment, PA, benefits) and Copay Claim (Start Claim). The Figma does not show where this modal opens from. Proposed: the drug card on the iAssist home, plus a "Submit claim" button on the copay tab of the patient record. Confirm.
+8. **Patient view (new).** Today the dashboard's patient link goes nowhere. Build a patient view in the iAssist brand (not the client brand). Two reference versions exist, one per client. Keep our layout: patient header, submission status cards, and history table.
+    - **History item detail:** Click a history row to open the detail view. It shows uploads, notes (add and delete), then sections for enrollment, Buy and Bill, and prior authorization, each with a download. Attachments cover SOB, PA approval notice (auth number and expiration), enrollment form, and PA form.
+    - **Buy and Bill section:** Contains the collapsible Copay Information card. Collapsed: current balance. Expanded: copay card, status, benefit period, year-to-date spend, and transaction history.
+9. **Copay claim.** Add a "Copay Claim" button next to View Submission on the status dashboard. It opens the claim modal directly. The Figma selection modal (Start Workflow vs Copay Claim) is not needed, because the button replaces it.
+    - **Claim modal (Figma):** Prescriber, patient search (or add new patient), date of service, and document upload (CMS-1500 and EOB, JPG, PNG, or PDF, 19MB max). Add-patient fields: first and last name, DOB, sex, zip, email, phone. Next leads to the upload step.
+    - **Success:** Show the "Submitted success" modal. The claim then appears in the copay transaction history.
     - **Upload:** The standard Assistivan has no upload function. Demo it as a faux upload (pick a sample CMS-1500 and EOB). Store nothing.
-    - **Rebrand:** The Figma copy says UCB. Change to Celldex and barzolvolimab.
+    - **Rebrand:** The Figma copy says UCB. Change to the brand's manufacturer and drug name from `brand.json`.
 10. PA approval communication. The HCP sees PA approved, auth number, expiration, SOB, and remaining copay balance.
 11. Rules tab talk track is still open.
 
@@ -85,8 +120,7 @@ One workflow. iAssist starts. One default scenario (commercial, covered, PA appr
 
 ## Open questions
 
-1. **Copay claim entry point:** See the proposal under iAssist item 9. Only three of the four expected images arrived: Selection Modal, Copay Claim Modal, and Add patient.
-2. **Financial assistance detail (default path):** Show a balance amount, or just "enrolled"? Brok can talk around it.
+1. **Financial assistance stage (CRM, default path):** The CRM stage card has fields for Financial Program, Effective Date, Program Approval Date, Expiration Date, and Denial Reason. Proposal: fill program name, approval date, effective date, and expiration so it reads "copay enrolled by HCP." Keep the balance in iAssist, where the HCP checks it. Does that work for Brok?
 3. **Rules tab:** What is the talk track?
 4. **Indication, J-code, ICD-10:** Use representative values unless Celldex provides them. The CRM shows no permanent J-code yet, which fits an unapproved drug.
 5. **PAP fork inputs:** The patient UI asks for household size and income, and the result returns to iAssist. Confirm the result values (approved, denied, or income-based tier).
