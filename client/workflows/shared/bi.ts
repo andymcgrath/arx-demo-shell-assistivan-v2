@@ -63,6 +63,13 @@ export const BI_EXITS = {
     data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered", paRequired: false },
     requires: ["cash_offer"],
   },
+  no_coverage_pap: {
+    label: "No Coverage (Free Drug Program)",
+    description:
+      "Neither benefit covers it. No PA is submitted and no cash offer goes out. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses.",
+    data: { pharmacyBenefitStatus: "not_covered", medicalBenefitStatus: "not_covered", paRequired: false, pharmacyAssigned: true },
+    requires: ["pap_transfer", "income_qualification", "pharmacy_selection:assigned"],
+  },
 } satisfies Record<string, CatalogExit>;
 
 export type BiExitId = keyof typeof BI_EXITS;
@@ -89,7 +96,8 @@ export function biFork(options: { scenarios: FlowType[]; exits: { id: BiExitId; 
 /**
  * What COMPLETE_BI sets. The `bi` fork's exit decides it. An event that carries the benefit statuses still wins, so a
  * stage jump or a test can force one. Forced statuses use the legacy PA rule: pharmacy covers and medical does not.
- * An assigned pharmacy only applies when a PA runs.
+ * An assigned pharmacy applies when a PA runs, or when the exit hands the Rx to one with no PA at all (the free drug
+ * program, `assignsWithoutPa`). A forced status can switch a PA off, so a forced result keeps the PA condition.
  */
 export function resolveBi(fork: ForkDefinition, d: WorkflowData, e: Record<string, any>): Partial<WorkflowData> {
   const chosen = exitFor(fork, d).data;
@@ -103,8 +111,17 @@ export function resolveBi(fork: ForkDefinition, d: WorkflowData, e: Record<strin
     medicalBenefitStatus: medical,
     paRequired,
     biResult: deriveBiResult(paRequired, medical, pharmacy),
-    pharmacyAssigned: paRequired && !!chosen.pharmacyAssigned,
+    pharmacyAssigned: !!chosen.pharmacyAssigned && (forced ? paRequired : true),
   };
+}
+
+/**
+ * True when the chosen exit assigns a pharmacy and runs no PA: the free drug program transfer. Such a branch sends no
+ * cash offer, because the patient is not asked to pay.
+ */
+export function assignsWithoutPa(fork: ForkDefinition, d: WorkflowData): boolean {
+  const { pharmacyAssigned, paRequired } = exitFor(fork, d).data;
+  return !!pharmacyAssigned && !paRequired;
 }
 
 /** A PA needs a completed BI whose exit says one is required. COMPLETE_BI sends SUBMIT_PA, and this rule ignores it otherwise. */

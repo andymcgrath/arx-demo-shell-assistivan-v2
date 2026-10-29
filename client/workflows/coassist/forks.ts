@@ -57,7 +57,7 @@ const fulfillment = (firstLabel: string) => [
  */
 export const BI_FORK: ForkDefinition = biFork({
   scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
-  exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }],
+  exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
 /**

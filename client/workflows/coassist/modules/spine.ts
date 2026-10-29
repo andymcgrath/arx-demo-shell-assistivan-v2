@@ -7,7 +7,7 @@
 import type { CoassistContent } from "../scenarios";
 import type { CoaRule } from "./shared";
 import { nowIso, neitherCovered, REVEAL_MS } from "./shared";
-import { resolveBi, submitPaRule } from "../../shared/bi";
+import { assignsWithoutPa, resolveBi, submitPaRule } from "../../shared/bi";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 
@@ -26,13 +26,15 @@ export const SPINE_RULES: CoaRule[] = [
     on: "COMPLETE_BI",
     when: (d) => d.biStatus === "running",
     set: (d, e) => {
-      const bi = resolveBi(biForkFor(d.flowType), d, e);
-      // Neither covered: the cash-offer SMS goes out automatically.
-      return { ...bi, cashOfferSmsSent: bi.pharmacyBenefitStatus === "not_covered" && bi.medicalBenefitStatus === "not_covered" };
+      const fork = biForkFor(d.flowType);
+      const bi = resolveBi(fork, d, e);
+      // Neither covered: the cash-offer SMS goes out automatically. The free drug program transfer sends none.
+      const neither = bi.pharmacyBenefitStatus === "not_covered" && bi.medicalBenefitStatus === "not_covered";
+      return { ...bi, cashOfferSmsSent: neither && !assignsWithoutPa(fork, d) };
     },
     emit: [
       { portal: "analytics", step: 7 },
-      { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: neitherCovered },
+      { type: "SEND_CASH_OFFER_SMS", portal: "crm", step: 9, when: (d) => neitherCovered(d) && d.cashOfferSmsSent },
     ],
     // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA ignores it unless the exit requires a PA.
     then: { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },

@@ -16,6 +16,12 @@ Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag eac
 - The recipe: `source: "coassist"`, `forks: ["bi"]`, `choices: { bi: "no_coverage_pap" }`, `panels: ["benefits"]`. Modules: `enrollment`, `pap_transfer`, `income_qualification`, `pharmacy_selection` (variant `assigned`), `scheduling`, `tracking`. No `pa_notification`, `cash_offer`, or `payment`.
 - `no_coverage` keeps the cash offer. `no_coverage_pap` is a second exit with the same benefit data and a different path.
 
+- The patient journey after the transfer is the Fax PAP income form (decided 2026-10-29). Income verified activates the program, with no agent approval beat. iAssist's `financial_assistance:pap` (credit check, agent approval, approval text and code) stays iAssist only. Both modules fire the same five events, so keep their gating the same where it overlaps. Revisit a merge into one module only if a third scenario needs the free drug journey (rule 6).
+
+## Progress
+
+- Step 1 done: tag `ryzup/01-income-qualification`. `main` merged into `ryzup`: tag `ryzup/02-merge-main` (596 tests, baseline 2).
+
 ## Why a new exit and not a cash offer variant
 
 The patient sees a different journey after the same BI result. Rule 14 says that is a fork exit. Rule 5 says the scenario decides what follows, so `cash_offer` and `pap_transfer` never know about each other.
@@ -23,7 +29,7 @@ The patient sees a different journey after the same BI result. Rule 14 says that
 ## Steps
 
 1. **Extract `income_qualification`.** Move `SEND_PAP_SMS`, `VERIFY_PAP_SMS`, `VERIFY_PAP_OTP`, `START_INCOME_QUALIFICATION`, and `VERIFY_INCOME` from `workflows/pap/rules.ts` into a shared module. Rule 6 allows it because a second scenario now uses it. `PAP_RULES` imports it back. The Fax and PrES fixtures must not change. Do this step first and alone. Declare its needs and sets (needs a completed BI and a consented patient, sets `incomeStatus` and `papStatus`).
-2. **`bi` exit.** Add `no_coverage_pap` to `BI_EXITS` with `paRequired: false`, `pharmacyAssigned: true`, and `requires: ["pap_transfer", "income_qualification", "pharmacy_selection:assigned"]`. `resolveBi` already applies `pharmacyAssigned` only when a PA runs, so check that rule and change it for this exit. Add the exit to the CoAssist `bi` fork.
+2. **`bi` exit.** Add `no_coverage_pap` to `BI_EXITS` with `paRequired: false`, `pharmacyAssigned: true`, and `requires: ["pap_transfer", "income_qualification", "pharmacy_selection:assigned"]`. `resolveBi` applied `pharmacyAssigned` only when a PA runs, so an unforced exit now keeps its own flag (a forced status still needs the PA). `spine.complete_bi` sent the cash-offer SMS whenever neither benefit covered, so it now skips it when the exit assigns a pharmacy with no PA (`assignsWithoutPa`). Add the exit to the CoAssist `bi` fork. New test: `coassist.papExit.test.ts`.
 3. **`pap_transfer` module.** The referral to the PSP. It sets `papTransferStatus` and sends the transfer SMS. Preconditions: BI complete and `no_coverage_pap` chosen. Mark the referral `system`. Screens: waiting, transfer SMS. Add the route rules to `coassist/screens.ts`.
 4. **CoAssist `assigned` variant for this path.** The variant exists for medical transfer. Confirm its route rules do not collide with the PAP routes, and add the dispense hand-off to ARx Patient Solutions Pharmacy.
 5. **The scenario.** Flow type, scenario, recipe, registry entry, screen map, `ALL_SCENARIOS`, starting portal, and `BI_STAGES` rungs. The golden path ends at `medication_delivered`. Add the new scenario's fixtures. The rule 12 invariant and the menu test must pass for it.
