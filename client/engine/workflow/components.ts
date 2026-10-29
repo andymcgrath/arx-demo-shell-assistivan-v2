@@ -20,6 +20,7 @@ export type ModuleId =
   | "cash_offer"
   | "financial_assistance"
   | "provider_transfer"
+  | "income_qualification"
   | "pharmacy_selection"
   | "scheduling"
   | "payment"
@@ -182,6 +183,14 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     needs: ["fork:bi"],
     sets: ["providerTransferred"],
     trackerSteps: ["Provider notified", "Transfer confirmed"],
+  },
+  // The free drug program application. Rules live in workflows/shared/income.ts. The PAP workflow uses them today.
+  income_qualification: {
+    id: "income_qualification",
+    lane: "patient",
+    needs: ["consentVerified", "fork:bi"],
+    sets: ["incomeVerified"],
+    trackerSteps: ["Application update confirmed", "Income verified"],
   },
   pharmacy_selection: {
     id: "pharmacy_selection",

@@ -1,0 +1,22 @@
+{
+  "extends": "assistivan",
+  "slug": "ryzup",
+  "name": "RyzUp",
+  "title": "RyzUp Demo",
+  "demos": [
+    {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "1. Direct to patient",
+      "description": "Placeholder until the CoA_PAP demo lands (docs/plans/PLAN_COA_PAP.md, step 6)"
+    }
+  ],
+  "manufacturer": {
+    "name": "Alkermes",
+    "copyright": "©{{YEAR}} Alkermes. All Rights Reserved."
+  },
+  "program": {
+    "name": "Lumryz RyzUp Support Services",
+    "drugDisplayName": "Lumryz"
+  }
+}
