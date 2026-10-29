@@ -5,10 +5,13 @@
   "title": "RyzUp Demo",
   "demos": [
     {
-      "id": "coa-dtp",
-      "flow": "CoA_DTP",
-      "label": "1. Direct to patient",
-      "description": "Placeholder until the CoA_PAP demo lands (docs/plans/PLAN_COA_PAP.md, step 6)"
+      "id": "coa-pap",
+      "flow": "CoA_PAP",
+      "choices": {
+        "bi": "no_coverage_pap"
+      },
+      "label": "1. CoAssist free drug program",
+      "description": "BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and ARx Patient Solutions Pharmacy dispenses. No PA, cash offer, or payment"
     }
   ],
   "manufacturer": {
@@ -17,6 +20,14 @@
   },
   "program": {
     "name": "Lumryz RyzUp Support Services",
-    "drugDisplayName": "Lumryz"
+    "drugDisplayName": "Lumryz",
+    "transferPartner": {
+      "name": "ARx Patient Solutions Pharmacy",
+      "address": "[TBD] street address",
+      "city": "[TBD]",
+      "state": "[TBD]",
+      "zip": "[TBD]",
+      "phone": "(555) 555-0100"
+    }
   }
 }

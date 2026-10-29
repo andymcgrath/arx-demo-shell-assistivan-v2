@@ -1,6 +1,6 @@
 # Plan: CoAssist PAP transfer
 
-Status: proposed.
+Status: steps 1 to 6 done. Step 7 is a follow-up in `PLAN_RULE7_CLEANUP.md`.
 
 CoAssist is the system entry point. BI returns no coverage. The case transfers to the manufacturer's patient support program (PSP), the patient applies for the free drug program, and ARx Patient Solutions Pharmacy dispenses. No PA, no payment, no cash offer.
 
@@ -25,6 +25,7 @@ Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag eac
 - Step 3 done: tag `ryzup/04-pap-transfer` (607 tests, baseline 2). The module, its screens, and its routes exist and are tested alone. They are not in `COASSIST_RULES` or `COASSIST_SCREENS` yet, because the build-time scope check rejects a module no recipe lists. Step 5 wires them in, with the `REFER_TO_PSP` system trigger on `spine.complete_bi`. 
 - Step 4 done: tag `ryzup/05-pap-assigned-handoff` (609 tests, baseline 2). `assigned_waiting` no longer claims a PA-less case (`assignedWithoutPa` in `modules/shared.ts`), and `spine.complete_bi` assigns the scenario's `transferPharmacy` when the exit runs no PA. Dispatch still waits for income (`VERIFY_INCOME` sets `dispatchStatus`). The pharmacy's name and contact come from the brand file's `program.transferPartner` through `TRANSFER_PHARMACY`.
 - Step 5 done: tag `ryzup/06-coa-pap-scenario` (624 tests, baseline 2). `CoA_PAP` is a flow type, a scenario, a recipe, a registry entry, a golden path (`coa-pap`, ends delivered), and a 10-rung ladder from the `bi` fork. The module rules and routes are wired in. `spine.complete_bi` fires `REFER_TO_PSP`, and the transfer text tap fires `SEND_PAP_SMS`, both `system`. `recipe.ts` gained `orderedAfter`, so a recipe with the pharmacy before the referral or income fails. The assigned PA routes now need the `pa` fork. New patient page `PapTransferSms`. Known gap: a pin of another `bi` exit that needs no module the recipe lacks (`pharmacy_covered`, `medical_pa_required`) falls back to the free drug program. Step 6 closes it in the brand test.
+- Step 6 done: tag `ryzup/07-ryzup-demo` (636 tests, baseline 2). `brands/ryzup/brand.json` has the `coa-pap` demo (`choices: { bi: "no_coverage_pap" }`) and `program.transferPartner` for ARx Patient Solutions Pharmacy, with a placeholder address and phone. The brand test now rejects a pin of a `bi` exit the scenario cannot reach (`forksForFlow`), and a pin the recipe cannot run. `docs/BRANDS.md` explains both. Checked in the app with `BRAND=ryzup`: stages 4, 5, 6, 7, and 11 land on the transfer text, the update text, the home card, the address form, and delivered. `BRAND=ryzup pnpm build:client` builds.
 
 ## Why a new exit and not a cash offer variant
 
@@ -49,8 +50,9 @@ The patient sees a different journey after the same BI result. Rule 14 says that
 
 ## Open items
 
-- **Pharmacy details.** `program.transferPartner` holds one pharmacy. Set it to ARx Patient Solutions Pharmacy. Need its address and phone, or a placeholder.
-- **Manufacturer fields.** `tagline`, `support` phone, the four legal URLs, and `dosageForm` have no source yet. Use template placeholders until supplied.
+- **Pharmacy details [TBD].** `program.transferPartner` is set to ARx Patient Solutions Pharmacy. Its street address, city, state, zip, and phone are placeholders in `brands/ryzup/brand.json`. Replace them when supplied.
+- **Manufacturer fields [TBD].** `ryzup` extends `assistivan`, so `tagline`, `support` phone, the legal URLs, and `dosageForm` still show Assistivan's values. Replace them when the client supplies theirs.
+- **Logo and colors [TBD].** `program.assets` and `program.colors` are not set. The program name shows as text on the inherited colors.
 
 ## Final check
 

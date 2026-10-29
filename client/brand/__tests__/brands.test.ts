@@ -13,7 +13,10 @@ import {
   rowPasses,
 } from "@/brand/theme";
 import { choiceProblems } from "@/engine/workflow/forks";
-import { ALL_FORKS } from "@/workflows/forks";
+import { forksForFlow } from "@/workflows/forks";
+import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import { recipeProblems } from "@/engine/workflow/recipe";
+import { forksForScenario } from "@/engine/workflow/forks";
 
 /**
  * Every folder under brands/ must resolve to a complete, self-consistent brand
@@ -128,7 +131,16 @@ for (const slug of slugs) {
 
     it("lets a demo choose only branches that exist", () => {
       for (const demo of brand.demos) {
-        expect(choiceProblems(ALL_FORKS, demo.flow, demo.choices)).toEqual([]);
+        expect(choiceProblems(forksForFlow(demo.flow), demo.flow, demo.choices)).toEqual([]);
+      }
+    });
+
+    it("lets a demo choose only branches its scenario's recipe can run", () => {
+      for (const demo of brand.demos) {
+        const recipe = ALL_SCENARIOS.find((s) => s.flowType === demo.flow)?.recipe;
+        if (!recipe) continue;
+        const forks = forksForScenario(forksForFlow(demo.flow), demo.flow);
+        expect(recipeProblems({ ...recipe, choices: { ...recipe.choices, ...demo.choices } }, forks)).toEqual([]);
       }
     });
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { forksForScenario } from "@/engine/workflow/forks";
+import { choiceProblems, forksForScenario } from "@/engine/workflow/forks";
+import { forksForFlow } from "@/workflows/forks";
 import { recipeProblems } from "@/engine/workflow/recipe";
 import { menuPaths, routeFor, routedPaths } from "@/engine/workflow/screens";
 import type { ScenarioRecipe } from "@/engine/workflow/components";
@@ -68,6 +69,13 @@ describe("pap_transfer module", () => {
     for (const [bi, needs] of [["no_coverage", "cash_offer"], ["medical_covered", "provider_transfer"]] as const) {
       const problems = recipeProblems({ ...COA_PAP_RECIPE, choices: { bi } }, PAP_FORKS);
       expect(problems.some((p) => p.includes(`exit "${bi}" requires`) && p.includes(needs)), bi).toBe(true);
+    }
+  });
+
+  it("lets a demo pin only the exit the scenario can reach", () => {
+    expect(choiceProblems(forksForFlow("CoA_PAP"), "CoA_PAP", { bi: "no_coverage_pap" })).toEqual([]);
+    for (const bi of ["pharmacy_covered", "medical_pa_required", "no_coverage"]) {
+      expect(choiceProblems(forksForFlow("CoA_PAP"), "CoA_PAP", { bi }).length, bi).toBeGreaterThan(0);
     }
   });
 

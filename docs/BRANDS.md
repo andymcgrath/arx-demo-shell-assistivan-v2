@@ -136,6 +136,10 @@ Some brand and drug names still sit in source (patient copy, sample patients, th
 
 `program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to every `bi` exit that assigns a pharmacy: `pharmacy_transfer` in CoA_Coverage and `medical_pa_required` in iAssist_Medical_Transfer. The patient does not pick a pharmacy on those branches. When the brand names no partner, a placeholder pharmacy (CVS Pharmacy #3795) shows. Add it to `brand.json` by hand: the Brand Lab has no editor for it, and it saves nothing.
 
+`CoA_PAP` (the free drug program) uses it too: the `no_coverage_pap` exit assigns the pharmacy and runs no PA. The patient never picks one. `program.name` is the patient support program the case transfers to. The `ryzup` brand sets both.
+
+A demo can pin only a `bi` exit its scenario can reach. `CoA_PAP` reaches `no_coverage_pap` alone, so the brand test rejects any other pin on it, and rejects a pin whose exit needs a module the recipe lacks.
+
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 
 The Brand Lab at `/brand-lab` has two tabs. Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
