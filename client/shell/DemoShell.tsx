@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEMO_OPTIONS } from "./flowOptions";
+import { pspStepBar } from "./pspStepBar";
 import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents } from "./coassistLadders";
@@ -660,7 +661,8 @@ function StepBar() {
   // consent" problem iAssistStepDone above solves, now also true for CoA.
   const coaStepDone = isCoaFlow ? computeCoaStepDone(workflowData) : null;
   const coverageStepDone = isCoverageFlow ? computeCoverageStepDone(workflowData) : null;
-  const stepDone = iAssistStepDone ?? coaStepDone ?? coverageStepDone;
+  const pspBar = pspStepBar(flowType);
+  const stepDone = pspBar ? pspBar.map((step) => step.done(workflowData)) : (iAssistStepDone ?? coaStepDone ?? coverageStepDone);
 
   const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
     const p = workflowData.pharmacyStatus;
@@ -687,7 +689,8 @@ function StepBar() {
   const paStatus        = workflowData.paStatus;
   const appealStatus    = workflowData.appealStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
-  const STEP_LABELS     = isBuyAndBill ? STEP_LABELS_BUY_AND_BILL
+  const STEP_LABELS     = pspBar ? pspBar.map((step) => step.label)
+    : isBuyAndBill ? STEP_LABELS_BUY_AND_BILL
     : isFreeDrug ? STEP_LABELS_FREE_DRUG
     : (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
     : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL

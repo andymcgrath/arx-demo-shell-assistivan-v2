@@ -1,6 +1,6 @@
 # Plan: CoAssist PAP transfer
 
-Status: steps 1 to 6 done. Step 7 is a follow-up in `PLAN_RULE7_CLEANUP.md`.
+Status: steps 1 to 7 done for the CRM and the shell. The Client portal copy still needs step 7 (see Progress). The rest of rule 7 is in `PLAN_RULE7_CLEANUP.md`.
 
 CoAssist is the system entry point. BI returns no coverage. The case transfers to the manufacturer's patient support program (PSP), the patient applies for the free drug program, and ARx Patient Solutions Pharmacy dispenses. No PA, no payment, no cash offer.
 
@@ -26,6 +26,7 @@ Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag eac
 - Step 4 done: tag `ryzup/05-pap-assigned-handoff` (609 tests, baseline 2). `assigned_waiting` no longer claims a PA-less case (`assignedWithoutPa` in `modules/shared.ts`), and `spine.complete_bi` assigns the scenario's `transferPharmacy` when the exit runs no PA. Dispatch still waits for income (`VERIFY_INCOME` sets `dispatchStatus`). The pharmacy's name and contact come from the brand file's `program.transferPartner` through `TRANSFER_PHARMACY`.
 - Step 5 done: tag `ryzup/06-coa-pap-scenario` (624 tests, baseline 2). `CoA_PAP` is a flow type, a scenario, a recipe, a registry entry, a golden path (`coa-pap`, ends delivered), and a 10-rung ladder from the `bi` fork. The module rules and routes are wired in. `spine.complete_bi` fires `REFER_TO_PSP`, and the transfer text tap fires `SEND_PAP_SMS`, both `system`. `recipe.ts` gained `orderedAfter`, so a recipe with the pharmacy before the referral or income fails. The assigned PA routes now need the `pa` fork. New patient page `PapTransferSms`. Known gap: a pin of another `bi` exit that needs no module the recipe lacks (`pharmacy_covered`, `medical_pa_required`) falls back to the free drug program. Step 6 closes it in the brand test.
 - Step 6 done: tag `ryzup/07-ryzup-demo` (636 tests, baseline 2). `brands/ryzup/brand.json` has the `coa-pap` demo (`choices: { bi: "no_coverage_pap" }`) and `program.transferPartner` for ARx Patient Solutions Pharmacy, with a placeholder address and phone. The brand test now rejects a pin of a `bi` exit the scenario cannot reach (`forksForFlow`), and a pin the recipe cannot run. `docs/BRANDS.md` explains both. Checked in the app with `BRAND=ryzup`: stages 4, 5, 6, 7, and 11 land on the transfer text, the update text, the home card, the address form, and delivered. `BRAND=ryzup pnpm build:client` builds.
+- Step 7 done, scoped to CoA_PAP: tag `ryzup/08-coa-pap-step-bar` (642 tests, baseline 2, no fixture diff). `shell/pspStepBar.ts` returns the bar (Referral, Enrolled, BI, Transfer to PSP, Income verified, Delivery) and a done test over `workflowData`, picked by `scenarioHasModule(flowType, "pap_transfer")`. `portals/crm/pspStages.ts` builds the CRM BI, PSP referral, and income stages from the `bi` fork choice. Other flows keep their bars and lists. **Still open:** `portals/client/pages/Index.tsx` (the Client portal copy of the CRM page) needs the same change, and the rest of the rule 7 cleanup. The shell's pulsing-ring offsets still hardcode positions (`rxProcessingStepN`), so on this 6-step bar the Delivery dot pulses while the Rx is processing.
 
 ## Why a new exit and not a cash offer variant
 
@@ -39,7 +40,7 @@ The patient sees a different journey after the same BI result. Rule 14 says that
 4. **CoAssist `assigned` variant for this path.** The variant exists for medical transfer. Confirm its route rules do not collide with the PAP routes, and add the dispense hand-off to ARx Patient Solutions Pharmacy.
 5. **The scenario.** Flow type, scenario, recipe, registry entry, screen map, `ALL_SCENARIOS`, starting portal, and `BI_STAGES` rungs. The golden path ends at `medication_delivered`. Add the new scenario's fixtures. The rule 12 invariant and the menu test must pass for it.
 6. **Brand and demo.** Add `brands/ryzup/brand.json` (see Brand). Add a `demos` entry with `flow: "CoA_PAP"` and `choices: { bi: "no_coverage_pap" }`. Update `docs/BRANDS.md`.
-7. **Follow-up, own step.** The shell and CRM branch on `isCoaFlow` and `isCoverageFlow`. The new flow shows the closest existing step bar. Fixing it belongs to `PLAN_RULE7_CLEANUP.md`.
+7. **Step bar and CRM stages.** Done for the shell and the CRM (see Progress). The Client portal copy and the rest of the `isCoaFlow` and `isCoverageFlow` cleanup stay in `PLAN_RULE7_CLEANUP.md`.
 
 ## Brand
 

@@ -18,6 +18,7 @@ import { PAYER } from "../payerFacts";
 import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
 import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
 import { BRAND } from "@/brand";
+import { pspStages } from "../pspStages";
 import { caseDocuments } from "@/brand/caseDocuments";
 import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
 import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX } from "@/portals/iassist/data/copayProgram";
@@ -1285,6 +1286,8 @@ export default function Index() {
 
   const STAGES_LIVE: Stage[] = isFreeDrug
     ? freeDrugStages
+    : scenarioHasModule(flowType, "pap_transfer")
+    ? [eaStage, ...pspStages(workflowData, BRAND.program.name), tpStage, psStage]
     : isBuyAndBill
     ? buyAndBillStages
     : isCoverageFlow
