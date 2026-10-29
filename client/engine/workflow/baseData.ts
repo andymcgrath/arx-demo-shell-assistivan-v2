@@ -51,6 +51,9 @@ export function createInitialWorkflowData(
     cashOfferSmsVerified: false,
     providerTransferSmsSent: false,
     providerTransferSmsVerified: false,
+    papTransferStatus: "none",
+    papTransferSmsSent: false,
+    papTransferSmsVerified: false,
     choices: {},
     ...overrides,
   };

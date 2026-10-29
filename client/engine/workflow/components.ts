@@ -24,6 +24,7 @@ export type ModuleId =
   | "cash_offer"
   | "financial_assistance"
   | "provider_transfer"
+  | "pap_transfer"
   | "income_qualification"
   | "pharmacy_selection"
   | "scheduling"
@@ -217,6 +218,15 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     needs: ["fork:bi"],
     sets: ["providerTransferred"],
     trackerSteps: ["Provider notified", "Transfer confirmed"],
+  },
+  // The referral to the manufacturer's patient support program (PSP), after BI finds no coverage. A system step: the
+  // text goes out when BI completes. Rules live in workflows/coassist/modules/pap_transfer.ts.
+  pap_transfer: {
+    id: "pap_transfer",
+    lane: "patient",
+    needs: ["consentVerified", "fork:bi"],
+    sets: ["papTransferred"],
+    trackerSteps: ["Referred to patient support program"],
   },
   // The free drug program application. Rules live in workflows/shared/income.ts. The PAP workflow uses them today.
   income_qualification: {

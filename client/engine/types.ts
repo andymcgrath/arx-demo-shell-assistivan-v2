@@ -194,6 +194,13 @@ export interface WorkflowData {
    *  taps through the SMS (VERIFY_PROVIDER_TRANSFER_SMS), which unlocks
    *  /provider-transfer. Stays false for every other flow. */
   providerTransferSmsVerified: boolean;
+  /** CoA_PAP only: has CoAssist referred the case to the manufacturer's patient support program? 'referred' is set when
+   *  BI completes on the `no_coverage_pap` exit. Stays 'none' for every other flow. */
+  papTransferStatus: 'none' | 'referred';
+  /** CoA_PAP only: the transfer text goes out with the referral. Same tap-through shape as providerTransferSmsSent. */
+  papTransferSmsSent: boolean;
+  /** CoA_PAP only: true once the patient taps the transfer text (VERIFY_PAP_TRANSFER_SMS). */
+  papTransferSmsVerified: boolean;
   /**
    * The branch picked at each declared fork, keyed by fork id (for example `{ bi: "no_coverage" }`).
    * The scenario sets the story's default. A demo in the brand file or the presenter can change it.

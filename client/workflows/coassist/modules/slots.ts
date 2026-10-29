@@ -48,6 +48,7 @@ export const COASSIST_GROUPS = [
   "Pricing and pharmacy",
   "Cash pay",
   "Provider transfer",
+  "Patient support program",
   "{program} order",
 ] as const;
 

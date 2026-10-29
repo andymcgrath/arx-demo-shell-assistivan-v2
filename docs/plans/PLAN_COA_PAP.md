@@ -21,6 +21,8 @@ Run `pnpm test` and `pnpm typecheck:ratchet` before and after each step. Tag eac
 ## Progress
 
 - Step 1 done: tag `ryzup/01-income-qualification`. `main` merged into `ryzup`: tag `ryzup/02-merge-main` (596 tests, baseline 2).
+- Step 2 done: tag `ryzup/03-no-coverage-pap-exit` (602 tests, baseline 2).
+- Step 3 done: tag `ryzup/04-pap-transfer` (607 tests, baseline 2). The module, its screens, and its routes exist and are tested alone. They are not in `COASSIST_RULES` or `COASSIST_SCREENS` yet, because the build-time scope check rejects a module no recipe lists. Step 5 wires them in, with the `REFER_TO_PSP` system trigger on `spine.complete_bi`. Step 4 must fix `pharmacy_selection.assigned_waiting`, which holds the PA-less case on `/`.
 
 ## Why a new exit and not a cash offer variant
 
