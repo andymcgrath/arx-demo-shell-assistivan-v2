@@ -45,8 +45,11 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * CoA_Coverage reads its stages from the BI fork (workflows/coassist/forks.ts), so `choices` selects the branch.
  * Without `choices`, it takes the scenario's default branch.
  */
+/** The flows with a CoAssist stage-jump ladder. */
+export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
+
 export function coassistStageEvents(
-  flowType: "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP",
+  flowType: CoassistLadderFlow,
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {

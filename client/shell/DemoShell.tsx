@@ -35,10 +35,10 @@ import { DEMO_OPTIONS } from "./flowOptions";
 import { stepBarModel } from "./stepBar";
 import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
-import { coassistStageEvents } from "./coassistLadders";
+import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
-import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
 import { scenarioHasModule } from "@/workflows/scenarios";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
@@ -163,12 +163,11 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
+  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow } = scenarioFacts(flowType);
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
   // has no provider screen at all.
-  const isPapFlow = flowType === "Fax_PAP_Audit";
 
   return PORTALS_BASE.filter(p => {
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
@@ -428,7 +427,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
   // into the phone frame by accident.
   const { workflowData } = usePersonaState('patient');
   const showPesPapUpdateSmsPhone =
-    flowType === 'PrES_PAP' && workflowData.papSmsSent && !workflowData.papSmsVerified;
+    scenarioFacts(flowType).isPres && workflowData.papSmsSent && !workflowData.papSmsVerified;
 
   return (
     <div className="flex flex-col flex-1 min-w-0 border-r border-slate-700/50 last:border-r-0">
@@ -470,7 +469,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * (showPesPapUpdateSmsPhone, computed above) — that one screen still
        * uses the phone frame, matching every other flow's SMS screens.
        */}
-      {portal === "patient" && (flowType !== "PrES_PAP" || showPesPapUpdateSmsPhone) ? (
+      {portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
@@ -559,26 +558,27 @@ export default function DemoShell() {
   // tab-visibility-adjacent behavior; the reset ladder and stage-button
   // labels branch on isIAssistPapFlow specifically where WF5's denied-PA
   // path actually diverges from WF4's approved-PA path.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
+  const facts = scenarioFacts(flowType);
+  const isIAssistFlow = facts.isIassistSource;
   // WF5 (iAssist_PAP) — structural clone of WF4, but the demo's PA resolves
   // to Denied instead of Approved (see engine/types.ts's FlowType comment),
   // so its reset ladder and stage-button labels need their own short list
   // instead of reusing WF4's approved-path one below.
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  const isIAssistPapFlow = facts.isIassistAppeal;
   // PrES_PAP (WF6) shares WF2's ladder here — its dedicated machine
   // (presPap.ts) accepts the identical event sequence, so the same
   // stage-jump steps apply. See STEP_LABELS_PAP_AUDIT/getPortals above for
   // where WF5 intentionally does NOT follow WF2 (its provider tab stays
   // visible).
-  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  const isPapFlow = facts.isNoPaIntake;
   // CoA_Coverage — its own resetActorToStage branch below (this file's StepBar()
   // component above has its own separate isCoverageFlow local, unrelated scope).
-  const isCoverageFlow = flowType === "CoA_Coverage";
+  const isCoverageFlow = facts.isCoverageScenario;
   // CoA_DTP/CoA_Copay — own resetActorToStage branch below too (see the
   // generic block's header comment for why this used to silently break past
   // Prior Authorization for both flows). Same isCoaFlow local StepBar()
   // above already has, unrelated scope.
-  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  const isCoaFlow = facts.hasPricingFork;
   const resetPatient = usePatientStore((s) => s.reset);
   // WF5's own captured-application-data store — reset alongside patientStore
   // wherever patientStore itself gets a full reset() call below (stale
@@ -738,7 +738,7 @@ export default function DemoShell() {
 
     // The free drug program ladder follows the scenario's own `bi` fork rungs, like Coverage's.
     if (scenarioHasModule(flowType, "pap_transfer")) {
-      for (const event of coassistStageEvents("CoA_PAP", stage, forkChoices)) actor.send(event as any);
+      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) actor.send(event as any);
       return;
     }
 
@@ -746,7 +746,7 @@ export default function DemoShell() {
     // coassistLadders.ts so the headless tests run the same event lists.
     if (isCoverageFlow || isCoaFlow) {
       // RESET keeps the current choices, so the jump lands on the selected branch.
-      for (const event of coassistStageEvents(isCoverageFlow ? 'CoA_Coverage' : (flowType as 'CoA_DTP' | 'CoA_Copay'), stage, forkChoices)) {
+      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) {
         actor.send(event as any);
       }
       return;
@@ -926,7 +926,7 @@ export default function DemoShell() {
                   >
                     Reset All
                   </button>
-                  {((flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP")
+                  {(isPapFlow
                     ? [
                       { stage: 1, label: "Referral Received" },
                       { stage: 2, label: "Patient Enrolled" },
@@ -968,7 +968,7 @@ export default function DemoShell() {
                     : scenarioHasModule(flowType, "pap_transfer")
                     ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     : isCoverageFlow
-                    ? forkStageList(biForkFor("CoA_Coverage"), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic
