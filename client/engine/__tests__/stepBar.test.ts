@@ -48,4 +48,33 @@ describe("shell step bar along the golden paths", () => {
     expect(Object.keys(recorded).length).toBe(SCENARIOS.length);
     expectMatchesFixture("ui/stepBar", recorded);
   });
+
+  it("every Rx ring sits on a step the bar has", () => {
+    for (const scenario of SCENARIOS) {
+      withFrozenClock(() => {
+        const actor = startFlow(scenario.flowType, scenario.choices ? { choices: scenario.choices } : {});
+        for (const step of [{ type: "(start)" }, ...scenario.steps]) {
+          if (step.type !== "(start)") runSteps(actor, [step]);
+          const m = stepBarModel(scenario.flowType, ctx(actor).workflowData);
+          for (const n of [m.rxProcessingStepN, m.rxShippedStepN]) {
+            // 0 means the bar has no such step. The iAssist appeal bar keeps its ring on the last dot.
+            expect(n).toBeGreaterThanOrEqual(0);
+            expect(n).toBeLessThanOrEqual(m.labels.length);
+          }
+        }
+        actor.stop();
+      });
+    }
+  });
+
+  it("the patient support program bar rings its Delivery step while the Rx is in transit", () => {
+    withFrozenClock(() => {
+      const actor = startFlow("CoA_PAP");
+      const m = stepBarModel("CoA_PAP", ctx(actor).workflowData);
+      expect(m.labels).toHaveLength(6);
+      expect(m.labels[m.rxProcessingStepN - 1]).toBe("Delivery");
+      expect(m.labels[m.rxShippedStepN - 1]).toBe("Delivery");
+      actor.stop();
+    });
+  });
 });

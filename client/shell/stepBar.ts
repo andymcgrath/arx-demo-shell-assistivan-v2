@@ -397,9 +397,14 @@ export interface StepBarModel {
   paRingApplies: boolean;
   /** True when the bar ends at Triage to Pharmacy, so the Rx rings must not land on its last dot. */
   rxRingsOff: boolean;
+  /** The 1-based step the "Processing…" and "In Transit…" rings sit on, or 0 when the bar has no such step. */
   rxProcessingStepN: number;
+  /** The 1-based step the "Shipping…" ring sits on, or 0 when the bar has no such step. */
   rxShippedStepN: number;
 }
+
+/** The 1-based position of a labelled step, or 0 when the bar has none. */
+const stepNumberOf = (labels: string[], label: string): number => labels.indexOf(label) + 1;
 
 export function stepBarModel(flowType: string, workflowData: WorkflowData): StepBarModel {
   const facts = scenarioFacts(flowType);
@@ -465,6 +470,15 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
     : isIAssistPapFlow ? STEP_LABELS_IASSIST_PAP
     : STEP_LABELS_DEFAULT;
 
+  // The rings follow the bar's own steps. The patient support program bar has no Rx steps: its Delivery step covers
+  // both. The iAssist appeal bar keeps its ring on the last dot, as it always has (it has no Rx steps either).
+  const pspTransitStep = pspBar ? pspBar.findIndex((step) => step.rxInTransit) + 1 : 0;
+  const rx = pspTransitStep
+    ? { processing: pspTransitStep, shipped: pspTransitStep }
+    : labels === STEP_LABELS_IASSIST_PAP
+    ? { processing: labels.length, shipped: 0 }
+    : { processing: stepNumberOf(labels, "Rx Processing"), shipped: stepNumberOf(labels, "Rx Shipped") };
+
   return {
     labels,
     stepDone,
@@ -472,8 +486,7 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
     // Only paProcessing stays WF1/CoA-only: Fax_PAP_Audit and PrES_PAP never leave paStatus "none".
     paRingApplies: !facts.isNoPaIntake,
     rxRingsOff: isCoveragePharmacyFlow,
-    // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP and CoA_Copay: n=7/8 (Payment pushes the tail back by one).
-    rxProcessingStepN: isCoaFlow ? 7 : 6,
-    rxShippedStepN: isCoaFlow ? 8 : 7,
+    rxProcessingStepN: rx.processing,
+    rxShippedStepN: rx.shipped,
   };
 }

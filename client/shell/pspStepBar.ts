@@ -13,6 +13,8 @@ export interface PspStep {
   /** Label of the first stage-jump rung where `done` turns true. */
   rung: string;
   done: (d: WorkflowData) => boolean;
+  /** The Rx is processing and shipping while this step is the next one. The step bar's pulsing rings sit here. */
+  rxInTransit?: boolean;
 }
 
 const PSP_STEPS: PspStep[] = [
@@ -21,7 +23,7 @@ const PSP_STEPS: PspStep[] = [
   { label: "BI", rung: "No Coverage Confirmed (referred to patient support program)", done: (d) => d.biStatus === "complete" },
   { label: "Transfer to PSP", rung: "Transfer SMS Confirmed", done: (d) => d.papTransferSmsVerified },
   { label: "Income verified", rung: "Income Verified", done: (d) => d.incomeStatus === "verified" },
-  { label: "Delivery", rung: "Medication Delivered", done: (d) => d.pharmacyStatus === "delivered" },
+  { label: "Delivery", rung: "Medication Delivered", done: (d) => d.pharmacyStatus === "delivered", rxInTransit: true },
 ];
 
 /** The step bar for the scenario, or null when its recipe has no `pap_transfer` module. */
