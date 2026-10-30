@@ -1,6 +1,6 @@
 # Plan: remove `flowType ===` checks from the UI (rule 7)
 
-Status: draft for review. No code has changed.
+Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 are done and tagged. Step 6 (the CRM page) is next and needs a decision, see the progress notes at the end.
 
 CLAUDE.md rule 7: do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition. Rule 14: a scenario's path changes at forks, not at flow checks. The UI still breaks both rules in about 24 files. Two earlier plans (the medical transfer plans) deferred this as a follow-up.
 
@@ -83,3 +83,29 @@ Replace each check with a read from the scenario definition. Work in order of ri
 - `rg "flowType ===" client/portals client/shell` returns only allowlisted lines.
 - `pnpm test` and `pnpm typecheck:ratchet` pass.
 - Every file touched is under about 600 lines or has a split planned.
+
+## Progress notes (30 Oct 2026)
+
+Tags run `refactor/59` to `refactor/63`, because `refactor/51` to `refactor/58` were already taken by earlier work. Plan step N is tag N+58.
+
+| Plan step | Tag | What landed |
+|---|---|---|
+| Oracle | `59-ui-predicates-oracle` | Test that copies every UI flag verbatim and records it per flow (`__fixtures__/ui/predicates.json`). |
+| Facts | `60-scenario-facts` | `client/workflows/scenarioFacts.ts`: every flag derived from the recipe, intake, and `legacy`. No `ui` block was needed. `isCoA` is now `isCoassistSource` and `hasPricingFork`. `isPapFlow` is now `isFaxPap` and `isNoPaIntake`. |
+| Shell | `61-shell-step-bar` | Step bar moved to `shell/stepBar.ts` (pure, fixture `ui/stepBar.json`). DemoShell reads `scenarioFacts`. Intended change: CoA_PAP's Rx rings now sit on its Delivery step. |
+| Patient | `62-patient-pages` | Every patient page and `patient/index.tsx`. New fact `isStandardFaxPa`. |
+| Provider and rest | `63-provider-field-ladders` | Provider, field, both FulfilmentCenter pages, iAssist NewCasePatient, hooks, ladders. New `scenarioFor` lookup. Provider's `isCoA` is `isCoassistSource`. |
+
+Fixtures stayed identical except the two new ones and the CoA_PAP ring change.
+
+**Left to do**
+
+- Step 6, CRM page (`crm/pages/Index.tsx`, 4,160 lines, 7 `flowType ===` lines and about 30 local flag uses). Not started. Two problems:
+  - The stage list and quick view (`STAGES_LIVE`, about 600 lines) are built inside the component from hook values, and the repo has no jsdom or testing-library. A "stage-list test before the swap" needs the stage builder extracted into a pure function first. That extraction is itself the risky edit.
+  - Splitting 4,160 lines into files under 600 is several commits, each with a large closure surface (stage panels, benefits panel, fulfillment step).
+  Proposed order: (1) extract the stage builder to a pure function, unchanged, and record its fixture; (2) swap its flags to `scenarioFacts`, `panels`, and the `bi` choice; (3) swap the JSX flags; (4) split, one seam per commit.
+- Step 7, Client portal copy (`client/pages/Index.tsx`, 3,713 lines, 6 lines). Ask first: share the CRM sections or keep the copy. Wait for step 6, since sharing removes most of the work.
+- Step 8, guard test. Allowlist today would hold only the two CRM and Client page files' lines plus any that remain on purpose.
+- `WorkflowEngine.ts` still branches on `isCoverageFlow` for copy (lines 410 to 548). Separate follow-up, outside the guard.
+- CoA_PAP and iAssist_PAP step bars: iAssist_PAP keeps its Rx ring on the last dot, as before. It has no Rx steps, so this may be the same fault CoA_PAP had. Check by eye before changing.
+- `FLOW_START_PORTAL` in `DemoShell.tsx` is still a map keyed by flow id. The plan's `ui` block would replace it.
