@@ -4,6 +4,7 @@ import { ChevronLeft, Mic } from "lucide-react";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { useRecipeModule } from "@/hooks/useRecipeModule";
 import { useFreeDrug } from "@/hooks/useFreeDrug";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 /**
  * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
@@ -28,7 +29,7 @@ export default function PaApprovedSms() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
+  const { isCoverageScenario } = scenarioFacts(workflowData.flowType);
   // Buy and Bill: the HCP administers the drug, so there is no delivery to schedule.
   const hcpAdministered = useRecipeModule("pa_notification")?.props?.variant === "hcp_administered";
   // Free drug: the same text and code after the CRM agent approves the application.
@@ -73,7 +74,7 @@ export default function PaApprovedSms() {
                 ? `Good news! Your ${PROGRAM.drugDisplayName} free drug application was approved. See what happens next:`
                 : hcpAdministered
                 ? `Good news! Your ${PROGRAM.name} prior authorization was approved. See what happens next:`
-                : isCoverageFlow
+                : isCoverageScenario
                 ? `Good news! Your ${PROGRAM.name} prior authorization was approved. Time to pick a pharmacy:`
                 : `Good news! Your ${PROGRAM.drugDisplayName} prior authorization was approved. Time to schedule delivery:`}
             </p>

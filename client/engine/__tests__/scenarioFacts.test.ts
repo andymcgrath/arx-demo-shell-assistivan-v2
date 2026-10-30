@@ -41,6 +41,11 @@ describe("scenarioFacts", () => {
     });
   }
 
+  it("isStandardFaxPa is the faxed PA flow and no other (the UI's isWorkflow1)", () => {
+    // The old definition, copied from patient/pages/DeliveryDate.tsx: flowType === "Fax_QS_PA_Approved".
+    for (const s of ALL_SCENARIOS) expect({ flow: s.flowType, is: scenarioFacts(s.flowType).isStandardFaxPa }).toEqual({ flow: s.flowType, is: s.flowType === "Fax_QS_PA_Approved" });
+  });
+
   it("a flow with no scenario has no facts", () => {
     const f = scenarioFacts("not_a_flow");
     expect(Object.entries(f).filter(([, v]) => v === true)).toEqual([]);

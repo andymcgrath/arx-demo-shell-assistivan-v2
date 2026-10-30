@@ -4,6 +4,7 @@ import { usePatientCase } from "@/hooks/usePatientCase";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 const LIST_PRICE = 575;
 const DISCOUNT = 426;
@@ -18,7 +19,7 @@ const TOTAL = LIST_PRICE - DISCOUNT;
 // sets pricingOption to "self_pay", but it's a flat cash-pay price for the
 // CGM sensor, not the Copay Program's discounted monthly rate — this table
 // alone can't tell the two apart since they share the same key, so
-// COVERAGE_SELF_PAY_PRICE below overrides it specifically for isCoverageFlow.
+// COVERAGE_SELF_PAY_PRICE below overrides it specifically for isCoverageScenario.
 const COA_PRICE_BY_OPTION: Record<string, { price: number; cadence: string }> = {
   retail: { price: 50, cadence: "" },
   mail_order: { price: 100, cadence: "" },
@@ -44,25 +45,23 @@ export default function DeliveryPayment() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  const isIAssist = flowType === "iAssist_PA_Approved";
+  const { hasPricingFork, isIassistStandardPa, isCoverageScenario, isStandardFaxPa } = scenarioFacts(flowType);
   // CoA_Coverage only reaches this screen for its own self-pay scenario (Scenario
   // 3 — neither benefit covered, see workflows/coassist/) — display-only
   // addition, doesn't change completePayment()'s dispatch logic below, which
   // already fires PATIENT_PAYS/VERIFY_PAYMENT unconditionally for this flow
-  // via the generic (!isCoA && !isIAssist) branch.
-  const isCoverageFlow = flowType === "CoA_Coverage";
+  // via the generic (!hasPricingFork && !isIassistStandardPa) branch.
   // iAssist replicates CoA's exact pricing display (Total due today card)
   // instead of WF1's List Price/Discount breakdown, since iAssist now also
   // sets pricingOption via Benefit Pricing.
-  const usesCoaPricingDisplay = isCoA || isIAssist || isCoverageFlow;
+  const usesCoaPricingDisplay = hasPricingFork || isIassistStandardPa || isCoverageScenario;
   const { data: patient } = usePatientCase();
 
   useEffect(() => {
-    if (flowType === "Fax_QS_PA_Approved") {
+    if (isStandardFaxPa) {
       navigate("/delivery-confirmation");
     }
-  }, [flowType, navigate]);
+  }, [isStandardFaxPa, navigate]);
   const firstName = patient.patientName.split(" ")[0];
 
   // One shared layout (Apple Pay + expandable Pay-with-Card) for every flow —
@@ -86,7 +85,7 @@ export default function DeliveryPayment() {
     // patients at all now (DeliveryDate.tsx's skipPayment routes them
     // straight to /delivery-confirmation instead), but keeping the check
     // here too means this stays correct even if that routing ever changes.
-    if ((!isCoA && !isIAssist) || workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled) {
+    if ((!hasPricingFork && !isIassistStandardPa) || workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled) {
       dispatch("PATIENT_PAYS", { portal: "patient" });
       dispatch("VERIFY_PAYMENT", { portal: "patient" });
     }
@@ -98,7 +97,7 @@ export default function DeliveryPayment() {
   const [breakdown, setBreakdown] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
 
-  const coaPricing = isCoverageFlow && workflowData.pricingOption === "self_pay"
+  const coaPricing = isCoverageScenario && workflowData.pricingOption === "self_pay"
     ? COVERAGE_SELF_PAY_PRICE
     : COA_PRICE_BY_OPTION[workflowData.pricingOption ?? "retail"] ?? COA_PRICE_BY_OPTION.retail;
   const cardTotalLabel = usesCoaPricingDisplay ? `${coaPricing.price}${coaPricing.cadence}` : TOTAL.toFixed(2);

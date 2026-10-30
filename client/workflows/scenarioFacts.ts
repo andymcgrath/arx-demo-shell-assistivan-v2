@@ -28,6 +28,8 @@ export interface ScenarioFacts {
   isFax: boolean;
   /** Fax intake and BI finds no insurance, so no PA runs. */
   isFaxPap: boolean;
+  /** Fax intake with a manual PA: coverage is found and the provider's submission starts the PA. */
+  isStandardFaxPa: boolean;
   /** Fax or esign intake and BI finds no insurance, so no PA runs. */
   isNoPaIntake: boolean;
   /** Legacy esign intake. The patient app uses the wide layout. */
@@ -73,6 +75,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     hasCopayFork,
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
+    isStandardFaxPa: !!scenario && !recipe && !noPa && intake === "fax",
     isFaxPap: noPa && intake === "fax",
     isNoPaIntake: noPa && (intake === "fax" || intake === "esign"),
     isPres,

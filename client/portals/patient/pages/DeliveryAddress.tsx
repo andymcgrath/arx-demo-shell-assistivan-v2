@@ -4,6 +4,7 @@ import { MapPin, ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { scenarioHasModule } from "@/workflows/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 interface AddressForm { address: string; city: string; state: string; zip: string; }
 
@@ -43,13 +44,10 @@ export default function DeliveryAddress() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const isCoA = workflowData.flowType === "CoA_DTP" || workflowData.flowType === "CoA_Copay";
-  const isIAssist = workflowData.flowType === "iAssist_PA_Approved";
-  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
+  const { hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, hasCopayFork, isPres } = scenarioFacts(workflowData.flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 and Scenario 3 — see workflows/coassist/) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
-  const isCoverageFlow = workflowData.flowType === "CoA_Coverage";
   // The free drug program in CoAssist: read from the recipe, not the flow id.
   const isPapProgram = scenarioHasModule(workflowData.flowType, "income_qualification");
   const [form, setForm] = useState<AddressForm>({ address: "789 Oakridge Avenue", city: "Fairview", state: "TX", zip: "75069" });
@@ -72,14 +70,14 @@ export default function DeliveryAddress() {
   // Triage tab, this just signals the patient's own part is done.
   function handleContinue() {
     if (!valid) return;
-    if (isCoA || isIAssist || isPapFlow || isCoverageFlow || isPapProgram) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (hasPricingFork || isIassistStandardPa || isNoPaIntake || isCoverageScenario || isPapProgram) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
     // workflow once dispatched" treatment (Retail skips this screen
     // entirely; Mail Order still confirms an address, just no ship date —
     // see WorkflowEngine.ts's derivePatientRoute). Straight to
     // /enrollment-complete ("Thanks! Your details were received") instead
     // of /delivery-date, which every other pricing pick/flow still uses.
-    if (workflowData.flowType === "CoA_Copay" && workflowData.pricingOption === "mail_order") {
+    if (hasCopayFork && workflowData.pricingOption === "mail_order") {
       navigate("/enrollment-complete");
       return;
     }
@@ -88,7 +86,7 @@ export default function DeliveryAddress() {
 
   return (
     <main className="flex-grow">
-        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2} wide={workflowData.flowType === "PrES_PAP"}>
+        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2} wide={isPres}>
           <div className="space-y-4">
             <FloatingInput label="Address" value={form.address} onChange={set("address")} required />
             <FloatingInput label="City" value={form.city} onChange={set("city")} required />
