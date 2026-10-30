@@ -20,7 +20,8 @@
  */
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import type { LadderEvent } from "./coassistLadders";
-import { transferStageEvents } from "./transferLadders";
+import { isTransferScenario, transferStageEvents } from "./transferLadders";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
@@ -35,9 +36,9 @@ export function iassistStageEvents(flowType: IassistLadderFlow, stage: number): 
   if (upTo(3)) out.push(ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient"));
 
   // The transfer scenario shares one ladder with every source that ends in the Triage transfer exit.
-  if (flowType === "iAssist_Medical_Transfer") return transferStageEvents(stage);
+  if (isTransferScenario(flowType)) return transferStageEvents(stage);
 
-  if (flowType === "iAssist_PAP") {
+  if (scenarioFacts(flowType).isIassistAppeal) {
     if (upTo(4)) out.push(ev("COMPLETE_BI", "crm", { result: "coverage_found" }), ev("DENY_PA", "crm"));
     if (upTo(5)) out.push(ev("INITIATE_APPEAL", "crm"));
     if (upTo(6)) {

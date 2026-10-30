@@ -29,6 +29,7 @@ import { useCaseWizardStore, PRESCRIBER_OPTIONS, type PhoneEntry, type SignSourc
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import { BRAND } from "@/brand";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 type SignatureMode = "type" | "draw";
 
@@ -169,7 +170,7 @@ export default function NewCasePatient() {
   // persona id used only for tagging, same as Dashboard.tsx's own read of
   // this same live actor — no events are dispatched from this screen.
   const { workflowData } = usePersonaState("provider");
-  const showInfusionCard = workflowData.flowType === "iAssist_PAP" && workflowData.infusionDate !== null;
+  const showInfusionCard = scenarioFacts(workflowData.flowType).isIassistAppeal && workflowData.infusionDate !== null;
   const infusionDateLabel = workflowData.infusionDate
     ? new Date(workflowData.infusionDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
     : null;

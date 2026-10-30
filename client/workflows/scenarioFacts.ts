@@ -1,6 +1,6 @@
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import type { ModuleId } from "@/engine/workflow/components";
-import { ALL_SCENARIOS } from "./scenarios";
+import { scenarioFor } from "./scenarios";
 
 /**
  * What the UI asks about a scenario, derived from its definition: recipe (source, forks, modules), intake
@@ -54,7 +54,7 @@ const biResultOf = (scenario: ScenarioDefinition<any>): string | undefined => {
 };
 
 export function scenarioFacts(flowType: string): ScenarioFacts {
-  const scenario = ALL_SCENARIOS.find((s) => s.flowType === flowType);
+  const scenario = scenarioFor(flowType);
   const recipe = scenario?.recipe;
   const hasModule = (id: ModuleId) => !!recipe?.modules.some((m) => m.id === id);
   const hasFork = (id: string) => !!recipe?.forks.includes(id);

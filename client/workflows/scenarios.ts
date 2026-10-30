@@ -22,6 +22,9 @@ export const ALL_SCENARIOS: ScenarioDefinition<any>[] = [
   PAP_PRES,
 ];
 
+/** The scenario for a flow, or undefined for an unknown flow. UI reads the definition through this, never `flowType ===`. */
+export const scenarioFor = (flowType: string): ScenarioDefinition<any> | undefined => ALL_SCENARIOS.find((s) => s.flowType === flowType);
+
 /** True when the scenario's recipe lists the module. UI reads the definition through this, never `flowType ===`. */
 export const scenarioHasModule = (flowType: string, id: ModuleId): boolean =>
-  !!ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.modules.some((m) => m.id === id);
+  !!scenarioFor(flowType)?.recipe?.modules.some((m) => m.id === id);

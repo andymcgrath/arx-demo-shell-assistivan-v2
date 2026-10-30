@@ -21,7 +21,7 @@
 
 import { biForkFor, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
 import { forkStageEvents } from "@/engine/workflow/forks";
-import { transferStageEvents } from "./transferLadders";
+import { isTransferScenario, transferStageEvents } from "./transferLadders";
 
 export interface LadderEvent {
   type: string;
@@ -53,8 +53,10 @@ export function coassistStageEvents(
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
-  if (flowType === "CoA_Medical_Transfer") return transferStageEvents(stage);
-  if (flowType === "CoA_Coverage" || flowType === "CoA_PAP") return forkStageEvents(biForkFor(flowType), { choices }, stage);
+  if (isTransferScenario(flowType)) return transferStageEvents(stage);
+  // A scenario with its own rungs after the `bi` fork reads them from the fork.
+  const biFork = biForkFor(flowType);
+  if (biFork.stagesBefore) return forkStageEvents(biFork, { choices }, stage);
 
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;

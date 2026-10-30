@@ -8,6 +8,7 @@ import { useSendPapUpdate } from "@/hooks/useSendPapUpdate";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientStore } from "@/store/patientStore";
 import type { WorkflowData } from "@/engine/types";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 const CASE_ID = "demo";
 const FC_BLUE = "#0176d3";
@@ -98,7 +99,7 @@ const MATERIAL_META: Record<string, MaterialMeta> = {
 function canAddItem(selectedId: string, consentStatus: string, workflowData: WorkflowData): boolean {
   if (selectedId === "pap-application-update") {
     return (
-      (workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP") &&
+      scenarioFacts(workflowData.flowType).isNoPaIntake &&
       workflowData.biStatus === "complete" &&
       workflowData.biResult === "no_insurance" &&
       !workflowData.papSmsSent
@@ -538,7 +539,7 @@ export default function FulfilmentCenter() {
   const { data: patientCase, isLoading: caseLoading } = usePatientCase(CASE_ID);
   const enrollMutation = useEnrollPatient();
   const papUpdateMutation = useSendPapUpdate();
-  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit" || workflowData.flowType === "PrES_PAP";
+  const isPapFlow = scenarioFacts(workflowData.flowType).isNoPaIntake;
   const isPapUpdateItem = selectedItem === "pap-application-update";
   const activeMutation = isPapUpdateItem ? papUpdateMutation : enrollMutation;
 

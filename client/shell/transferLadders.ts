@@ -6,7 +6,7 @@
  * 2 referral received (BI runs), 3 patient enrolled, 4 BI complete and PA approved, 5 patient verified and the Rx
  * transferred to the assigned site of care (the terminal stage).
  */
-import { ALL_SCENARIOS } from "@/workflows/scenarios";
+import { scenarioFor } from "@/workflows/scenarios";
 import type { LadderEvent } from "./coassistLadders";
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
@@ -24,7 +24,7 @@ export const TRANSFER_STAGE_LABELS = [
 
 /** True when the scenario's recipe uses the Triage `transfer` exit. */
 export const isTransferScenario = (flowType: string): boolean =>
-  ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.triage === "transfer";
+  scenarioFor(flowType)?.recipe?.triage === "transfer";
 
 export function transferStageEvents(stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
