@@ -6,6 +6,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useFreeDrug } from "@/hooks/useFreeDrug";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import { MapPin } from "lucide-react";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function PAApproved() {
   const navigate = useNavigate();
@@ -13,8 +14,7 @@ export default function PAApproved() {
   const flowType = workflowData.flowType;
   const pharmacyStatus = workflowData.pharmacyStatus;
   const paStatus = workflowData.paStatus;
-  const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  const { isStandardFaxPa, hasPricingFork, isIassistAppeal } = scenarioFacts(flowType);
   // iAssist_PAP (WF5) reaches this screen via an approved APPEAL, not a
   // straight-through PA approval (see WorkflowEngine.ts's derivePatientRoute
   // and workflows/iassist/rules.ts's appealStatus) — the generic "covered by
@@ -23,7 +23,7 @@ export default function PAApproved() {
   // closes that loop instead of silently reusing WF1's copy.
   // Free drug (Buy and Bill PAP) is the other scenario that sends the drug to a site of care. Its recipe says so.
   const freeDrug = useFreeDrug();
-  const isIAssistPap = flowType === "iAssist_PAP" || freeDrug;
+  const isIAssistPap = isIassistAppeal || freeDrug;
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -68,7 +68,7 @@ export default function PAApproved() {
 
             <button
               onClick={() => {
-                navigate(isIAssistPap ? "/infusion-date" : isCoA ? "/benefit-pricing" : "/delivery-address");
+                navigate(isIAssistPap ? "/infusion-date" : hasPricingFork ? "/benefit-pricing" : "/delivery-address");
               }}
               className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors"
             >
@@ -80,7 +80,7 @@ export default function PAApproved() {
           {/* Copay card — CoA_DTP shows its own copay banner on the Benefit
               Pricing screen that follows; iAssist_PAP (WF5) dispenses via a
               site of care, not a pharmacy copay, so skip it here too. */}
-          {!isWorkflow1 && !isCoA && !isIAssistPap && (
+          {!isStandardFaxPa && !hasPricingFork && !isIAssistPap && (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">

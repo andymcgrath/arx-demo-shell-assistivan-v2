@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { daysFromToday } from "@/lib/relativeDate";
 import { PROGRAM } from "@/portals/patient/config/branding";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 const ORDER_NUMBER = "428046573";
 const ORDER_DATE = daysFromToday(-4);
 
@@ -177,7 +178,7 @@ export default function OrderTracker() {
   const pharmacyStatus = workflowData.pharmacyStatus;
   const paStatus = workflowData.paStatus;
 
-  if (workflowData.flowType === "CoA_Copay" &&
+  if (scenarioFacts(workflowData.flowType).hasCopayFork &&
       (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order")) {
     return (
       <RetailPharmacyTracker
@@ -193,7 +194,7 @@ export default function OrderTracker() {
   // crm/pages/Index.tsx's isCoverageRetailFlow, which drops the Pharmacy Status
   // stage the same way isCopayRetailFlow does), so the default 5-step
   // shipping tracker below would get stuck forever on "Routing to pharmacy."
-  if (workflowData.flowType === "CoA_Coverage" &&
+  if (scenarioFacts(workflowData.flowType).isCoverageScenario &&
       workflowData.pharmacyBenefitStatus === "covered" &&
       workflowData.medicalBenefitStatus !== "covered" &&
       workflowData.pricingOption === "retail") {

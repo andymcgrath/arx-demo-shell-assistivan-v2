@@ -7,6 +7,7 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useFreeDrug } from "@/hooks/useFreeDrug";
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 const DELIVERY_DATE = "May 30, 10:00 AM";
 
 // Admin-configured (Branding Admin → Education Video). Absent/blank
@@ -23,7 +24,7 @@ export default function MedicationDelivered() {
   const navigate = useNavigate();
   const { openChat } = useChatContext();
   const { workflowData } = usePersonaState('patient');
-  const isWideFlow = workflowData.flowType === 'PrES_PAP';
+  const isWideFlow = scenarioFacts(workflowData.flowType).isWideFlow;
   const [showPfVideo, setShowPfVideo] = useState(false);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
@@ -36,7 +37,7 @@ export default function MedicationDelivered() {
   // able to come back to, not part of a one-time text message.
   const freeDrug = useFreeDrug();
   const noun = freeDrug ? 'Injection' : 'Infusion';
-  const isIAssistPap = workflowData.flowType === 'iAssist_PAP' || freeDrug;
+  const isIAssistPap = scenarioFacts(workflowData.flowType).isIassistAppeal || freeDrug;
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
   // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
@@ -50,7 +51,7 @@ export default function MedicationDelivered() {
   // Dexcom G7 sensor itself, not on a package that was never shipped to
   // them.
   const isCoverageNetworkPharmacyFlow =
-    workflowData.flowType === 'CoA_Coverage' &&
+    scenarioFacts(workflowData.flowType).isCoverageScenario &&
     workflowData.pharmacyBenefitStatus === 'covered' &&
     workflowData.medicalBenefitStatus !== 'covered';
   const drugName = PROGRAM.drugDisplayName || PROGRAM.name;

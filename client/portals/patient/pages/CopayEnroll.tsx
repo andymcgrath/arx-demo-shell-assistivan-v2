@@ -4,6 +4,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, CreditCard, ShoppingBag, CheckCircle, Sparkles, Loader2 } from "lucide-react";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { usePatientToastStore } from "@/store/patientToastStore";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function CopayEnroll() {
   const navigate = useNavigate();
@@ -11,16 +12,14 @@ export default function CopayEnroll() {
   const { workflowData } = usePersonaState('patient');
   const showPatientToast = usePatientToastStore((s) => s.show);
   const flowType = workflowData.flowType;
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  const isIAssist = flowType === "iAssist_PA_Approved";
-  const isCopayWorkflow = flowType === "CoA_Copay";
+  const { hasPricingFork, isIassistStandardPa, hasCopayFork, isStandardFaxPa } = scenarioFacts(flowType);
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    if (flowType === "Fax_QS_PA_Approved") {
+    if (isStandardFaxPa) {
       navigate("/pa-approved");
     }
-  }, [flowType, navigate]);
+  }, [isStandardFaxPa, navigate]);
 
   // Enrolling only unlocks the reduced price — it isn't payment. That
   // happens later at the actual payment step (after address + date, see
@@ -42,7 +41,7 @@ export default function CopayEnroll() {
   // CoA_DTP/iAssist are unaffected either way — still an instant dispatch +
   // navigate straight into the same address/date flow Retail/Mail use.
   function enrollInCopay() {
-    if (!isCopayWorkflow) {
+    if (!hasCopayFork) {
       dispatch("SELECT_SELF_PAY", { portal: "patient" });
       navigate("/delivery-address");
       return;
@@ -56,7 +55,7 @@ export default function CopayEnroll() {
     }, 1800);
   }
 
-  if (isCoA || isIAssist) {
+  if (hasPricingFork || isIassistStandardPa) {
     return (
       <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
@@ -79,7 +78,7 @@ export default function CopayEnroll() {
                 // Pharmacy (see coaCopay.ts's copayEnrolled state) — the
                 // patient picks Retail or Mail Order right after enrolling.
                 // CoA_DTP/iAssist are unaffected — they keep the original line.
-                isCopayWorkflow ? "Fill through Retail or Mail Order — you'll choose next" : "Fills through the CoAssist Pharmacy",
+                hasCopayFork ? "Fill through Retail or Mail Order — you'll choose next" : "Fills through the CoAssist Pharmacy",
                 "Cancel anytime",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-arx-body-copy">
