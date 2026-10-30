@@ -6,10 +6,9 @@
  * `engine/__tests__/stepBar.test.ts` pins them against a fixture.
  */
 import type { WorkflowData } from "@/engine/types";
-import type { FlowType } from "@/engine/types";
-import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { pspStepBar } from "./pspStepBar";
-import { isBuyAndBillScenario, isFreeDrugScenario } from "./buyAndBillLadders";
+import { isBuyAndBillScenario } from "./buyAndBillLadders";
 
 export const STEP_LABELS_DEFAULT = [
   "Referral Received",
@@ -403,19 +402,21 @@ export interface StepBarModel {
 }
 
 export function stepBarModel(flowType: string, workflowData: WorkflowData): StepBarModel {
-  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  const facts = scenarioFacts(flowType);
+  // The patient picks a pricing option: CoA_DTP and CoA_Copay.
+  const isCoaFlow = facts.hasPricingFork;
   // Covers both Retail and Mail Order: both end at Triage to Pharmacy (see derivePatientRoute).
-  const isCopayRetailFlow = flowType === "CoA_Copay" && (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order");
+  const isCopayRetailFlow = facts.isCopayRetail(workflowData.pricingOption);
   // Covers WF4 and WF5 (iAssist_PAP). WF5 uses its own computeIAssistPapStepDone, with an extra "Appeal" step.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
-  const isCoverageFlow = flowType === "CoA_Coverage";
+  const isIAssistFlow = facts.isIassistSource;
+  const isIAssistPapFlow = facts.isIassistAppeal;
+  const isCoverageFlow = facts.isCoverageScenario;
   // Scenario 2 only: the short, terminal bar once medicalBenefitStatus resolves to "covered" (medical always wins).
   const isCoverageMedicalFlow = isCoverageFlow && workflowData.medicalBenefitStatus === "covered";
   // Scenario 1 only: the short, Triage-to-Pharmacy-terminal bar. The full bar then applies to Scenario 3 only.
   const isCoveragePharmacyFlow = isCoverageFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered";
   const isBuyAndBill = isBuyAndBillScenario(flowType);
-  const isFreeDrug = isFreeDrugScenario(flowType);
+  const isFreeDrug = facts.isFreeDrug;
   const iAssistStepDone = isBuyAndBill
     ? computeBuyAndBillStepDone(workflowData)
     : isFreeDrug
@@ -455,7 +456,7 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
   const labels = pspBar ? pspBar.map((step) => step.label)
     : isBuyAndBill ? STEP_LABELS_BUY_AND_BILL
     : isFreeDrug ? STEP_LABELS_FREE_DRUG
-    : (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
+    : facts.isNoPaIntake ? STEP_LABELS_PAP_AUDIT
     : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL
     : isCoaFlow ? STEP_LABELS_COA
     : isCoverageMedicalFlow ? STEP_LABELS_COVERAGE_MEDICAL
@@ -469,7 +470,7 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
     stepDone,
     workflowStep,
     // Only paProcessing stays WF1/CoA-only: Fax_PAP_Audit and PrES_PAP never leave paStatus "none".
-    paRingApplies: flowType !== "Fax_PAP_Audit" && flowType !== "PrES_PAP",
+    paRingApplies: !facts.isNoPaIntake,
     rxRingsOff: isCoveragePharmacyFlow,
     // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP and CoA_Copay: n=7/8 (Payment pushes the tail back by one).
     rxProcessingStepN: isCoaFlow ? 7 : 6,
