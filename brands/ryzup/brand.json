@@ -15,12 +15,12 @@
     }
   ],
   "manufacturer": {
-    "name": "Alkermes",
+    "name": "RyzUp Support Services",
     "copyright": "©{{YEAR}} Alkermes. All Rights Reserved."
   },
   "program": {
-    "name": "Lumryz RyzUp Support Services",
-    "drugDisplayName": "Lumryz",
+    "name": "Lumryz",
+    "drugDisplayName": "LUMRYZ (sodium oxybate)",
     "transferPartner": {
       "name": "ARx Patient Solutions Pharmacy",
       "address": "[TBD] street address",
