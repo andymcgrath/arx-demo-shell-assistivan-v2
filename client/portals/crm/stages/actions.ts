@@ -10,6 +10,9 @@ import { scenarioFacts } from "@/workflows/scenarioFacts";
  * Stage ids are matched as written in the stage list. Step 5 of docs/plans/PROMPT_CRM_REFACTOR.md replaces them.
  */
 
+/** The stage id for actions on the case home (the Missing Information tab), which is not a stage. */
+export const CASE_HOME = "case";
+
 export interface CrmEvent {
   type: string;
   portal: "crm";
@@ -62,6 +65,9 @@ const BUTTONS: ButtonDef[] = [
     // The coverage scenario shows the price to the patient in the app. It has no cash offer to send.
     appliesTo: (d) => !scenarioFacts(d.flowType).isCoverageScenario,
   },
+  { stage: "CO-14281", id: "cash_offer.verify", label: "Verify Payment", kind: "primary", event: "VERIFY_PAYMENT", shown: "always" },
+  { stage: "TP-14277", id: "triage.dispatch", label: "Triage to Pharmacy", kind: "primary", event: "FILL_RX", shown: "when_enabled" },
+  { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.received", label: "Mark as Received at Pharmacy", kind: "primary", event: "READY_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.shipped", label: "Mark as Shipped", kind: "primary", event: "SHIP_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.delivered", label: "Mark as Delivered", kind: "success", event: "DELIVER_RX", shown: "when_enabled" },

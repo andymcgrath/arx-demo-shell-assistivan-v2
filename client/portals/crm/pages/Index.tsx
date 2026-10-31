@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { FC_BLUE, SfButton, SectionHeader } from "../components/SfControls";
 import { StageCard } from "../components/StageCard";
-import { crmActions, type CrmAction, type CrmCan } from "../stages/actions";
+import { CASE_HOME, crmActions, type CrmAction, type CrmCan } from "../stages/actions";
 import { CASE_TABS, RIGHT_TABS, type RelatedDocument, type PharmacyOption, SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
 
@@ -183,15 +183,6 @@ export default function Index() {
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
   // The scenario's recipe says whether the CRM shows the benefits panel.
   const showBenefitsPanel = !!scenarioFor(flowType)?.recipe?.panels?.includes("benefits");
-  // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
-  // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
-  // (that only happens once the patient confirms their delivery address).
-  // WF1 has no such head start: dispatchStatus === "selected" only once HUB
-  // staff manually pick a pharmacy via the Choose Pharmacy modal. So CoA can
-  // dispatch to pharmacy as soon as one is known; WF1 still needs the
-  // explicit "selected" status.
-  const canDispatchToPharmacy = !!selectedPharmacy && pharmacyStatus === "none" && dispatchStatus !== "dispatched" &&
-    (isCoaFlow || isCoverageFlow || dispatchStatus === "selected");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
@@ -355,6 +346,8 @@ export default function Index() {
   const can: CrmCan = (e) => actor.getSnapshot().can(e as any);
   const stageActions = activeStage ? crmActions(workflowData, activeStage.id, can) : [];
   const action = (id: string) => stageActions.find((a) => a.id === id);
+  const caseActions = crmActions(workflowData, CASE_HOME, can);
+  const caseAction = (id: string) => caseActions.find((a) => a.id === id);
   const send = (a: CrmAction) => a.event && dispatch(a.event.type, { portal: a.event.portal });
 
   if (isCoaFlow && hubView === "list") {
@@ -787,10 +780,10 @@ export default function Index() {
                     </button>
                   )}
                   <button
-                    onClick={() => dispatch('VERIFY_PAYMENT', { portal: 'crm' })}
-                    disabled={cashOfferStatus !== "paid" || paymentVerified}
+                    onClick={() => send(action("cash_offer.verify")!)}
+                    disabled={!action("cash_offer.verify")!.enabled}
                     className="px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: cashOfferStatus !== "paid" || paymentVerified ? "#ccc" : FC_BLUE }}
+                    style={{ background: action("cash_offer.verify")!.enabled ? FC_BLUE : "#ccc" }}
                   >
                     Verify Payment
                   </button>
@@ -1533,15 +1526,11 @@ export default function Index() {
               <span className="text-[13px] font-semibold text-[#3e3e3c]">
                 {activeStage.name} {activeStage.id}
               </span>
-              {/* iAssist_PAP (WF5) dispatches the moment a site of care is
-                  picked (see tpStage above) — there's no separate "Dispatch
-                  to Pharmacy" step or Rx Processing/Shipped/Delivered chain
-                  to wait on for this flow, so this button never applies to
-                  it even though canDispatchToPharmacy would otherwise be
-                  true once dispatchStatus flips to 'selected'. */}
-              {canDispatchToPharmacy && !isIAssistPapFlow && (
+              {/* Shown while the machine accepts FILL_RX. A flow that dispatches on its own when a site of care is
+                  picked (the free drug program) never reaches a state where it does. */}
+              {action("triage.dispatch") && (
                 <button
-                  onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
+                  onClick={() => send(action("triage.dispatch")!)}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: FC_BLUE }}
                 >
@@ -2398,13 +2387,15 @@ export default function Index() {
                               those two flows specifically. Every other flow keeps it. */}
                           <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">{isCoaFlow ? "Delays Prior Authorization submission" : "Benefits Investigation has not yet run"}</td>
                           <td className="px-3 py-2.5 border-b border-[#dddbda]">
-                            <button
-                              onClick={() => dispatch('REFERRAL_RECEIVED', { portal: 'crm' })}
-                              className="px-2.5 py-1 rounded text-[11px] font-semibold text-white transition-colors hover:opacity-90"
-                              style={{ background: FC_BLUE }}
-                            >
-                              Enroll Patient
-                            </button>
+                            {caseAction("enroll") && (
+                              <button
+                                onClick={() => send(caseAction("enroll")!)}
+                                className="px-2.5 py-1 rounded text-[11px] font-semibold text-white transition-colors hover:opacity-90"
+                                style={{ background: FC_BLUE }}
+                              >
+                                Enroll Patient
+                              </button>
+                            )}
                           </td>
                         </tr>
                       </tbody>

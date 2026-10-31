@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildCrmStages } from "@/portals/crm/stages/buildStages";
-import { CRM_ACTION_EVENTS, crmActions, type CrmCan } from "@/portals/crm/stages/actions";
+import { CASE_HOME, CRM_ACTION_EVENTS, crmActions, type CrmCan } from "@/portals/crm/stages/actions";
 import { forksForFlow } from "@/workflows/forks";
 import { choiceProblems, forksForScenario } from "@/engine/workflow/forks";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
@@ -35,9 +35,8 @@ describe("CRM actions along the golden paths", () => {
         for (let k = -1; k < scenario.steps.length; k++) {
           const actor = replay(scenario, k);
           const d = ctx(actor).workflowData;
-          const shown = buildCrmStages(d).flatMap((st) =>
-            crmActions(d, st.id, canOf(actor)).map((a) => ({ stage: st.id, a })),
-          );
+          const places = [...buildCrmStages(d).map((st) => st.id), CASE_HOME];
+          const shown = places.flatMap((id) => crmActions(d, id, canOf(actor)).map((a) => ({ stage: id, a })));
           const key = JSON.stringify(shown.map(({ stage, a }) => [stage, a.id, a.enabled]));
           if (key !== last) {
             last = key;
