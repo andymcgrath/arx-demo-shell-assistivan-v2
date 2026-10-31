@@ -41,7 +41,7 @@ export function CaseListView({
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}>
       {/* App bar */}
-      <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "#032d60" }}>
+      <div className="flex items-center gap-4 px-3 border-b border-[#dddbda]" style={{ height: 44, background: "var(--crm-primary-dark, #032d60)" }}>
         <div className="flex-1 flex justify-center">
           <div className="flex items-center gap-2 bg-white/10 rounded px-3 py-1 w-full max-w-sm">
             <Search size={13} className="text-white/70" />
@@ -125,7 +125,7 @@ export function CaseListView({
                 <tr
                   onClick={onOpenKeanuCase}
                   className="cursor-pointer hover:bg-teal-50 transition-colors"
-                  style={{ background: "#e8f6f6" }}
+                  style={{ background: "var(--crm-primary-30, #e8f6f6)" }}
                 >
                   <td className="px-3 py-2 border-b border-[#dddbda]">
                     <input type="checkbox" onClick={(e) => e.stopPropagation()} />

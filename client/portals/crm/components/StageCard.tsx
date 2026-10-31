@@ -54,13 +54,13 @@ export function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClic
     : stage.isNotStarted
     ? "#706e6b"
     : (isRunning || isInProgress || isSubmitted)
-    ? "#0176d3"
+    ? "var(--crm-primary, #0176d3)"
     : "#3e3e3c";
 
   return (
     <div
       className="py-3 border-b border-[#dddbda] last:border-b-0"
-      style={isActiveWaiting ? { background: "linear-gradient(90deg, #f0f7ff 0%, #fff 100%)" } : undefined}
+      style={isActiveWaiting ? { background: "linear-gradient(90deg, var(--crm-primary-30, #f0f7ff) 0%, #fff 100%)" } : undefined}
     >
       <div className="flex items-start gap-2.5">
         <div

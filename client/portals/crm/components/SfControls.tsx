@@ -2,7 +2,7 @@ import { SF_SECTION_BG } from "./SfPrimitives";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 // The CRM page's buttons, signature line, and collapsible section header.
-export const FC_BLUE = "#0176d3";
+export const FC_BLUE = "var(--crm-primary, #0176d3)";
 export const SF_BORDER = "#dddbda";
 
 // ─── Shared SF components ────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ export function Signature({ name, width = 160 }: { name: string; width?: number 
         style={{
           fontFamily: "Brush Script MT, Segoe Script, cursive",
           fontSize: 22,
-          color: "#1a3560",
+          color: "var(--crm-primary-dark, #1a3560)",
           letterSpacing: "-0.5px",
           lineHeight: 1.1,
           display: "block",
@@ -59,7 +59,7 @@ export function Signature({ name, width = 160 }: { name: string; width?: number 
           display: "block",
           width,
           height: 1,
-          background: "linear-gradient(to right, #1a3560aa, transparent)",
+          background: "linear-gradient(to right, color-mix(in srgb, var(--crm-primary-dark, #1a3560) 67%, transparent), transparent)",
           marginTop: 2,
         }}
       />
