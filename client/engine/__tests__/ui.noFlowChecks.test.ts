@@ -28,19 +28,8 @@ interface Allowed {
   reason: string;
 }
 
-const CLIENT = "client/portals/client/pages/Index.tsx";
-const CLIENT_DEBT = "Known debt. The Client portal copies the CRM page. Step 57 in docs/plans/PLAN_RULE7_CLEANUP.md decides whether to share it.";
 
 const ALLOWED: Allowed[] = [
-  { file: CLIENT, text: 'if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay") {', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'const isFaxFlow = flowType === "Fax_QS_PA_Approved"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'const isPapFlow = flowType === "Fax_PAP_Audit"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'const isIAssistPapFlow = flowType === "iAssist_PAP"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'const isCoaFlow = flowType === "CoA_DTP"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: 'const isCopayRetailFlow = flowType === "CoA_Copay"', reason: CLIENT_DEBT },
-  { file: CLIENT, text: "flowType === 'iAssist_PAP' ? 'DENY_PA' : 'APPROVE_PA'", reason: CLIENT_DEBT },
-  { file: CLIENT, text: "if (flowType !== 'iAssist_PAP') return;", reason: CLIENT_DEBT },
   {
     file: "client/shell/BrandLabDemos.tsx",
     text: '{ id: "',
