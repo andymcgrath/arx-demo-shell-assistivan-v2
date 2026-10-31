@@ -57,8 +57,8 @@ export function buildCrmStages(workflowData: WorkflowData): Stage[] {
     ? "No Insurance Found; Free Goods Assessment Initiated"
     : "Patient Has Coverage; Prior Authorization Required";
 
-  // CoA_DTP/CoA_Copay no longer wait on consent to start BI (see the
-  // isCoaFlow-scoped RUN_BI effect above) — biStatus === "none" now only
+  // CoA_DTP/CoA_Copay no longer wait on consent to start BI (the machine starts it
+  // at the referral, workflows/coassist/rules.ts) — biStatus === "none" now only
   // describes the sliver of time before the eRx itself has been sent, not
   // before consent, so the copy needs to say so. Every other flow keeps the
   // original consent-gated wording.
@@ -121,12 +121,6 @@ export function buildCrmStages(workflowData: WorkflowData): Stage[] {
     : pharmacyStatus === "delivered"
     ? { id: "PS-14278", name: "Pharmacy Status", statusLabel: "Complete", statusDetail: "First dispense delivered", isComplete: true, isNotStarted: false, fields: [{ label: "Carrier", value: "FedEx" }, { label: "Tracking #", value: "775899987245" }, { label: "Delivered", value: daysFromToday(0) }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
     : { id: "PS-14278", name: "Pharmacy Status", statusLabel: "Stage not started", statusDetail: "No Status available", isComplete: false, isNotStarted: true, fields: [], lastUpdated: null, lastUpdatedAgo: null };
-
-  const auditStage: Stage = papStatus !== "audit_pending" && paStatus === "none"
-    ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Scheduled", statusDetail: "ABV audit — 90 days post-enrollment", isComplete: false, isNotStarted: true, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }], lastUpdated: null, lastUpdatedAgo: null }
-    : papStatus === "audit_pending"
-    ? { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "In Progress", statusDetail: "Conducting ABV audit — insurance found", isComplete: false, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" }
-    : { id: "AUDIT-14280", name: "PAP Audit", statusLabel: "Complete", statusDetail: "Insurance found — PA required", isComplete: true, isNotStarted: false, fields: [{ label: "Audit Type", value: "ABV Insurance Check" }, { label: "Result", value: "Insurance Identified" }], lastUpdated: dateFromToday(0).toLocaleDateString(), lastUpdatedAgo: "today" };
 
   // iAssist_PAP (WF5) is the one flow that actually files a real Appeal
   // (appealStatus flips 'initiated' via INITIATE_APPEAL, then 'approved' via

@@ -3,14 +3,13 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
-import { getLiveWorkItems, KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
+import { getLiveWorkItems } from "@/engine/WorkflowEngine";
 import { dateFromToday, daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { getWorkflowActor } from "@/engine/actorSingleton";
-import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
-import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
+import { enrollmentFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { PAYER } from "../payerFacts";
 import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
@@ -25,24 +24,16 @@ import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
 import { copayBalance, copayMemberId, COPAY_ANNUAL_MAX } from "@/portals/iassist/data/copayProgram";
 import {
   ChevronDown,
-  ChevronRight,
-  Pencil,
   User,
   X,
   Zap,
-  CornerUpRight,
-  Loader2,
   Settings,
   RefreshCw,
   ArrowUpDown,
   ArrowUp,
-  Search,
-  Star,
-  Plus,
-  Bell,
   Send,
 } from "lucide-react";
-import { FC_BLUE, SF_BORDER, SfButton, Signature, SectionHeader } from "../components/SfControls";
+import { FC_BLUE, SfButton, SectionHeader } from "../components/SfControls";
 import { StageCard } from "../components/StageCard";
 import { CASE_TABS, RIGHT_TABS, type RelatedDocument, type PharmacyOption, SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
@@ -130,23 +121,20 @@ export default function Index() {
   const paStatus = workflowData.paStatus;
   const appealStatus = workflowData.appealStatus;
   const paApprovedAt = workflowData.paApprovedAt;
-  const papStatus = workflowData.papStatus;
   const papSmsSent = workflowData.papSmsSent;
-  const incomeStatus = workflowData.incomeStatus;
   const dispatchStatus = workflowData.dispatchStatus;
   const pharmacyStatus = workflowData.pharmacyStatus;
   const selectedPharmacy = workflowData.selectedPharmacy;
   const cashOfferStatus = workflowData.cashOfferStatus;
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
-  const pricingOption = workflowData.pricingOption;
   const copayEnrolled = workflowData.copayEnrolled;
   const providerTransferStatus = workflowData.providerTransferStatus;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
   const {
     isFaxFlow, isPapFlow, isCoaFlow, isCoverageFlow, isIAssistFlow, isIAssistPapFlow, isFreeDrug,
-    isBuyAndBill, isCopayRetailFlow, isCoverageRetailFlow, schedulingDone,
+    isBuyAndBill, isCoverageRetailFlow,
   } = crmFlags(workflowData);
 
   // Summary of Benefits — only appears in Related Documents once the PA is
@@ -167,9 +155,6 @@ export default function Index() {
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
   const closeEnrollmentFormTab = useDemoStore((s) => s.closeEnrollmentFormTab);
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
-  // PrES_PAP (WF5) is included here so CRM renders identically to WF2 for
-  // this flow, per the WF5 foundation request — its own differentiated
-  // capture happens elsewhere (Provider/Patient portals), not in CRM.
   // Related Documents: the enrollment form (fax flows), the brand's PA form (non-PAP flows), and the
   // Summary of Benefits once the PA is approved.
   // An HCP-administered case (eMedBV in iAssist) shows the same documents iAssist and the Field portal show.
@@ -196,47 +181,9 @@ export default function Index() {
   // SITES_OF_CARE; Patient Preferred/Payer Mandated/Program Mandated stay on
   // the standard pharmacyOptions list since those still describe a
   // hypothetical outside pharmacy the case COULD have used.
-  // Free drug (Buy and Bill PAP): the recipe's `financial_assistance` module with eMedBV. Like the appeal scenario, it
-  // sends the drug to a site of care, so it shares the site-of-care screens below.
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
-  // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
-  // workflows/coassist/) is deliberately its own flag, not folded into
-  // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
-  // doesn't apply to it at all.
   // The scenario's recipe says whether the CRM shows the benefits panel.
-  // Buy and Bill: the recipe's `copay` module swaps in a four-stage list. No appeals, triage, or order stages.
   const showBenefitsPanel = !!scenarioFor(flowType)?.recipe?.panels?.includes("benefits");
-  // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
-  // different, fixed-pharmacy path this doesn't touch) — both are filled
-  // outside AssistRx's own dispensing pipeline (a real-world pharmacy
-  // counter for Retail, a mail-order pharmacy's own facility for Mail
-  // Order — see coaCopay.ts, PharmacySelection.tsx, and
-  // WorkflowEngine.ts's derivePatientRoute), so there's no Processing/
-  // Ready/Shipped/Delivered chain for HUB staff to track for either.
-  // Triage to Pharmacy (TP-14277) is this path's last stage — Pharmacy
-  // Status (PS-14278) is dropped from STAGES_LIVE below, the same way
-  // isIAssistPapFlow drops it for its own out-of-pipeline site-of-care
-  // dispense. Named for its original Retail-only scope; kept short rather
-  // than renamed everywhere now that Mail Order shares it.
-  // CoA_Coverage Scenario 1 (pharmacy covered, medical not) — same "filled
-  // outside AssistRx's own pipeline" reasoning isCopayRetailFlow already
-  // uses, now that Scenario 1 no longer goes through Retail-vs-Mail-Order
-  // pricing/address/date at all: the patient just picks a network pharmacy
-  // (see workflows/coassist/'s pharmacySmsVerified state), which sets pricingOption to
-  // "retail" the same way CoA_Copay's own Retail pick does. Named for
-  // parallelism with isCopayRetailFlow, not because this flow offers a
-  // Mail Order option too (it doesn't).
-  // CO-14281's completion gate normally requires patientShipDate — for
-  // CoA_Copay Retail/Mail Order, that field stays null forever (ship-date
-  // collection is skipped entirely for both paths, see PharmacySelection.tsx,
-  // DeliveryAddress.tsx, and WorkflowEngine.ts's derivePatientRoute), so
-  // pricingOption alone is enough to call scheduling "done" once
-  // isCopayRetailFlow.
-  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
-  // resolves to Denied instead of Approved — see engine/types.ts's FlowType
-  // comment). Only affects the eaStage "Welcome message sent" copy below;
-  // everything else (paStage, appealStage, STAGES fallback) already handles
-  // paStatus === 'denied' generically with no flow-specific branching needed.
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).
@@ -285,8 +232,8 @@ export default function Index() {
   // resetActorToStage()'s DENY_PA→INITIATE_APPEAL jump flips appealStatus to
   // 'initiated' while that tab is still open, which immediately (and
   // invisibly, from the user's perspective) satisfies the "opened Appeals
-  // tab + appealStatus initiated" auto-resolve effect below — 2.5s later the
-  // appeal shows Approved despite nobody having actually opened that tab
+  // tab + appealStatus initiated" VIEW_STAGE effect below — the machine approves
+  // the appeal 2.5s later, despite nobody having actually opened that tab
   // themselves in this session. Snapping back to the "keanu" home tab on
   // every reset (mirroring ResetToHome/StateDrivenNav's own resetNonce
   // pattern) means that effect can only fire from a deliberate, fresh click
@@ -301,11 +248,6 @@ export default function Index() {
     setBipcParentTabs({});
     setActiveTopTab("keanu");
   }, [resetNonce]);
-
-  const biCompletionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const biCompletionScheduledRef = useRef(false);
-  const paCompletionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const paCompletionScheduledRef = useRef(false);
 
   const scrollToTop = () => {
     const scrollable = document.querySelector(".overflow-y-auto");
@@ -420,11 +362,7 @@ export default function Index() {
 
   const STAGES_LIVE: Stage[] = buildCrmStages(workflowData);
 
-  const [patientAccountCollapsed, setPatientAccountCollapsed] = useState(false);
-  const [patientContactCollapsed, setPatientContactCollapsed] = useState(false);
   const [triageDispatched, setTriageDispatched] = useState(false);
-
-  // Schedule BI auto-completion 3 seconds after opening the tab
 
   const handleOpenStage = (stage: Stage) => {
     setOpenStageTabs((prev) =>
@@ -435,18 +373,6 @@ export default function Index() {
   };
 
   const handleCloseStageTab = (stageId: string, e: React.MouseEvent) => {
-    // Closing BI tab while timer is pending should cancel it
-    if (stageId === "BI-14273" && biCompletionTimerRef.current !== null) {
-      clearTimeout(biCompletionTimerRef.current);
-      biCompletionTimerRef.current = null;
-      biCompletionScheduledRef.current = false;
-    }
-    // Closing PA tab while timer is pending should cancel it
-    if (stageId === "PA-14274" && paCompletionTimerRef.current !== null) {
-      clearTimeout(paCompletionTimerRef.current);
-      paCompletionTimerRef.current = null;
-      paCompletionScheduledRef.current = false;
-    }
     e.stopPropagation();
     setOpenStageTabs((prev) => prev.filter((id) => id !== stageId));
     if (activeTopTab === stageId) setActiveTopTab("keanu");
@@ -1316,7 +1242,7 @@ export default function Index() {
              record-header/Information/right-rail shape, relabeled for the
              Appeals stage's own resolved outcome. Only reachable for
              iAssist_PAP (WF5); see appealStage's 'approved' branch and the
-             auto-resolve effect above (activeTopTab === 'A-14275'). */
+             VIEW_STAGE effect above (activeTopTab === 'A-14275'). */
           <div>
             {/* Appeal Record Header */}
             <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
@@ -2185,11 +2111,6 @@ export default function Index() {
                   Approved
                 </span>
               )}
-              {activeStage.id === "PA-14274" && paStatus === "approved" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
-                  Approved
-                </span>
-              )}
               {activeStage.id === "PT-14282" && biStatus === "complete" && medicalBenefitStatus === "covered" && providerTransferStatus === "none" && (
                 <button
                   onClick={() => dispatch('NOTIFY_PROVIDER_TRANSFER', { portal: 'crm' })}
@@ -2203,48 +2124,6 @@ export default function Index() {
               {activeStage.id === "PT-14282" && providerTransferStatus === "notified" && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
                   Transferred
-                </span>
-              )}
-              {activeStage.id === "TP-14277" && canDispatchToPharmacy && !isIAssistPapFlow && (
-                <button
-                  onClick={() => dispatch('FILL_RX', { portal: 'crm' })}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
-                  style={{ background: FC_BLUE }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  Triage to Pharmacy
-                </button>
-              )}
-              {activeStage.id === "TP-14277" && isIAssistPapFlow && selectedPharmacy && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
-                  Dispatched
-                </span>
-              )}
-              {/* CoA_Copay Retail/Mail Order (isCopayRetailFlow) and CoA_Coverage
-                  Scenario 1 (isCoverageRetailFlow) — dispatchStatus "dispatched"
-                  is this path's completion signal (see tpStage above);
-                  pharmacyStatus stays "processing" forever after that since
-                  there's no Pharmacy Status tab left to advance it, so the
-                  generic "Processing…"/"Shipping…" pills below never fire
-                  for either and this needs its own chip. */}
-              {activeStage.id === "TP-14277" && (isCopayRetailFlow || isCoverageRetailFlow) && dispatchStatus === "dispatched" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
-                  Dispatched
-                </span>
-              )}
-              {activeStage.id === "TP-14277" && !isIAssistPapFlow && !isCopayRetailFlow && !isCoverageRetailFlow && dispatchStatus === "dispatched" && pharmacyStatus !== "processing" && pharmacyStatus !== "ready" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "var(--crm-primary-30, #e8f0fa)", color: FC_BLUE }}>
-                  Processing…
-                </span>
-              )}
-              {activeStage.id === "TP-14277" && pharmacyStatus === "ready" && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded animate-pulse" style={{ background: "var(--crm-primary-30, #e8f0fa)", color: FC_BLUE }}>
-                  Shipping…
-                </span>
-              )}
-              {activeStage.id === "TP-14277" && (pharmacyStatus === "shipped" || pharmacyStatus === "delivered") && (
-                <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
-                  Dispatched
                 </span>
               )}
             </div>
@@ -2647,7 +2526,8 @@ export default function Index() {
                             <span className="px-2 py-0.5 rounded text-[11px] font-medium" style={{ background: "#fff3cd", color: "#856404" }}>Pending</span>
                           </td>
                           {/* CoA_DTP/CoA_Copay no longer gate Benefits Investigation on
-                              consent (see the isCoaFlow-scoped RUN_BI effect above) — BI
+                              consent (the machine starts BI at the referral, see
+                              workflows/coassist/rules.ts) — BI
                               may already be running or complete while this row still shows
                               consent as Pending, so the old copy would be a false claim for
                               those two flows specifically. Every other flow keeps it. */}

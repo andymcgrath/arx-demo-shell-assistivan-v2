@@ -78,13 +78,8 @@ export const STAGES_PAP_AUDIT: Stage[] = [
     lastUpdated: null,
     lastUpdatedAgo: null,
   },
-  // PAP Audit (AUDIT-14280), Prior Authorization (PA-14274), and Appeals
-  // (A-14275) were removed from this list on request — none of them are
-  // implemented for Fax_PAP_Audit (papStatus never reaches 'audit_pending',
-  // paStatus never leaves 'none' for this flow, and no appeal concept
-  // exists at all — see auditStage/paStage/appealStage below, still shared
-  // with WF1's STAGES list where paStage/appealStage are real). WF2 now
-  // ends its CRM stage list at Pharmacy Status / Medication Delivered.
+  // No PAP Audit, Prior Authorization or Appeals stage here: none applies to Fax_PAP_Audit
+  // (papStatus never reaches 'audit_pending', paStatus never leaves 'none', and there is no appeal).
 ];
 
 export const STAGES: Stage[] = [
