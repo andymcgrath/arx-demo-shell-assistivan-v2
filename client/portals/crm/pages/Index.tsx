@@ -215,8 +215,6 @@ export default function Index() {
   // afterward). The tab strip below re-looks each ID up in the live
   // STAGES_LIVE array every render, same pattern as `activeStage`.
   const [openStageTabs, setOpenStageTabs] = useState<string[]>([]);
-  const [openBipcTabs, setOpenBipcTabs] = useState<string[]>([]);
-  const [bipcParentTabs, setBipcParentTabs] = useState<Record<string, string>>({});
   const [activeTopTab, setActiveTopTab] = useState<string>("keanu");
   const [activePatientSubTab, setActivePatientSubTab] = useState<"onboarding" | "enrollment-form">(
     () => enrollmentFormTabOpen ? "enrollment-form" : "onboarding"
@@ -244,8 +242,6 @@ export default function Index() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     setOpenStageTabs([]);
-    setOpenBipcTabs([]);
-    setBipcParentTabs({});
     setActiveTopTab("keanu");
   }, [resetNonce]);
 
@@ -253,30 +249,6 @@ export default function Index() {
     const scrollable = document.querySelector(".overflow-y-auto");
     if (scrollable) {
       scrollable.scrollTop = 0;
-    }
-  };
-
-
-  const handleOpenBipcTab = (bipcId: string) => {
-    if (!openBipcTabs.includes(bipcId)) {
-      setBipcParentTabs((prev) => ({ ...prev, [bipcId]: activeTopTab }));
-      setOpenBipcTabs([...openBipcTabs, bipcId]);
-    }
-    setActiveTopTab(bipcId);
-    scrollToTop();
-  };
-
-  const handleCloseBipcTab = (bipcId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const parentTab = bipcParentTabs[bipcId];
-    setOpenBipcTabs((prev) => prev.filter((id) => id !== bipcId));
-    setBipcParentTabs((prev) => {
-      const newMap = { ...prev };
-      delete newMap[bipcId];
-      return newMap;
-    });
-    if (activeTopTab === bipcId && parentTab) {
-      setActiveTopTab(parentTab);
     }
   };
 
@@ -473,38 +445,6 @@ export default function Index() {
               <button
                 className="ml-1 p-0.5 rounded hover:bg-[#e5e5e5] transition-colors"
                 onClick={(e) => handleCloseStageTab(stage.id, e)}
-              >
-                <X size={11} className="text-[#706e6b]" />
-              </button>
-            </div>
-          );
-        })}
-
-        {/* Dynamic BIPC tabs */}
-        {openBipcTabs.map((bipcId) => {
-          const isActive = activeTopTab === bipcId;
-          return (
-            <div
-              key={bipcId}
-              className="flex items-center gap-2 px-3 py-2 border border-[#dddbda] cursor-pointer select-none shrink-0 transition-colors"
-              style={{
-                borderRadius: "4px 4px 0 0",
-                marginBottom: -1,
-                background: isActive ? "#fff" : "#ebe9e9",
-                borderBottomColor: isActive ? "#fff" : "#dddbda",
-                boxShadow: isActive ? "0 -1px 3px rgba(0,0,0,0.08)" : "none",
-              }}
-              onClick={() => {
-                setActiveTopTab(bipcId);
-                scrollToTop();
-              }}
-            >
-              <span className="text-[12px] font-semibold text-[#3e3e3c] whitespace-nowrap">
-                {bipcId}
-              </span>
-              <button
-                className="ml-1 p-0.5 rounded hover:bg-[#e5e5e5] transition-colors"
-                onClick={(e) => handleCloseBipcTab(bipcId, e)}
               >
                 <X size={11} className="text-[#706e6b]" />
               </button>
@@ -2152,79 +2092,6 @@ export default function Index() {
           </div>
         </div>
         )
-      ) : openBipcTabs.includes(activeTopTab) ? (
-        /* ── BIPC Detail View ──────────────────────────────────────────────── */
-        <div>
-          {/* BIPC Record Header */}
-          <div className="border-b border-[#dddbda] bg-white px-4 pt-2 pb-0">
-            <div className="text-[11px] text-[#706e6b] mb-0.5">Product Coverage</div>
-            <div className="flex items-center justify-between py-2 gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded text-white font-bold text-[10px] shrink-0"
-                  style={{ width: 36, height: 36, background: "linear-gradient(135deg, var(--crm-primary, #0176d3) 0%, var(--crm-primary-dark, #014486) 100%)" }}
-                >
-                  PC
-                </div>
-                <h1 className="text-[20px] font-bold text-[#3e3e3c]">{activeTopTab}</h1>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <SfButton>Edit</SfButton>
-                <SfButton>Delete</SfButton>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-0 overflow-hidden">
-            {/* Left: Information */}
-            <div className="flex-1 min-w-0 p-4 space-y-4">
-              {/* Information section */}
-              <Section title="Information">
-                <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
-                  <div>
-                    <FieldRow label="Product" value={drugName} isLink />
-                    <FieldRow label="Product Coverage Status" value={isPapFlow ? "No Coverage" : "Covered"} />
-                    <FieldRow label="PA Required?" value={isPapFlow ? "No" : "Yes"} />
-                    <FieldRow label="Care" value="00001740" isLink />
-                    <FieldRow label="Benefit Type" value="Pharmacy" />
-                    <FieldRow label="Rank" value="Primary" />
-                  </div>
-                  <div>
-                    <FieldRow label="BI Product Coverage Name" value={activeTopTab} />
-                    <FieldRow label="Benefit Investigation Result" value="BIR-0431" isLink />
-                    <FieldRow label="Payer" value={payer} />
-                    <FieldRow label="Payer Type" value={isPapFlow ? "No Insurance" : "Commercial"} />
-                    <FieldRow label="Status" value="Active" />
-                    <FieldRow label="Internal Comments" value="" />
-                  </div>
-                </div>
-              </Section>
-            </div>
-
-            {/* Right: Quick Info Panel */}
-            <div className="shrink-0 border-l border-[#dddbda] p-4" style={{ width: 260 }}>
-              <div className="border border-[#dddbda] rounded">
-                <div className="px-3 py-1.5 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                  <span className="text-[12px] font-semibold text-[#3e3e3c]">Quick Info</span>
-                </div>
-                <div className="p-4 space-y-4">
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] mb-1">Last Updated</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Today</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] mb-1">Created Date</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{dateFromToday(0).toLocaleDateString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] mb-1">Related Benefit Investigation</div>
-                    <div className="text-[13px] text-[#3e3e3c]"><SfLink>BIR-0431</SfLink></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       ) : null}
       {/* ── Onboarding Case Record (shown when keanu + onboarding sub-tab) ─ */}
       {activeTopTab === "keanu" && activePatientSubTab === "onboarding" && (
