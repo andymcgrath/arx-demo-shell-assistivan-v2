@@ -1,6 +1,6 @@
 # Plan: remove `flowType ===` checks from the UI (rule 7)
 
-Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 and the guard test (step 8) are done and tagged. Steps 6 (CRM page) and 7 (Client portal copy) are open, see the progress notes at the end.
+Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 and the guard test (step 8) are done and tagged. Step 6 (CRM page) has its flags done and its file split started. Step 7 (Client portal copy) is open, see the progress notes at the end.
 
 CLAUDE.md rule 7: do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition. Rule 14: a scenario's path changes at forks, not at flow checks. The UI still breaks both rules in about 24 files. Two earlier plans (the medical transfer plans) deferred this as a follow-up.
 
@@ -100,12 +100,11 @@ Fixtures stayed identical except the two new ones and the CoA_PAP ring change.
 
 **Left to do**
 
-- Step 6, CRM page (`crm/pages/Index.tsx`, 4,160 lines, 7 `flowType ===` lines and about 30 local flag uses). Not started. Two problems:
-  - The stage list and quick view (`STAGES_LIVE`, about 600 lines) are built inside the component from hook values, and the repo has no jsdom or testing-library. A "stage-list test before the swap" needs the stage builder extracted into a pure function first. That extraction is itself the risky edit.
-  - Splitting 4,160 lines into files under 600 is several commits, each with a large closure surface (stage panels, benefits panel, fulfillment step).
-  Proposed order: (1) extract the stage builder to a pure function, unchanged, and record its fixture; (2) swap its flags to `scenarioFacts`, `panels`, and the `bi` choice; (3) swap the JSX flags; (4) split, one seam per commit.
+- Step 6, CRM page (tag `65-crm-flags-and-stage-builder`): flags done, file split not finished.
+  - Done: the stage builder is a pure function (`crm/stages/buildStages.ts`) with a fixture along every golden path (`ui/crmStages.json`, unchanged by the flag swap). `crm/stages/flags.ts` derives the page's flags from `scenarioFacts`. The page has no `flowType` comparison, and its guard allowlist entries are gone. Also split out unchanged: `SfControls`, `StageCard`, `CaseListView`, `caseData.ts`. The page went from 4,160 to 2,984 lines.
+  - Left: the `Index` component is still about 2,760 lines of JSX over about 80 local values (stage panels, benefits panel, fulfillment step, tabs). No jsdom or testing-library, so a render-level check does not exist. Each panel needs its props listed by hand. Split one panel per commit and check the CRM by eye after each, or add a render test setup first.
 - Step 7, Client portal copy (`client/pages/Index.tsx`, 3,713 lines, 6 lines). Ask first: share the CRM sections or keep the copy. Wait for step 6, since sharing removes most of the work.
-- Step 8, guard test: done early, tag `64-guard-test`. `client/engine/__tests__/ui.noFlowChecks.test.ts` scans `client/portals` and `client/shell` for `flowType ===`, `flow_type ===`, and quoted flow ids. The allowlist (reason per entry, matched by file and line text) holds the CRM page (10 lines), the Client page (9 lines), the Brand Lab picker list, and two ladder flow-id types. Fax, provider and shell code have no entries. A stale entry fails the test, so removing a line from the CRM or Client page means deleting its entry. Steps 6 and 7 must empty the CRM and Client entries.
+- Step 8, guard test: done early, tag `64-guard-test`. `client/engine/__tests__/ui.noFlowChecks.test.ts` scans `client/portals` and `client/shell` for `flowType ===`, `flow_type ===`, and quoted flow ids. The allowlist (reason per entry, matched by file and line text) holds the Client page (9 lines), the Brand Lab picker list, and two ladder flow-id types. Fax, provider and shell code have no entries. A stale entry fails the test, so removing a line from the CRM or Client page means deleting its entry. Step 7 must empty the Client entries. The CRM entries are gone.
 - `WorkflowEngine.ts` still branches on `isCoverageFlow` for copy (lines 410 to 548). Separate follow-up, outside the guard.
 - CoA_PAP and iAssist_PAP step bars: iAssist_PAP keeps its Rx ring on the last dot, as before. It has no Rx steps, so this may be the same fault CoA_PAP had. Check by eye before changing.
 - `FLOW_START_PORTAL` in `DemoShell.tsx` is still a map keyed by flow id. The plan's `ui` block would replace it.
