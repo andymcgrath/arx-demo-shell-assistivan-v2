@@ -1,6 +1,6 @@
 # Plan: remove `flowType ===` checks from the UI (rule 7)
 
-Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 are done and tagged. Step 6 (the CRM page) is next and needs a decision, see the progress notes at the end.
+Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 and the guard test (step 8) are done and tagged. Steps 6 (CRM page) and 7 (Client portal copy) are open, see the progress notes at the end.
 
 CLAUDE.md rule 7: do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition. Rule 14: a scenario's path changes at forks, not at flow checks. The UI still breaks both rules in about 24 files. Two earlier plans (the medical transfer plans) deferred this as a follow-up.
 
@@ -105,7 +105,7 @@ Fixtures stayed identical except the two new ones and the CoA_PAP ring change.
   - Splitting 4,160 lines into files under 600 is several commits, each with a large closure surface (stage panels, benefits panel, fulfillment step).
   Proposed order: (1) extract the stage builder to a pure function, unchanged, and record its fixture; (2) swap its flags to `scenarioFacts`, `panels`, and the `bi` choice; (3) swap the JSX flags; (4) split, one seam per commit.
 - Step 7, Client portal copy (`client/pages/Index.tsx`, 3,713 lines, 6 lines). Ask first: share the CRM sections or keep the copy. Wait for step 6, since sharing removes most of the work.
-- Step 8, guard test. Allowlist today would hold only the two CRM and Client page files' lines plus any that remain on purpose.
+- Step 8, guard test: done early, tag `64-guard-test`. `client/engine/__tests__/ui.noFlowChecks.test.ts` scans `client/portals` and `client/shell` for `flowType ===`, `flow_type ===`, and quoted flow ids. The allowlist (reason per entry, matched by file and line text) holds the CRM page (10 lines), the Client page (9 lines), the Brand Lab picker list, and two ladder flow-id types. Fax, provider and shell code have no entries. A stale entry fails the test, so removing a line from the CRM or Client page means deleting its entry. Steps 6 and 7 must empty the CRM and Client entries.
 - `WorkflowEngine.ts` still branches on `isCoverageFlow` for copy (lines 410 to 548). Separate follow-up, outside the guard.
 - CoA_PAP and iAssist_PAP step bars: iAssist_PAP keeps its Rx ring on the last dot, as before. It has no Rx steps, so this may be the same fault CoA_PAP had. Check by eye before changing.
 - `FLOW_START_PORTAL` in `DemoShell.tsx` is still a map keyed by flow id. The plan's `ui` block would replace it.
