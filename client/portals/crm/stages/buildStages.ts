@@ -6,27 +6,14 @@ import { copayBalance } from "@/portals/iassist/data/copayProgram";
 import { pspStages } from "../pspStages";
 import type { Stage } from "./types";
 import { STAGES, STAGES_PAP_AUDIT } from "./stageData";
+import { crmFlags } from "./flags";
 
 /**
  * buildStages.ts: the stages the CRM shows in the Stage Quick View and the stage tabs, from the workflow data.
- * Pure: no React, no store, so the stage-list test (engine/__tests__/crm.stages.test.ts) runs it headless.
+ * Pure: no React, no store, so the stage-list test (engine/__tests__/crm.stages.test.ts) runs it headless. Flags come from crmFlags (flags.ts).
  */
 
-/** The scenario flags the stage list depends on. The page computes them. */
-export interface CrmStageFlags {
-  isPapFlow: boolean;
-  isCoaFlow: boolean;
-  isCoverageFlow: boolean;
-  isIAssistFlow: boolean;
-  isIAssistPapFlow: boolean;
-  isFreeDrug: boolean;
-  isBuyAndBill: boolean;
-  isCopayRetailFlow: boolean;
-  isCoverageRetailFlow: boolean;
-  schedulingDone: boolean;
-}
-
-export function buildCrmStages(workflowData: WorkflowData, flags: CrmStageFlags): Stage[] {
+export function buildCrmStages(workflowData: WorkflowData): Stage[] {
   const flowType = workflowData.flowType;
   const consentStatus = workflowData.consentStatus;
   const biStatus = workflowData.biStatus;
@@ -49,7 +36,7 @@ export function buildCrmStages(workflowData: WorkflowData, flags: CrmStageFlags)
   const {
     isPapFlow, isCoaFlow, isCoverageFlow, isIAssistFlow, isIAssistPapFlow, isFreeDrug,
     isBuyAndBill, isCopayRetailFlow, isCoverageRetailFlow, schedulingDone,
-  } = flags;
+  } = crmFlags(workflowData);
 
   const paStage: Stage =
     paStatus === "none" && biStatus === "complete" && !isPapFlow

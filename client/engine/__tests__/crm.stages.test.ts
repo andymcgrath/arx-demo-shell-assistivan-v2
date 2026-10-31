@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { WorkflowData } from "@/engine/types";
-import { scenarioFacts } from "@/workflows/scenarioFacts";
-import { scenarioHasModule } from "@/workflows/scenarios";
-import { buildCrmStages, type CrmStageFlags } from "@/portals/crm/stages/buildStages";
+import { buildCrmStages } from "@/portals/crm/stages/buildStages";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
 import { SCENARIOS } from "./scenarios";
 
@@ -13,24 +10,6 @@ import { SCENARIOS } from "./scenarios";
  *
  * An intentional change? Run `RECORD=1 pnpm test`, read the fixture diff, and commit it with the change.
  */
-const flagsFor = (w: WorkflowData): CrmStageFlags => {
-  const f = scenarioFacts(w.flowType);
-  const isCopayRetailFlow = f.isCopayRetail(w.pricingOption);
-  return {
-    isPapFlow: f.isNoPaIntake,
-    isCoaFlow: f.hasPricingFork,
-    isCoverageFlow: f.isCoverageScenario,
-    isIAssistFlow: f.isIassistSource,
-    isIAssistPapFlow: f.dispensesAtSiteOfCare,
-    isFreeDrug: f.isFreeDrug,
-    isBuyAndBill: scenarioHasModule(w.flowType, "copay"),
-    isCopayRetailFlow,
-    isCoverageRetailFlow:
-      f.isCoverageScenario && w.pharmacyBenefitStatus === "covered" && w.medicalBenefitStatus !== "covered" && w.pricingOption === "retail",
-    schedulingDone: isCopayRetailFlow || w.patientShipDate !== null,
-  };
-};
-
 describe("CRM stage list along the golden paths", () => {
   const recorded: Record<string, unknown> = {};
 
@@ -42,7 +21,7 @@ describe("CRM stage list along the golden paths", () => {
         let last: Record<string, string> = {};
         const snapshot = (after: string) => {
           const w = ctx(actor).workflowData;
-          const stages = buildCrmStages(w, flagsFor(w));
+          const stages = buildCrmStages(w);
           const changed = stages.filter((st) => last[st.id] !== JSON.stringify(st));
           last = Object.fromEntries(stages.map((st) => [st.id, JSON.stringify(st)]));
           return { after, order: stages.map((st) => st.id), changed };

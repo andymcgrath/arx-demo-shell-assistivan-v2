@@ -10,15 +10,15 @@ import { getWorkflowActor } from "@/engine/actorSingleton";
 import { SAMPLE_COA_CASES } from "@/store/sampleCoaCases";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
-import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
-import type { FlowType } from "@/engine/types";
 import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { BenefitsPanel } from "../components/BenefitsPanel";
 import { PAYER } from "../payerFacts";
 import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components/SfPrimitives";
-import { ALL_SCENARIOS, scenarioHasModule } from "@/workflows/scenarios";
+import { scenarioFor, scenarioHasModule } from "@/workflows/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { BRAND } from "@/brand";
 import { buildCrmStages } from "../stages/buildStages";
+import { crmFlags } from "../stages/flags";
 import type { Stage } from "../stages/types";
 import { caseDocuments } from "@/brand/caseDocuments";
 import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
@@ -530,7 +530,8 @@ export default function Index() {
     if (enrollmentStatus === 'none') {
       navigate('/');
       const currentFlowType = useDemoStore.getState().flowType;
-      if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay" || currentFlowType === "CoA_Coverage") {
+      const facts = scenarioFacts(currentFlowType);
+      if (facts.hasPricingFork || facts.isCoverageScenario) {
         setHubView("detail");
       }
     }
@@ -543,7 +544,8 @@ export default function Index() {
   // (otherwise clicking "Back to Cases" afterward would just get overridden).
   const autoOpenedOnConsentRef = useRef(false);
   useEffect(() => {
-    if (workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay" && workflowData.flowType !== "CoA_Coverage") return;
+    const facts = scenarioFacts(workflowData.flowType);
+    if (!facts.hasPricingFork && !facts.isCoverageScenario) return;
     if (workflowData.consentStatus === "confirmed") {
       if (!autoOpenedOnConsentRef.current) {
         autoOpenedOnConsentRef.current = true;
@@ -597,8 +599,11 @@ export default function Index() {
   const providerTransferStatus = workflowData.providerTransferStatus;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
+  const {
+    isFaxFlow, isPapFlow, isCoaFlow, isCoverageFlow, isIAssistFlow, isIAssistPapFlow, isFreeDrug,
+    isBuyAndBill, isCopayRetailFlow, isCoverageRetailFlow, schedulingDone,
+  } = crmFlags(workflowData);
 
-  const isFaxFlow = flowType === "Fax_QS_PA_Approved" || flowType === "Fax_PAP_Audit";
   // Summary of Benefits — only appears in Related Documents once the PA is
   // actually approved (not just submitted). Dated to the live PA approval
   // timestamp so it tracks whenever the demo operator actually clicks
@@ -620,7 +625,6 @@ export default function Index() {
   // PrES_PAP (WF5) is included here so CRM renders identically to WF2 for
   // this flow, per the WF5 foundation request — its own differentiated
   // capture happens elsewhere (Provider/Patient portals), not in CRM.
-  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
   // Related Documents: the enrollment form (fax flows), the brand's PA form (non-PAP flows), and the
   // Summary of Benefits once the PA is approved.
   // An HCP-administered case (eMedBV in iAssist) shows the same documents iAssist and the Field portal show.
@@ -649,19 +653,14 @@ export default function Index() {
   // hypothetical outside pharmacy the case COULD have used.
   // Free drug (Buy and Bill PAP): the recipe's `financial_assistance` module with eMedBV. Like the appeal scenario, it
   // sends the drug to a site of care, so it shares the site-of-care screens below.
-  const isFreeDrug = scenarioHasModule(flowType, "financial_assistance") && scenarioHasModule(flowType, "benefit_verification");
-  const isIAssistPapFlow = flowType === "iAssist_PAP" || isFreeDrug;
   const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
-  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment — see
   // workflows/coassist/) is deliberately its own flag, not folded into
   // isCoaFlow above — this flow's PA/pricing/fulfillment behavior below
   // doesn't apply to it at all.
-  const isCoverageFlow = flowType === "CoA_Coverage";
   // The scenario's recipe says whether the CRM shows the benefits panel.
   // Buy and Bill: the recipe's `copay` module swaps in a four-stage list. No appeals, triage, or order stages.
-  const isBuyAndBill = scenarioHasModule(flowType, "copay");
-  const showBenefitsPanel = !!ALL_SCENARIOS.find((s) => s.flowType === flowType)?.recipe?.panels?.includes("benefits");
+  const showBenefitsPanel = !!scenarioFor(flowType)?.recipe?.panels?.includes("benefits");
   // CoA_Copay's Retail AND Mail Order paths (not CoA_DTP's Retail — a
   // different, fixed-pharmacy path this doesn't touch) — both are filled
   // outside AssistRx's own dispensing pipeline (a real-world pharmacy
@@ -674,7 +673,6 @@ export default function Index() {
   // isIAssistPapFlow drops it for its own out-of-pipeline site-of-care
   // dispense. Named for its original Retail-only scope; kept short rather
   // than renamed everywhere now that Mail Order shares it.
-  const isCopayRetailFlow = flowType === "CoA_Copay" && (pricingOption === "retail" || pricingOption === "mail_order");
   // CoA_Coverage Scenario 1 (pharmacy covered, medical not) — same "filled
   // outside AssistRx's own pipeline" reasoning isCopayRetailFlow already
   // uses, now that Scenario 1 no longer goes through Retail-vs-Mail-Order
@@ -683,20 +681,17 @@ export default function Index() {
   // "retail" the same way CoA_Copay's own Retail pick does. Named for
   // parallelism with isCopayRetailFlow, not because this flow offers a
   // Mail Order option too (it doesn't).
-  const isCoverageRetailFlow = isCoverageFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered" && pricingOption === "retail";
   // CO-14281's completion gate normally requires patientShipDate — for
   // CoA_Copay Retail/Mail Order, that field stays null forever (ship-date
   // collection is skipped entirely for both paths, see PharmacySelection.tsx,
   // DeliveryAddress.tsx, and WorkflowEngine.ts's derivePatientRoute), so
   // pricingOption alone is enough to call scheduling "done" once
   // isCopayRetailFlow.
-  const schedulingDone = isCopayRetailFlow || patientShipDate !== null;
   // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4 whose PA
   // resolves to Denied instead of Approved — see engine/types.ts's FlowType
   // comment). Only affects the eaStage "Welcome message sent" copy below;
   // everything else (paStage, appealStage, STAGES fallback) already handles
   // paStatus === 'denied' generically with no flow-specific branching needed.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
   // CoA_DTP auto-assigns a pharmacy the moment pricing is chosen (see
   // coaDtp.ts) — well before dispatchStatus itself flips to "selected"
   // (that only happens once the patient confirms their delivery address).
@@ -841,7 +836,7 @@ export default function Index() {
   // (workflows/iassist/rules.ts, SET_APPEAL_RULE and DENY_PA). Sent again after a
   // reset, because a reset clears the machine's copy but not the Rules portal's.
   useEffect(() => {
-    if (flowType !== 'iAssist_PAP') return;
+    if (!scenarioFacts(flowType).isIassistAppeal) return;
     dispatch('SET_APPEAL_RULE', { portal: 'crm', active: appealRuleActive });
   }, [flowType, appealRuleActive, resetNonce, dispatch]);
 
@@ -878,10 +873,7 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [dispatchStatus]);
 
-  const STAGES_LIVE: Stage[] = buildCrmStages(workflowData, {
-    isPapFlow, isCoaFlow, isCoverageFlow, isIAssistFlow, isIAssistPapFlow, isFreeDrug,
-    isBuyAndBill, isCopayRetailFlow, isCoverageRetailFlow, schedulingDone,
-  });
+  const STAGES_LIVE: Stage[] = buildCrmStages(workflowData);
 
   const [patientAccountCollapsed, setPatientAccountCollapsed] = useState(false);
   const [patientContactCollapsed, setPatientContactCollapsed] = useState(false);

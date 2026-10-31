@@ -28,26 +28,10 @@ interface Allowed {
   reason: string;
 }
 
-const CRM = "client/portals/crm/pages/Index.tsx";
 const CLIENT = "client/portals/client/pages/Index.tsx";
-const CRM_DEBT = "Known debt. The CRM page still holds its own flags. Step 56 in docs/plans/PLAN_RULE7_CLEANUP.md swaps them for scenarioFacts.";
 const CLIENT_DEBT = "Known debt. The Client portal copies the CRM page. Step 57 in docs/plans/PLAN_RULE7_CLEANUP.md decides whether to share it.";
 
 const ALLOWED: Allowed[] = [
-  { file: CRM, text: 'currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay" || currentFlowType === "CoA_Coverage"', reason: CRM_DEBT },
-  { file: CRM, text: 'workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay" && workflowData.flowType !== "CoA_Coverage"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isFaxFlow = flowType === "Fax_QS_PA_Approved"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isPapFlow = flowType === "Fax_PAP_Audit"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isIAssistPapFlow = flowType === "iAssist_PAP"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isCoaFlow = flowType === "CoA_DTP"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isCoverageFlow = flowType === "CoA_Coverage"', reason: CRM_DEBT },
-  { file: CRM, text: 'const isCopayRetailFlow = flowType === "CoA_Copay"', reason: CRM_DEBT },
-  { file: CRM, text: "if (flowType !== 'iAssist_PAP') return;", reason: CRM_DEBT },
-  {
-    file: CRM,
-    text: "ALL_SCENARIOS.find((s) => s.flowType === flowType)",
-    reason: "A scenario lookup by id, not a branch on a flow. Step 56 swaps it for scenarioFor(flowType).",
-  },
   { file: CLIENT, text: 'if (currentFlowType === "CoA_DTP" || currentFlowType === "CoA_Copay") {', reason: CLIENT_DEBT },
   { file: CLIENT, text: 'workflowData.flowType !== "CoA_DTP" && workflowData.flowType !== "CoA_Copay"', reason: CLIENT_DEBT },
   { file: CLIENT, text: 'const isFaxFlow = flowType === "Fax_QS_PA_Approved"', reason: CLIENT_DEBT },
