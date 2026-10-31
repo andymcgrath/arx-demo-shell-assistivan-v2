@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useDemoStore } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
-import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { getLiveWorkItems } from "@/engine/WorkflowEngine";
 import { dateFromToday, daysFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
-import { getWorkflowActor } from "@/engine/actorSingleton";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { FileText } from "lucide-react";
 import { enrollmentFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
@@ -35,6 +34,7 @@ import {
 } from "lucide-react";
 import { FC_BLUE, SfButton, SectionHeader } from "../components/SfControls";
 import { StageCard } from "../components/StageCard";
+import { crmActions, type CrmAction, type CrmCan } from "../stages/actions";
 import { CASE_TABS, RIGHT_TABS, type RelatedDocument, type PharmacyOption, SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
 
@@ -48,8 +48,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { workflowData } = usePersonaState('crm');
   const dispatch = useWorkflowDispatch();
-
-  const actor = getWorkflowActor();
+  const actor = useWorkflowActor();
   const enrollmentStatus = useSelector(
     actor,
     (snapshot) => snapshot.context.workflowData.enrollmentStatus
@@ -351,6 +350,12 @@ export default function Index() {
   };
 
   const activeStage = STAGES_LIVE.find((s) => s.id === activeTopTab);
+
+  // The buttons and badges on the open stage. `enabled` is the machine's own answer (stages/actions.ts).
+  const can: CrmCan = (e) => actor.getSnapshot().can(e as any);
+  const stageActions = activeStage ? crmActions(workflowData, activeStage.id, can) : [];
+  const action = (id: string) => stageActions.find((a) => a.id === id);
+  const send = (a: CrmAction) => a.event && dispatch(a.event.type, { portal: a.event.portal });
 
   if (isCoaFlow && hubView === "list") {
     return (
@@ -767,16 +772,16 @@ export default function Index() {
                       there's no SEND_CASH_OFFER handler in workflows/coassist/ for
                       this button to even dispatch to — so skip it for this
                       flow and show a status label instead. */}
-                  {isCoverageFlow ? (
+                  {!action("cash_offer.send") ? (
                     <span className="text-[12px] font-semibold px-2.5 py-1.5 rounded" style={{ background: "#f3f2f2", color: "#3e3e3c" }}>
                       {biStatus === "complete" ? "Cash price presented to patient in-app" : "Awaiting Benefits Investigation"}
                     </span>
                   ) : (
                     <button
-                      onClick={() => dispatch('SEND_CASH_OFFER', { portal: 'crm' })}
-                      disabled={cashOfferStatus !== "none" || paStatus !== "denied"}
+                      onClick={() => send(action("cash_offer.send")!)}
+                      disabled={!action("cash_offer.send")!.enabled}
                       className="px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ background: cashOfferStatus !== "none" || paStatus !== "denied" ? "#ccc" : FC_BLUE }}
+                      style={{ background: action("cash_offer.send")!.enabled ? FC_BLUE : "#ccc" }}
                     >
                       Send Cash Offer
                     </button>
@@ -1953,9 +1958,9 @@ export default function Index() {
                 </div>
               )}
 
-              {pharmacyStatus === "processing" && (
+              {action("pharmacy.received") && (
                 <button
-                  onClick={() => dispatch('READY_RX', { portal: 'crm' })}
+                  onClick={() => send(action("pharmacy.received")!)}
                   className="flex items-center gap-2 px-4 py-2 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90 mt-2"
                   style={{ background: FC_BLUE }}
                 >
@@ -1964,9 +1969,9 @@ export default function Index() {
                 </button>
               )}
 
-              {pharmacyStatus === "ready" && (
+              {action("pharmacy.shipped") && (
                 <button
-                  onClick={() => dispatch('SHIP_RX', { portal: 'crm' })}
+                  onClick={() => send(action("pharmacy.shipped")!)}
                   className="flex items-center gap-2 px-4 py-2 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: FC_BLUE }}
                 >
@@ -1975,9 +1980,9 @@ export default function Index() {
                 </button>
               )}
 
-              {pharmacyStatus === "shipped" && (
+              {action("pharmacy.delivered") && (
                 <button
-                  onClick={() => dispatch('DELIVER_RX', { portal: 'crm' })}
+                  onClick={() => send(action("pharmacy.delivered")!)}
                   className="flex items-center gap-2 px-4 py-2 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: "#2e844a" }}
                 >
@@ -2019,16 +2024,9 @@ export default function Index() {
               <span className="text-[13px] font-semibold text-[#3e3e3c]">
                 {activeStage.id === "BI-14273" ? "Benefit Investigation Result" : activeStage.name} {activeStage.id}
               </span>
-              {activeStage.id === "BI-14273" && biStatus === "running" && (
+              {action("bi.check_status") && (
                 <button
-                  onClick={() => {
-                    if (isCoverageFlow) {
-                      // The branch comes from the `bi` fork's choice in the machine (set by the selected demo).
-                      dispatch('COMPLETE_BI', { portal: 'crm' });
-                    } else {
-                      dispatch('COMPLETE_BI', { portal: 'crm', result: isPapFlow ? "no_insurance" : "coverage_found" });
-                    }
-                  }}
+                  onClick={() => send(action("bi.check_status")!)}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: FC_BLUE }}
                 >
@@ -2036,9 +2034,9 @@ export default function Index() {
                   Check Status
                 </button>
               )}
-              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.incomeStatus === "verified" && workflowData.papStatus !== "active" && (
+              {action("pap.approve") && (
                 <button
-                  onClick={() => dispatch('APPROVE_PAP', { portal: 'crm' })}
+                  onClick={() => send(action("pap.approve")!)}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: FC_BLUE }}
                 >
@@ -2046,14 +2044,14 @@ export default function Index() {
                   Approve Application
                 </button>
               )}
-              {activeStage.id === "FA-14276" && isFreeDrug && workflowData.papStatus === "active" && (
+              {action("pap.approved") && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
                   Approved
                 </span>
               )}
-              {activeStage.id === "PT-14282" && biStatus === "complete" && medicalBenefitStatus === "covered" && providerTransferStatus === "none" && (
+              {action("provider_transfer.notify") && (
                 <button
-                  onClick={() => dispatch('NOTIFY_PROVIDER_TRANSFER', { portal: 'crm' })}
+                  onClick={() => send(action("provider_transfer.notify")!)}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ background: FC_BLUE }}
                 >
@@ -2061,7 +2059,7 @@ export default function Index() {
                   Notify Provider
                 </button>
               )}
-              {activeStage.id === "PT-14282" && providerTransferStatus === "notified" && (
+              {action("provider_transfer.transferred") && (
                 <span className="ml-auto text-[12px] font-semibold px-2.5 py-0.5 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
                   Transferred
                 </span>
