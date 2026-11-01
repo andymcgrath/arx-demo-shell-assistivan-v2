@@ -68,13 +68,14 @@ export default function Index() {
   useEffect(() => {
     if (enrollmentStatus === 'none') {
       navigate('/');
-      const currentFlowType = useDemoStore.getState().flowType;
-      const facts = scenarioFacts(currentFlowType);
+      // The flow comes from the workflow data this page renders. The demo store's copy is updated first by a reset,
+      // so it can name the next flow while the data is still the last one's.
+      const facts = scenarioFacts(workflowData.flowType);
       if (facts.hasPricingFork || facts.isCoverageScenario) {
         setHubView("detail");
       }
     }
-  }, [enrollmentStatus, navigate]);
+  }, [enrollmentStatus, workflowData.flowType, navigate]);
 
   // Once the patient confirms consent there's real work to look at — jump
   // straight into Keanu's case detail instead of leaving the operator on
@@ -132,7 +133,6 @@ export default function Index() {
   const paymentVerified = workflowData.paymentVerified;
   const patientShipDate = workflowData.patientShipDate;
   const copayEnrolled = workflowData.copayEnrolled;
-  const providerTransferStatus = workflowData.providerTransferStatus;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
   const {

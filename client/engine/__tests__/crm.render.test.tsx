@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { PortalRouter } from "@/lib/portalRouter";
 import { useActorStore } from "@/engine/actorSingleton";
 import { useDemoStore } from "@/store/demoStore";
@@ -256,5 +256,29 @@ describe("CRM page wiring, per scenario", () => {
     expect(paSeen).toBeGreaterThan(5);
     expect(appealSeen).toBeGreaterThan(0);
     expect(transferSeen).toBeGreaterThan(0);
+  });
+});
+
+describe("CRM page follows the workflow's own flow", () => {
+  const BACK = "← Back to Cases";
+  const hasBack = (view: ReturnType<typeof render>) => visibleText(view.container).split("\n").includes(BACK);
+
+  // After a reset, the page goes back to the case detail for a flow that has a case list. It has to read the flow
+  // from the workflow data it renders, not from a second copy in the demo store, which a reset updates first.
+  it("opens the case detail after a reset by the actor's flow, whatever the store says", () => {
+    const scenario = SCENARIOS.find((s) => s.flowType === "CoA_DTP")!;
+    let k = -1;
+    while (ctx(replay(scenario, k)).workflowData.enrollmentStatus === "none") k++;
+    const enrolled = replay(scenario, k);
+
+    // The store names a flow with no case list. The actor runs the flow that has one.
+    const view = mount(enrolled, "Fax_QS_PA_Approved");
+    expect(hasBack(view)).toBe(true);
+    const back = [...view.container.querySelectorAll("*")].find((el) => el.children.length === 0 && el.textContent?.trim() === BACK);
+    fireEvent.click(back!);
+    expect(hasBack(view)).toBe(false);
+
+    act(() => useActorStore.getState().setActor(replay(scenario, -1) as any));
+    expect(hasBack(view)).toBe(true);
   });
 });
