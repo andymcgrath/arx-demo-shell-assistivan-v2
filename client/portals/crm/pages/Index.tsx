@@ -40,6 +40,8 @@ import { stageRecord } from "../stages/records";
 import { CASE_HOME, crmActions, type CrmAction, type CrmCan } from "../stages/actions";
 import { CASE_TABS, RIGHT_TABS, type RelatedDocument, type PharmacyOption, SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
+import { ProductDetailModal } from "../components/ProductDetailModal";
+import { CopayClaimModal } from "../components/CopayClaimModal";
 
 
 
@@ -2085,117 +2087,11 @@ export default function Index() {
       )}
 
       {/* Copay claim detail: opens from a claim number on the Copay tab. */}
-      {openCopayClaim && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setOpenCopayClaimId(null)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-white border border-[#dddbda] rounded shadow-xl pointer-events-auto" style={{ width: 520, maxHeight: "90vh" }}>
-              <div className="px-5 py-3 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
-                <span className="text-[14px] font-semibold text-[#3e3e3c]">Copay Claim {openCopayClaim.id}</span>
-                <button onClick={() => setOpenCopayClaimId(null)} className="text-[#706e6b] hover:text-[#3e3e3c] text-[18px] leading-none" aria-label="Close">×</button>
-              </div>
-              <div className="grid grid-cols-2 gap-x-6 px-5 py-2">
-                <div>
-                  <FieldRow label="Claim Number" value={openCopayClaim.id} />
-                  <FieldRow label="Status" value={openCopayClaim.status === "in_review" ? "In review" : openCopayClaim.status === "paid" ? "Paid" : "Rejected"} />
-                  <FieldRow label="Patient" value={patientName} />
-                  <FieldRow label="Program" value={BRAND.program.name} />
-                </div>
-                <div>
-                  <FieldRow label="Member ID" value={copayMemberId(patientName, BRAND.program.name)} />
-                  <FieldRow label="Benefit Type" value="Medical drug" />
-                  <FieldRow label="Date of Service" value={ymdToMdy(openCopayClaim.dateOfService)} />
-                  <FieldRow label="Submitted" value={`${ymdToMdy(openCopayClaim.submittedAt.slice(0, 10))} via iAssist`} />
-                </div>
-              </div>
-              <div className="px-5 pb-3">
-                <div className="text-[12px] text-[#706e6b] mb-1">Documents</div>
-                <div className="flex gap-4 text-[13px]">
-                  <a href="/docs/cms-1500.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>CMS-1500</a>
-                  <a href="/docs/eob.pdf" target="_blank" rel="noreferrer" className="hover:underline" style={{ color: SF_BLUE }}>EOB</a>
-                </div>
-              </div>
-              <div className="px-5 py-3 border-t border-[#dddbda] flex justify-end">
-                <button onClick={() => setOpenCopayClaimId(null)} className="px-4 py-1.5 border border-[#dddbda] rounded text-[13px] font-semibold text-[#3e3e3c] hover:bg-[#f3f3f3]">Close</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {openCopayClaim && <CopayClaimModal claim={openCopayClaim} onClose={() => setOpenCopayClaimId(null)} patientName={patientName} />}
 
       {/* Product Detail Modal - rendered at root level to escape overflow constraints */}
       {productDetailModalOpen && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setProductDetailModalOpen(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="bg-white border border-[#dddbda] rounded shadow-xl" style={{ width: 600, maxHeight: "90vh" }}>
-              <div className="px-6 py-4 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center rounded" style={{ width: 32, height: 32, background: "var(--crm-primary, #0070d2)" }}>
-                    <span className="text-white text-[12px] font-bold">PC</span>
-                  </div>
-                  <h2 className="text-[16px] font-semibold text-[#3e3e3c]">BIPC-0455</h2>
-                </div>
-                <button onClick={() => setProductDetailModalOpen(false)} className="p-1 hover:bg-[#f3f3f3] rounded">
-                  <X size={18} className="text-[#706e6b]" />
-                </button>
-              </div>
-
-              <div className="overflow-y-auto p-6" style={{ maxHeight: "calc(90vh - 80px)" }}>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PRODUCT</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{drugName}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">BI PRODUCT COVERAGE NAME</div>
-                    <div className="text-[13px] text-[#3e3e3c]">BIPC-0455</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PRODUCT COVERAGE STATUS</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No Coverage" : "Covered"}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">BENEFIT INVESTIGATION RESULT</div>
-                    <div className="text-[13px]" style={{ color: SF_BLUE }}>BIR-0431</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PA REQUIRED?</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No" : "Yes"}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PAYER</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{payer}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">CARE</div>
-                    <div className="text-[13px]" style={{ color: SF_BLUE }}>00001740</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PAYER TYPE</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Commercial</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">BENEFIT TYPE</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Pharmacy</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">STATUS</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Active</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">RANK</div>
-                    <div className="text-[13px] text-[#3e3e3c]">Primary</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">INTERNAL COMMENTS</div>
-                    <div className="text-[13px] text-[#3e3e3c]">—</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
+        <ProductDetailModal onClose={() => setProductDetailModalOpen(false)} drugName={drugName} noPaIntake={facts.isNoPaIntake} payer={payer} />
       )}
     </div>
   );
