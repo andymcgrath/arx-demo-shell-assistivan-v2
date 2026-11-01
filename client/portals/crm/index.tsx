@@ -30,7 +30,8 @@ function ResetToHome() {
   return null;
 }
 
-export default function CrmPortal() {
+/** The CRM's routes inside their own router. The Client tab renders this too, under its own brand colors. */
+export function CrmRoutes() {
   return (
     <PortalRouter>
       <ResetToHome />
@@ -40,4 +41,8 @@ export default function CrmPortal() {
       </Routes>
     </PortalRouter>
   );
+}
+
+export default function CrmPortal() {
+  return <CrmRoutes />;
 }
