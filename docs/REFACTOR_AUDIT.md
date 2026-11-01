@@ -165,6 +165,17 @@ Summarized from the tag messages on 27 Oct 2026. The type-error baseline held at
 
 The "Not yet done" items from step 01 are done: auto-advance timers run in the machines as `after` transitions, PA preconditions are enforced, and screen order comes from `screens.ts`.
 
+### Patient view, step 00: baseline (tag `patient-view/00-baseline`)
+
+Plan: `docs/plans/arx-demo-patient-refactor-plan.md`. Branch `patient-view`, off `main`. No source changed. `main` was green first: 987 tests, type-error baseline 2.
+
+Added the leak guard for the patient view work: `engine/__tests__/patient.render.test.tsx`. It mounts the real patient portal against the real machine in the default view. For each of the 22 scenarios it records the visible text of the patient's screen at the start, the middle, and the end (fixture `ui/patientRender.json`). A later skin step that changes the default view shows up as a diff in that fixture. Engine fixtures must not change during skin work.
+
+- The test sits in `engine/__tests__/` beside `crm.render.test.tsx`, because the fixture helper lives there.
+- It records text only, not styles or layout. A pure CSS leak will not show up. The browser comparison after steps 3 and 6 still has to be done.
+- Not done here: the `archive/patient-fork` tag on `../arx-demo-patient`. That repo is read-only for this work, so the tag is left to be made by hand.
+- Not run in a browser.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.
