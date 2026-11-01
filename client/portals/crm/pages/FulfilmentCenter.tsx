@@ -111,7 +111,7 @@ function canAddItem(selectedId: string, consentStatus: string, workflowData: Wor
   return false;
 }
 
-function buildMessageText(selectedId: string, isPapFlow: boolean): string {
+function buildMessageText(selectedId: string, noPaIntake: boolean): string {
   // Not a hook call — .getState() reads the current value at call time,
   // which is correct here since this is a plain template-building helper,
   // not a component that needs to re-render on change.
@@ -119,7 +119,7 @@ function buildMessageText(selectedId: string, isPapFlow: boolean): string {
   if (selectedId === "pap-application-update") {
     return `There's an update on your ${drugName} Patient Assistance Program application. Tap to continue:\n\nhttps://go.iassist/pap-update\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
   }
-  return isPapFlow
+  return noPaIntake
     ? `Welcome! You've been referred to the ${drugName} Patient Assistance Program. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`
     : `Welcome! Your prescription is ready to process. Complete next step here:\n\nhttps://go.iassist/g6w9\n\nReply STOP to opt out, HELP for help. Msg&data rates may apply.`;
 }
@@ -539,7 +539,7 @@ export default function FulfilmentCenter() {
   const { data: patientCase, isLoading: caseLoading } = usePatientCase(CASE_ID);
   const enrollMutation = useEnrollPatient();
   const papUpdateMutation = useSendPapUpdate();
-  const isPapFlow = scenarioFacts(workflowData.flowType).isNoPaIntake;
+  const noPaIntake = scenarioFacts(workflowData.flowType).isNoPaIntake;
   const isPapUpdateItem = selectedItem === "pap-application-update";
   const activeMutation = isPapUpdateItem ? papUpdateMutation : enrollMutation;
 
@@ -589,7 +589,7 @@ export default function FulfilmentCenter() {
   const consentStatus = patientCase?.consentStatus ?? "pending";
   const meta = MATERIAL_META[selectedItem] ?? MATERIAL_META["electronic-consent"];
   const itemReady = canAddItem(selectedItem, consentStatus, workflowData);
-  const messageText = buildMessageText(selectedItem, isPapFlow);
+  const messageText = buildMessageText(selectedItem, noPaIntake);
 
   return (
     <div

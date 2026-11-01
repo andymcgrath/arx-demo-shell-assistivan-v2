@@ -18,7 +18,6 @@ import { BRAND } from "@/brand";
 import { stageSignalFor } from "@/engine/workflow/stages";
 import { stageMapFor } from "@/workflows/stageMaps";
 import { buildCrmStages } from "../stages/buildStages";
-import { crmFlags } from "../stages/flags";
 import type { Stage } from "../stages/types";
 import { caseDocuments } from "@/brand/caseDocuments";
 import { ymdToMdy } from "@/portals/iassist/data/submissionStatus";
@@ -135,10 +134,11 @@ export default function Index() {
   const copayEnrolled = workflowData.copayEnrolled;
   const pharmacyBenefitStatus = workflowData.pharmacyBenefitStatus;
   const medicalBenefitStatus = workflowData.medicalBenefitStatus;
-  const {
-    isFaxFlow, isPapFlow, isCoaFlow, isCoverageFlow, isIAssistFlow, isIAssistPapFlow, isFreeDrug,
-    isBuyAndBill, isCoverageRetailFlow,
-  } = crmFlags(workflowData);
+  const facts = scenarioFacts(flowType);
+  const isBuyAndBill = scenarioHasModule(flowType, "copay");
+  // Coverage scenario 1: the pharmacy benefit covers, the medical benefit does not, and the patient picked retail.
+  const coverageRetailPick =
+    facts.isCoverageScenario && pharmacyBenefitStatus === "covered" && medicalBenefitStatus !== "covered" && workflowData.pricingOption === "retail";
 
   // Summary of Benefits — only appears in Related Documents once the PA is
   // actually approved (not just submitted). Dated to the live PA approval
@@ -172,19 +172,19 @@ export default function Index() {
       }))
     : null;
   const relatedDocuments: RelatedDocument[] = sharedCaseDocs ?? [
-    ...(isFaxFlow ? FAX_DOCUMENTS : []),
-    ...(PA_FORM_DOCUMENT && !isPapFlow ? [PA_FORM_DOCUMENT] : []),
+    ...(facts.isFax ? FAX_DOCUMENTS : []),
+    ...(PA_FORM_DOCUMENT && !facts.isNoPaIntake ? [PA_FORM_DOCUMENT] : []),
     ...sobDocuments,
   ];
   // Triage pharmacy dropdowns include ARx Pharmacy only for PAP/Income
   // Verification workflows.
-  const pharmacyOptions = isPapFlow ? [...SPECIALTY_PHARMACIES, ARX_PHARMACY] : SPECIALTY_PHARMACIES;
+  const pharmacyOptions = facts.isNoPaIntake ? [...SPECIALTY_PHARMACIES, ARX_PHARMACY] : SPECIALTY_PHARMACIES;
   // iAssist_PAP (WF5) dispenses via an in-house site of care rather than a
   // specialty pharmacy — only the Office Dispense dropdown swaps to
   // SITES_OF_CARE; Patient Preferred/Payer Mandated/Program Mandated stay on
   // the standard pharmacyOptions list since those still describe a
   // hypothetical outside pharmacy the case COULD have used.
-  const officeDispenseOptions = isIAssistPapFlow ? SITES_OF_CARE : pharmacyOptions;
+  const officeDispenseOptions = facts.dispensesAtSiteOfCare ? SITES_OF_CARE : pharmacyOptions;
   // The scenario's recipe says whether the CRM shows the benefits panel.
   const showBenefitsPanel = !!scenarioFor(flowType)?.recipe?.panels?.includes("benefits");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
@@ -325,12 +325,12 @@ export default function Index() {
   const stageActions = activeStage ? crmActions(workflowData, activeStage.id, can) : [];
   const action = (id: string) => stageActions.find((a) => a.id === id);
   // The record view of a resolved PA or appeal (stages/records.ts), drawn by one shell.
-  const record = activeStage ? stageRecord(activeStage.id, workflowData, { patientName, caseNumber, payer }, isCoaFlow) : null;
+  const record = activeStage ? stageRecord(activeStage.id, workflowData, { patientName, caseNumber, payer }, facts.hasPricingFork) : null;
   const caseActions = crmActions(workflowData, CASE_HOME, can);
   const caseAction = (id: string) => caseActions.find((a) => a.id === id);
   const send = (a: CrmAction) => a.event && dispatch(a.event.type, { portal: a.event.portal });
 
-  if (isCoaFlow && hubView === "list") {
+  if (facts.hasPricingFork && hubView === "list") {
     return (
       <CaseListView
         keanuCaseNumber={enrollmentStatus !== "none" ? caseNumber : null}
@@ -344,7 +344,7 @@ export default function Index() {
       className="min-h-screen bg-white"
       style={{ fontFamily: "'Salesforce Sans', Arial, sans-serif", fontSize: 13 }}
     >
-      {isCoaFlow && (
+      {facts.hasPricingFork && (
         <div className="px-3 py-1.5 border-b border-[#dddbda] bg-[#f3f3f3]">
           <SfLink onClick={() => setHubView("list")}>← Back to Cases</SfLink>
         </div>
@@ -741,7 +741,7 @@ export default function Index() {
                       that's a CoA_DTP/Copay-only precondition (cash offer
                       there only exists after a PA denial). CoA_Coverage's price
                       is shown straight to the patient in-app (PADenied.tsx's
-                      isCoverageFlow branch) with no CRM "send" action at all —
+                      facts.isCoverageScenario branch) with no CRM "send" action at all —
                       there's no SEND_CASH_OFFER handler in workflows/coassist/ for
                       this button to even dispatch to — so skip it for this
                       flow and show a status label instead. */}
@@ -794,7 +794,7 @@ export default function Index() {
                     WorkflowEngine.ts's PAP routing branch). Sent through the
                     Fulfillment Center now, same as every other patient SMS
                     in the demo, instead of a bespoke button here. */}
-                {isPapFlow && biResult === "no_insurance" && (
+                {facts.isNoPaIntake && biResult === "no_insurance" && (
                   papSmsSent ? (
                     <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
                       SMS Sent to Patient
@@ -835,7 +835,7 @@ export default function Index() {
                     layout populated from the same BlueCross BlueShield of
                     Florida facts used in the Summary of Benefits PDF; every
                     other flow keeps the original single "Information" box. */}
-                {isIAssistFlow ? (
+                {facts.isIassistSource ? (
                   <>
                     <Section title="Patient Details">
                       <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
@@ -902,7 +902,7 @@ export default function Index() {
                       <FieldRow label="Status" value="Active" />
                       <FieldRow label="Reimbursement Plan" value="" />
                       <FieldRow label="Sub-Status" value="" />
-                      <FieldRow label="Insured?" value={isPapFlow ? "No" : "Yes"} />
+                      <FieldRow label="Insured?" value={facts.isNoPaIntake ? "No" : "Yes"} />
                       <FieldRow label="Prior Authorization Phone #" value={phone} />
                       <FieldRow label="Subscriber Name" value="Dr. Sarah Chen" />
                       <FieldRow label="Internal Comments" value="" />
@@ -913,7 +913,7 @@ export default function Index() {
                       <FieldRow label="Stage" value="BI-14273" isLink />
                       <FieldRow label="Selected Product Coverage" value="Pharmacy" />
                       <FieldRow label="Payer" value={payer} />
-                      <FieldRow label="Payer Type" value={isPapFlow ? "No Insurance" : "Commercial"} />
+                      <FieldRow label="Payer Type" value={facts.isNoPaIntake ? "No Insurance" : "Commercial"} />
                       <FieldRow label="Benefit Source" value="BI" />
                       <FieldRow label="External Comments" value="" />
                       <FieldRow label="Subscriber Tax #" value="" />
@@ -979,11 +979,11 @@ export default function Index() {
                     </div>
                     <div className="px-3 py-2 border-b border-[#dddbda]">
                       <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">Status</div>
-                      <div className="text-[13px] text-[#3e3e3c]">{isPapFlow ? "No Coverage" : "Covered"}</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No Coverage" : "Covered"}</div>
                     </div>
                     <div className="px-3 py-2 border-b border-[#dddbda]">
                       <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                      <div className="text-[13px] text-[#3e3e3c]">{isPapFlow ? "No" : "Yes"}</div>
+                      <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No" : "Yes"}</div>
                     </div>
                   </div>
                 </div>
@@ -1039,10 +1039,10 @@ export default function Index() {
                     dispatches to a site of care instead of a pharmacy. */}
                 <div className="border border-[#dddbda] rounded">
                   <div className="px-3 py-2 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{isIAssistPapFlow ? "Site of Care Details" : "Triage Pharmacy Details"}</span>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Site of Care Details" : "Triage Pharmacy Details"}</span>
                   </div>
                   <div className="space-y-0">
-                    <FieldRow label={isIAssistPapFlow ? "Site of Care Name" : "Pharmacy Name"} value={selectedPharmacy?.name || ""} />
+                    <FieldRow label={facts.dispensesAtSiteOfCare ? "Site of Care Name" : "Pharmacy Name"} value={selectedPharmacy?.name || ""} />
                     <FieldRow label="Address" value={selectedPharmacy?.address || ""} />
                     <FieldRow label="City" value={selectedPharmacy?.city || ""} />
                     <FieldRow label="State" value={selectedPharmacy?.state || ""} />
@@ -1056,10 +1056,10 @@ export default function Index() {
               <div>
                 <div className="border border-[#dddbda] rounded flex flex-col">
                   <div className="px-4 py-3 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{isIAssistPapFlow ? "Select Site of Care" : "Select Triage Pharmacy"}</span>
+                    <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Select Site of Care" : "Select Triage Pharmacy"}</span>
                   </div>
                   <div className="flex flex-col items-center justify-center p-4 gap-4">
-                    {isIAssistPapFlow ? (
+                    {facts.dispensesAtSiteOfCare ? (
                       // WF5 dispatches the instant a site of care is picked —
                       // no separate "Triage to Pharmacy" click, no
                       // Processing/Shipping cosmetic states (those all belong
@@ -1104,7 +1104,7 @@ export default function Index() {
                           Shipping…
                         </span>
                       </div>
-                    ) : isCoaFlow || (isCoverageFlow && !isCoverageRetailFlow && !!selectedPharmacy) ? (
+                    ) : facts.hasPricingFork || (facts.isCoverageScenario && !coverageRetailPick && !!selectedPharmacy) ? (
                       // Coverage cash pay (No Coverage) also lands here: the scenario
                       // sets the pharmacy when the patient picks self-pay, so
                       // there is nothing to choose. The button would only
@@ -1118,7 +1118,7 @@ export default function Index() {
                           Pharmacy assigned — ready to dispatch
                         </span>
                       </div>
-                    ) : isCoverageRetailFlow ? (
+                    ) : coverageRetailPick ? (
                       // CoA_Coverage Scenario 1 — the patient picks their own
                       // network pharmacy on NetworkPharmacySelection.tsx
                       // (SELECT_PHARMACY, only valid once the PA chain
@@ -1146,8 +1146,8 @@ export default function Index() {
                     ) : (
                       <button
                         onClick={() => setPharmacyModalOpen(true)}
-                        disabled={isFreeDrug && workflowData.infusionDate === null}
-                        title={isFreeDrug && workflowData.infusionDate === null ? "Triage after the patient confirms the appointment date." : undefined}
+                        disabled={facts.isFreeDrug && workflowData.infusionDate === null}
+                        title={facts.isFreeDrug && workflowData.infusionDate === null ? "Triage after the patient confirms the appointment date." : undefined}
                         className="w-full px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: FC_BLUE }}
                       >
@@ -1296,7 +1296,7 @@ export default function Index() {
 
                     <div>
                       <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">
-                        {isIAssistPapFlow ? "Office Dispense — Site of Care" : "Office Dispense"}
+                        {facts.dispensesAtSiteOfCare ? "Office Dispense — Site of Care" : "Office Dispense"}
                       </label>
                       <select
                         className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
@@ -1867,7 +1867,7 @@ export default function Index() {
                               may already be running or complete while this row still shows
                               consent as Pending, so the old copy would be a false claim for
                               those two flows specifically. Every other flow keeps it. */}
-                          <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">{isCoaFlow ? "Delays Prior Authorization submission" : "Benefits Investigation has not yet run"}</td>
+                          <td className="px-3 py-2.5 border-b border-[#dddbda] text-[#706e6b]">{facts.hasPricingFork ? "Delays Prior Authorization submission" : "Benefits Investigation has not yet run"}</td>
                           <td className="px-3 py-2.5 border-b border-[#dddbda]">
                             {caseAction("enroll") && (
                               <button
@@ -2153,7 +2153,7 @@ export default function Index() {
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PRODUCT COVERAGE STATUS</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{isPapFlow ? "No Coverage" : "Covered"}</div>
+                    <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No Coverage" : "Covered"}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">BENEFIT INVESTIGATION RESULT</div>
@@ -2161,7 +2161,7 @@ export default function Index() {
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PA REQUIRED?</div>
-                    <div className="text-[13px] text-[#3e3e3c]">{isPapFlow ? "No" : "Yes"}</div>
+                    <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No" : "Yes"}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PAYER</div>

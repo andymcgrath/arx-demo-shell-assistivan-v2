@@ -41,7 +41,7 @@ export default function MedicationDelivered() {
   const hasInfusionAppointment = isIAssistPap && workflowData.infusionDate !== null;
 
   // CoA_Coverage Scenario 1 only (pharmacy covered, medical not) — this is the
-  // same condition as crm/pages/Index.tsx's isCoverageRetailFlow. The Rx never
+  // same condition as crm/pages/Index.tsx's coverageRetailPick. The Rx never
   // ships to the patient at all in this outcome — it's picked up at
   // whichever network pharmacy the patient chose on
   // NetworkPharmacySelection.tsx (see workflows/coassist/'s header comment) — so the
