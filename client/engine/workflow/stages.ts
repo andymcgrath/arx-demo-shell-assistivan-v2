@@ -26,8 +26,11 @@ export interface StageRule {
   /** A stable name, for example `triage.site_of_care`. Unique within a map. */
   id?: string;
   stage: string;
-  /** Names the CRM builder for this stage, for example `site_of_care` for `TP-14277`. */
-  variant: string;
+  /**
+   * Names the CRM builder for this stage, for example `site_of_care` for `TP-14277`. `null` hides the stage: the rule
+   * says "this scenario skips it here", so a later rule cannot bring it back.
+   */
+  variant: string | null;
   scenarios?: FlowType[];
   /** Applies only when the scenario's recipe or forks match. Needs `scenarioDefs` and `forks` on the map. */
   scope?: Scope;
@@ -62,7 +65,7 @@ export function stagesFor(map: StageMap, data: WorkflowData): StagePick[] {
   const picks: StagePick[] = [];
   for (const def of map.catalog) {
     const rule = rules.find((r) => r.stage === def.id && (!r.when || r.when(data)));
-    if (rule) picks.push({ stage: def.id, variant: rule.variant });
+    if (rule && rule.variant !== null) picks.push({ stage: def.id, variant: rule.variant });
   }
   return picks;
 }
@@ -76,7 +79,7 @@ export function stageSignalFor(map: StageMap, stageId: string, data: WorkflowDat
 
 /** Every variant a scenario can use for a stage, whatever the data. For tests and the builder registry check. */
 export function stageVariantsFor(map: StageMap, flowType: FlowType): StagePick[] {
-  return stageRulesFor(map, flowType).map((r) => ({ stage: r.stage, variant: r.variant }));
+  return stageRulesFor(map, flowType).flatMap((r) => (r.variant === null ? [] : [{ stage: r.stage, variant: r.variant }]));
 }
 
 /** Problems that make a stage map unsafe: a rule for an unknown stage, a repeated id, a scope without definitions. */
@@ -95,7 +98,7 @@ export function stageMapProblems(map: StageMap): string[] {
   }
   const ruleIds = new Set<string>();
   for (const rule of map.rules) {
-    const name = rule.id ?? `${rule.stage}.${rule.variant}`;
+    const name = rule.id ?? `${rule.stage}.${rule.variant ?? "hidden"}`;
     if (!stageIds.has(rule.stage)) problems.push(`stage rule "${name}" names stage "${rule.stage}", which the catalog does not list`);
     if (rule.id) {
       if (ruleIds.has(rule.id)) problems.push(`stage rule id "${rule.id}" is used twice`);
