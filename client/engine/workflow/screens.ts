@@ -1,5 +1,5 @@
 import type { FlowType, WorkflowData } from "@/engine/types";
-import { inScope } from "./scope";
+import { appliesToFlow } from "./scope";
 import type { ForkDefinition, ScenarioDefinition, Scope } from "./types";
 
 /**
@@ -82,10 +82,7 @@ function appliesTo(
   item: { scenarios?: FlowType[]; scope?: Scope },
   flowType: FlowType,
 ): boolean {
-  if (item.scenarios && !item.scenarios.includes(flowType)) return false;
-  if (!item.scope) return true;
-  const scenario = map.scenarioDefs?.find((s) => s.flowType === flowType);
-  return !!scenario && inScope(item.scope, scenario, map.forks ?? []);
+  return appliesToFlow(item, flowType, map.scenarioDefs, map.forks);
 }
 
 /** The route rules that apply to a scenario, in the order they are tried. */
