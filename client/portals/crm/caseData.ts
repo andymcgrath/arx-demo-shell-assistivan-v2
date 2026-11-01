@@ -60,6 +60,9 @@ export interface PharmacyOption {
   phone: string;
 }
 
+/** The preferred pharmacy on the demo patient's enrollment form. It is also one of the pharmacies the agent can pick. */
+export const PREFERRED_PHARMACY_NAME = "Accredo Health Group Inc.";
+
 export const SPECIALTY_PHARMACIES: PharmacyOption[] = [
   // Leads the list — AssistRx's own specialty pharmacy, same contact details
   // iAssist.ts's SELF_PAY_PHARMACY and the case wizard's "Preferred Pharmacy"
@@ -68,7 +71,7 @@ export const SPECIALTY_PHARMACIES: PharmacyOption[] = [
   // rest of the flow lands on by default.
   { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" },
   { name: "Biologics", address: "456 Specialty Lane", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-1234" },
-  { name: "Accredo Health Group Inc.", address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
+  { name: PREFERRED_PHARMACY_NAME, address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
   { name: "CVS Specialty", address: "321 Medication Blvd", city: "Jacksonville", state: "FL", zip: "32099", phone: "(904) 555-9012" },
   { name: "Walgreens Specialty", address: "654 Drug St", city: "Miami", state: "FL", zip: "33101", phone: "(305) 555-3456" },
   { name: "AllianceRx Walgreens Prime", address: "987 Medicine Way", city: "Fort Lauderdale", state: "FL", zip: "33301", phone: "(954) 555-7890" },

@@ -15,11 +15,11 @@ import { SfButton } from "./SfControls";
 // current always-detail-view behavior.
 
 export function CaseListView({
-  keanuCaseNumber,
-  onOpenKeanuCase,
+  caseNumber,
+  onOpenCase,
 }: {
-  keanuCaseNumber: string | null;
-  onOpenKeanuCase: () => void;
+  caseNumber: string | null;
+  onOpenCase: () => void;
 }) {
   const patientName = usePatientStore((s) => s.patientName);
   const now = new Date();
@@ -85,7 +85,7 @@ export function CaseListView({
         {/* List toolbar */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-[12px] text-[#706e6b]">
-            {SAMPLE_COA_CASES.length + (keanuCaseNumber ? 1 : 0)} items • Sorted by Case Number • Updated a few seconds ago
+            {SAMPLE_COA_CASES.length + (caseNumber ? 1 : 0)} items • Sorted by Case Number • Updated a few seconds ago
           </span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 border border-[#dddbda] rounded px-2 py-1 w-56">
@@ -121,16 +121,16 @@ export function CaseListView({
               </tr>
             </thead>
             <tbody>
-              {keanuCaseNumber && (
+              {caseNumber && (
                 <tr
-                  onClick={onOpenKeanuCase}
+                  onClick={onOpenCase}
                   className="cursor-pointer hover:bg-teal-50 transition-colors"
                   style={{ background: "var(--crm-primary-30, #e8f6f6)" }}
                 >
                   <td className="px-3 py-2 border-b border-[#dddbda]">
                     <input type="checkbox" onClick={(e) => e.stopPropagation()} />
                   </td>
-                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{keanuCaseNumber}</SfLink></td>
+                  <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{caseNumber}</SfLink></td>
                   <td className="px-3 py-2 border-b border-[#dddbda]"><SfLink>{patientName}</SfLink></td>
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">{nowStr}</td>
                   <td className="px-3 py-2 border-b border-[#dddbda] text-[#3e3e3c] whitespace-nowrap">Onboarding</td>

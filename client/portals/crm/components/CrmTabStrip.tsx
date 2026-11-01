@@ -2,8 +2,11 @@ import type { Stage } from "../stages/types";
 import { X, Zap } from "lucide-react";
 import { FC_BLUE } from "./SfControls";
 
+/** The id of the case home tab. Every other tab id is a stage id. */
+export const HOME_TAB = "home";
+
 interface CrmTabStripProps {
-  /** "keanu" is the case home tab. Any other value is the id of an open stage. */
+  /** HOME_TAB is the case home tab. Any other value is the id of an open stage. */
   activeTab: string;
   patientName: string;
   patientDob: string;
@@ -32,11 +35,11 @@ export function CrmTabStrip({ activeTab, patientName, patientDob, stages, openSt
         style={{
           borderRadius: "4px 4px 0 0",
           marginBottom: -1,
-          background: activeTab === "keanu" ? "#fff" : "#ebe9e9",
-          borderBottomColor: activeTab === "keanu" ? "#fff" : "#dddbda",
-          boxShadow: activeTab === "keanu" ? "0 -1px 3px rgba(0,0,0,0.08)" : "none",
+          background: activeTab === HOME_TAB ? "#fff" : "#ebe9e9",
+          borderBottomColor: activeTab === HOME_TAB ? "#fff" : "#dddbda",
+          boxShadow: activeTab === HOME_TAB ? "0 -1px 3px rgba(0,0,0,0.08)" : "none",
         }}
-        onClick={() => onSelect("keanu")}
+        onClick={() => onSelect(HOME_TAB)}
       >
         <div
           className="flex items-center justify-center rounded-full text-white text-[10px] font-bold shrink-0"

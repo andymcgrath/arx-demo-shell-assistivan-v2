@@ -1,6 +1,9 @@
 import { FileText } from "lucide-react";
 import { enrollmentFormDocument } from "@/brand/documents";
 import { daysFromToday, dateFromToday } from "@/lib/relativeDate";
+import { PAYER } from "../payerFacts";
+import { CLINICAL } from "../clinicalFacts";
+import { PREFERRED_PHARMACY_NAME } from "../caseData";
 import { FieldRow } from "./SfPrimitives";
 
 interface EnrollmentFormViewProps {
@@ -103,7 +106,7 @@ export function EnrollmentFormView({ patientName, patientFirstName, patientLastN
               <div className="px-4 pb-2">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1 mt-1">Prescription Drug Insurance</div>
                 <div className="grid grid-cols-2 gap-x-4">
-                  <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
+                  <FieldRow label="Payer" value={PAYER.name} />
                   <FieldRow label="Phone" value="(800) 477-3736" />
                   <FieldRow label="Policy / Member ID" value="BCB-KR-298341" />
                   <FieldRow label="Rx BIN" value="610415" />
@@ -111,7 +114,7 @@ export function EnrollmentFormView({ patientName, patientFirstName, patientLastN
                 </div>
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1 mt-2">Medical Insurance</div>
                 <div className="grid grid-cols-2 gap-x-4">
-                  <FieldRow label="Payer" value="BlueCross BlueShield of Florida" />
+                  <FieldRow label="Payer" value={PAYER.name} />
                   <FieldRow label="Phone" value="(800) 477-3736" />
                   <FieldRow label="Policy / Member ID" value="BCB-KR-298341" />
                 </div>
@@ -130,7 +133,7 @@ export function EnrollmentFormView({ patientName, patientFirstName, patientLastN
                 <FieldRow label="Sig" value="Take one tablet by mouth twice per day" />
                 <FieldRow label="Quantity" value="30-day supply" />
                 <FieldRow label="Refills" value="0" />
-                <FieldRow label="Preferred Pharmacy" value="Accredo Health Group Inc." />
+                <FieldRow label="Preferred Pharmacy" value={PREFERRED_PHARMACY_NAME} />
               </div>
             </div>
 
@@ -141,10 +144,10 @@ export function EnrollmentFormView({ patientName, patientFirstName, patientLastN
                 <span className="text-[13px] font-semibold text-[#3e3e3c]">Clinical Information</span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 px-4 pt-1 pb-2">
-                <FieldRow label="Diagnosis (ICD-10)" value="J84.112" />
-                <FieldRow label="Diagnosis Description" value="Idiopathic Pulmonary Fibrosis (IPF)" />
+                <FieldRow label="Diagnosis (ICD-10)" value={CLINICAL.icd10} />
+                <FieldRow label="Diagnosis Description" value={CLINICAL.diagnosis} />
                 <FieldRow label="Allergies" value="Penicillin" />
-                <FieldRow label="Prior Therapies" value="Ofev (nintedanib) — discontinued 02/15/20" />
+                <FieldRow label="Prior Therapies" value={CLINICAL.priorTherapies} />
                 <FieldRow label="Concurrent Therapies" value="None" />
               </div>
             </div>

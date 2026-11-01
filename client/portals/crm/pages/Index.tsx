@@ -28,7 +28,7 @@ import { BiDetail } from "../components/BiDetail";
 import { TriageDetail } from "../components/TriageDetail";
 import { PharmacyStatusDetail } from "../components/PharmacyStatusDetail";
 import { StageDetail } from "../components/StageDetail";
-import { CrmTabStrip } from "../components/CrmTabStrip";
+import { CrmTabStrip, HOME_TAB } from "../components/CrmTabStrip";
 import { CaseHome } from "../components/CaseHome";
 import { CopayClaimModal } from "../components/CopayClaimModal";
 
@@ -156,7 +156,7 @@ export default function Index() {
   // afterward). The tab strip below re-looks each ID up in the live
   // STAGES_LIVE array every render, same pattern as `activeStage`.
   const [openStageTabs, setOpenStageTabs] = useState<string[]>([]);
-  const [activeTopTab, setActiveTopTab] = useState<string>("keanu");
+  const [activeTopTab, setActiveTopTab] = useState<string>(HOME_TAB);
   const [activePatientSubTab, setActivePatientSubTab] = useState<"onboarding" | "enrollment-form">(
     () => enrollmentFormTabOpen ? "enrollment-form" : "onboarding"
   );
@@ -173,7 +173,7 @@ export default function Index() {
   // invisibly, from the user's perspective) satisfies the "opened Appeals
   // tab + appealStatus initiated" VIEW_STAGE effect below — the machine approves
   // the appeal 2.5s later, despite nobody having actually opened that tab
-  // themselves in this session. Snapping back to the "keanu" home tab on
+  // themselves in this session. Snapping back to the HOME_TAB home tab on
   // every reset (mirroring ResetToHome/StateDrivenNav's own resetNonce
   // pattern) means that effect can only fire from a deliberate, fresh click
   // into the tab afterward, not as a side effect of the reset itself.
@@ -183,7 +183,7 @@ export default function Index() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     setOpenStageTabs([]);
-    setActiveTopTab("keanu");
+    setActiveTopTab(HOME_TAB);
   }, [resetNonce]);
 
   const scrollToTop = () => {
@@ -262,7 +262,7 @@ export default function Index() {
   const handleCloseStageTab = (stageId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenStageTabs((prev) => prev.filter((id) => id !== stageId));
-    if (activeTopTab === stageId) setActiveTopTab("keanu");
+    if (activeTopTab === stageId) setActiveTopTab(HOME_TAB);
   };
 
   const activeStage = STAGES_LIVE.find((s) => s.id === activeTopTab);
@@ -280,8 +280,8 @@ export default function Index() {
   if (facts.hasPricingFork && hubView === "list") {
     return (
       <CaseListView
-        keanuCaseNumber={enrollmentStatus !== "none" ? caseNumber : null}
-        onOpenKeanuCase={() => setHubView("detail")}
+        caseNumber={enrollmentStatus !== "none" ? caseNumber : null}
+        onOpenCase={() => setHubView("detail")}
       />
     );
   }
@@ -316,7 +316,7 @@ export default function Index() {
       />
 
       {/* ── Content area (conditional on active Row 1 tab) ──────────────────── */}
-      {activeTopTab === "keanu" ? (
+      {activeTopTab === HOME_TAB ? (
         /* ── Patient view with sub-tabs */
         <>
           {/* Sub-tab strip: Onboarding | FAX-2026-00431 */}
@@ -433,8 +433,8 @@ export default function Index() {
         <StageDetail stage={activeStage} action={action} onAction={send} />
         )
       ) : null}
-      {/* ── Onboarding Case Record (shown when keanu + onboarding sub-tab) ─ */}
-      {activeTopTab === "keanu" && activePatientSubTab === "onboarding" && (
+      {/* ── Onboarding Case Record (shown on the home tab + onboarding sub-tab) ─ */}
+      {activeTopTab === HOME_TAB && activePatientSubTab === "onboarding" && (
         <CaseHome
         workflowData={workflowData}
         patientName={patientName}

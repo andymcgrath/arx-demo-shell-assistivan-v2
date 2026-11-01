@@ -1,5 +1,8 @@
 import type { WorkflowData } from "@/engine/types";
 import { dateFromToday } from "@/lib/relativeDate";
+import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
+
+const PROVIDER = ADVANCED_DIABETES_SUPPLY_FACTS.name;
 import type { Stage } from "../types";
 
 /**
@@ -31,11 +34,11 @@ const transfer = (d: WorkflowData): Stage => {
       d.biStatus !== "complete"
         ? "Awaiting Benefits Investigation"
         : notified
-        ? "Transferred to Advanced Diabetes Supply for fulfillment"
-        : "Medical benefit coverage confirmed — ready to notify Advanced Diabetes Supply",
+        ? `Transferred to ${PROVIDER} for fulfillment`
+        : `Medical benefit coverage confirmed — ready to notify ${PROVIDER}`,
     isComplete: notified,
     isNotStarted: d.biStatus !== "complete",
-    fields: notified ? [{ label: "Provider", value: "Advanced Diabetes Supply" }] : [],
+    fields: notified ? [{ label: "Provider", value: PROVIDER }] : [],
     lastUpdated: notified ? new Date().toLocaleDateString() : null,
     lastUpdatedAgo: notified ? "today" : null,
   };
@@ -129,5 +132,5 @@ export const CASH_OFFER_BUILDERS = {
 };
 
 /** The placeholders the Coverage outcomes that hand fulfillment to the provider show for Triage and Pharmacy Status. */
-export const TRANSFER_NOT_NEEDED_DETAIL = "Case transferred to Advanced Diabetes Supply — fulfillment handled outside AssistRx's pipeline";
+export const TRANSFER_NOT_NEEDED_DETAIL = `Case transferred to ${PROVIDER} — fulfillment handled outside AssistRx's pipeline`;
 export { notNeeded };

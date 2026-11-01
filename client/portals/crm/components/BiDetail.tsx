@@ -1,3 +1,4 @@
+import { ADVANCED_DIABETES_SUPPLY_FACTS } from "@/engine/WorkflowEngine";
 import { useNavigate } from "@/lib/portalRouter";
 import type { WorkflowData } from "@/engine/types";
 import { scenarioFor } from "@/workflows/scenarios";
@@ -74,7 +75,7 @@ export function BiDetail({ workflowData, patientName, drugName, caseNumber, phon
             pharmacyBenefitStatus={pharmacyBenefitStatus}
             medicalBenefitStatus={medicalBenefitStatus}
             paRequired={workflowData.paRequired}
-            transferProvider="Advanced Diabetes Supply"
+            transferProvider={ADVANCED_DIABETES_SUPPLY_FACTS.name}
             onOpenProductDetail={() => onOpenProductDetail()}
           />
         ) : (
@@ -84,8 +85,8 @@ export function BiDetail({ workflowData, patientName, drugName, caseNumber, phon
 
             {/* Information section — iAssist flows get the Patient
                 Details / Insurance Information / Member Information
-                layout populated from the same BlueCross BlueShield of
-                Florida facts used in the Summary of Benefits PDF; every
+                layout populated from the same payer
+                facts used in the Summary of Benefits PDF; every
                 other flow keeps the original single "Information" box. */}
             {facts.isIassistSource ? (
               <>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { patientFirstNameFor } from "../patientFacts";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, type PharmacyOption } from "../caseData";
 import type { Stage } from "../stages/types";
@@ -109,7 +110,7 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
                     selectedPharmacy ? (
                       <div className="w-full flex items-center justify-center py-3 px-4 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)" }}>
                         <span className="text-[12px] font-semibold" style={{ color: "#2e844a" }}>
-                          Dispatched — Keanu to Facility
+                          {`Dispatched — ${patientFirstNameFor(workflowData.flowType)} to Facility`}
                         </span>
                       </div>
                     ) : (

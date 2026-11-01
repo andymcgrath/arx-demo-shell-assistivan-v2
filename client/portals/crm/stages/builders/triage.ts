@@ -1,6 +1,7 @@
 import type { WorkflowData } from "@/engine/types";
 import { dateFromToday } from "@/lib/relativeDate";
 import type { Stage } from "../types";
+import { patientFirstNameFor } from "../../patientFacts";
 import { TRANSFER_NOT_NEEDED_DETAIL, notNeeded } from "./coverage";
 
 /** Triage to Pharmacy. The variants are the ways a scenario dispenses: a pharmacy chain, a site of care, or outside AssistRx. */
@@ -33,7 +34,7 @@ const standard = (d: WorkflowData): Stage =>
 const siteOfCare = (pendingDetail: (d: WorkflowData) => string, name = NAME) => (d: WorkflowData): Stage =>
   d.dispatchStatus === "pending_selection" || d.dispatchStatus === "none"
     ? { ...pending(pendingDetail(d)), name }
-    : { id: ID, name, statusLabel: "Complete", statusDetail: "Dispatched to site of care — Keanu to facility", isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: pharmacyField(d) }, { label: "Dispense Method", value: "Keanu to Facility" }], lastUpdated: today(), lastUpdatedAgo: "today" };
+    : { id: ID, name, statusLabel: "Complete", statusDetail: `Dispatched to site of care — ${patientFirstNameFor(d.flowType)} to facility`, isComplete: true, isNotStarted: false, fields: [{ label: "Site of Care", value: pharmacyField(d) }, { label: "Dispense Method", value: `${patientFirstNameFor(d.flowType)} to Facility` }], lastUpdated: today(), lastUpdatedAgo: "today" };
 
 /**
  * Filled outside AssistRx's own pipeline: Copay retail and mail order, and Coverage scenario 1. Retail jumps straight
