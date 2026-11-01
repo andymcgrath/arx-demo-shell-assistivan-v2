@@ -52,6 +52,12 @@ export interface BrandDocuments {
 }
 
 /**
+ * How a demo is presented. `full` shows every portal. `patient` shows the patient experience alone.
+ * A view is shell state: it is not workflow, scenario, or brand, and it never enters the machine.
+ */
+export type ViewId = "full" | "patient";
+
+/**
  * One entry in the demo dropdown: a flow plus the branch to take at each fork. The client picks a
  * story, not a workflow. A demo can only select declared fork exits (see workflows/forks.ts), so a
  * bad edit cannot build an illegal path. The brand test checks every flow and choice.
@@ -65,6 +71,8 @@ export interface BrandDemo {
   description?: string;
   /** Fork id to exit id, for example `{ "bi": "no_coverage" }`. Omitted forks take the scenario's default. */
   choices?: Record<string, string>;
+  /** The view this demo opens in. It must be one the brand enables. Omitted: the current view stays. */
+  view?: ViewId;
 }
 
 /** The diagnosis a brand's drug treats, with the clinical wording the iAssist forms prefill. */
@@ -92,6 +100,11 @@ export interface BrandConfig {
   demos: BrandDemo[];
   /** Shows the one-off "Client" tab in iAssist workflows. Off unless set to `true`. */
   showClientTab?: boolean;
+  /**
+   * The views this brand allows, for example `["full", "patient"]`. The header Full / Patient toggle shows only when
+   * this is set. `["patient"]` opens patient-only with no toggle. Left out: `full` only, no toggle.
+   */
+  enabledViews?: ViewId[];
   manufacturer: {
     name: string;
     tagline: string;

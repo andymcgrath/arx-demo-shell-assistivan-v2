@@ -12,6 +12,7 @@ import {
   resolveSurfaces,
   rowPasses,
 } from "@/brand/theme";
+import { viewProblems } from "@/shell/view";
 import { choiceProblems } from "@/engine/workflow/forks";
 import { forksForFlow } from "@/workflows/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
@@ -142,6 +143,10 @@ for (const slug of slugs) {
         const forks = forksForScenario(forksForFlow(demo.flow), demo.flow);
         expect(recipeProblems({ ...recipe, choices: { ...recipe.choices, ...demo.choices } }, forks)).toEqual([]);
       }
+    });
+
+    it("enables only known views, and no demo pins a view the brand does not enable", () => {
+      expect(viewProblems(brand)).toEqual([]);
     });
 
     it("does not repeat the same flow and choices under two demos", () => {

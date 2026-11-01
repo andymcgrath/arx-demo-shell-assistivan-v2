@@ -6,7 +6,9 @@
  * events log, undo snapshots. Components read workflow state via
  * usePersonaState() or useSelector(actor, ...).
  *
- * This store holds only four things:
+ * This store holds only five things:
+ *   view      — how the demo is presented, "full" or "patient" (shell state, never in the machine, so switching
+ *     view keeps progress and a reset keeps the current view; see shell/view.ts)
  *   flowType  — which workflow is active (drives which XState machine to use)
  *   demoId    — which brand demo is selected in the dropdown (a flow plus its fork choices)
  *   enrollmentFormTabOpen — CRM UI tab state
@@ -23,7 +25,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { resetCurrentWorkflowActor } from "../engine/actorSingleton";
 import { BRAND, DEFAULT_DEMO, DEFAULT_FLOW, findDemo, isFlowEnabled } from "@/brand";
-import type { BrandDemo } from "@/brand/schema";
+import type { BrandDemo, ViewId } from "@/brand/schema";
+import { resolveView, viewFromSearch } from "@/shell/view";
 
 // ── Re-exports so existing portal imports keep working ────────────────────────
 
@@ -142,6 +145,8 @@ export interface Pharmacy {
 import type { FlowType } from '../engine/types';
 
 export interface DemoState {
+  /** How the demo is presented. Always one the brand enables. */
+  view: ViewId;
   flowType: FlowType;
   /** The brand demo selected in the dropdown (`BrandDemo.id`). Its `flow` equals `flowType`. */
   demoId: string;
@@ -153,6 +158,7 @@ export interface DemoState {
 }
 
 export interface DemoActions {
+  setView: (view: ViewId) => void;
   /** Signals that the machine just stepped back. Does not touch the machine. */
   markUndo: () => void;
   changeFlow: (flow: FlowType) => void;
@@ -166,7 +172,11 @@ export interface DemoActions {
 
 export type DemoStore = DemoState & DemoActions;
 
+/** `?view=` from the URL, when there is one. */
+const viewFromUrl = (): ViewId | undefined => (typeof window === "undefined" ? undefined : viewFromSearch(window.location.search));
+
 export const SEED: DemoState = {
+  view: resolveView({ enabledViews: BRAND.enabledViews, param: viewFromUrl(), pinned: DEFAULT_DEMO.view }),
   flowType: DEFAULT_FLOW,
   demoId: DEFAULT_DEMO.id,
   enrollmentFormTabOpen: false,
@@ -180,6 +190,11 @@ export const useDemoStore = create<DemoStore>()(
   persist(
     (set, get) => ({
       ...SEED,
+
+      setView(view): void {
+        // The toggle only offers enabled views. Ignore anything else.
+        if (resolveView({ enabledViews: BRAND.enabledViews, param: view }) === view) set({ view });
+      },
 
       markUndo(): void {
         set({ undoNonce: get().undoNonce + 1 });
@@ -206,13 +221,14 @@ export const useDemoStore = create<DemoStore>()(
       },
 
       selectDemo(demo): void {
-        set({ flowType: demo.flow, demoId: demo.id });
+        // A demo that pins a view opens in it. Otherwise the current view stays.
+        set({ flowType: demo.flow, demoId: demo.id, view: demo.view ?? get().view });
       },
 
       resetDemo(flow): void {
         const targetFlow = flow ?? get().flowType;
-        // A reset restarts the selected demo, so it keeps `demoId`.
-        set({ ...SEED, flowType: targetFlow, demoId: get().demoId, resetNonce: get().resetNonce + 1 });
+        // A reset restarts the selected demo, so it keeps `demoId` and the current view.
+        set({ ...SEED, flowType: targetFlow, demoId: get().demoId, view: get().view, resetNonce: get().resetNonce + 1 });
         resetCurrentWorkflowActor();
       },
     }),
@@ -228,6 +244,14 @@ export const useDemoStore = create<DemoStore>()(
         if (!demo || demo.flow !== merged.flowType) {
           merged.demoId = (BRAND.demos.find((d) => d.flow === merged.flowType) ?? DEFAULT_DEMO).id;
         }
+        // A saved view this brand does not enable falls back. `?view=` beats the saved one. A session saved before
+        // views existed has none and takes the demo's pin or the brand's first view.
+        merged.view = resolveView({
+          enabledViews: BRAND.enabledViews,
+          param: viewFromUrl(),
+          stored: (persisted as Partial<DemoStore> | undefined)?.view,
+          pinned: findDemo(merged.demoId)?.view,
+        });
         return merged;
       },
     }

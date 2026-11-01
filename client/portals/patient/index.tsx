@@ -31,8 +31,7 @@ import { useDemoStore } from "@/store/demoStore";
 import { isSticky } from "@/engine/workflow/screens";
 import { screenMapFor } from "@/workflows/screenMaps";
 
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import { useSkin } from "@/shell/skin";
 
 import LockScreen from "./pages/LockScreen";
 import SMSMessage from "./pages/SMSMessage";
@@ -143,6 +142,7 @@ function StateDrivenNav() {
 }
 
 function PatientRoutes() {
+  const { Header, Footer } = useSkin();
   const ctx = useChatContext();
   const { pathname } = useLocation();
   const { workflowData } = usePersonaState('patient');

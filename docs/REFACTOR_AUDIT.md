@@ -176,6 +176,17 @@ Added the leak guard for the patient view work: `engine/__tests__/patient.render
 - Not done here: the `archive/patient-fork` tag on `../arx-demo-patient`. That repo is read-only for this work, so the tag is left to be made by hand.
 - Not run in a browser.
 
+### Patient view, step 01: view plumbing (tag `patient-view/01-view-plumbing`)
+
+The view is now shell state with no visible change. `demoStore` holds `view` (`full` or `patient`). The brand schema has `enabledViews` and a per-demo `view`. `?view=` is read. A skin resolver returns the `Header` and `Footer` for the current view, and both views return today's components. `patientRender.json` and every engine fixture are unchanged. Tests 1010 to 1041, type-error baseline 2.
+
+- **Rules in `shell/view.ts` (pure).** The view to start in is the URL, then the saved one, then the demo's pin, then the brand's first enabled view. A view the brand does not enable never wins. The toggle shows only when a brand lists more than one view (used from step 2). A brand with no `enabledViews` gets `full` and no toggle.
+- **Store.** `selectDemo` opens a demo's pinned view and keeps the current view for a demo with no pin. `resetDemo` keeps the view. A saved session with no `view` takes the default, so open sessions survive and the persist key and version did not change.
+- **Brand test.** `viewProblems` fails an unknown view, an empty or repeating `enabledViews`, and a demo that pins a view the brand does not enable.
+- **Rule 2 test.** `skin.rule2.test.ts` scans source for reads of the view. Only `skin.ts`, `view.ts`, and `demoStore.ts` may read it. The patient portal now takes `Header` and `Footer` from `useSkin()`.
+- **Plan change.** The plan says `view` persists through "the one persistence helper". No such helper exists (about 14 files call `sessionStorage`), so `view` rides in `demoStore`'s existing persist block. A real helper is still open.
+- **Not run in a browser.** The `?view=` read and the saved-view restore are covered by unit tests only. Nothing reads `view` in the UI yet, so a browser check waits for step 2.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.
