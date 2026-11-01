@@ -41,6 +41,7 @@ import { CASE_HOME, crmActions, type CrmAction, type CrmCan } from "../stages/ac
 import { CASE_TABS, RIGHT_TABS, type RelatedDocument, type PharmacyOption, SPECIALTY_PHARMACIES, ARX_PHARMACY, SITES_OF_CARE, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
 import { ProductDetailModal } from "../components/ProductDetailModal";
+import { PharmacyModal } from "../components/PharmacyModal";
 import { CopayClaimModal } from "../components/CopayClaimModal";
 
 
@@ -191,11 +192,6 @@ export default function Index() {
   const showBenefitsPanel = !!scenarioFor(flowType)?.recipe?.panels?.includes("benefits");
   const [pharmacyModalOpen, setPharmacyModalOpen] = useState(false);
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
-  const [selectedPharmacyType, setSelectedPharmacyType] = useState<"preferred" | "payer" | "program" | "dispenser" | null>(null);
-  const [preferredPharmacy, setPreferredPharmacy] = useState<PharmacyOption | null>(null);
-  const [payerPharmacy, setPayerPharmacy] = useState<PharmacyOption | null>(null);
-  const [programPharmacy, setProgramPharmacy] = useState<PharmacyOption | null>(null);
-  const [dispenserPharmacy, setDispenserPharmacy] = useState<PharmacyOption | null>(null);
   const [activeCaseTab, setActiveCaseTab] = useState("summary");
   // Copay is its own tab only when the recipe has a copay module.
   const caseTabs = isBuyAndBill ? [CASE_TABS[0], CASE_TABS[1], { id: "copay", label: "Copay" }, ...CASE_TABS.slice(2)] : CASE_TABS;
@@ -1177,196 +1173,13 @@ export default function Index() {
 
           {/* Pharmacy Selection Modal */}
           {pharmacyModalOpen && (
-            <>
-              <div className="fixed inset-0 z-40 bg-black/50" onClick={() => {
-                setPharmacyModalOpen(false);
-                setSelectedPharmacyType(null);
-                setPreferredPharmacy(null);
-                setPayerPharmacy(null);
-                setProgramPharmacy(null);
-                setDispenserPharmacy(null);
-              }} />
-              <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div className="bg-white border border-[#dddbda] rounded shadow-xl" style={{ width: 600, maxHeight: "80vh" }}>
-                  <div className="px-6 py-4 border-b border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
-                    <h2 className="text-[16px] font-semibold text-[#3e3e3c]">Select Triage Pharmacy</h2>
-                    <button onClick={() => {
-                      setPharmacyModalOpen(false);
-                      setSelectedPharmacyType(null);
-                      setPreferredPharmacy(null);
-                      setPayerPharmacy(null);
-                      setProgramPharmacy(null);
-                      setDispenserPharmacy(null);
-                    }} className="p-1 hover:bg-[#f3f3f3] rounded">
-                      <X size={18} className="text-[#706e6b]" />
-                    </button>
-                  </div>
-
-                  <div className="overflow-y-auto p-6 space-y-4" style={{ maxHeight: "calc(80vh - 80px)" }}>
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">Patient Preferred Pharmacy</label>
-                      <select
-                        className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
-                        disabled={selectedPharmacyType !== null && selectedPharmacyType !== "preferred"}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
-                            if (pharm) {
-                              setPreferredPharmacy(pharm);
-                              setPayerPharmacy(null);
-                              setProgramPharmacy(null);
-                              setDispenserPharmacy(null);
-                              setSelectedPharmacyType("preferred");
-                            }
-                          } else {
-                            setPreferredPharmacy(null);
-                            if (selectedPharmacyType === "preferred") setSelectedPharmacyType(null);
-                          }
-                        }}
-                        value={preferredPharmacy?.name || ""}
-                      >
-                        <option value="">Select...</option>
-                        {pharmacyOptions.map((p) => (
-                          <option key={p.name} value={p.name}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">Payer Mandated Pharmacy</label>
-                      <select
-                        className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
-                        disabled={selectedPharmacyType !== null && selectedPharmacyType !== "payer"}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
-                            if (pharm) {
-                              setPayerPharmacy(pharm);
-                              setPreferredPharmacy(null);
-                              setProgramPharmacy(null);
-                              setDispenserPharmacy(null);
-                              setSelectedPharmacyType("payer");
-                            }
-                          } else {
-                            setPayerPharmacy(null);
-                            if (selectedPharmacyType === "payer") setSelectedPharmacyType(null);
-                          }
-                        }}
-                        value={payerPharmacy?.name || ""}
-                      >
-                        <option value="">Select...</option>
-                        {pharmacyOptions.map((p) => (
-                          <option key={p.name} value={p.name}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">Program Mandated Pharmacy</label>
-                      <select
-                        className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
-                        disabled={selectedPharmacyType !== null && selectedPharmacyType !== "program"}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const pharm = pharmacyOptions.find(p => p.name === e.target.value);
-                            if (pharm) {
-                              setProgramPharmacy(pharm);
-                              setPreferredPharmacy(null);
-                              setPayerPharmacy(null);
-                              setDispenserPharmacy(null);
-                              setSelectedPharmacyType("program");
-                            }
-                          } else {
-                            setProgramPharmacy(null);
-                            if (selectedPharmacyType === "program") setSelectedPharmacyType(null);
-                          }
-                        }}
-                        value={programPharmacy?.name || ""}
-                      >
-                        <option value="">Select...</option>
-                        {pharmacyOptions.map((p) => (
-                          <option key={p.name} value={p.name}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#3e3e3c] mb-2">
-                        {facts.dispensesAtSiteOfCare ? "Office Dispense — Site of Care" : "Office Dispense"}
-                      </label>
-                      <select
-                        className="w-full px-3 py-2 border border-[#dddbda] rounded text-[13px] bg-white"
-                        disabled={selectedPharmacyType !== null && selectedPharmacyType !== "dispenser"}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const pharm = officeDispenseOptions.find(p => p.name === e.target.value);
-                            if (pharm) {
-                              setDispenserPharmacy(pharm);
-                              setPreferredPharmacy(null);
-                              setPayerPharmacy(null);
-                              setProgramPharmacy(null);
-                              setSelectedPharmacyType("dispenser");
-                            }
-                          } else {
-                            setDispenserPharmacy(null);
-                            if (selectedPharmacyType === "dispenser") setSelectedPharmacyType(null);
-                          }
-                        }}
-                        value={dispenserPharmacy?.name || ""}
-                      >
-                        <option value="">Select...</option>
-                        {officeDispenseOptions.map((p) => (
-                          <option key={p.name} value={p.name}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="px-6 py-4 border-t border-[#dddbda] flex items-center justify-between" style={{ background: SF_SECTION_BG }}>
-                    <button
-                      onClick={() => {
-                        setPharmacyModalOpen(false);
-                        setSelectedPharmacyType(null);
-                        setPreferredPharmacy(null);
-                        setPayerPharmacy(null);
-                        setProgramPharmacy(null);
-                        setDispenserPharmacy(null);
-                      }}
-                      className="px-4 py-2 border border-[#dddbda] rounded text-[13px] font-semibold text-[#3e3e3c] hover:bg-[#f3f3f3] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => {
-                        const selected = preferredPharmacy || payerPharmacy || programPharmacy || dispenserPharmacy;
-                        if (selected) {
-                          dispatch('SELECT_PHARMACY', { portal: 'crm', pharmacy: selected });
-                          setPharmacyModalOpen(false);
-                          setSelectedPharmacyType(null);
-                          setPreferredPharmacy(null);
-                          setPayerPharmacy(null);
-                          setProgramPharmacy(null);
-                          setDispenserPharmacy(null);
-                        }
-                      }}
-                      className="px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ background: FC_BLUE, opacity: (preferredPharmacy || payerPharmacy || programPharmacy || dispenserPharmacy) ? 1 : 0.5 }}
-                      disabled={!(preferredPharmacy || payerPharmacy || programPharmacy || dispenserPharmacy)}
-                    >
-                      Save Selection
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
+            <PharmacyModal
+              pharmacyOptions={pharmacyOptions}
+              officeDispenseOptions={officeDispenseOptions}
+              dispensesAtSiteOfCare={facts.dispensesAtSiteOfCare}
+              onSelect={(pharmacy) => dispatch("SELECT_PHARMACY", { portal: "crm", pharmacy })}
+              onClose={() => setPharmacyModalOpen(false)}
+            />
           )}
 
         </div>
