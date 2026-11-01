@@ -2,6 +2,9 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
 
+/** What a field shows when its question does not apply, such as "PA Required?" on a benefit that is not covered. */
+export const NOT_APPLICABLE = "Not applicable";
+
 export const SF_BLUE = "var(--crm-primary, #0070d2)";
 export const SF_SECTION_BG = "#f3f3f3";
 

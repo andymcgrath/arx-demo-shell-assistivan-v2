@@ -3,7 +3,7 @@
  * It reads the two benefit statuses and `paRequired` the `bi` fork's exit set. A scenario shows it by listing
  * `panels: ["benefits"]` in its recipe.
  */
-import { FieldRow, Section, SfLink, SF_SECTION_BG } from "./SfPrimitives";
+import { FieldRow, Section, SfLink, SF_SECTION_BG, NOT_APPLICABLE } from "./SfPrimitives";
 import { PAYER } from "../payerFacts";
 
 export interface BenefitsPanelProps {
@@ -64,7 +64,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="Reimbursement Plan" value={biComplete && pharmacyBenefitStatus === "covered" ? "Standard" : ""} />
                 <FieldRow label="Sub-Status" value={!biComplete ? "" : pharmacyBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
                 <FieldRow label="Insured?" value={!biComplete ? "" : pharmacyBenefitStatus === "covered" ? "Yes" : "No"} />
-                <FieldRow label="PA Required?" value={!biComplete ? "" : paOn === "pharmacy" ? "Yes" : "No"} />
+                <FieldRow label="PA Required?" value={!biComplete ? "" : pharmacyBenefitStatus !== "covered" ? NOT_APPLICABLE : paOn === "pharmacy" ? "Yes" : "No"} />
               </div>
             </div>
           </Section>
@@ -85,7 +85,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
                 <FieldRow label="Status" value={!biComplete ? "Pending" : medicalBenefitStatus === "covered" ? "Active" : "Inactive"} />
                 <FieldRow label="Sub-Status" value={!biComplete ? "" : medicalBenefitStatus === "covered" ? "Verified" : "Not Covered"} />
                 <FieldRow label="Insured?" value={!biComplete ? "" : medicalBenefitStatus === "covered" ? "Yes" : "No"} />
-                <FieldRow label="PA Required?" value={!biComplete ? "" : paOn === "medical" ? "Yes" : "No"} />
+                <FieldRow label="PA Required?" value={!biComplete ? "" : medicalBenefitStatus !== "covered" ? NOT_APPLICABLE : paOn === "medical" ? "Yes" : "No"} />
                 {biComplete && medicalBenefitStatus === "covered" && !paRequired && (
                   <FieldRow label="Provider" value={transferProvider} />
                 )}
@@ -114,7 +114,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : paOn === "pharmacy" ? "Yes" : "No"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : pharmacyBenefitStatus !== "covered" ? NOT_APPLICABLE : paOn === "pharmacy" ? "Yes" : "No"}</div>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function BenefitsPanel(props: BenefitsPanelProps) {
               </div>
               <div className="px-3 py-2 border-b border-[#dddbda]">
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : paOn === "medical" ? "Yes" : "No"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{!biComplete ? "\u00a0" : medicalBenefitStatus !== "covered" ? NOT_APPLICABLE : paOn === "medical" ? "Yes" : "No"}</div>
               </div>
             </div>
           </div>

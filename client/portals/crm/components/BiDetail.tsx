@@ -6,7 +6,7 @@ import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { FC_BLUE } from "./SfControls";
 import { Send, ChevronDown } from "lucide-react";
 import { BenefitsPanel } from "./BenefitsPanel";
-import { Section, FieldRow, SF_SECTION_BG, SfLink } from "./SfPrimitives";
+import { Section, FieldRow, SF_SECTION_BG, SfLink, NOT_APPLICABLE } from "./SfPrimitives";
 import { PAYER } from "../payerFacts";
 
 interface BiDetailProps {
@@ -236,7 +236,7 @@ export function BiDetail({ workflowData, patientName, drugName, caseNumber, phon
                 </div>
                 <div className="px-3 py-2 border-b border-[#dddbda]">
                   <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-0.5">PA Required?</div>
-                  <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? "No" : "Yes"}</div>
+                  <div className="text-[13px] text-[#3e3e3c]">{facts.isNoPaIntake ? NOT_APPLICABLE : "Yes"}</div>
                 </div>
               </div>
             </div>

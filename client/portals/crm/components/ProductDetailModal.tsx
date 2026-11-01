@@ -1,4 +1,4 @@
-import { SF_SECTION_BG, SF_BLUE } from "./SfPrimitives";
+import { SF_SECTION_BG, SF_BLUE, NOT_APPLICABLE } from "./SfPrimitives";
 import { X } from "lucide-react";
 
 interface ProductDetailModalProps {
@@ -47,7 +47,7 @@ export function ProductDetailModal({ onClose, drugName, noPaIntake, payer }: Pro
               </div>
               <div>
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PA REQUIRED?</div>
-                <div className="text-[13px] text-[#3e3e3c]">{noPaIntake ? "No" : "Yes"}</div>
+                <div className="text-[13px] text-[#3e3e3c]">{noPaIntake ? NOT_APPLICABLE : "Yes"}</div>
               </div>
               <div>
                 <div className="text-[11px] text-[#706e6b] uppercase tracking-wide font-medium mb-1">PAYER</div>
