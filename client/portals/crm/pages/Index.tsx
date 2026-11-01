@@ -15,6 +15,8 @@ import { FieldRow, Section, SfLink, SF_BLUE, SF_SECTION_BG } from "../components
 import { scenarioFor, scenarioHasModule } from "@/workflows/scenarios";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { BRAND } from "@/brand";
+import { stageSignalFor } from "@/engine/workflow/stages";
+import { stageMapFor } from "@/workflows/stageMaps";
 import { buildCrmStages } from "../stages/buildStages";
 import { crmFlags } from "../stages/flags";
 import type { Stage } from "../stages/types";
@@ -253,25 +255,18 @@ export default function Index() {
   // The workflow machine owns the automation (workflows/<name>/rules.ts, `then`): BI starts
   // when the referral lands (erx) or when the patient consents (fax and e-sign), and a PA
   // starts on its own only for erx workflows. This page only reports what the agent is
-  // looking at. The machine owns the 3 second delay and the outcome. Leaving a stage
-  // cancels a pending reveal.
+  // looking at. The machine owns the delay and the outcome. Leaving a stage cancels a pending reveal.
   //
-  // BI: opening the stage while BI runs. The branch the BI takes (CoA_Coverage's coverage outcome) is the
-  // `bi` fork's choice, which lives in the machine, so the event carries nothing extra.
+  // Which stage sends which signal, and while what holds, is in the workflow's stage map
+  // (workflows/<name>/stages.ts, `signal` and `signalWhen`): BI while it runs, the PA while it is
+  // submitted, the appeal while it is filed, and the provider transfer while the medical benefit covered.
+  // The signal carries nothing else. The `bi` fork's choice, which lives in the machine, decides the branch.
+  const stageSignal = activeTopTab ? stageSignalFor(stageMapFor(workflowData.flowType), activeTopTab, workflowData) : null;
   useEffect(() => {
-    if (activeTopTab !== 'BI-14273') return;
-    if (biStatus !== 'running') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'BI' });
-    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'BI' });
-  }, [activeTopTab, biStatus, dispatch]);
-
-  // PA: opening the stage while the PA is submitted. The scenario decides approve or deny.
-  useEffect(() => {
-    if (activeTopTab !== 'PA-14274') return;
-    if (paStatus !== 'submitted') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PA' });
-    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PA' });
-  }, [activeTopTab, paStatus, dispatch]);
+    if (!stageSignal) return;
+    dispatch('VIEW_STAGE', { portal: 'crm', stage: stageSignal });
+    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: stageSignal });
+  }, [stageSignal, dispatch]);
 
   // Action Factory bridge: once the presenter creates & activates the
   // "Initiate Appeal — Upon PA Denial" rule in the Rules portal
@@ -290,25 +285,6 @@ export default function Index() {
     if (!scenarioFacts(flowType).isIassistAppeal) return;
     dispatch('SET_APPEAL_RULE', { portal: 'crm', active: appealRuleActive });
   }, [flowType, appealRuleActive, resetNonce, dispatch]);
-
-  // Payer-response follow-up: opening the Appeals stage tab shows the payer's
-  // answer a few seconds later. The machine owns the delay (rules.ts, VIEW_STAGE).
-  useEffect(() => {
-    if (activeTopTab !== 'A-14275') return;
-    if (appealStatus !== 'initiated') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'APPEAL' });
-    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'APPEAL' });
-  }, [activeTopTab, appealStatus, dispatch]);
-
-  // CoA_Coverage: the provider transfer notice follows the agent opening the
-  // Provider Transfer stage. The machine owns the delay (rules.ts, VIEW_STAGE).
-  useEffect(() => {
-    if (activeTopTab !== 'PT-14282') return;
-    if (biStatus !== 'complete' || medicalBenefitStatus !== 'covered') return;
-    if (providerTransferStatus !== 'none') return;
-    dispatch('VIEW_STAGE', { portal: 'crm', stage: 'PROVIDER_TRANSFER' });
-    return () => dispatch('LEAVE_STAGE', { portal: 'crm', stage: 'PROVIDER_TRANSFER' });
-  }, [activeTopTab, biStatus, medicalBenefitStatus, providerTransferStatus, dispatch]);
 
   // Visual-only: show "Transferring to pharmacy..." for 3 seconds
   // after dispatch, then show "Dispatched" badge.

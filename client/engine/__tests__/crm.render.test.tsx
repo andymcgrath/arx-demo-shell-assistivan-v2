@@ -23,6 +23,7 @@ import { SCENARIOS } from "./scenarios";
 
 const FIXED_NOW = new Date("2026-01-15T12:00:00.000Z");
 const REVEAL_MS = 3000;
+const APPEAL_MS = 2500;
 
 type Scenario = (typeof SCENARIOS)[number];
 type Actor = ReturnType<typeof startFlow>;
@@ -194,8 +195,66 @@ describe("CRM page wiring, per scenario", () => {
     });
   }
 
+  let appealSeen = 0;
+  let transferSeen = 0;
+
+  for (const scenario of SCENARIOS) {
+    it(`${scenario.name}: opening Appeals shows the payer's answer after 2.5 seconds`, () => {
+      const actor = replayUntil(scenario, (d) => d.appealStatus === "initiated");
+      if (!actor) return;
+      appealSeen++;
+      const view = mount(actor, scenario.flowType);
+      vi.advanceTimersByTime(10 * REVEAL_MS);
+      expect(ctx(actor).workflowData.appealStatus).toBe("initiated");
+
+      openStage(view, "A");
+      vi.advanceTimersByTime(APPEAL_MS - 1);
+      expect(ctx(actor).workflowData.appealStatus).toBe("initiated");
+      vi.advanceTimersByTime(1);
+      expect(ctx(actor).workflowData.appealStatus).toBe("approved");
+      actor.stop();
+    });
+
+    it(`${scenario.name}: opening Provider Transfer notifies the provider after 3 seconds`, () => {
+      const actor = replayUntil(
+        scenario,
+        (d) =>
+          buildCrmStages(d).some((s) => s.id === "PT-14282") &&
+          d.biStatus === "complete" &&
+          d.medicalBenefitStatus === "covered" &&
+          d.providerTransferStatus === "none",
+      );
+      if (!actor) return;
+      transferSeen++;
+      const view = mount(actor, scenario.flowType);
+      vi.advanceTimersByTime(10 * REVEAL_MS);
+      expect(ctx(actor).workflowData.providerTransferStatus).toBe("none");
+
+      openStage(view, "PT");
+      vi.advanceTimersByTime(REVEAL_MS - 1);
+      expect(ctx(actor).workflowData.providerTransferStatus).toBe("none");
+      vi.advanceTimersByTime(1);
+      expect(ctx(actor).workflowData.providerTransferStatus).toBe("notified");
+      actor.stop();
+    });
+
+    it(`${scenario.name}: leaving a stage before the reveal cancels it`, () => {
+      const actor = replayUntil(scenario, (d) => d.biStatus === "running");
+      if (!actor) return;
+      const view = mount(actor, scenario.flowType);
+      openStage(view, "BI");
+      vi.advanceTimersByTime(REVEAL_MS - 1);
+      cleanup();
+      vi.advanceTimersByTime(10 * REVEAL_MS);
+      expect(ctx(actor).workflowData.biStatus).toBe("running");
+      actor.stop();
+    });
+  }
+
   it("the check ran on real scenarios", () => {
     expect(biSeen).toBe(SCENARIOS.length);
     expect(paSeen).toBeGreaterThan(5);
+    expect(appealSeen).toBeGreaterThan(0);
+    expect(transferSeen).toBeGreaterThan(0);
   });
 });
