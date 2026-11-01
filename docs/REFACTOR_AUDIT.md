@@ -421,12 +421,40 @@ The portals began as separate repos and were copied in.
 
 | File | Lines |
 |---|---|
-| `portals/crm/pages/Index.tsx` | 3,780 |
+| `portals/crm/pages/Index.tsx` | 3,780 (now 464, see the CRM refactor below) |
 | `portals/provider/index.tsx` | 3,269 (about 30 inline components) |
 | `portals/field/index.tsx` | 2,201 |
 | `portals/analytics/pages/Index.tsx` | 1,600 |
 | `shell/DemoShell.tsx` | 1,516 |
 | `engine/WorkflowEngine.ts` | 1,119 |
+
+### CRM refactor (steps 1 to 8, tags `refactor/67` to `refactor/74`)
+
+Plan: `docs/plans/PROMPT_CRM_REFACTOR.md`. Every file in `portals/crm/` is now under 600 lines (`Index.tsx` 464, `CaseHome.tsx` 567). The Client tab holds no copy of CRM code.
+
+What changed:
+
+- **Buttons come from the machine.** `stages/actions.ts` asks `snapshot.can(event)`. One headless test per scenario replays the golden path against it.
+- **One record view.** PA and appeal results draw from `stages/records.ts` through one `RecordStageView`.
+- **Stage list from the workflow.** Each workflow has a `stages.ts` (catalog plus rules, like `screens.ts`). The CRM keeps one builder per variant in `stages/builders/`. The four VIEW_STAGE effects are one effect that reads the stage map. The reset effect reads the flow from the workflow data, not the demo store.
+- **No page flags.** `crmFlags` is gone. The page reads `scenarioFacts`. `crm.noFlags.test.ts` guards it.
+- **Page split.** Tab strip, enrollment form, one view per stage kind, case home, and three modals are components. The pharmacy modal owns its picks, `CaseHome` owns its tab state.
+- **Names.** Payer, provider, patient first name and clinical history read one source each. `crm.noNames.test.ts` allows names only in `payerFacts.ts`, `clinicalFacts.ts` and `caseData.ts`.
+- **Fulfilment Center.** Items and message text are in `fulfilment/items.ts`, the columns are components, and colors read `--crm-*`. The Application Update item asks the machine for `SEND_PAP_SMS`.
+
+Still open:
+
+- The three facts files still hold a payer, a prior therapy and a pharmacy by name. Moving them into `brand.json` needs a brand schema change (Step 10 above).
+- The consent item reads `patientCase.consentStatus` from the mock API, not the machine.
+- `WorkflowEngine.ts` still holds `ADVANCED_DIABETES_SUPPLY_FACTS` and an `isCoverageFlow` copy.
+
+Needs a browser check (no automated test sees layout):
+
+- Case home tabs (Copay in Buy and Bill), opening and closing stage tabs, reset with a stage tab open.
+- BI and PA 3 second waits, Appeals and Provider Transfer reveals, in each workflow.
+- Triage pharmacy modal, Pharmacy Status, Cash Offer.
+- The Missing Information tab, the Cash Offer stage in retail DTP, the Triage stage in PAP flows (step 3 changes), and the CoA DTP denied rail now reading "Payer: Commercial" (step 4).
+- Fulfilment Center on the CRM and Client tabs, with the brand colors on the Client tab.
 
 Split these along existing seams (stages in CRM, EHR shell and steps in provider). Test coverage today is three `utils.spec.ts` files. Add tests for the workflow definitions and `derivePatientRoute`; those give the best return.
 
