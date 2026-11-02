@@ -16,18 +16,44 @@
   ],
   "manufacturer": {
     "name": "RyzUp Support Services",
+    "tagline": "Patient assistance & medication access program",
+    "logo": {
+      "colors": "/brands/alkermes-ryzup/imgi_3_Frame 1321316007.png",
+      "requiresFilter": false
+    },
+    "support": {
+      "label": "Technical Help",
+      "phone": "877-450-4412"
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#"
+    },
     "copyright": "©{{YEAR}} Alkermes. All Rights Reserved."
   },
   "program": {
     "name": "Lumryz",
     "drugDisplayName": "LUMRYZ (sodium oxybate)",
+    "description": "",
+    "dosageForm": "Tablet",
+    "assets": {
+      "logoColor": "brands/alkermes-ryzup/Lumryz-color.png",
+      "logoWhite": "brands/alkermes-ryzup/Lumryz-white.png"
+    },
+    "colors": {
+      "brand": "#36b0c9",
+      "source": "https://www.lumryzrems.com/"
+    },
     "transferPartner": {
       "name": "ARx Patient Solutions Pharmacy",
-      "address": "[TBD] street address",
-      "city": "[TBD]",
-      "state": "[TBD]",
-      "zip": "[TBD]",
-      "phone": "(555) 555-0100"
+      "address": "4500 W 107th St",
+      "city": "Overland Park",
+      "state": "KS",
+      "zip": "66207-4025",
+      "phone": "(866) 930-4146"
     }
-  }
+  },
+  "chatbotIcon": "brands/alkermes-ryzup/1786424090136-482GS01.svg",
+  "favicon": "brands/alkermes-ryzup/favicon.ico"
 }
