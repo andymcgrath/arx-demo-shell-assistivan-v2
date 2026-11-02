@@ -12,7 +12,8 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
-    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs"
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
+    "brand:scan": "node scripts/brand-scan.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
