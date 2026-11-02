@@ -72,11 +72,11 @@ for (const slug of slugs) {
     it("has valid color tokens", () => {
       const { colors } = brand.program;
       expect(typeof colors.brand).toBe("string");
-      for (const key of ["brand", "accent", "action"]) {
+      for (const key of ["brand", "accent", "action", "onAction", "onBrand"]) {
         if (colors[key] !== undefined) expect(() => normalizeHex(colors[key])).not.toThrow();
       }
       for (const key of Object.keys(colors)) {
-        expect(["brand", "accent", "action", "surfaces", "source"].includes(key)).toBe(true);
+        expect(["brand", "accent", "action", "onAction", "onBrand", "surfaces", "source"].includes(key)).toBe(true);
       }
       // Throws on an unknown surface or option.
       expect(() => resolveSurfaces(colors.surfaces, !!colors.accent)).not.toThrow();

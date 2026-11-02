@@ -43,6 +43,9 @@
     },
     "colors": {
       "brand": "#36b0c9",
+      "action": "#278093",
+      "onAction": "#ffffff",
+      "onBrand": "#ffffff",
       "source": "https://www.lumryzrems.com/"
     },
     "transferPartner": {
