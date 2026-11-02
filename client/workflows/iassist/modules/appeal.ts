@@ -12,6 +12,7 @@ export const APPEAL_RULES: IaRule[] = [
     // sitting at PA Denied springs into motion.
     id: "appeal.rule_on",
     on: "SET_APPEAL_RULE",
+    from: "crm",
     scope: { module: "appeal" },
     snapshot: false,
     when: (_d, e) => e.active === true,
@@ -36,6 +37,7 @@ export const APPEAL_RULES: IaRule[] = [
     // Files the appeal and unlocks fulfillment, the way an approval would.
     id: "appeal.initiate",
     on: "INITIATE_APPEAL",
+    autoOnly: true,
     scope: { module: "appeal" },
     when: (d) => d.paStatus === "denied" && d.appealStatus === "none",
     set: () => ({ appealStatus: "initiated", dispatchStatus: "pending_selection" }),
@@ -44,6 +46,7 @@ export const APPEAL_RULES: IaRule[] = [
   {
     id: "appeal.approve",
     on: "APPROVE_APPEAL",
+    autoOnly: true,
     scope: { module: "appeal" },
     when: (d) => d.appealStatus === "initiated",
     set: () => ({ appealStatus: "approved" }),

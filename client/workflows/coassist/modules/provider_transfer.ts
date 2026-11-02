@@ -19,6 +19,7 @@ export const PROVIDER_TRANSFER_RULES: CoaRule[] = [
   {
     id: "provider_transfer.notify",
     on: "NOTIFY_PROVIDER_TRANSFER",
+    autoOnly: true,
     scope: { module: "provider_transfer" },
     when: (d) => d.biStatus === "complete" && d.medicalBenefitStatus === "covered" && d.providerTransferStatus === "none",
     set: () => ({ providerTransferStatus: "notified", providerTransferSmsSent: true }),

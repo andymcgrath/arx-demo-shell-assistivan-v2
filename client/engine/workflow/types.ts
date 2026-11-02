@@ -199,6 +199,18 @@ export interface Rule<E = any, C = any> {
   then?: Automation<E, C> | Automation<E, C>[];
   /** Ids of delayed automations to cancel when this rule runs. */
   cancel?: string[];
+  /**
+   * True when only an automation sends this event: the result an agent step reveals (the BI result, the PA decision, the
+   * appeal decision) or a step another rule starts (filing the appeal). The Trigger panel never offers it as a button,
+   * because the presenter does not pick a branch (the fork does). A test fails if an agent automation can send an event
+   * whose rule is not marked.
+   */
+  autoOnly?: boolean;
+  /**
+   * The app a person sends this event from, for a rule that logs nothing (no `emit`). A rule with `emit` already says
+   * so through `emit.portal`. Without either, the Trigger panel does not offer the event.
+   */
+  from?: Portal;
   /** Set false for UI signals (such as VIEW_STAGE) that should not become an UNDO step. Default true. */
   snapshot?: boolean;
 }

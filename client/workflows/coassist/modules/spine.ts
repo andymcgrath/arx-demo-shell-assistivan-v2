@@ -25,6 +25,7 @@ export const SPINE_RULES: CoaRule[] = [
     // statuses still wins, so a replay or a test can force one. `biResult` is derived from the statuses.
     id: "spine.complete_bi",
     on: "COMPLETE_BI",
+    autoOnly: true,
     when: (d) => d.biStatus === "running",
     set: (d, e, s) => {
       const fork = biForkFor(d.flowType);
@@ -83,6 +84,7 @@ export const SPINE_RULES: CoaRule[] = [
   {
     id: "spine.approve_pa",
     on: "APPROVE_PA",
+    autoOnly: true,
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "approved", paApprovedAt: nowIso() }),
     emit: { portal: "provider", step: 9 },

@@ -226,6 +226,33 @@ The patient view now has its own two-factor screens and a tap cue on the text-me
 
 **Browser check (Chrome pane, dev server on port 8091).** Done with a temporary `enabledViews` edit to `brands/assistivan/brand.json`, reverted before the commit. Seen with the Standard demo: the toggle, the patient view (one tab, no layout buttons, `data-shell="patient"`, URL `/patient`), the SMS screen with the cue, the phone screen, the eight-box code screen with the autofill bubble, the autofill tap landing on Confirm Details, and the full view showing the unchanged default pages (no cue, six-digit input). I reached the SMS screen through the patient menu after a stage jump, because the patient view has no way to send the enrollment invite until step 4. Not seen in a browser: any scenario but Standard, `PaApprovedSms` and `PaApprovedOtp` (jsdom only), the wrong-code path, the Split 2 and Split 3 layouts, and the visual comparison against `main` pixel for pixel.
 
+### Patient view, step 04: Trigger panel (tag `patient-view/04-trigger-panel`)
+
+The patient view has no CRM, provider, or iAssist app, so it now carries a Trigger panel in the shell header. It is read from the workflow definition, not from a list of events. The full view has no panel. `patientRender.json`, `patientRenderPatientView.json`, and every engine fixture are unchanged. Tests 1086 to 1120, type-error baseline 2.
+
+**What the panel shows** (`engine/workflow/triggers.ts`, pure, rows computed from the rules and the stage map for the running scenario):
+
+- **Agent steps.** A `VIEW_STAGE` rule whose automation is `agent` and whose precondition holds now: "Open BI", "Open PA", "Open Appeal". Pressing it sends `VIEW_STAGE`, the machine reveals the result after its own delay (3 s today), and the panel sends `LEAVE_STAGE` when the result lands, as the CRM does when the tab closes. Closing the popover does not cancel the reveal. Leaving the patient view does, as closing the tab does.
+- **Manual steps.** Events another app sends (`emit.portal` is not `patient`) that the rules allow now and no automation sends: the referral, the invite, the provider's PA submission, the Triage pharmacy pick, Fill, Ready, Ship, Deliver, and so on.
+- **Runs on its own.** Events a `system` automation sends in this scenario, with its delay. No button. The same event is `system` in one scenario and `manual` in another: the PA starts on its own for eRx workflows and waits for the provider's submission on fax.
+- A step whose rule would change nothing is hidden, so a repeated press is never offered.
+
+**Changes to workflow files (metadata only, no machine behavior).** Each workflow now exports its `WorkflowDefinition` beside its machine, and `workflows/definitions.ts` has `definitionFor(flowType)`. `Rule.autoOnly` marks events only an automation sends: the BI result, the PA decision, the appeal decision, the provider transfer notice, and filing the appeal. The panel never offers these as buttons, because the presenter does not pick a branch (CLAUDE.md rule 14). A test fails if an agent automation can send an event whose rule is not marked. `Rule.from` names the sending app for a rule that logs nothing (`SET_APPEAL_RULE`, the Rules portal's switch).
+
+**Payloads** (`shell/triggerPayloads.ts`). Two manual events need more than their type: `SELECT_PHARMACY` (a pharmacy, from the same list the CRM Triage tab offers) and `SUBMIT_COPAY_CLAIM` (a date of service). This table is hand-written because the rules read the payload inside their own functions.
+
+**Test.** `triggers.panel.test.ts` plays every golden path with only the patient's own events and what the panel offers, and fails with where it got stuck. Three findings came out of it:
+
+- **Standard has no denied branch.** The scenario's PA outcome is `approved` and no app can deny it. `fax-standard-pa-denied` sends `DENY_PA` directly, so the denied branch exists only in tests. Listed in `CANNOT_FINISH` with the reason. The list only shrinks.
+- **Outcome golden paths need the demo's branch.** Paths that deny a PA or land on another coverage result send that outcome directly. The test starts them with the fork choice a demo would pass (`DEMO_CHOICES`).
+- **The iAssist appeal needs the Rules portal's switch.** Filing the appeal only happens when "Initiate appeal on PA denial" is switched on there. The golden path jumps over it. The panel offers the switch as a manual step (`ALSO_FIRE`).
+
+**Browser check (Chrome pane, dev server on port 8091, temporary `enabledViews` edit reverted).** Seen with the Standard demo: the panel at the lock screen with "Referral received" and "Complete provider PA", the patient SMS screen after the referral, the patient screens to the upload step, the "Open BI" agent row with a 3 s wait, "Submit PA" appearing after the BI result, "Open PA" after the submission, the Triage pharmacy picker with its select, Fill, Ready, Ship, and Deliver pressed in turn, and the step bar showing all eight stages done. The full view showed no Trigger button, the usual tabs and layout buttons, and no console errors. Seen with CoAssist DTP: "Referral received", then "Open BI", then "Open PA" with no "Submit PA" (the PA started on its own). Not seen in a browser: the other eight scenarios, the Rules-portal switch row, the date-of-service input, and a denied path.
+
+**Observations, not fixed here.**
+- After the Standard run reaches Medication Delivered, the patient screen stays on the sticky "Thanks!" screen until "Got it", and then lands on Home, not Medication Delivered. This matches the full view, where the same stay-put screen applies.
+- "Complete provider PA" is offered from the first moment of Standard. The rules allow it.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

@@ -77,6 +77,7 @@ export const INTAKE_RULES: IntakeRule[] = [
   },
   {
     on: "COMPLETE_BI",
+    autoOnly: true,
     when: (d) => d.biStatus === "running",
     set: (_d, e, s) => ({ biStatus: "complete", biResult: e.result ?? s.content.biResult }),
     emit: { portal: "analytics", step: 7 },

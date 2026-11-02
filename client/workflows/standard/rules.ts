@@ -23,12 +23,14 @@ export const STANDARD_RULES: IntakeRule[] = [
   },
   {
     on: "APPROVE_PA",
+    autoOnly: true,
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "approved", paApprovedAt: nowIso(), dispatchStatus: "pending_selection" }),
     emit: { portal: "provider", step: 9 },
   },
   {
     on: "DENY_PA",
+    autoOnly: true,
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "denied" }),
     emit: { portal: "provider", step: 9 },

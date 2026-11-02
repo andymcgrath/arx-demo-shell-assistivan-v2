@@ -30,6 +30,7 @@ export const SPINE_RULES: IaRule[] = [
   {
     id: "spine.complete_bi",
     on: "COMPLETE_BI",
+    autoOnly: true,
     when: (d) => d.biStatus === "running",
     set: (d, e) => resolveBi(IASSIST_BI_FORK, d, e),
     emit: { portal: "analytics", step: 7 },
@@ -47,6 +48,7 @@ export const SPINE_RULES: IaRule[] = [
     // The appeal scenario never approves its PA. The appeal is what unlocks it.
     id: "spine.approve_pa",
     on: "APPROVE_PA",
+    autoOnly: true,
     scope: { module: "pa_notification" },
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "approved", paApprovedAt: nowIso(), dispatchStatus: "pending_selection" }),
@@ -55,6 +57,7 @@ export const SPINE_RULES: IaRule[] = [
   {
     id: "spine.deny_pa",
     on: "DENY_PA",
+    autoOnly: true,
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "denied" }),
     emit: { portal: "provider", step: 9 },

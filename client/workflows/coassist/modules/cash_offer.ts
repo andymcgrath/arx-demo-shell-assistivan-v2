@@ -8,6 +8,7 @@ export const CASH_OFFER_RULES: CoaRule[] = [
     // Coverage has no denial branch: the PA is a formality.
     id: "cash_offer.deny_pa",
     on: "DENY_PA",
+    autoOnly: true,
     scope: { module: "cash_offer", props: { variant: "pa_denied" } },
     when: (d) => d.paStatus === "submitted",
     set: () => ({ paStatus: "denied" }),

@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { DEMO_OPTIONS } from "./flowOptions";
 import { stepBarModel } from "./stepBar";
 import { applyDemoChoices, startDemo } from "./demos";
-import { useShellView } from "./skin";
+import { useShellView, useSkin } from "./skin";
 import { filterPortals } from "./view";
 import ViewToggle from "./ViewToggle";
 import { usePatientToastStore } from "@/store/patientToastStore";
@@ -609,6 +609,7 @@ export default function DemoShell() {
 
   // The view decides which portals the shell offers and whether it splits (shell/skin.ts). The shell never reads the view.
   const { policy, toggle, setView, dataShell } = useShellView();
+  const { HeaderTools } = useSkin();
   const visiblePortals = filterPortals(getPortals(flowType), policy);
 
   // Layout state
@@ -812,6 +813,9 @@ export default function DemoShell() {
 
           {/* Controls */}
           <div className="flex items-center gap-2 px-3 py-2 shrink-0 border-l border-white/10">
+            {/* Presenter tools of the current view (the Trigger panel in the patient view). */}
+            <HeaderTools />
+
             {/* Full / Patient view. Shows only for a brand that lists more than one view. */}
             {toggle && <ViewToggle options={toggle} onChange={setView} />}
 

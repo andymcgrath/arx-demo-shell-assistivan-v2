@@ -16,6 +16,7 @@ import PhoneVerification from "@/portals/patient/pages/PhoneVerification";
 import OTPVerification from "@/portals/patient/pages/OTPVerification";
 import PaApprovedSms from "@/portals/patient/pages/PaApprovedSms";
 import PaApprovedOtp from "@/portals/patient/pages/PaApprovedOtp";
+import TriggerPanel from "./TriggerPanel";
 import PatientSMSMessage from "@/portals/patient/skins/patient/SMSMessage";
 import PatientPhoneVerification from "@/portals/patient/skins/patient/PhoneVerification";
 import PatientOTPVerification from "@/portals/patient/skins/patient/OTPVerification";
@@ -31,11 +32,15 @@ export interface SkinSlots {
   OTPVerification: ComponentType;
   PaApprovedSms: ComponentType;
   PaApprovedOtp: ComponentType;
+  /** Presenter tools in the shell header. The full view has the CRM and the other apps instead, so it shows none. */
+  HeaderTools: ComponentType;
 }
 
-const DEFAULT_SKIN: SkinSlots = { Header, Footer, SMSMessage, PhoneVerification, OTPVerification, PaApprovedSms, PaApprovedOtp };
+const NoHeaderTools = () => null;
 
-/** The patient skin changes the text-message tap cue and the two-factor screens. Everything else stays the default. */
+const DEFAULT_SKIN: SkinSlots = { Header, Footer, SMSMessage, PhoneVerification, OTPVerification, PaApprovedSms, PaApprovedOtp, HeaderTools: NoHeaderTools };
+
+/** The patient skin changes the text-message tap cue and the two-factor screens, and adds the Trigger panel. Everything else stays the default. */
 const PATIENT_SKIN: SkinSlots = {
   ...DEFAULT_SKIN,
   SMSMessage: PatientSMSMessage,
@@ -43,6 +48,7 @@ const PATIENT_SKIN: SkinSlots = {
   OTPVerification: PatientOTPVerification,
   PaApprovedSms: PatientPaApprovedSms,
   PaApprovedOtp: PatientPaApprovedOtp,
+  HeaderTools: TriggerPanel,
 };
 
 const SKINS: Record<ViewId, SkinSlots> = {

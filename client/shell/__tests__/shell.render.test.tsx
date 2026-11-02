@@ -70,6 +70,7 @@ describe("shell header, brand without enabledViews", () => {
     expect(tabs.length).toBeGreaterThan(2);
     expect(layoutButtons(container).every(Boolean)).toBe(true);
     expect(screen.queryByRole("group", { name: "View" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
   });
 });
 
@@ -83,6 +84,7 @@ describe("shell header, brand that enables both views", () => {
     expect(screen.getByRole("group", { name: "View" })).toBeTruthy();
     expect(tabLabels(header(container).querySelector("nav") as HTMLElement)).toContain("HUB / CRM");
     expect(layoutButtons(container).every(Boolean)).toBe(true);
+    expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
   });
 
   it("shows the patient portal alone in the patient view, with no layout buttons", async () => {
@@ -90,6 +92,8 @@ describe("shell header, brand that enables both views", () => {
     expect(tabLabels(header(container).querySelector("nav") as HTMLElement)).toEqual(["Patient"]);
     expect(layoutButtons(container).some(Boolean)).toBe(false);
     expect(screen.getByRole("group", { name: "View" })).toBeTruthy();
+    // The patient view has no CRM, so it carries the Trigger panel.
+    expect(screen.getByRole("button", { name: /Trigger/ })).toBeTruthy();
   });
 
   it("switches view with the toggle and keeps the machine's progress", async () => {
