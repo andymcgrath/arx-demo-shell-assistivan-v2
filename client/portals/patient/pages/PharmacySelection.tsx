@@ -79,7 +79,7 @@ export default function PharmacySelection() {
   return (
     <main className="flex-grow pt-5 pb-8">
       <div className="max-w-2xl mx-auto px-4 space-y-5">
-        <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+        <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
           {/* Header band */}
           <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
             <button

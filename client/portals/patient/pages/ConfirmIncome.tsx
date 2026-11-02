@@ -51,7 +51,7 @@ export default function ConfirmIncome() {
           <p className="text-arx-on-hero/90 text-sm leading-relaxed mb-8">
             No further action is needed at this time. We'll notify you as soon as there's an update.
           </p>
-          <button onClick={done} className="w-full bg-white text-arx-link font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors">Got it</button>
+          <button onClick={done} className="w-full bg-arx-white text-arx-link font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors">Got it</button>
         </div>
       </main>
     );

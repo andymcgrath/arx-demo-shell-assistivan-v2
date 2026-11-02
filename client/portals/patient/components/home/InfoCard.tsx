@@ -2,7 +2,7 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 
 export default function InfoCard() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+    <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
       {/* No drug logo here. The heading names the drug and the Prescriptions section shows it. */}
       <h2 className="text-h3 text-arx-slate">
         Everything you need to know about {PROGRAM.name}.

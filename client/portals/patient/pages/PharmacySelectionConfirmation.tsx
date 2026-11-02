@@ -44,7 +44,7 @@ export default function PharmacySelectionConfirmation() {
 
           <button
             onClick={() => { navigate("/order-tracker"); }}
-            className="w-full bg-white text-arx-link font-semibold py-3.5 rounded-lg hover:bg-arx-sky transition-colors"
+            className="w-full bg-arx-white text-arx-link font-semibold py-3.5 rounded-lg hover:bg-arx-sky transition-colors"
           >
             Got it
           </button>

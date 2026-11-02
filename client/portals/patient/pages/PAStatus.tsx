@@ -17,7 +17,7 @@ export default function PAStatus() {
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Submitted card */}
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
               <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
@@ -80,7 +80,7 @@ export default function PAStatus() {
               <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
               <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h4 className="text-lg font-bold leading-snug text-arx-slate">
                   Prior Authorization (PA): What to Expect

@@ -59,12 +59,12 @@ export default function IncomeQualification() {
     return (
       <main className="flex-grow pb-8">
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
               <ProgramLogo variant="colors" />
             </div>
             <div className="flex items-center gap-3 mb-3">
-              <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "#16a34a" }} />
+              <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "hsl(var(--arx-success))" }} />
               <h2 className="text-xl font-bold leading-snug text-arx-slate">{freeDrug ? "Application received" : "You're eligible!"}</h2>
             </div>
             <p className="text-sm leading-relaxed text-arx-body-copy mb-5">
@@ -72,9 +72,9 @@ export default function IncomeQualification() {
                 ? `We've received your ${PROGRAM.drugDisplayName} free drug application. Our team is reviewing it and will contact you with next steps.`
                 : `Based on your household information, you qualify for the ${PROGRAM.drugDisplayName} free drug program. Your application has been submitted and is being reviewed.`}
             </p>
-            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5">
-              <p className="text-sm font-semibold text-green-800">Application submitted</p>
-              <p className="text-xs text-green-700 mt-0.5">{freeDrug ? "No action is needed right now. We'll message you when there's an update." : "We'll notify you once your eligibility has been confirmed and your medication is ready to ship."}</p>
+            <div className="bg-arx-success-bg border border-arx-success-border rounded-xl px-4 py-3 mb-5">
+              <p className="text-sm font-semibold text-arx-success-text">Application submitted</p>
+              <p className="text-xs text-arx-success-text-soft mt-0.5">{freeDrug ? "No action is needed right now. We'll message you when there's an update." : "We'll notify you once your eligibility has been confirmed and your medication is ready to ship."}</p>
             </div>
             <button
               onClick={openChat}
@@ -93,13 +93,13 @@ export default function IncomeQualification() {
     return (
       <main className="flex-grow pb-8">
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
               <ProgramLogo variant="colors" />
             </div>
 
             <div className="flex items-center gap-3 mb-3">
-              <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "#16a34a" }} />
+              <CheckCircle className="w-7 h-7 flex-shrink-0" style={{ color: "hsl(var(--arx-success))" }} />
               <h2 className="text-xl font-bold leading-snug text-arx-slate">{freeDrug ? "Review your application" : "You qualify!"}</h2>
             </div>
 
@@ -121,7 +121,7 @@ export default function IncomeQualification() {
               {!freeDrug && (
                 <div className="flex justify-between text-sm">
                   <span className="text-arx-body-copy">Eligibility result</span>
-                  <span className="font-semibold" style={{ color: "#16a34a" }}>Eligible</span>
+                  <span className="font-semibold" style={{ color: "hsl(var(--arx-success))" }}>Eligible</span>
                 </div>
               )}
             </div>
@@ -143,7 +143,7 @@ export default function IncomeQualification() {
     <main className="flex-grow pb-8">
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
         {/* Intro card */}
-        <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+        <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
           <div className="flex items-center justify-between mb-4">
             <ProgramLogo variant="colors" />
           </div>
@@ -154,7 +154,7 @@ export default function IncomeQualification() {
         </div>
 
         {/* Form card */}
-        <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders space-y-5">
+        <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders space-y-5">
           {/* Household size */}
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-arx-slate mb-3">
@@ -168,9 +168,9 @@ export default function IncomeQualification() {
                   onClick={() => setHouseholdSize(s)}
                   className="py-2.5 rounded-lg border text-sm font-semibold transition-colors"
                   style={{
-                    borderColor: householdSize === s ? "hsl(var(--arx-primary))" : "#e5e5e5",
-                    backgroundColor: householdSize === s ? "hsl(var(--arx-sky) / 0.25)" : "white",
-                    color: householdSize === s ? "hsl(var(--arx-primary))" : "#414042",
+                    borderColor: householdSize === s ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))",
+                    backgroundColor: householdSize === s ? "hsl(var(--arx-sky) / 0.25)" : "hsl(var(--arx-white))",
+                    color: householdSize === s ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
                   }}
                 >
                   {s}
@@ -212,7 +212,7 @@ export default function IncomeQualification() {
             disabled={!canSubmit || checkingEligibility}
             className="w-full text-arx-on-action font-semibold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             style={{
-              backgroundColor: canSubmit ? "hsl(var(--arx-action))" : "#c4c4c4",
+              backgroundColor: canSubmit ? "hsl(var(--arx-action))" : "hsl(var(--arx-inactive))",
               cursor: canSubmit && !checkingEligibility ? "pointer" : "not-allowed",
             }}
           >

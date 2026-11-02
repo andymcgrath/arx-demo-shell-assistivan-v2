@@ -59,7 +59,7 @@ export default function CopayEnroll() {
     return (
       <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5 bg-arx-sky">
                 <Sparkles className="w-5 h-5 text-arx-link" />
@@ -119,7 +119,7 @@ export default function CopayEnroll() {
     <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <h2 className="text-xl font-bold mb-1 text-arx-slate">Your savings options</h2>
             <p className="text-sm mb-5 text-arx-body-copy">
               Choose the option that works best for you to reduce your out-of-pocket cost for {PROGRAM.drugDisplayName}.
@@ -179,7 +179,7 @@ export default function CopayEnroll() {
                 ].map((row, i, arr) => (
                   <div
                     key={row.dose}
-                    className={`flex items-center justify-between px-3 py-2.5 text-sm ${i % 2 === 0 ? "bg-white" : "bg-arx-neutral-100"} ${i < arr.length - 1 ? "border-b border-arx-borders" : ""}`}
+                    className={`flex items-center justify-between px-3 py-2.5 text-sm ${i % 2 === 0 ? "bg-arx-white" : "bg-arx-neutral-100"} ${i < arr.length - 1 ? "border-b border-arx-borders" : ""}`}
                   >
                     <span className="text-arx-body-copy">{row.dose}</span>
                     <span className="font-semibold text-arx-slate">{row.price}</span>

@@ -25,9 +25,9 @@ export default function YesNoToggle({
           onClick={() => onChange(opt)}
           className="flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-colors"
           style={{
-            borderColor: value === opt ? "hsl(var(--arx-primary))" : "#e5e5e5",
-            backgroundColor: value === opt ? "hsl(var(--arx-sky) / 0.25)" : "white",
-            color: value === opt ? "hsl(var(--arx-primary))" : "#414042",
+            borderColor: value === opt ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))",
+            backgroundColor: value === opt ? "hsl(var(--arx-sky) / 0.25)" : "hsl(var(--arx-white))",
+            color: value === opt ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
           }}
         >
           {opt}

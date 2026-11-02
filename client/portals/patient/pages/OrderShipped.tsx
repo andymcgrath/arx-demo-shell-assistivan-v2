@@ -18,7 +18,7 @@ type StepStatus = "done" | "active" | "pending";
 function StepIcon({ n, status }: { n: number; status: StepStatus }) {
   if (status === "done") return (
     <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-arx-step-done">
-      <Check className="w-5 h-5 text-white" strokeWidth={3} />
+      <Check className="w-5 h-5 text-arx-white" strokeWidth={3} />
     </div>
   );
   if (status === "active") return (
@@ -27,7 +27,7 @@ function StepIcon({ n, status }: { n: number; status: StepStatus }) {
     </div>
   );
   return (
-    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-base border-2 border-arx-borders text-arx-inactive bg-white">
+    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-base border-2 border-arx-borders text-arx-inactive bg-arx-white">
       {n}
     </div>
   );
@@ -38,7 +38,7 @@ function StepRow({ step, onClick }: { step: typeof STEPS[number]; onClick?: () =
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-colors ${isActive ? "bg-arx-step-row" : "bg-white border border-arx-borders"}`}
+      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-colors ${isActive ? "bg-arx-step-row" : "bg-arx-white border border-arx-borders"}`}
     >
       <StepIcon n={step.n} status={step.status} />
       <div className="flex-1 min-w-0">
@@ -55,7 +55,7 @@ export default function OrderShipped() {
   return (
     <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{ORDER_NUMBER}</span></p>
             <p className="text-sm mb-4 text-arx-slate">Shipped on <span className="font-bold">{SHIP_DATE}</span></p>
             <p className="text-sm leading-relaxed text-arx-body-copy">

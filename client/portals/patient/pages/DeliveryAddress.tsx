@@ -22,7 +22,7 @@ function FloatingInput({ label, value, onChange, required }: {
           top: lifted ? "6px" : "50%",
           transform: lifted ? "none" : "translateY(-50%)",
           fontSize: lifted ? "10px" : "14px",
-          color: focused ? "#007178" : "#6F7276",
+          color: focused ? "hsl(var(--arx-primary))" : "hsl(var(--arx-body-copy))",
         }}
       >
         {label}{required && "*"}
@@ -33,8 +33,8 @@ function FloatingInput({ label, value, onChange, required }: {
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="w-full pt-5 pb-2 px-4 rounded-xl text-sm outline-none transition-colors text-arx-slate bg-white"
-        style={{ border: `1.5px solid ${focused ? "#007178" : "#E0E0E0"}` }}
+        className="w-full pt-5 pb-2 px-4 rounded-xl text-sm outline-none transition-colors text-arx-slate bg-arx-white"
+        style={{ border: `1.5px solid ${focused ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))"}` }}
       />
     </div>
   );

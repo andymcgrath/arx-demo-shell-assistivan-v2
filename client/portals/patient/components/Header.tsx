@@ -37,14 +37,14 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-arx-borders shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-arx-white border-b border-arx-borders shadow-sm">
         {/* Row 1: Hamburger + Logo + Chat */}
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           {/* Hamburger */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors hover:bg-arx-sky/30"
-            style={{ color: "#1C1C1C" }}
+            style={{ color: "hsl(var(--arx-slate))" }}
             aria-label="Open navigation menu"
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -58,11 +58,11 @@ export default function Header() {
           {/* Chat / Technical Help */}
           <button
             className="flex-shrink-0 flex items-center gap-2 text-sm font-semibold transition-colors"
-            style={{ color: "#1C1C1C" }}
+            style={{ color: "hsl(var(--arx-slate))" }}
             aria-label={MANUFACTURER.support.label}
             onClick={openChat}
-            onMouseEnter={e => (e.currentTarget.style.color = "#555555")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#1C1C1C")}
+            onMouseEnter={e => (e.currentTarget.style.color = "hsl(var(--arx-body-copy))")}
+            onMouseLeave={e => (e.currentTarget.style.color = "hsl(var(--arx-slate))")}
           >
             <span className="hidden sm:inline text-xs">{MANUFACTURER.support.label}</span>
             <img src={CHATBOT_ICON} alt="" className="w-5 h-5 object-contain" style={{ filter: "brightness(0) opacity(0.8)" }} />
@@ -70,7 +70,7 @@ export default function Header() {
         </div>
 
         {/* Row 2: Safety Nav Links — all pages */}
-        <div className="border-t border-arx-borders bg-white">
+        <div className="border-t border-arx-borders bg-arx-white">
           <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-8">
             <a
               href={MANUFACTURER.legal.safetyUrl}
@@ -110,7 +110,7 @@ export default function Header() {
           />
 
           {/* Drawer */}
-          <nav className="fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-2xl flex flex-col overflow-y-auto border-r border-arx-borders">
+          <nav className="fixed top-0 left-0 z-50 h-full w-64 bg-arx-white shadow-2xl flex flex-col overflow-y-auto border-r border-arx-borders">
             {/* Drawer header */}
             <div className="flex items-center justify-end px-5 py-4 flex-shrink-0 border-b border-arx-borders">
               <button
@@ -133,10 +133,10 @@ export default function Header() {
                       onClick={() => handleNav(entry.path)}
                       className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                       style={{
-                        backgroundColor: isActive ? "#ADE2E340" : "transparent",
-                        color: isActive ? "#007178" : "#414042",
+                        backgroundColor: isActive ? "hsl(var(--arx-sky) / 0.25)" : "transparent",
+                        color: isActive ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
                       }}
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#ADE2E320"; }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "hsl(var(--arx-sky) / 0.12)"; }}
                       onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                     >
                       {entry.label}
@@ -158,10 +158,10 @@ export default function Header() {
                             onClick={() => handleNav(item.path)}
                             className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                             style={{
-                              backgroundColor: isActive ? "#ADE2E340" : "transparent",
-                              color: isActive ? "#007178" : "#6F7276",
+                              backgroundColor: isActive ? "hsl(var(--arx-sky) / 0.25)" : "transparent",
+                              color: isActive ? "hsl(var(--arx-primary))" : "hsl(var(--arx-body-copy))",
                             }}
-                            onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#ADE2E320"; }}
+                            onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "hsl(var(--arx-sky) / 0.12)"; }}
                             onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                           >
                             {item.label}
@@ -175,7 +175,7 @@ export default function Header() {
             </div>
 
             {/* Footer of drawer */}
-            <div className="px-5 py-4 border-t border-arx-borders text-[10px] text-white/70">
+            <div className="px-5 py-4 border-t border-arx-borders text-[10px] text-arx-white/70">
               {MANUFACTURER.copyright}
             </div>
           </nav>

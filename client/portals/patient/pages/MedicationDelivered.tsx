@@ -65,7 +65,7 @@ export default function MedicationDelivered() {
 
           {/* Infusion Appointment card — see hasInfusionAppointment above. */}
           {hasInfusionAppointment && (
-            <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+            <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
               <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-arx-on-primary" />
                 <span className="text-sm font-semibold text-arx-on-primary">{noun} Appointment</span>
@@ -98,7 +98,7 @@ export default function MedicationDelivered() {
           )}
 
           {/* Arrived card */}
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
               <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{DELIVERY_DATE}</span>
@@ -161,7 +161,7 @@ export default function MedicationDelivered() {
 
               <button
                 onClick={() => setShowPfVideo(true)}
-                className="w-full bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
+                className="w-full bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden text-left group"
               >
                 <div className="relative w-full h-40 bg-arx-slate/10">
                   {educationVideo!.thumbnail && !thumbnailFailed && (
@@ -181,8 +181,8 @@ export default function MedicationDelivered() {
                       }}
                     />
                   )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                    <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                  <div className="absolute inset-0 flex items-center justify-center bg-arx-black/20 group-hover:bg-arx-black/30 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-arx-white/90 flex items-center justify-center shadow-md">
                       <Play className="w-6 h-6 text-arx-link fill-arx-primary" />
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export default function MedicationDelivered() {
               </button>
             </div>
             <button className="w-full flex items-center gap-4 text-arx-on-primary rounded-xl px-4 py-3.5 bg-arx-primary hover:bg-arx-primary-dark transition-colors">
-              <ProgramLogo variant="white" className="flex-shrink-0" />
+              <ProgramLogo variant="hsl(var(--arx-white))" className="flex-shrink-0" />
               <div className="flex-1 text-left">
                 <p className="text-xs text-arx-on-primary/80">Review prescribing information</p>
               </div>
@@ -228,7 +228,7 @@ export default function MedicationDelivered() {
               <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+            <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
               <img
                 src="https://images.pexels.com/photos/7176319/pexels-photo-7176319.jpeg?auto=compress&cs=tinysrgb&w=600"
                 alt="Patient and doctor"
@@ -261,11 +261,11 @@ export default function MedicationDelivered() {
          */}
         {showPfVideo && hasEducationVideo && (
           <div
-            className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            className="absolute inset-0 bg-arx-black/70 flex items-center justify-center z-50 p-4"
             onClick={() => setShowPfVideo(false)}
           >
             <div
-              className={`bg-white rounded-2xl overflow-hidden w-full ${isWideFlow ? "max-w-[500px]" : "max-w-sm"}`}
+              className={`bg-arx-white rounded-2xl overflow-hidden w-full ${isWideFlow ? "max-w-[500px]" : "max-w-sm"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-arx-borders">
@@ -278,7 +278,7 @@ export default function MedicationDelivered() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="aspect-video bg-black">
+              <div className="aspect-video bg-arx-black">
                 <iframe
                   src={`${educationVideo!.embedUrl}${educationVideo!.embedUrl.includes("?") ? "&" : "?"}autoplay=1`}
                   className="w-full h-full"

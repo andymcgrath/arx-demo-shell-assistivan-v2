@@ -47,7 +47,7 @@ export default function PADenied() {
 
           {/* PA Denied card */}
           {isCoverageScenario ? (
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
@@ -80,7 +80,7 @@ export default function PADenied() {
               </button>
             </div>
           ) : hasPricingFork ? (
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
@@ -110,7 +110,7 @@ export default function PADenied() {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
                 <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
@@ -152,7 +152,7 @@ export default function PADenied() {
           )}
 
           {/* Real-time updates card */}
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
                 Real-time updates about your case, anytime!
@@ -208,7 +208,7 @@ export default function PADenied() {
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
                 <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+              <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
                 <div className="flex items-center justify-between mb-3">
                   <ProgramLogo variant="colors" size="small" />
                   <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
