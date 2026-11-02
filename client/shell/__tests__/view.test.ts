@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowedViews, resolveView, showViewToggle, viewFromSearch, viewProblems } from "@/shell/view";
+import { allowedViews, filterPortals, resolveView, shellPolicy, showViewToggle, toggleOptions, viewFromSearch, viewProblems } from "@/shell/view";
 
 describe("allowed views and the toggle", () => {
   it("gives a brand without enabledViews the full view and no toggle", () => {
@@ -71,5 +71,37 @@ describe("viewProblems", () => {
     expect(viewProblems({ enabledViews: [], demos: demos() })).toHaveLength(1);
     expect(viewProblems({ enabledViews: ["full", "full"], demos: demos() })).toHaveLength(1);
     expect(viewProblems({ enabledViews: "full", demos: demos() })).toHaveLength(1);
+  });
+});
+
+describe("shell policy", () => {
+  const portals = [{ id: "crm" }, { id: "patient" }, { id: "provider" }];
+
+  it("shows every portal and allows a split in the full view", () => {
+    expect(shellPolicy("full")).toEqual({ portalIds: null, singlePanel: false });
+    expect(filterPortals(portals, shellPolicy("full"))).toEqual(portals);
+  });
+
+  it("shows the patient portal alone, in one panel, in the patient view", () => {
+    expect(shellPolicy("patient").singlePanel).toBe(true);
+    expect(filterPortals(portals, shellPolicy("patient"))).toEqual([{ id: "patient" }]);
+  });
+
+  it("leaves nothing when the flow has no portal the view allows", () => {
+    expect(filterPortals([{ id: "crm" }], shellPolicy("patient"))).toEqual([]);
+  });
+});
+
+describe("toggle options", () => {
+  it("is null when the brand offers no choice", () => {
+    expect(toggleOptions("full", undefined)).toBeNull();
+    expect(toggleOptions("patient", ["patient"])).toBeNull();
+  });
+
+  it("lists the enabled views in brand order and marks the current one", () => {
+    expect(toggleOptions("patient", ["full", "patient"])).toEqual([
+      { id: "full", label: "Full", active: false },
+      { id: "patient", label: "Patient", active: true },
+    ]);
   });
 });

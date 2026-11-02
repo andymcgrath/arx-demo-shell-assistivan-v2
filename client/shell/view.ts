@@ -67,3 +67,39 @@ export function viewProblems(brand: {
   }
   return problems;
 }
+
+// ── Shell policy ──────────────────────────────────────────────────────────────
+
+/** What the shell shows in a view. `portalIds` null means every portal the flow offers. */
+export interface ShellPolicy {
+  portalIds: readonly string[] | null;
+  /** True when the layout buttons are hidden and the shell stays in one panel. */
+  singlePanel: boolean;
+}
+
+const SHELL_POLICY: Record<ViewId, ShellPolicy> = {
+  full: { portalIds: null, singlePanel: false },
+  patient: { portalIds: ["patient"], singlePanel: true },
+};
+
+export const shellPolicy = (view: ViewId): ShellPolicy => SHELL_POLICY[view];
+
+/** Keeps the portals the policy allows. A policy with no `portalIds` keeps them all. */
+export function filterPortals<T extends { id: string }>(portals: T[], policy: ShellPolicy): T[] {
+  const ids = policy.portalIds;
+  return ids ? portals.filter((p) => ids.includes(p.id)) : portals;
+}
+
+export interface ToggleOption {
+  id: ViewId;
+  label: string;
+  active: boolean;
+}
+
+const VIEW_LABELS: Record<ViewId, string> = { full: "Full", patient: "Patient" };
+
+/** The header toggle's buttons, or null when the brand does not offer a choice of views. */
+export function toggleOptions(view: ViewId, enabledViews: readonly ViewId[] | undefined): ToggleOption[] | null {
+  if (!showViewToggle(enabledViews)) return null;
+  return allowedViews(enabledViews).map((id) => ({ id, label: VIEW_LABELS[id], active: id === view }));
+}

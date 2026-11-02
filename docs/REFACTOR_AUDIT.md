@@ -187,6 +187,18 @@ The view is now shell state with no visible change. `demoStore` holds `view` (`f
 - **Plan change.** The plan says `view` persists through "the one persistence helper". No such helper exists (about 14 files call `sessionStorage`), so `view` rides in `demoStore`'s existing persist block. A real helper is still open.
 - **Not run in a browser.** The `?view=` read and the saved-view restore are covered by unit tests only. Nothing reads `view` in the UI yet, so a browser check waits for step 2.
 
+### Patient view, step 02: patient shell layout (tag `patient-view/02-patient-shell`)
+
+In the patient view the shell shows the patient portal alone, with no layout buttons, and the header has a Full / Patient toggle for brands that list more than one view. The full view with the current brands is unchanged. `patientRender.json` and every engine fixture are unchanged. Tests 1041 to 1050, type-error baseline 2.
+
+- **Policy lives in `shell/view.ts` (pure).** `shellPolicy(view)` names the portals a view shows and whether it stays in one panel. `toggleOptions` builds the toggle's buttons. `skin.ts` exposes both through `useShellView()`, so `DemoShell` never reads the view (rule 2 test still passes).
+- **`DemoShell` edit (about 15 lines).** The tab strip, the panels, and the redirect effects all take the portal list filtered by the policy. The existing single-panel redirect sends a presenter on `/hub` to `/patient`. A split layout collapses to single when the view is patient. The toggle is `shell/ViewToggle.tsx`.
+- **Other portals unmount in the patient view.** They drop out of the list the shell maps over. Workflow state lives in the machine, so progress survives switching back, and a test checks that. Local React state in those portals (for example the open CRM tab) resets.
+- **Step bar stays in the patient view.** The plan replaces presenter chrome in step 5.
+- **Tests.** `shell.render.test.tsx` renders `DemoShell` twice over: with the real brand (every tab, layout buttons, no toggle, the leak guard for the header) and with a brand that enables both views (patient alone, no layout buttons, toggle round trip keeps `workflowData`). It mocks `enabledViews` because no brand lists it before step 7.
+- **Still over the size rule.** `DemoShell.tsx` is 1088 lines. This step added 15 and did not split it. The split is a separate step.
+- **Not run in a browser.** No brand enables the patient view yet, so the toggle cannot be seen in the real app. The checks above run in jsdom.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

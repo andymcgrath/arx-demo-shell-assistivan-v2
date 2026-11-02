@@ -34,6 +34,9 @@ import { cn } from "@/lib/utils";
 import { DEMO_OPTIONS } from "./flowOptions";
 import { stepBarModel } from "./stepBar";
 import { applyDemoChoices, startDemo } from "./demos";
+import { useShellView } from "./skin";
+import { filterPortals } from "./view";
+import ViewToggle from "./ViewToggle";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
@@ -604,6 +607,10 @@ export default function DemoShell() {
   const urlSlug = location.pathname.slice(1) || "hub";
   const urlPortal: PortalId = SLUG_TO_PORTAL[urlSlug] ?? "crm";
 
+  // The view decides which portals the shell offers and whether it splits (shell/skin.ts). The shell never reads the view.
+  const { policy, toggle, setView } = useShellView();
+  const visiblePortals = filterPortals(getPortals(flowType), policy);
+
   // Layout state
   const [layout, setLayout] = useState<LayoutMode>("1up");
   const [panels, setPanels] = useState<PanelState[]>([{ portal: urlPortal }]);
@@ -652,7 +659,7 @@ export default function DemoShell() {
   // Also redirect URL in 1up mode if the current portal is no longer available
   // Update multi-panel state when flow changes
   useEffect(() => {
-    const availablePortals = getPortals(flowType).map(p => p.id);
+    const availablePortals = filterPortals(getPortals(flowType), policy).map(p => p.id);
     setPanels((prev) =>
       prev.map((panel) => {
         if (!availablePortals.includes(panel.portal)) {
@@ -661,16 +668,21 @@ export default function DemoShell() {
         return panel;
       })
     );
-  }, [flowType]);
+  }, [flowType, policy]);
+
+  // A single-panel view leaves any split layout.
+  useEffect(() => {
+    if (policy.singlePanel && layout !== "1up") setLayout("1up");
+  }, [policy, layout]);
 
   // In 1up mode, redirect if current URL portal is filtered out
   useEffect(() => {
-    const availablePortals = getPortals(flowType).map(p => p.id);
+    const availablePortals = filterPortals(getPortals(flowType), policy).map(p => p.id);
     if (layout === "1up" && !availablePortals.includes(urlPortal)) {
       const fallbackPortal = availablePortals[0] || "crm";
       navigate(`/${PORTAL_SLUG[fallbackPortal]}`);
     }
-  }, [flowType, layout, urlPortal]);
+  }, [flowType, layout, urlPortal, policy]);
 
   function switchLayout(next: LayoutMode) {
     setLayout(next);
@@ -767,7 +779,7 @@ export default function DemoShell() {
         <div className="flex items-stretch">
           {/* Portal tabs (single-panel mode: clicking selects that portal) */}
           <nav className="flex items-stretch flex-1 overflow-x-auto border-l border-white/10">
-            {getPortals(flowType).map((tab) => {
+            {visiblePortals.map((tab) => {
               // Provider is already excluded from getPortals() for
               // Fax_PAP_Audit (WF2) and iAssist (WF4) — no separate
               // per-tab hiding needed here now.
@@ -800,8 +812,11 @@ export default function DemoShell() {
 
           {/* Controls */}
           <div className="flex items-center gap-2 px-3 py-2 shrink-0 border-l border-white/10">
-            {/* Layout mode */}
-            <div className="flex items-center rounded overflow-hidden border border-white/20">
+            {/* Full / Patient view. Shows only for a brand that lists more than one view. */}
+            {toggle && <ViewToggle options={toggle} onChange={setView} />}
+
+            {/* Layout mode. A single-panel view has none. */}
+            {!policy.singlePanel && <div className="flex items-center rounded overflow-hidden border border-white/20">
               {(
                 [
                   { id: "1up" as LayoutMode, Icon: LayoutTemplate,  tip: "Single" },
@@ -823,7 +838,7 @@ export default function DemoShell() {
                   <Icon size={13} />
                 </button>
               ))}
-            </div>
+            </div>}
 
             {/* Demo selector: the brand's `demos` list. A demo is a flow plus its fork choices. */}
             <div className="relative">
@@ -1038,7 +1053,7 @@ export default function DemoShell() {
 
       {/* ── Portal panels ──────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden" style={{ paddingTop: 0, paddingBottom: 0 }}>
-        {getPortals(flowType).map((portalInfo) => {
+        {visiblePortals.map((portalInfo) => {
           const isActive = activePanels.some(
             (p) => p.portal === portalInfo.id
           );
