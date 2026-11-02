@@ -43,6 +43,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 
 ## Brand and deploy rules
 
+- A client's colors win over AA. A brand sets `colors.fidelity: "exact"` and a `source` to use them as given. Do not darken or swap a client color to pass a test, and do not add a second hue for buttons.
 - Brand lives in committed JSON at `brands/<slug>/brand.json`, with images in `public/brands/<slug>/`. See `docs/BRANDS.md`. Brand and drug names never appear in source code.
 - Each client has one Netlify site pointing at `main`. The `BRAND` environment variable selects the brand at build time. Per-client demos come from `demos` in the brand file.
 - Do not create long-lived client branches. Feature branches are short-lived and merge back.
@@ -51,6 +52,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 
 ## Code rules
 
+- Patient screens read color from brand tokens only. No raw Tailwind palette class, hex, rgb, or color word. A fill uses its own text token. `tokensOnly.test.ts` and `patient.tokenPairs.test.tsx` enforce it. Only the phone-chrome screens named in the test are exempt. See `docs/BRANDS.md`.
 - One UI kit at `client/ui/`. Do not add a `components/ui` folder inside a portal.
 - One `@/` alias. No import-rewriting Vite plugins.
 - One persistence helper with a versioned key and one reset-everything path. Do not call `sessionStorage` directly.
