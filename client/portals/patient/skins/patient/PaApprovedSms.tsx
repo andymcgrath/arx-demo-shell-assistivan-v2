@@ -1,0 +1,113 @@
+import { useNavigate } from "@/lib/portalRouter";
+import { TapDot, TapHint } from "./TapCue";
+import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
+import { ChevronLeft, Mic } from "lucide-react";
+import { PROGRAM } from "@/portals/patient/config/branding";
+import { useRecipeModule } from "@/hooks/useRecipeModule";
+import { useFreeDrug } from "@/hooks/useFreeDrug";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
+
+/**
+ * PA Approved SMS — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
+ * screen exactly, see WorkflowEngine.ts's derivePatientRoute and
+ * iAssist.ts's updatePaApprovedSmsVerified). WF1 (Fax_QS_PA_Approved) never
+ * routes here. CoA_Coverage Scenario 1 also routes here now — see this flow's own
+ * header comment below and workflows/coassist/'s paApproved state — reusing this
+ * screen (rather than a coverage-specific clone) replaces that scenario's old
+ * single tap-through SMS entirely, per the confirmed PA design.
+ *
+ * A second "text message" beat, separate from the original enrollment SMS
+ * (SMSMessage.tsx, untouched — this is a new dedicated screen so WF1's
+ * onboarding text can't be affected by anything here). Sent once PA is
+ * approved, letting the patient know it's time to schedule delivery (or, for
+ * CoA_Coverage, pick a network pharmacy — there's no "delivery" framing yet at
+ * this point in that flow). Tapping the link dispatches
+ * VERIFY_PA_APPROVED_SMS and continues to a second OTP check
+ * (PaApprovedOtp.tsx) before Benefit Pricing (CoA_DTP/iAssist) or Network
+ * Pharmacy Selection (CoA_Coverage).
+ */
+export default function PaApprovedSms() {
+  const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
+  const { workflowData } = usePersonaState('patient');
+  const { isCoverageScenario } = scenarioFacts(workflowData.flowType);
+  // Buy and Bill: the HCP administers the drug, so there is no delivery to schedule.
+  const hcpAdministered = useRecipeModule("pa_notification")?.props?.variant === "hcp_administered";
+  // Free drug: the same text and code after the CRM agent approves the application.
+  const freeDrug = useFreeDrug();
+
+  const handleTapMessage = () => {
+    dispatch("VERIFY_PA_APPROVED_SMS", { portal: "patient" });
+    navigate("/pa-approved-otp");
+  };
+
+  return (
+    <div className="h-full bg-black flex flex-col">
+      {/* Header - Contact Info */}
+      <div className="bg-black border-b border-gray-800 px-4 py-3 flex flex-col items-center gap-2">
+        <div className="flex items-center w-full mb-2">
+          <button onClick={() => navigate("/")} className="text-blue-400">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="flex-1 text-center">
+            <div className="w-12 h-12 rounded-full bg-white mx-auto flex items-center justify-center mb-2">
+              <span className="text-blue-500 font-bold" style={{ fontSize: '22px' }}>AR</span>
+            </div>
+          </div>
+          <div className="w-6" />
+        </div>
+        <div className="text-center">
+          <h1 className="font-semibold text-white text-base">+1 (225) 514-0411</h1>
+        </div>
+      </div>
+
+      {/* Messages Container */}
+      <div className="flex-1 flex flex-col px-4 py-4 overflow-y-auto space-y-4">
+        <div className="flex flex-col">
+          <p className="text-xs text-gray-400 text-center">Text Message · SMS</p>
+          <p className="text-xs text-gray-500 text-center">Today 5:33 PM</p>
+        </div>
+        {/* Incoming Message Bubble */}
+        <div className="flex justify-start">
+          <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
+            <p className="mb-2">
+              {freeDrug
+                ? `Good news! Your ${PROGRAM.drugDisplayName} free drug application was approved. See what happens next:`
+                : hcpAdministered
+                ? `Good news! Your ${PROGRAM.name} prior authorization was approved. See what happens next:`
+                : isCoverageScenario
+                ? `Good news! Your ${PROGRAM.name} prior authorization was approved. Time to pick a pharmacy:`
+                : `Good news! Your ${PROGRAM.drugDisplayName} prior authorization was approved. Time to schedule delivery:`}
+            </p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <button onClick={handleTapMessage} className="text-blue-400 underline font-semibold hover:opacity-80 transition-opacity">
+                https://go.coassist/pa-approved
+              </button>
+              <TapDot />
+            </div>
+            <p className="text-xs text-gray-300">
+              Reply STOP to opt out, HELP for help. Msg&data rates may apply.
+            </p>
+          </div>
+        </div>
+        <TapHint />
+      </div>
+
+      {/* Input Area */}
+      <div className="bg-gray-900 border-t border-gray-800 px-4 py-3 flex items-center gap-2">
+        <button className="text-gray-500 hover:text-gray-400 transition-colors text-2xl">+</button>
+        <div className="flex-1 bg-gray-800 rounded-full px-4 py-2 flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Text Message · SMS"
+            disabled
+            className="bg-transparent flex-1 text-sm outline-none placeholder-gray-600 text-gray-400"
+          />
+        </div>
+        <button className="text-gray-500 hover:text-gray-400 transition-colors">
+          <Mic size={20} />
+        </button>
+      </div>
+    </div>
+  );
+}

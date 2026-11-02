@@ -34,9 +34,6 @@ import { screenMapFor } from "@/workflows/screenMaps";
 import { useSkin } from "@/shell/skin";
 
 import LockScreen from "./pages/LockScreen";
-import SMSMessage from "./pages/SMSMessage";
-import PhoneVerification from "./pages/PhoneVerification";
-import OTPVerification from "./pages/OTPVerification";
 import Index from "./pages/Index";
 import ConfirmDetails from "./pages/ConfirmDetails";
 import Consent from "./pages/Consent";
@@ -46,8 +43,6 @@ import EnrollmentComplete from "./pages/EnrollmentComplete";
 import PAStatus from "./pages/PAStatus";
 import PADenied from "./pages/PADenied";
 import PAApproved from "./pages/PAApproved";
-import PaApprovedSms from "./pages/PaApprovedSms";
-import PaApprovedOtp from "./pages/PaApprovedOtp";
 import PapUpdateSms from "./pages/PapUpdateSms";
 import PapUpdateOtp from "./pages/PapUpdateOtp";
 import BenefitPricing from "./pages/BenefitPricing";
@@ -142,7 +137,7 @@ function StateDrivenNav() {
 }
 
 function PatientRoutes() {
-  const { Header, Footer } = useSkin();
+  const { Header, Footer, SMSMessage, PhoneVerification, OTPVerification, PaApprovedSms, PaApprovedOtp } = useSkin();
   const ctx = useChatContext();
   const { pathname } = useLocation();
   const { workflowData } = usePersonaState('patient');

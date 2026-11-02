@@ -199,6 +199,33 @@ In the patient view the shell shows the patient portal alone, with no layout but
 - **Still over the size rule.** `DemoShell.tsx` is 1088 lines. This step added 15 and did not split it. The split is a separate step.
 - **Not run in a browser.** No brand enables the patient view yet, so the toggle cannot be seen in the real app. The checks above run in jsdom.
 
+### Patient view, step 03: patient skin (tag `patient-view/03-patient-skin`)
+
+The patient view now has its own two-factor screens and a tap cue on the text-message screens. The full view is unchanged. `patientRender.json` and every engine fixture are unchanged. One new fixture, `ui/patientRenderPatientView.json`. Tests 1050 to 1086, type-error baseline 2.
+
+**The plan's premise did not hold for most of this step.** The fork is the older code, not a restyled one, so most of what the plan listed has nothing to port:
+
+- **CSS and Tailwind.** The fork's `global.css` is a subset of the reference's and its Tailwind config adds nothing. Copying it would drop the `arx-action`, `arx-link`, `arx-strip` tokens and the type scale. No CSS was ported. The shell root now carries `data-shell` (from `useShellView()`) so a later skin can hang CSS on `[data-shell="patient"]`. Nothing uses it yet.
+- **Header and Footer.** The fork's Header diff is its hand-written per-flow menus (`flowType ===` chains), which rule 13 replaced with the generated menu. Its Footer is the older 10px text. The skin keeps the default Header and Footer in both views.
+- **`MedicationDelivered`.** The fork's adherence block and mock video check `flowType === 'Fax_QS_PA_Approved'`, dispatch `VIEW_FIRST_DOSE_EDUCATION` (it exists only in the fork's machine), and read the fork's phase nav. Not visual-only. Not ported. It belongs with step 5, and the new event needs its own decision because it would move engine fixtures.
+
+**What was ported** (`portals/patient/skins/patient/`, slots in `shell/skin.ts`, routes in `portals/patient/index.tsx` render the slot):
+
+- `TwoFactorShell` and `OtpBoxes` (boxed code with the SMS-autofill bubble), used by patient-skin `OTPVerification` and `PaApprovedOtp`.
+- Patient-skin `PhoneVerification` in the same frame.
+- Patient-skin `SMSMessage` and `PaApprovedSms`: the reference pages plus a pulsing dot beside the link and a "Tap the link above to continue" hint.
+
+**Logic differences found in the fork's pages, and what was decided:**
+
+- **Code length.** The patient view takes 8 digits (`83145897` enrollment, `20439761` PA re-check), as the fork does. The default screens still take 6 (`314589`). The two views differ here on purpose. A change to the code in one skin will not change the other.
+- **Phone check.** The fork's screen takes any 10-digit number. The patient skin keeps the reference's check (last four digits of the scenario patient's phone), in the fork's frame.
+- **`PapUpdateSms` and `PapUpdateOtp`.** Left alone: they differ from the fork by 3 and 6 lines.
+- **Other text-message screens.** `CashOfferSms`, `ProviderTransferSms`, `PapTransferSms`, and `PapUpdateSms` also ask the patient to tap a link and have no cue. The fork never had them. Left alone, open for a decision.
+
+**Drift guard.** The skin's `SMSMessage` and `PaApprovedSms` are copies of the default pages, because the default components stay untouched (plan rule 3). `patient.skinRender.test.tsx` walks every scenario and, at every step on one of those routes, checks the patient view reads exactly like the default view plus the cue. The two-factor behavior is tested against both skins (`patient.skin.test.tsx`): same events, same next route, wrong code rejected.
+
+**Browser check (Chrome pane, dev server on port 8091).** Done with a temporary `enabledViews` edit to `brands/assistivan/brand.json`, reverted before the commit. Seen with the Standard demo: the toggle, the patient view (one tab, no layout buttons, `data-shell="patient"`, URL `/patient`), the SMS screen with the cue, the phone screen, the eight-box code screen with the autofill bubble, the autofill tap landing on Confirm Details, and the full view showing the unchanged default pages (no cue, six-digit input). I reached the SMS screen through the patient menu after a stage jump, because the patient view has no way to send the enrollment invite until step 4. Not seen in a browser: any scenario but Standard, `PaApprovedSms` and `PaApprovedOtp` (jsdom only), the wrong-code path, the Split 2 and Split 3 layouts, and the visual comparison against `main` pixel for pixel.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

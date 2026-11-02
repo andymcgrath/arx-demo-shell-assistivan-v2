@@ -608,7 +608,7 @@ export default function DemoShell() {
   const urlPortal: PortalId = SLUG_TO_PORTAL[urlSlug] ?? "crm";
 
   // The view decides which portals the shell offers and whether it splits (shell/skin.ts). The shell never reads the view.
-  const { policy, toggle, setView } = useShellView();
+  const { policy, toggle, setView, dataShell } = useShellView();
   const visiblePortals = filterPortals(getPortals(flowType), policy);
 
   // Layout state
@@ -772,7 +772,7 @@ export default function DemoShell() {
   }, [resetDemo, flowType, isIAssistFlow, isIAssistPapFlow, isPapFlow, isCoverageFlow, isCoaFlow, forkChoices]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
+    <div data-shell={dataShell} className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
       {/* ── Shell header ─────────────────────────────────────────────────── */}
       <header ref={headerRef} className="bg-[#0f172a] text-white shrink-0 shadow-lg">
         {/* Top row */}
