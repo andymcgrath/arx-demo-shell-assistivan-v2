@@ -1,10 +1,4 @@
-import { PROGRAM } from "@/portals/patient/config/branding";
-import { buildTheme } from "@/brand/theme";
-import { iconFilter } from "@/portals/patient/lib/brandFilter";
-
-const THEME = buildTheme(PROGRAM.colors);
-
-const CHATBOT_ICON ="https://cdn.builder.io/api/v1/image/assets%2F4c828a6b97e546bc967a796675ca457e%2Fcd6e286159a142f4ba939dc20997b2da";
+import BrandIcon from "@/portals/patient/components/brand/BrandIcon";
 
 interface SuggestedCard {
   title: string;
@@ -19,7 +13,7 @@ const suggestions: SuggestedCard[] = [
     description:
       "Get 24/7 support for questions about prior authorization, medication delivery, financial assistance, and more.",
     cta: "Chat with us",
-    icon: <img src={CHATBOT_ICON} alt="" className="w-6 h-6 object-contain" style={{ filter: iconFilter(THEME.tileFg) }} />,
+    icon: <BrandIcon token="on-tile" className="w-6 h-6" />,
   },
 ];
 

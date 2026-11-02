@@ -4,8 +4,8 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { useChatContext } from "@/portals/patient/components/ChatContext";
-import { CHATBOT_ICON, PROGRAM } from "@/portals/patient/config/branding";
-import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
+import { PROGRAM } from "@/portals/patient/config/branding";
+import BrandIcon from "@/portals/patient/components/brand/BrandIcon";
 import { useFreeDrug } from "@/hooks/useFreeDrug";
 import { useCaseWizardStore } from "@/store/caseWizardStore";
 import { MANUFACTURER } from "@/portals/patient/config/branding";
@@ -80,7 +80,7 @@ export default function IncomeQualification() {
               onClick={openChat}
               className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
             >
-              <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
+              <BrandIcon token="primary" />
               <span>Have questions? Start a chat</span>
             </button>
           </div>

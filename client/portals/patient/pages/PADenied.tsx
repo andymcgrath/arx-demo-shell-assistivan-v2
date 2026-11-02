@@ -2,8 +2,8 @@ import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, ChevronRight, Phone, DollarSign } from "lucide-react";
 import { useChatContext } from "@/portals/patient/components/ChatContext";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
-import { PROGRAM, CHATBOT_ICON } from "@/portals/patient/config/branding";
-import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
+import { PROGRAM } from "@/portals/patient/config/branding";
+import BrandIcon from "@/portals/patient/components/brand/BrandIcon";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 
@@ -75,7 +75,7 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
+                <BrandIcon token="primary" />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
@@ -105,7 +105,7 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
+                <BrandIcon token="primary" />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
@@ -145,7 +145,7 @@ export default function PADenied() {
                 onClick={openChat}
                 className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors"
               >
-                <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: hexToColorFilter(PROGRAM.colors.brand) }} />
+                <BrandIcon token="primary" />
                 <span>Have questions? Start a chat</span>
               </button>
             </div>

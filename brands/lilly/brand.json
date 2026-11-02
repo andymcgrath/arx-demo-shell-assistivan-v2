@@ -1,0 +1,31 @@
+{
+  "extends": "assistivan",
+  "slug": "lilly",
+  "name": "Lilly",
+  "title": "Foundayo Demo",
+  "manufacturer": {
+    "name": "Lilly Support Services",
+    "logo": {
+      "colors": "/brands/lilly/lilly-logo.svg",
+      "requiresFilter": false
+    },
+    "copyright": "©{{YEAR}} Eli Lilly and Company. All Rights Reserved."
+  },
+  "program": {
+    "name": "Foundayo",
+    "drugDisplayName": "Foundayo (orforglipron) tablets",
+    "assets": {
+      "logoColor": "brands/lilly/foundayo-color.png",
+      "logoWhite": null
+    },
+    "colors": {
+      "brand": "#D31710",
+      "fidelity": "exact",
+      "onAction": "#FFFFFF",
+      "onBrand": "#FFFFFF",
+      "source": "https://www.lilly.com/"
+    }
+  },
+  "chatbotIcon": "brands/lilly/chat-icon.svg",
+  "favicon": "brands/lilly/favicon.jpeg"
+}
