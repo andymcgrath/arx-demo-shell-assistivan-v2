@@ -32,6 +32,10 @@ export interface TriggerRow {
   stage?: string;
   /** What an `agent` row makes happen, and after how long. A `system` row says when it runs on its own. */
   reveals?: { event: string; afterMs?: number };
+  /** For a `manual` row: the events its rule sets running on their own. Pressing "Initiate appeal on denial" starts the appeal. */
+  starts?: string[];
+  /** For a `manual` row: the fields its rule sets now. Guided Next uses it to tell a step that moves the case on from a spare form. */
+  patch?: Partial<WorkflowData>;
 }
 
 /** UI signals and machine controls: never rows of their own. */
@@ -103,16 +107,21 @@ function systemSent(
   return sent;
 }
 
-/** True when running the rule would change nothing: every field it sets already holds that value. */
-function changesNothing(rule: Rule, data: WorkflowData, event: { type: string }, scenario: ScenarioDefinition<any>): boolean {
-  if (!rule.set) return false;
+/** The fields the rule would set on this data, or undefined when it cannot say (it needs more of its event). */
+function patchOf(rule: Rule, data: WorkflowData, event: { type: string }, scenario: ScenarioDefinition<any>): Partial<WorkflowData> | undefined {
+  if (!rule.set) return {};
   try {
-    const patch = rule.set(data, event, scenario) as Record<string, unknown>;
-    const keys = Object.keys(patch);
-    return keys.length > 0 && keys.every((k) => JSON.stringify(patch[k]) === JSON.stringify((data as any)[k]));
+    return rule.set(data, event, scenario);
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+/** True when running the rule would change nothing: every field it sets already holds that value. */
+function changesNothing(patch: Partial<WorkflowData> | undefined, data: WorkflowData): boolean {
+  if (!patch) return false;
+  const keys = Object.keys(patch);
+  return keys.length > 0 && keys.every((k) => JSON.stringify((patch as any)[k]) === JSON.stringify((data as any)[k]));
 }
 
 /**
@@ -159,10 +168,12 @@ export function triggerRows(
     const event = { type, portal: "crm", ...probe(type, data) };
     const rule = allowedRule(rules, data, event, scenario);
     const portal = rule && sourcePortal(rule);
-    if (!rule || !portal || portal === "patient" || changesNothing(rule, data, event, scenario)) continue;
+    const patch = rule ? patchOf(rule, data, event, scenario) : undefined;
+    if (!rule || !portal || portal === "patient" || changesNothing(patch, data)) continue;
     const system = automated.has(type);
     // Only an automation sends this one. It can show as "runs on its own", never as a button.
     if (rule.autoOnly && !system) continue;
+    const starts = system ? [] : [...systemSent([rule], data, scenario, probe).keys()];
     rows.push({
       kind: system ? "system" : "manual",
       event: type,
@@ -170,6 +181,8 @@ export function triggerRows(
       label: humanize(type),
       portal,
       ...(system ? { reveals: { event: type, afterMs: automated.get(type) } } : {}),
+      ...(starts.length ? { starts } : {}),
+      ...(patch && Object.keys(patch).length ? { patch } : {}),
     });
   }
   return rows;

@@ -16,7 +16,8 @@ import PhoneVerification from "@/portals/patient/pages/PhoneVerification";
 import OTPVerification from "@/portals/patient/pages/OTPVerification";
 import PaApprovedSms from "@/portals/patient/pages/PaApprovedSms";
 import PaApprovedOtp from "@/portals/patient/pages/PaApprovedOtp";
-import TriggerPanel from "./TriggerPanel";
+import PresenterTools from "./PresenterTools";
+import PhaseNav from "./PhaseNav";
 import PatientSMSMessage from "@/portals/patient/skins/patient/SMSMessage";
 import PatientPhoneVerification from "@/portals/patient/skins/patient/PhoneVerification";
 import PatientOTPVerification from "@/portals/patient/skins/patient/OTPVerification";
@@ -34,13 +35,15 @@ export interface SkinSlots {
   PaApprovedOtp: ComponentType;
   /** Presenter tools in the shell header. The full view has the CRM and the other apps instead, so it shows none. */
   HeaderTools: ComponentType;
+  /** The rail left of the portal panels. The patient view's phase rail guides a client. The full view shows none. */
+  LeftRail: ComponentType;
 }
 
-const NoHeaderTools = () => null;
+const Nothing = () => null;
 
-const DEFAULT_SKIN: SkinSlots = { Header, Footer, SMSMessage, PhoneVerification, OTPVerification, PaApprovedSms, PaApprovedOtp, HeaderTools: NoHeaderTools };
+const DEFAULT_SKIN: SkinSlots = { Header, Footer, SMSMessage, PhoneVerification, OTPVerification, PaApprovedSms, PaApprovedOtp, HeaderTools: Nothing, LeftRail: Nothing };
 
-/** The patient skin changes the text-message tap cue and the two-factor screens, and adds the Trigger panel. Everything else stays the default. */
+/** The patient skin changes the text-message tap cue and the two-factor screens, and adds the phase rail, with the Trigger panel behind a Presenter toggle. Everything else stays the default. */
 const PATIENT_SKIN: SkinSlots = {
   ...DEFAULT_SKIN,
   SMSMessage: PatientSMSMessage,
@@ -48,7 +51,8 @@ const PATIENT_SKIN: SkinSlots = {
   OTPVerification: PatientOTPVerification,
   PaApprovedSms: PatientPaApprovedSms,
   PaApprovedOtp: PatientPaApprovedOtp,
-  HeaderTools: TriggerPanel,
+  HeaderTools: PresenterTools,
+  LeftRail: PhaseNav,
 };
 
 const SKINS: Record<ViewId, SkinSlots> = {

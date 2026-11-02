@@ -78,12 +78,14 @@ describe("shell policy", () => {
   const portals = [{ id: "crm" }, { id: "patient" }, { id: "provider" }];
 
   it("shows every portal and allows a split in the full view", () => {
-    expect(shellPolicy("full")).toEqual({ portalIds: null, singlePanel: false });
+    expect(shellPolicy("full")).toEqual({ portalIds: null, singlePanel: false, stepBar: true });
     expect(filterPortals(portals, shellPolicy("full"))).toEqual(portals);
   });
 
   it("shows the patient portal alone, in one panel, in the patient view", () => {
     expect(shellPolicy("patient").singlePanel).toBe(true);
+    // The phase rail replaces the step bar in the patient view.
+    expect(shellPolicy("patient").stepBar).toBe(false);
     expect(filterPortals(portals, shellPolicy("patient"))).toEqual([{ id: "patient" }]);
   });
 

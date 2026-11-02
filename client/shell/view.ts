@@ -75,11 +75,13 @@ export interface ShellPolicy {
   portalIds: readonly string[] | null;
   /** True when the layout buttons are hidden and the shell stays in one panel. */
   singlePanel: boolean;
+  /** True when the header shows the step bar. The patient view has the phase rail instead. */
+  stepBar: boolean;
 }
 
 const SHELL_POLICY: Record<ViewId, ShellPolicy> = {
-  full: { portalIds: null, singlePanel: false },
-  patient: { portalIds: ["patient"], singlePanel: true },
+  full: { portalIds: null, singlePanel: false, stepBar: true },
+  patient: { portalIds: ["patient"], singlePanel: true, stepBar: false },
 };
 
 export const shellPolicy = (view: ViewId): ShellPolicy => SHELL_POLICY[view];

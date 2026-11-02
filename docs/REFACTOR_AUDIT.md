@@ -253,6 +253,31 @@ The patient view has no CRM, provider, or iAssist app, so it now carries a Trigg
 - After the Standard run reaches Medication Delivered, the patient screen stays on the sticky "Thanks!" screen until "Got it", and then lands on Home, not Medication Delivered. This matches the full view, where the same stay-put screen applies.
 - "Complete provider PA" is offered from the first moment of Standard. The rules allow it.
 
+### Patient view, step 05: guided phase rail (tag `patient-view/05-phase-nav`)
+
+The patient view is handed to a client to drive alone, so it now has a phase rail that tells them what to do: a list of the scenario's stages, a marker for where the case is, Next, Back, and a click on any stage to jump. The Trigger panel is a presenter tool behind a "Presenter" toggle, off by default. The full view is unchanged and keeps its step bar. Every fixture is unchanged. Tests 1120 to 1194, type-error baseline 2.
+
+The plan's step 5 also had `StepExplainer`. That moves to step 06 (notes keyed by stage label). Steps after it shift down by one.
+
+**One stage list.** The jump list and the replay moved out of `DemoShell` into `shell/stageJump.ts` unchanged (`stageList`, `jumpEvents`). The header's jump menu and the rail both read them, so they cannot disagree. `stageLadders.test.ts` now calls `jumpEvents`, the real dispatch, not a mirror table. `DemoShell` went from 1088 to 952 lines. `useStageJump` is the one hook that resets and replays.
+
+**Which stage the case is on** (`shell/stageAt.ts`). Each stage's ladder is replayed on a throwaway machine to get its progress (counters that only go up). A stage is reached when the case shows at least half of what it adds over the stage before. A case that took another path still counts (the ladder pays for the order, the story does not). Tests: replaying every stage of every scenario, on every `bi` fork exit, lands on a stage with the same progress. No golden path ever moves backwards, and one that delivers ends on the last stage.
+
+**What Next does** (`shell/guidedNav.ts`). It works on the first stage with work left, in the ladder's order, so the patient consents before the PA is decided. If one of the Trigger rows (an agent opens a stage, another app sends an event) is part of that stage, Next sends it. If the next thing is the patient's own tap, Next is off and says "Continue on the phone: SMS Verification", using the screen label the patient route already has. When the ladder list ends before the story does (a transfer, then the pharmacy steps), Next sends what still moves the case on. When the Rx is delivered or the last stage is fully done, it says "Journey complete".
+
+**Test.** `guidedNav.test.ts` plays every golden path with only Next and the story's phone steps. It fails with where Next left the client stuck, as the step 4 test does for the panel. All pass except one in the allow-list, as before: the Standard scenario has no denied branch.
+
+**Finding, not fixed.** In iAssist Medical Transfer the transfer pharmacy is assigned at `VERIFY_PA_APPROVED_OTP`, but `CONFIRM_CONSENT` marks that code verified without assigning it. If the PA is approved before the patient consents (possible from the Trigger panel or the full view), the case ends with no pharmacy assigned (`selectedPharmacy` is null). The CoAssist rule assigns it at consent. Guided Next never reaches this, because it follows the ladder's order. I left the rule alone. It needs a decision, and it would move fixtures.
+
+**Plan change.** The plan listed Next, Back, and phase jump as the fork's presenter chrome. They are the client's guide, so they stay. The audience note is in the project memory.
+
+**Browser check (Chrome pane, dev server on port 8091, temporary `enabledViews` edit, reverted).**
+- **Standard, seen:** the rail in the patient view with no step bar. Next walked the whole journey: Referral, Invite, then "Continue on the phone: SMS Verification". I did the patient screens (text link, phone, code, details, consent, signature, skip upload). The rail then read Stage 3 and offered Open BI, Submit PA, Open PA, Select pharmacy, Fill, Ready, Ship, Deliver, and ended on "Journey complete" at Stage 8 of 8. Back went to Stage 7 and a click on Benefits Investigation jumped to Stage 3. The Presenter toggle showed and hid the Trigger button.
+- **iAssist Appeal and CoAssist Coverage, partly seen:** each showed its own stage list. Next fired the referral and then said to continue on the phone. I did not drive them through the patient screens.
+- **Not seen in a browser:** the other eight scenarios past their first Next, Back from the middle of a fork scenario, and the rail on a narrow window (the rail is 280 px).
+
+**Unrelated.** A folder `public/brands/alkermes-ryzup/` appeared untracked in the working tree during this step. I did not create it and did not commit it.
+
 ## Short answers
 
 **Simplify what?** Four things drive most of the complexity: customer variants kept as diverged branches, six near-identical workflow machines, three vendored copies of every portal UI kit, and a brand system whose live source of truth is per-site Netlify Blobs.

@@ -71,6 +71,10 @@ describe("shell header, brand without enabledViews", () => {
     expect(layoutButtons(container).every(Boolean)).toBe(true);
     expect(screen.queryByRole("group", { name: "View" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Presenter/ })).toBeNull();
+    // No phase rail, and the header keeps its step bar.
+    expect(screen.queryByRole("complementary", { name: "Your journey" })).toBeNull();
+    expect(header(container).textContent).toContain("Referral Received");
   });
 });
 
@@ -85,6 +89,8 @@ describe("shell header, brand that enables both views", () => {
     expect(tabLabels(header(container).querySelector("nav") as HTMLElement)).toContain("HUB / CRM");
     expect(layoutButtons(container).every(Boolean)).toBe(true);
     expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Presenter/ })).toBeNull();
+    expect(screen.queryByRole("complementary", { name: "Your journey" })).toBeNull();
   });
 
   it("shows the patient portal alone in the patient view, with no layout buttons", async () => {
@@ -92,8 +98,15 @@ describe("shell header, brand that enables both views", () => {
     expect(tabLabels(header(container).querySelector("nav") as HTMLElement)).toEqual(["Patient"]);
     expect(layoutButtons(container).some(Boolean)).toBe(false);
     expect(screen.getByRole("group", { name: "View" })).toBeTruthy();
-    // The patient view has no CRM, so it carries the Trigger panel.
+    // The client drives it with the phase rail. The Trigger panel is a presenter tool, off until switched on.
+    expect(screen.getByRole("complementary", { name: "Your journey" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Presenter/ }));
     expect(screen.getByRole("button", { name: /Trigger/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Presenter/ }));
+    expect(screen.queryByRole("button", { name: /Trigger/ })).toBeNull();
+    // The rail replaces the header's step bar.
+    expect(header(container).textContent).not.toContain("Referral Received");
   });
 
   it("switches view with the toggle and keeps the machine's progress", async () => {

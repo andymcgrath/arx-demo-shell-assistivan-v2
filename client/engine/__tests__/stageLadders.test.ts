@@ -12,31 +12,31 @@ import { buyAndBillStageEvents, freeDrugStageEvents } from "@/shell/buyAndBillLa
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
+import { jumpEvents } from "@/shell/stageJump";
 import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
- * The presenter's "jump to stage" menu (resetActorToStage in shell/DemoShell.tsx)
- * RESETs the actor and replays events up to a stage. The CoAssist event lists
- * live in shell/coassistLadders.ts, the same module DemoShell calls, so this
- * test exercises the real lists, not a copy.
+ * The "jump to stage" menu and the patient view's phase rail RESET the actor and replay
+ * events up to a stage. Both call jumpEvents (shell/stageJump.ts), the same function this
+ * test calls, so it exercises the real dispatch and the real lists, not a copy.
  *
  * Each stage is replayed on a fresh actor. The fixture records which events
  * the machine ignored, so a stage that does not actually land shows up.
  */
 const LADDERS = [
-  { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DTP", stage) },
-  { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
-  { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
-  { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => coassistStageEvents("CoA_Medical_Transfer", stage) },
-  { flowType: "CoA_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => coassistStageEvents("CoA_PAP", stage) },
-  { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
-  { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
-  { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => iassistStageEvents("iAssist_Medical_Transfer", stage) },
-  { flowType: "iAssist_Buy_And_Bill", stages: [2, 3, 4, 5, 6], events: (stage: number) => buyAndBillStageEvents(stage) },
-  { flowType: "iAssist_Buy_And_Bill_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => freeDrugStageEvents(stage) },
-  { flowType: "Fax_QS_PA_Approved", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("standard", stage) },
-  { flowType: "Fax_PAP_Audit", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
-  { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => faxStageEvents("pap", stage) },
+  { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("CoA_DTP", stage, undefined) },
+  { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("CoA_Copay", stage, undefined) },
+  { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("CoA_Coverage", stage, undefined) },
+  { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => jumpEvents("CoA_Medical_Transfer", stage, undefined) },
+  { flowType: "CoA_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => jumpEvents("CoA_PAP", stage, undefined) },
+  { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => jumpEvents("iAssist_PA_Approved", stage, undefined) },
+  { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => jumpEvents("iAssist_PAP", stage, undefined) },
+  { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => jumpEvents("iAssist_Medical_Transfer", stage, undefined) },
+  { flowType: "iAssist_Buy_And_Bill", stages: [2, 3, 4, 5, 6], events: (stage: number) => jumpEvents("iAssist_Buy_And_Bill", stage, undefined) },
+  { flowType: "iAssist_Buy_And_Bill_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("iAssist_Buy_And_Bill_PAP", stage, undefined) },
+  { flowType: "Fax_QS_PA_Approved", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("Fax_QS_PA_Approved", stage, undefined) },
+  { flowType: "Fax_PAP_Audit", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("Fax_PAP_Audit", stage, undefined) },
+  { flowType: "PrES_PAP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => jumpEvents("PrES_PAP", stage, undefined) },
 ] as const;
 
 const BI_FORK = biForkFor("CoA_Coverage");

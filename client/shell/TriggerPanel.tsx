@@ -1,25 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "@xstate/react";
+import { useState } from "react";
 import { ChevronDown, Zap } from "lucide-react";
-import { useWorkflowActor } from "@/engine/WorkflowProvider";
-import type { WorkflowData } from "@/engine/types";
-import { eventFor, triggerRows, type TriggerRow } from "@/engine/workflow/triggers";
-import { definitionFor } from "@/workflows/definitions";
-import { stageMapFor } from "@/workflows/stageMaps";
 import { cn } from "@/lib/utils";
 import { defaultPayload, payloadFields } from "./triggerPayloads";
+import { useTriggerRows } from "./useTriggerRows";
 
 /**
- * The Trigger panel. The patient view has no CRM, provider, or iAssist app, so this offers what those apps do, read from
- * the workflow definition (engine/workflow/triggers.ts). It sends the same events they send: an agent step opens the
- * stage (VIEW_STAGE) and the machine reveals the result after its own delay, a manual step sends its event. It holds the
- * stage open until the result lands, as the CRM does with its tab, then sends LEAVE_STAGE.
+ * The Trigger panel, a presenter tool. The patient view has no CRM, provider, or iAssist app, so this offers what those
+ * apps do, read from the workflow definition (engine/workflow/triggers.ts). It sends the same events they send: an agent
+ * step opens the stage (VIEW_STAGE) and the machine reveals the result after its own delay, a manual step sends its event.
+ * useTriggerRows holds the stage open until the result lands, then sends LEAVE_STAGE. A client uses the phase rail's Next
+ * instead (shell/PhaseNav.tsx), which sends the same rows.
  */
 
 const seconds = (ms?: number) => (ms ? `${Math.round(ms / 100) / 10}s` : "now");
-
-/** Whether the panel can send a row. Rows that run on their own show but have no button. */
-const canSend = (row: TriggerRow) => row.kind !== "system";
 
 function Section({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
   return (
@@ -32,43 +25,9 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 }
 
 export default function TriggerPanel() {
-  const actor = useWorkflowActor();
-  const data = useSelector(actor, (s) => (s.context as { workflowData: WorkflowData }).workflowData);
+  const { data, rows, fire, lastFired } = useTriggerRows();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<Record<string, Record<string, unknown>>>({});
-  const [lastFired, setLastFired] = useState("");
-  /** Stages this panel has open, as the CRM keeps a tab open. */
-  const viewing = useRef(new Set<string>());
-
-  const rows = useMemo(() => {
-    const def = definitionFor(data.flowType);
-    return def ? triggerRows(def, data, stageMapFor(data.flowType), defaultPayload) : [];
-  }, [data]);
-
-  // Close a stage when its result has landed (the agent row is gone), and every open stage when the panel goes away.
-  useEffect(() => {
-    for (const stage of [...viewing.current]) {
-      if (!rows.some((r) => r.kind === "agent" && r.stage === stage)) {
-        viewing.current.delete(stage);
-        actor.send({ type: "LEAVE_STAGE", portal: "crm", stage } as any);
-        setLastFired("");
-      }
-    }
-  }, [rows, actor]);
-  useEffect(
-    () => () => {
-      for (const stage of viewing.current) actor.send({ type: "LEAVE_STAGE", portal: "crm", stage } as any);
-      viewing.current.clear();
-    },
-    [actor],
-  );
-
-  const fire = (row: TriggerRow) => {
-    const payload = { ...row.payload, ...defaultPayload(row.event, data), ...(picked[row.event] ?? {}) };
-    if (row.kind === "agent" && row.stage) viewing.current.add(row.stage);
-    actor.send(eventFor({ ...row, payload }) as any);
-    setLastFired(row.kind === "agent" ? `${row.label}: waiting ${seconds(row.reveals?.afterMs)}` : `Sent ${row.label}`);
-  };
 
   const agent = rows.filter((r) => r.kind === "agent");
   const manual = rows.filter((r) => r.kind === "manual");
@@ -100,7 +59,7 @@ export default function TriggerPanel() {
               {agent.map((row) => (
                 <button
                   key={row.stage}
-                  onClick={() => fire(row)}
+                  onClick={() => fire(row, picked[row.event])}
                   className="w-full text-left px-2.5 py-2 rounded bg-indigo-500 hover:bg-indigo-400 text-white text-[12px] font-semibold transition-colors"
                 >
                   {row.label}
@@ -145,7 +104,7 @@ export default function TriggerPanel() {
                     ),
                   )}
                   <button
-                    onClick={() => fire(row)}
+                    onClick={() => fire(row, picked[row.event])}
                     className="w-full px-2.5 py-1.5 rounded bg-indigo-500 hover:bg-indigo-400 text-white text-[12px] font-semibold transition-colors"
                   >
                     {row.label}

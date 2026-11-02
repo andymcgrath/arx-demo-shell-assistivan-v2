@@ -34,19 +34,13 @@ import { cn } from "@/lib/utils";
 import { DEMO_OPTIONS } from "./flowOptions";
 import { stepBarModel } from "./stepBar";
 import { applyDemoChoices, startDemo } from "./demos";
+import { stageList } from "./stageJump";
+import { useStageJump } from "./useStageJump";
 import { useShellView, useSkin } from "./skin";
 import { filterPortals } from "./view";
 import ViewToggle from "./ViewToggle";
 import { usePatientToastStore } from "@/store/patientToastStore";
-import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
-import { forkStageList } from "@/engine/workflow/forks";
-import { biForkFor } from "@/workflows/coassist/forks";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
-import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
-import { scenarioHasModule } from "@/workflows/scenarios";
-import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
-import { isBuyAndBillScenario, buyAndBillStageEvents, BUY_AND_BILL_STAGE_LABELS, isFreeDrugScenario, freeDrugStageEvents, FREE_DRUG_STAGE_LABELS } from "./buyAndBillLadders";
-import { faxStageEvents } from "./faxLadders";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -609,7 +603,7 @@ export default function DemoShell() {
 
   // The view decides which portals the shell offers and whether it splits (shell/skin.ts). The shell never reads the view.
   const { policy, toggle, setView, dataShell } = useShellView();
-  const { HeaderTools } = useSkin();
+  const { HeaderTools, LeftRail } = useSkin();
   const visiblePortals = filterPortals(getPortals(flowType), policy);
 
   // Layout state
@@ -711,66 +705,9 @@ export default function DemoShell() {
   // In 1up mode, always derive the active portal from the URL
   const activePanels = layout === "1up" ? [{ portal: urlPortal }] : panels;
 
-  const resetActorToStage = useCallback((stage: number) => {
-    // Bump resetNonce so portals with their own navigation guards (e.g. the
-    // patient portal's StateDrivenNav) know this is a reset and force-navigate
-    // to the correct screen, same as the "Reset All" button does.
-    resetDemo();
-
-    const actor = getWorkflowActor();
-
-    // Always start with a full reset
-    actor.send({ type: 'RESET' });
-
-    // Buy and Bill: the HCP runs eMedBV and enrolls copay before the referral, so it has its own ladder.
-    if (isBuyAndBillScenario(flowType)) {
-      for (const event of buyAndBillStageEvents(stage)) actor.send(event as any);
-      return;
-    }
-
-    // Free drug (PAP): eMedBV finds no coverage, so it has its own ladder too.
-    if (isFreeDrugScenario(flowType)) {
-      for (const event of freeDrugStageEvents(stage)) actor.send(event as any);
-      return;
-    }
-
-    // A scenario whose recipe ends in the Triage transfer exit: one ladder, whatever the source.
-    if (isTransferScenario(flowType)) {
-      for (const event of transferStageEvents(stage)) actor.send(event as any);
-      return;
-    }
-
-    // iAssist flows (iAssist_PA_Approved and the iAssist_PAP appeal): the ladders live in
-    // iassistLadders.ts so the headless tests run the same event lists.
-    if (isIAssistPapFlow || isIAssistFlow) {
-      for (const event of iassistStageEvents(flowType as IassistLadderFlow, stage)) {
-        actor.send(event as any);
-      }
-      return;
-    }
-
-    // The free drug program ladder follows the scenario's own `bi` fork rungs, like Coverage's.
-    if (scenarioHasModule(flowType, "pap_transfer")) {
-      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) actor.send(event as any);
-      return;
-    }
-
-    // CoAssist flows (CoA_DTP, CoA_Copay, CoA_Coverage): the ladders live in
-    // coassistLadders.ts so the headless tests run the same event lists.
-    if (isCoverageFlow || isCoaFlow) {
-      // RESET keeps the current choices, so the jump lands on the selected branch.
-      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) {
-        actor.send(event as any);
-      }
-      return;
-    }
-
-    // Standard (Fax_QS_PA_Approved) and PAP (Fax_PAP_Audit, PrES_PAP): the ladders live in
-    // faxLadders.ts so the headless tests run the same event lists.
-    for (const event of faxStageEvents(isPapFlow ? 'pap' : 'standard', stage)) {
-      actor.send(event as any);
-    }
-  }, [resetDemo, flowType, isIAssistFlow, isIAssistPapFlow, isPapFlow, isCoverageFlow, isCoaFlow, forkChoices]);
+  // Resets, then replays the stage's ladder. The reset bumps resetNonce, so portals with their own navigation guards
+  // (the patient portal's StateDrivenNav) snap to the right screen, as "Reset All" does. The phase rail uses the same hook.
+  const resetActorToStage = useStageJump();
 
   return (
     <div data-shell={dataShell} className="flex flex-col h-screen bg-[#0f172a] overflow-hidden">
@@ -945,94 +882,14 @@ export default function DemoShell() {
                   >
                     Reset All
                   </button>
-                  {(isPapFlow
-                    ? [
-                      { stage: 1, label: "Referral Received" },
-                      { stage: 2, label: "Patient Enrolled" },
-                      { stage: 3, label: "Benefits Investigation" },
-                      { stage: 4, label: "PAP Enrolled" },
-                      { stage: 5, label: "Triage to Pharmacy" },
-                      { stage: 6, label: "Rx Processing" },
-                      { stage: 7, label: "Rx Shipped" },
-                      { stage: 8, label: "Medication Delivered" },
-                    ]
-                    : isIAssistPapFlow
-                    ? [
-                      { stage: 1, label: "Referral Received" },
-                      { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
-                      { stage: 3, label: "Patient Enrolled" },
-                      { stage: 4, label: "PA Denied" },
-                      { stage: 5, label: "Appeal Filed" },
-                      { stage: 6, label: "Triage to Pharmacy (Keanu to Facility)" },
-                    ]
-                    : isBuyAndBillScenario(flowType)
-                    ? BUY_AND_BILL_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
-                    : isFreeDrugScenario(flowType)
-                    ? FREE_DRUG_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
-                    : isTransferScenario(flowType)
-                    ? TRANSFER_STAGE_LABELS.map((label, i) => ({ stage: i + 1, label }))
-                    : isIAssistFlow
-                    ? [
-                      { stage: 1, label: "Referral Received" },
-                      { stage: 2, label: "eRx Submitted (BI Complete, PA Submitted)" },
-                      { stage: 3, label: "Patient Enrolled" },
-                      { stage: 4, label: "PA Approved" },
-                      { stage: 5, label: "Triage to Pharmacy" },
-                      { stage: 6, label: "Rx Shipped" },
-                      { stage: 7, label: "Medication Delivered" },
-                    ]
-                    // CoA_Coverage: the list comes from the BI fork, so it follows the
-                    // selected branch (workflows/coassist/forks.ts). The events
-                    // behind each rung are the same list resetActorToStage sends.
-                    : scenarioHasModule(flowType, "pap_transfer")
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
-                    : isCoverageFlow
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
-                    // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
-                    // below. That shared list used to call stage 4 "Prior
-                    // Authorization" while resetActorToStage's old generic
-                    // block only submitted PA there (never approved it, and
-                    // never sent the paApproved-sms/otp re-verify events
-                    // either) — this is what left the patient stranded on
-                    // /enrollment-complete past "PA results." Also adds the
-                    // "Cash Offer" rung the CRM's own STAGES_LIVE has
-                    // between Prior Authorization and Triage to Pharmacy
-                    // (see resetActorToStage's own isCoaFlow branch above),
-                    // which the old shared list never had at all.
-                    : isCoaFlow
-                    ? [
-                      { stage: 1, label: "Referral Received" },
-                      { stage: 2, label: "Patient Enrolled" },
-                      { stage: 3, label: "Benefits Investigation" },
-                      { stage: 4, label: "Prior Authorization" },
-                      { stage: 5, label: "Cash Offer" },
-                      { stage: 6, label: "Triage to Pharmacy" },
-                      { stage: 7, label: "Rx Processing" },
-                      { stage: 8, label: "Rx Shipped" },
-                      { stage: 9, label: "Medication Delivered" },
-                    ]
-                    : [
-                      { stage: 1, label: "Referral Received" },
-                      { stage: 2, label: "Patient Enrolled" },
-                      { stage: 3, label: "Benefits Investigation" },
-                      { stage: 4, label: "Prior Authorization" },
-                      { stage: 5, label: "Triage to Pharmacy" },
-                      { stage: 6, label: "Rx Processing" },
-                      { stage: 7, label: "Rx Shipped" },
-                      { stage: 8, label: "Medication Delivered" },
-                    ]
-                  ).map(({ stage, label }, idx) => (
+                  {stageList(flowType, forkChoices).map(({ stage, label }, idx) => (
                     <button
                       key={stage}
                       onClick={() => {
-                        resetActorToStage(stage);
-                        // See "Reset All" button above: resetActorToStage() already
-                        // persists the correct flowType via resetDemo(); don't wipe
-                        // 'arx-demo-shell' afterward or a reload before the next
+                        // resetActorToStage() persists the right flowType (resetDemo) and clears the stale
+                        // session keys. Do not wipe 'arx-demo-shell' afterward, or a reload before the next
                         // write reverts the workflow to WF1.
-                        sessionStorage.removeItem('arx-patient-identity');
-                        sessionStorage.removeItem('arxWorkflow_v2');
-                        sessionStorage.removeItem('arx-prespap-application');
+                        resetActorToStage(stage);
                         setShowStageReset(false);
                       }}
                       className={cn(
@@ -1049,14 +906,17 @@ export default function DemoShell() {
           </div>
         </div>
 
-        {/* Step progress bar */}
-        <div className="px-2 py-4">
-          <StepBar />
-        </div>
+        {/* Step progress bar. The patient view has the phase rail instead. */}
+        {policy.stepBar && (
+          <div className="px-2 py-4">
+            <StepBar />
+          </div>
+        )}
       </header>
 
       {/* ── Portal panels ──────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden" style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <LeftRail />
         {visiblePortals.map((portalInfo) => {
           const isActive = activePanels.some(
             (p) => p.portal === portalInfo.id
