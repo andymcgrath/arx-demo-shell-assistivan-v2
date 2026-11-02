@@ -359,3 +359,18 @@ describe("fidelity exact", () => {
     expect(buildTheme({ brand: TEAL })).toEqual(buildTheme({ brand: TEAL, fidelity: "accessible" }));
   });
 });
+
+describe("onBrand reaches every brand-filled surface", () => {
+  const colors = { brand: "#36b0c9", fidelity: "exact" as const, onAction: "#ffffff", onBrand: "#ffffff" };
+
+  it("sets the confirmation, step row, and tile text to the brand's choice", () => {
+    const t = buildTheme(colors);
+    expect(t.onHero).toBe("#ffffff");
+    expect(t.onStepRow).toBe("#ffffff");
+    expect(buildTheme({ ...colors, surfaces: { tiles: "accent" } }).tileFg).toBe("#ffffff");
+  });
+
+  it("leaves a brand without onBrand to the contrast pick", () => {
+    expect(buildTheme({ brand: "#36b0c9" }).onHero).toBe("#111111");
+  });
+});

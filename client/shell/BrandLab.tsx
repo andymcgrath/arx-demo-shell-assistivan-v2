@@ -9,6 +9,7 @@
  * App.tsx mounts it only when `import.meta.env.DEV` is true, so client builds do not include it.
  */
 import DemosLab from "./BrandLabDemos";
+import FidelityPanel from "./BrandLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
 import { BRAND } from "@/brand";
 import {
@@ -25,11 +26,19 @@ import {
   type Surfaces,
 } from "@/brand/theme";
 
-type Draft = { brand: string; accent: string; action: string; surfaces: Surfaces };
+type Draft = { brand: string; accent: string; action: string; onAction: string; onBrand: string; exact: boolean; surfaces: Surfaces };
 
 const initial = (): Draft => {
   const c = BRAND.program.colors;
-  return { brand: c.brand, accent: c.accent ?? "", action: c.action ?? "", surfaces: { ...(c.surfaces ?? {}) } };
+  return {
+    brand: c.brand,
+    accent: c.accent ?? "",
+    action: c.action ?? "",
+    onAction: c.onAction ?? "",
+    onBrand: c.onBrand ?? "",
+    exact: c.fidelity === "exact",
+    surfaces: { ...(c.surfaces ?? {}) },
+  };
 };
 
 /** Each surface: what it controls, in words a designer would use. */
@@ -48,6 +57,9 @@ function toColors(d: Draft): { colors?: BrandColors; error?: string } {
     const colors: BrandColors = { brand: normalizeHex(d.brand), surfaces: d.surfaces };
     if (d.accent.trim()) colors.accent = normalizeHex(d.accent);
     if (d.action.trim()) colors.action = normalizeHex(d.action);
+    if (d.onAction.trim()) colors.onAction = normalizeHex(d.onAction);
+    if (d.onBrand.trim()) colors.onBrand = normalizeHex(d.onBrand);
+    if (d.exact) colors.fidelity = "exact";
     return { colors };
   } catch (err) {
     return { error: (err as Error).message };
@@ -263,8 +275,8 @@ function ColorsLab() {
   const [draft, setDraft] = useState<Draft>(initial);
   const [copied, setCopied] = useState(false);
   // Preview only. Off shows the brand exactly as set, so you can see what the automatic adjustment changes.
-  const [autoAdjust, setAutoAdjust] = useState(true);
-  const set = (key: "brand" | "accent" | "action") => (value: string) => setDraft((d) => ({ ...d, [key]: value }));
+  const [autoAdjust, setAutoAdjust] = useState(() => !initial().exact);
+  const set = (key: "brand" | "accent" | "action" | "onAction" | "onBrand") => (value: string) => setDraft((d) => ({ ...d, [key]: value }));
   const setSurface = (key: SurfaceKey) => (value: string) =>
     setDraft((d) => ({ ...d, surfaces: { ...d.surfaces, [key]: value } }));
 
@@ -272,7 +284,8 @@ function ColorsLab() {
   const built = useMemo(() => {
     if (!parsed.colors) return { error: parsed.error };
     try {
-      return { theme: buildTheme(parsed.colors, { autoAdjust }) };
+      // An exact brand is shown as set. The switch below overrides that for a preview.
+      return { theme: buildTheme(parsed.colors, { autoAdjust: parsed.colors.fidelity === "exact" ? false : autoAdjust }) };
     } catch (err) {
       return { error: (err as Error).message };
     }
@@ -287,7 +300,7 @@ function ColorsLab() {
 
   const json = useMemo(() => {
     if (!parsed.colors) return "";
-    const { brand, accent, action } = parsed.colors;
+    const { brand, accent, action, onAction, onBrand, fidelity } = parsed.colors;
     // Only the surfaces that differ from their default go in the file.
     const surfaces = Object.fromEntries(
       Object.entries(draft.surfaces).filter(([key, value]) => defaults[key as SurfaceKey] !== value),
@@ -297,6 +310,9 @@ function ColorsLab() {
         brand,
         ...(accent ? { accent } : {}),
         ...(action ? { action } : {}),
+        ...(onAction ? { onAction } : {}),
+        ...(onBrand ? { onBrand } : {}),
+        ...(fidelity ? { fidelity } : {}),
         ...(Object.keys(surfaces).length ? { surfaces } : {}),
         ...(BRAND.program.colors.source ? { source: BRAND.program.colors.source } : {}),
       },
@@ -313,6 +329,15 @@ function ColorsLab() {
           <Field label="Brand" hint="Logo color. Headings, links, footer." value={draft.brand} onChange={set("brand")} />
           <Field label="Accent" hint="Second brand color. Used where a surface says accent." value={draft.accent} onChange={set("accent")} optional />
           <Field label="Action" hint="Button color. Defaults to brand." value={draft.action} onChange={set("action")} optional />
+          <Field label="Button text" hint="Text on buttons. Left out, white, or near-black when white is too faint." value={draft.onAction} onChange={set("onAction")} optional />
+          <Field label="Text on brand fills" hint="Badges, check circles, the chat header." value={draft.onBrand} onChange={set("onBrand")} optional />
+          <label className="mb-4 flex items-start gap-2 text-sm text-[#1e293b]">
+            <input type="checkbox" className="mt-1" checked={draft.exact} onChange={(e) => setDraft((d) => ({ ...d, exact: e.target.checked }))} />
+            <span>
+              <span className="font-semibold">Match the client exactly</span>
+              <span className="block text-xs text-[#64748b]">Use these colors as set, even where contrast misses AA. The misses show as warnings. The brand file must say where the colors came from.</span>
+            </span>
+          </label>
 
           <h2 className="mb-1 mt-5 border-t border-[#e2e8f0] pt-3 text-xs font-bold uppercase tracking-wide text-[#64748b]">Surfaces</h2>
           <p className="mb-3 text-xs text-[#64748b]">
@@ -405,7 +430,9 @@ function ColorsLab() {
                     </p>
                   </div>
 
-                  <h2 className="mb-1 text-base font-bold">Contrast (WCAG 2.x)</h2>
+                  <FidelityPanel colors={parsed.colors!} theme={theme} />
+
+                  <h2 className="mb-1 mt-6 text-base font-bold">Contrast (WCAG 2.x)</h2>
                   <p className="mb-3 text-xs text-[#475569]">
                     Text needs AA 4.5. Large text (24px, or 19px bold) and UI parts need AA large 3.0. Gradients score at
                     the worst point of the text area. A required row fails <code>pnpm test</code>. A warning does not.

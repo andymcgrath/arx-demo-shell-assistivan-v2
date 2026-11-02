@@ -475,7 +475,9 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
   const { hero, stops } = heroFor(surfaces.confirmation, brand, accent, gradient);
 
   const tileBg = surfaces.tiles === "tint" ? tint : accentOrBrand;
-  const tileFg = surfaces.tiles === "tint" ? brand : readableOn(accentOrBrand);
+  // Where a surface is filled with the brand color and the brand file sets `onBrand`, its text follows that choice.
+  const textOn = (bg: string) => (colors.onBrand && bg === brand ? onBrand : readableOn(bg));
+  const tileFg = surfaces.tiles === "tint" ? brand : textOn(accentOrBrand);
   const stepRow = surfaces.stepRow === "accent" ? accentOrBrand : brand;
   // A marker the same color as its row would vanish, so it falls back to white.
   const wanted = surfaces.marker === "accent" ? accentOrBrand : surfaces.marker === "brand" ? brand : WHITE;
@@ -488,14 +490,14 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     surfaces,
     hero,
     heroStops: stops,
-    onHero: readableOverAll(heroTextBackgrounds(stops)),
+    onHero: colors.onBrand && stops[0] === brand && stops[1] === brand ? onBrand : readableOverAll(heroTextBackgrounds(stops)),
     strip: surfaces.strip === "none" ? WHITE : surfaces.strip === "brand" ? brand : accentOrBrand,
     tileBg,
     tileFg,
     stepRow,
-    onStepRow: readableOn(stepRow),
+    onStepRow: textOn(stepRow),
     marker,
-    onMarker: marker === WHITE ? brand : readableOn(marker),
+    onMarker: marker === WHITE ? brand : textOn(marker),
     link: surfaces.headings === "dark" ? dark : brand,
     brand,
     accent,
