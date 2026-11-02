@@ -326,3 +326,36 @@ describe("text on brand and action fills", () => {
     expect(white["--arx-on-action-invert"]).toBe("1");
   });
 });
+
+describe("fidelity exact", () => {
+  const TEAL = "#36b0c9";
+
+  it("keeps the client's colors where an accessible brand would move them", () => {
+    const accessible = buildTheme({ brand: TEAL, action: "#ffd23f", onAction: "#ffffff" });
+    expect(accessible.action).toBe("#ffd23f");
+    const a = buildTheme({ brand: TEAL, action: "#ef4162" });
+    expect(a.action).not.toBe("#ef4162");
+    const e = buildTheme({ brand: TEAL, action: "#ef4162", fidelity: "exact" });
+    expect(e.action).toBe("#ef4162");
+    expect(e.tint).toBe(deriveShades(TEAL).wash);
+  });
+
+  it("picks the better of white and near-black for text unless the brand sets it", () => {
+    const e = buildTheme({ brand: TEAL, fidelity: "exact" });
+    expect(e.onAction).toBe(readableOn(TEAL));
+    expect(e.action).toBe(TEAL);
+  });
+
+  it("uses an explicit onAction and onBrand, and reports the miss as a warning row", () => {
+    const e = buildTheme({ brand: TEAL, fidelity: "exact", onAction: "#ffffff", onBrand: "#ffffff" });
+    expect(e.onAction).toBe("#ffffff");
+    expect(e.onBrand).toBe("#ffffff");
+    expect(e.action).toBe(TEAL);
+    const rows = Object.fromEntries(contrastReport(e).map((r) => [r.id, r]));
+    expect(rowPasses(rows.button)).toBe(false);
+  });
+
+  it("leaves a brand without fidelity unchanged", () => {
+    expect(buildTheme({ brand: TEAL })).toEqual(buildTheme({ brand: TEAL, fidelity: "accessible" }));
+  });
+});
