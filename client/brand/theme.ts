@@ -11,7 +11,9 @@
  *   light        brand, lighter.  Secondary accents.
  *   wash         brand, faint.    Tinted backgrounds.
  *   actionHover  action, darker.  Button hover and pressed states.
- *   onAction     Button text. White, unless `action` would need to darken a lot to pass AA.
+ *   onAction     Button text. The brand file's `onAction` when set. Otherwise white, unless `action` would need to darken a lot to pass AA.
+ *   onBrand      Text on a `brand` fill (badges, check circles, chat header). The brand file's `onBrand` when set.
+ *                Otherwise white when white reaches AA on `brand`, else near-black. Every screen reads this one value.
  *
  * Buttons use `action`. Everything else (headings, links, icons, bars, confirmation screens) uses
  * `brand`. They are the same color unless the client sets `action`.
@@ -60,6 +62,13 @@ export interface BrandColors {
   brand: string;
   accent?: string;
   action?: string;
+  /**
+   * Text on `action` fills (buttons). Optional. Left out, the theme picks white, or near-black when white misses AA.
+   * Set it to fix the color for the whole brand. The fill is then not darkened. A pair that misses AA shows in the Brand Lab.
+   */
+  onAction?: string;
+  /** Text on `brand` fills (badges, check circles, the chat header). Optional. Left out, white when it reaches AA, else near-black. */
+  onBrand?: string;
   /** Style choices for the surfaces that use these colors. Leave out a key to take its default. */
   surfaces?: Surfaces;
   /** Where the values came from (a URL or a document name). */
@@ -71,6 +80,8 @@ export interface BrandTheme {
   accent: string | undefined;
   action: string;
   onAction: string;
+  /** Text on a `brand` fill. */
+  onBrand: string;
   /** Hover and pressed shade of `action`. */
   actionHover: string;
   dark: string;
@@ -354,6 +365,7 @@ export function contrastReport(theme: BrandTheme): ContrastRow[] {
   // The header strip is decorative, so WCAG 1.4.11 sets no contrast for it and it has no row.
   return [
     row("button", "Button text on the action color", "text", theme.onAction, [theme.action], true),
+    row("on-brand", "Text on the brand color (badges, chat header)", "text", theme.onBrand, [theme.brand]),
     row("hero-heading", "Confirmation heading (large text)", "large", theme.onHero, heroBgs, true),
     row("hero-body", "Confirmation body text", "text", theme.onHero, heroBgs),
     row("heading", "Headings and links on white", "text", theme.link, [WHITE]),
@@ -406,7 +418,9 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
   const adjustments: Adjustment[] = [];
 
   // Button fill. White text needs AA 4.5, so the fill darkens a little when it must.
-  const button = buttonColors(requestedAction);
+  // An explicit `onAction` fixes the text, so the fill stays as the client set it.
+  const explicitOnAction = colors.onAction ? normalizeHex(colors.onAction) : undefined;
+  const button = explicitOnAction ? { action: requestedAction, onAction: explicitOnAction } : buttonColors(requestedAction);
   if (button.action !== requestedAction) {
     adjustments.push({
       id: "button",
@@ -417,7 +431,8 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     });
   }
   const action = autoAdjust ? button.action : requestedAction;
-  const onAction = autoAdjust ? button.onAction : WHITE;
+  const onAction = explicitOnAction ?? (autoAdjust ? button.onAction : WHITE);
+  const onBrand = colors.onBrand ? normalizeHex(colors.onBrand) : contrastRatio(WHITE, brand) >= AA_CONTRAST ? WHITE : readableOn(brand);
 
   // Brand text sits on the tint (Rx tile, selected rows). Lighten the tint until it reaches AA 4.5.
   const fitted = ensureContrast(brand, wash, AA_CONTRAST, "lighter");
@@ -474,6 +489,7 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     accent,
     action,
     onAction,
+    onBrand,
     dark,
     actionHover: deriveShades(action).dark,
     light,
@@ -502,6 +518,7 @@ export function hexToHslString(hex: string): string {
  * Variable names stay as they were, so existing screens keep working:
  * --arx-primary is the brand color, and -dark, -80, and -30 are its shades.
  * Buttons read --arx-action, --arx-action-hover, and --arx-on-action instead.
+ * Text on a brand fill reads --arx-on-primary, never a literal white.
  * --arx-brand (same as --arx-primary), --arx-accent, and --arx-gradient are new.
  */
 export function themeToCssVars(theme: BrandTheme): Record<string, string> {
@@ -529,6 +546,10 @@ export function themeToCssVars(theme: BrandTheme): Record<string, string> {
     "--arx-action": hexToHslString(theme.action),
     "--arx-action-hover": hexToHslString(theme.actionHover),
     "--arx-on-action": hexToHslString(theme.onAction),
+    "--arx-on-primary": hexToHslString(theme.onBrand),
+    // 1 turns a black icon white, 0 leaves it black. Icons on a fill follow its text color.
+    "--arx-on-action-invert": relativeLuminance(theme.onAction) > 0.5 ? "1" : "0",
+    "--arx-on-primary-invert": relativeLuminance(theme.onBrand) > 0.5 ? "1" : "0",
     "--arx-gradient": theme.gradient,
   };
 }

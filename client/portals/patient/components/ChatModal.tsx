@@ -93,14 +93,14 @@ export default function ChatModal({ onClose }: ChatModalProps) {
         <div className="flex items-center justify-between px-5 py-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
-              <img src={CHATBOT_ICON} alt="" className="w-6 h-6 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+              <img src={CHATBOT_ICON} alt="" className="w-6 h-6 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-sm text-white">{MANUFACTURER.support.label}</span>
-              <span className="text-[10px] text-white/70">{MANUFACTURER.name} Virtual Assistant</span>
+              <span className="font-bold text-sm text-arx-on-primary">{MANUFACTURER.support.label}</span>
+              <span className="text-[10px] text-arx-on-primary/70">{MANUFACTURER.name} Virtual Assistant</span>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close chat" className="text-white/80 hover:text-white transition-colors">
+          <button onClick={onClose} aria-label="Close chat" className="text-arx-on-primary/80 hover:text-arx-on-primary transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -136,10 +136,10 @@ export default function ChatModal({ onClose }: ChatModalProps) {
                 className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity bg-arx-action hover:bg-arx-action-hover disabled:opacity-40"
                 aria-label="Send"
               >
-                <Send className="w-4 h-4 text-white" />
+                <Send className="w-4 h-4 text-arx-on-action" />
               </button>
             </div>
-          <p className="text-[10px] mt-2 leading-relaxed text-white/60">
+          <p className="text-[10px] mt-2 leading-relaxed text-arx-on-primary/60">
             This is an AI-powered assistant. It is not a substitute for professional medical
             advice, diagnosis, or treatment. All information is for educational purposes only.
           </p>
@@ -153,7 +153,7 @@ function BotMessage({ text }: { text: string }) {
   return (
     <div className="flex items-end gap-2">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
-        <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+        <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
       </div>
       <div className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed bg-white text-arx-slate">
         {text}
@@ -176,7 +176,7 @@ function TypingIndicator() {
   return (
     <div className="flex items-end gap-2">
       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
-        <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+        <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
       </div>
       <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center bg-white">
         {[0, 1, 2].map((i) => (

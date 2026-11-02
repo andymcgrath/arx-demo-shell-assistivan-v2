@@ -67,8 +67,8 @@ export default function MedicationDelivered() {
           {hasInfusionAppointment && (
             <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
               <div className="bg-arx-primary px-4 py-3 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-white" />
-                <span className="text-sm font-semibold text-white">{noun} Appointment</span>
+                <Calendar className="w-4 h-4 text-arx-on-primary" />
+                <span className="text-sm font-semibold text-arx-on-primary">{noun} Appointment</span>
               </div>
               <div className="p-5 space-y-3">
                 <div>
@@ -212,12 +212,12 @@ export default function MedicationDelivered() {
                 View all <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-            <button className="w-full flex items-center gap-4 text-white rounded-xl px-4 py-3.5 bg-arx-primary hover:bg-arx-primary-dark transition-colors">
+            <button className="w-full flex items-center gap-4 text-arx-on-primary rounded-xl px-4 py-3.5 bg-arx-primary hover:bg-arx-primary-dark transition-colors">
               <ProgramLogo variant="white" className="flex-shrink-0" />
               <div className="flex-1 text-left">
-                <p className="text-xs text-white/80">Review prescribing information</p>
+                <p className="text-xs text-arx-on-primary/80">Review prescribing information</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-white/70" />
+              <ChevronRight className="w-5 h-5 text-arx-on-primary/70" />
             </button>
           </section>
 

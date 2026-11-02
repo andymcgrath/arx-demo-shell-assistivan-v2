@@ -88,6 +88,7 @@ export default {
         "arx-action": "hsl(var(--arx-action))",
         "arx-action-hover": "hsl(var(--arx-action-hover))",
         "arx-on-action": "hsl(var(--arx-on-action))",
+        "arx-on-primary": "hsl(var(--arx-on-primary) / <alpha-value>)",
         "arx-brand": "hsl(var(--arx-brand))",
         "arx-tile": "hsl(var(--arx-tile))",
         "arx-on-tile": "hsl(var(--arx-on-tile))",

@@ -39,7 +39,7 @@ export default function PrescriptionsSection() {
             key={rx.name}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
-            className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-white"
+            className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-arx-on-primary"
           >
             {/* Logo switches to white on hover */}
             <ProgramLogo
@@ -47,7 +47,7 @@ export default function PrescriptionsSection() {
               size="row" className="flex-shrink-0"
             />
             <div className="flex-1 text-left">
-              <p className={`text-xs transition-colors ${hoveredIndex === index ? "text-white" : "text-arx-slate"}`}>{rx.status}</p>
+              <p className={`text-xs transition-colors ${hoveredIndex === index ? "text-arx-on-primary" : "text-arx-slate"}`}>{rx.status}</p>
             </div>
             <ChevronRight className="w-5 h-5 text-arx-slate" />
           </button>

@@ -243,7 +243,7 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
                     className="relative text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
                   >
                     {option.badge && (
-                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-white text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
+                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-arx-on-primary text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
                         {option.badge}
                       </span>
                     )}
@@ -357,13 +357,13 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
                     }
                   >
                     {option.badge && (
-                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-white text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
+                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-arx-on-primary text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
                         {option.badge}
                       </span>
                     )}
                     <div className="flex items-center gap-2 mb-3">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isPrimary ? "bg-arx-primary" : "bg-arx-sky"}`}>
-                        <Icon className={`w-4 h-4 ${isPrimary ? "text-white" : "text-arx-link"}`} />
+                        <Icon className={`w-4 h-4 ${isPrimary ? "text-arx-on-primary" : "text-arx-link"}`} />
                       </div>
                       <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
                     </div>
@@ -380,7 +380,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
                       </>
                     )}
                     {isPrimary ? (
-                      <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-arx-primary text-white font-semibold text-sm py-2.5">
+                      <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-arx-primary text-arx-on-primary font-semibold text-sm py-2.5">
                         <span>{option.cta}</span>
                         <ArrowRight className="w-4 h-4" />
                       </div>

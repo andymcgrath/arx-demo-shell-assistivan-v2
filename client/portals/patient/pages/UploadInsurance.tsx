@@ -108,7 +108,7 @@ function UploadRow({ label, thumbnail, uploaded, onClick }: {
       </div>
       {uploaded ? (
         <div className="w-6 h-6 rounded-full bg-arx-primary flex items-center justify-center flex-shrink-0">
-          <Check className="w-3.5 h-3.5 text-white" />
+          <Check className="w-3.5 h-3.5 text-arx-on-primary" />
         </div>
       ) : (
         <Camera className="w-5 h-5 flex-shrink-0 text-arx-body-copy" />

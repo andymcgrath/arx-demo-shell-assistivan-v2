@@ -44,7 +44,7 @@ export default function SuggestedSection() {
               </div>
             </div>
             <p className="mt-3 text-body leading-relaxed text-arx-body-copy">{item.description}</p>
-            <button className="mt-5 w-full text-arx-link font-semibold py-3.5 rounded-lg transition-colors border-2 border-arx-primary bg-transparent hover:bg-arx-primary hover:text-white">
+            <button className="mt-5 w-full text-arx-link font-semibold py-3.5 rounded-lg transition-colors border-2 border-arx-primary bg-transparent hover:bg-arx-primary hover:text-arx-on-primary">
               {item.cta}
             </button>
           </div>

@@ -45,7 +45,7 @@ export default function PAStatus() {
               onClick={openChat}
               className="w-full bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mb-3 hover:bg-arx-action-hover transition-colors"
             >
-              <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+              <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-action-invert))" }} />
               <span>Have questions? Start a chat</span>
             </button>
             <button className="w-full font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 border-2 border-arx-primary text-arx-link hover:bg-arx-sky/30 transition-colors">

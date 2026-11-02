@@ -13,6 +13,7 @@
  *   action       -> --arx-action
  *   actionHover  -> --arx-action-hover
  *   onAction     -> --arx-on-action
+ *   onBrand      -> --arx-on-primary
  *   gradient     -> --arx-gradient
  *
  * `selector` and `styleTagId` default to the patient portal. The client tab passes its own.

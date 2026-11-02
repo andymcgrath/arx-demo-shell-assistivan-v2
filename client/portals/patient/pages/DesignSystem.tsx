@@ -524,7 +524,7 @@ function Pagination() {
 ───────────────────────────────────────────── */
 function Snackbar({ type = "success", message }: { type?: "success" | "error" | "warning"; message: string }) {
   const styles = {
-    success: "bg-arx-primary text-white",
+    success: "bg-arx-primary text-arx-on-primary",
     error: "bg-arx-errors text-white",
     warning: "bg-arx-orange text-white",
   };

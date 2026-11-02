@@ -49,7 +49,7 @@ export function ArxButton({
     primary:
       "bg-arx-action text-arx-on-action hover:bg-arx-action-hover active:bg-arx-action",
     outline:
-      "border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-white active:bg-arx-primary active:text-white",
+      "border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-arx-on-primary active:bg-arx-primary active:text-arx-on-primary",
     ghost:
       "bg-transparent text-arx-link hover:bg-arx-sky hover:text-arx-primary",
     link: "text-arx-link font-bold underline hover:opacity-80 p-0 h-auto",

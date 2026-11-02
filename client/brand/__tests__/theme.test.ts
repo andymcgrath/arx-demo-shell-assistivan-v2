@@ -288,3 +288,41 @@ describe("brand theme", () => {
     expect(vars["--arx-primary"]).toBe("184 100% 24%");
   });
 });
+
+describe("text on brand and action fills", () => {
+  const TEAL = "#36b0c9";
+
+  it("picks near-black on a brand color white cannot reach AA on", () => {
+    const t = buildTheme({ brand: TEAL });
+    expect(t.onBrand).toBe(readableOn(TEAL));
+    expect(t.onAction).toBe(t.onBrand);
+  });
+
+  it("keeps white on a brand color that reaches AA", () => {
+    const t = buildTheme({ brand: "#007178" });
+    expect(t.onBrand).toBe("#ffffff");
+  });
+
+  it("uses the brand file's onAction and onBrand, and does not darken the fill for onAction", () => {
+    const t = buildTheme({ brand: TEAL, onAction: "#ffffff", onBrand: "#ffffff" });
+    expect(t.onAction).toBe("#ffffff");
+    expect(t.onBrand).toBe("#ffffff");
+    expect(t.action).toBe(TEAL);
+  });
+
+  it("flags an explicit pair that misses AA instead of changing it", () => {
+    const t = buildTheme({ brand: TEAL, onAction: "#ffffff", onBrand: "#ffffff" });
+    const rows = Object.fromEntries(contrastReport(t).map((r) => [r.id, r]));
+    expect(rowPasses(rows.button)).toBe(false);
+    expect(rows["on-brand"].ratio).toBeLessThan(AA_CONTRAST);
+  });
+
+  it("writes the text colors and icon inversion as CSS variables", () => {
+    const dark = themeToCssVars(buildTheme({ brand: TEAL }));
+    expect(dark["--arx-on-primary"]).toBe("0 0% 7%");
+    expect(dark["--arx-on-primary-invert"]).toBe("0");
+    const white = themeToCssVars(buildTheme({ brand: "#007178" }));
+    expect(white["--arx-on-primary-invert"]).toBe("1");
+    expect(white["--arx-on-action-invert"]).toBe("1");
+  });
+});

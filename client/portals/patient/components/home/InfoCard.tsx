@@ -14,7 +14,7 @@ export default function InfoCard() {
       </p>
 
       <button
-        className="mt-5 w-full text-arx-link font-semibold py-3.5 rounded-lg transition-colors border-2 border-arx-primary bg-transparent hover:bg-arx-primary hover:text-white"
+        className="mt-5 w-full text-arx-link font-semibold py-3.5 rounded-lg transition-colors border-2 border-arx-primary bg-transparent hover:bg-arx-primary hover:text-arx-on-primary"
       >
         Learn more
       </button>
