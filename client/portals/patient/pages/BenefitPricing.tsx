@@ -4,6 +4,7 @@ import { ArrowRight, Store, Truck, Sparkles } from "lucide-react";
 import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { PROGRAM } from "@/portals/patient/config/branding";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 /**
  * Benefit Pricing — CoA_DTP and iAssist_PA_Approved (WF4 replicates this
@@ -173,7 +174,7 @@ export default function BenefitPricing() {
   // pricing tier alongside Retail/Mail — see this file's header comment.
   // Every other flow (CoA_DTP, iAssist_PA_Approved) keeps the original,
   // untouched rendering below.
-  if (workflowData.flowType === "CoA_Copay") {
+  if (scenarioFacts(workflowData.flowType).hasCopayFork) {
     return <CopayBenefitPricing copayEnrolled={workflowData.copayEnrolled} />;
   }
 
@@ -182,7 +183,7 @@ export default function BenefitPricing() {
   // derivePatientRoute) — its cash-pay scenario (Scenario 3) is a completely
   // separate branch triggered only when neither benefit is covered, never a
   // patient choice on this screen, so there's no self-pay/Copay option here.
-  if (workflowData.flowType === "CoA_Coverage") {
+  if (scenarioFacts(workflowData.flowType).isCoverageScenario) {
     return <DefaultBenefitPricing hideSelfPay />;
   }
 

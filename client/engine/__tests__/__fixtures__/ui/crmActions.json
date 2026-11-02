@@ -1,0 +1,2486 @@
+{
+  "fax-standard-pa-approved": {
+    "flowType": "Fax_QS_PA_Approved",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "fax-standard-pa-denied": {
+    "flowType": "Fax_QS_PA_Approved",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      }
+    ]
+  },
+  "fax-pap-audit": {
+    "flowType": "Fax_PAP_Audit",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "coa-dtp-pa-approved-retail": {
+    "flowType": "CoA_DTP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-dtp-pa-approved-before-patient-consent": {
+    "flowType": "CoA_DTP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-dtp-pa-approved-self-pay": {
+    "flowType": "CoA_DTP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_SELF_PAY",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-dtp-pa-denied-cash-offer": {
+    "flowType": "CoA_DTP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "DENY_PA",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SEND_CASH_OFFER",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "PATIENT_PAYS",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "VERIFY_PAYMENT",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-copay-enroll-then-mail-order": {
+    "flowType": "CoA_Copay",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-copay-direct-retail": {
+    "flowType": "CoA_Copay",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-coverage-1-pharmacy-covered": {
+    "flowType": "CoA_Coverage",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-pharmacy-transfer": {
+    "flowType": "CoA_Coverage",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "VERIFY_PA_APPROVED_OTP",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-coverage-2-medical-covered-provider-transfer": {
+    "flowType": "CoA_Coverage",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "PT-14282",
+            "id": "provider_transfer.notify",
+            "label": "Notify Provider",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "NOTIFY_PROVIDER_TRANSFER",
+        "actions": [
+          {
+            "stage": "PT-14282",
+            "id": "provider_transfer.transferred",
+            "label": "Transferred",
+            "kind": "badge",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-coverage-3-no-coverage-cash-pay": {
+    "flowType": "CoA_Coverage",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_SELF_PAY",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "VERIFY_PAYMENT",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "iassist-pa-approved": {
+    "flowType": "iAssist_PA_Approved",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "iassist-pa-approved-before-patient-consent": {
+    "flowType": "iAssist_PA_Approved",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "VERIFY_PAYMENT",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "iassist-pa-denied-appeal": {
+    "flowType": "iAssist_PAP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": []
+      }
+    ]
+  },
+  "iassist-medical-transfer": {
+    "flowType": "iAssist_Medical_Transfer",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      }
+    ]
+  },
+  "iassist-buy-and-bill": {
+    "flowType": "iAssist_Buy_And_Bill",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": []
+      },
+      {
+        "after": "ENROLL_COPAY",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      }
+    ]
+  },
+  "iassist-buy-and-bill-pap": {
+    "flowType": "iAssist_Buy_And_Bill_PAP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": []
+      },
+      {
+        "after": "RUN_MEDBV",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approve",
+            "label": "Approve Application",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "APPROVE_PAP",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          },
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": [
+          {
+            "stage": "FA-14276",
+            "id": "pap.approved",
+            "label": "Approved",
+            "kind": "badge",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "coa-medical-transfer": {
+    "flowType": "CoA_Medical_Transfer",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      }
+    ]
+  },
+  "coa-pap": {
+    "flowType": "CoA_PAP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "pres-pap": {
+    "flowType": "PrES_PAP",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  }
+}

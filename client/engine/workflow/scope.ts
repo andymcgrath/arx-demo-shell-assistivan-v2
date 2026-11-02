@@ -1,3 +1,4 @@
+import type { FlowType } from "@/engine/types";
 import { forkApplies } from "./forks";
 import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from "./types";
 
@@ -23,6 +24,22 @@ function inOneScope(scope: RuleScope, scenario: ScenarioDefinition<any>, forks: 
   }
   const fork = forks.find((f) => f.id === scope.fork && forkApplies(f, scenario.flowType));
   return !!fork && (!scope.exit || fork.exits.some((e) => e.id === scope.exit));
+}
+
+/**
+ * True when an item (a screen, a route rule, a stage rule) applies to a flow. A `scenarios` list names flows. A `scope`
+ * needs the scenario definitions and forks the item's map carries. Neither means every flow.
+ */
+export function appliesToFlow(
+  item: { scenarios?: FlowType[]; scope?: Scope },
+  flowType: FlowType,
+  scenarioDefs: ScenarioDefinition<any>[] | undefined,
+  forks: ForkDefinition[] | undefined,
+): boolean {
+  if (item.scenarios && !item.scenarios.includes(flowType)) return false;
+  if (!item.scope) return true;
+  const scenario = scenarioDefs?.find((s) => s.flowType === flowType);
+  return !!scenario && inScope(item.scope, scenario, forks ?? []);
 }
 
 /** True when the rule applies to the scenario. A rule with no `scenarios` and no `scope` applies to all of them. */

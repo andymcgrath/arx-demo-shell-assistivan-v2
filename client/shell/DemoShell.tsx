@@ -32,13 +32,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEMO_OPTIONS } from "./flowOptions";
-import { pspStepBar } from "./pspStepBar";
+import { stepBarModel } from "./stepBar";
 import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
-import { coassistStageEvents } from "./coassistLadders";
+import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
 import { biForkFor } from "@/workflows/coassist/forks";
-import { IASSIST_FLOWS } from "@/workflows/iassist/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
 import { scenarioHasModule } from "@/workflows/scenarios";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
@@ -163,12 +163,11 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
+  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow } = scenarioFacts(flowType);
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
   // has no provider screen at all.
-  const isPapFlow = flowType === "Fax_PAP_Audit";
 
   return PORTALS_BASE.filter(p => {
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
@@ -235,518 +234,26 @@ const DEFAULT_PANELS: Record<LayoutMode, PanelState[]> = {
 
 // ── Step progress bar ─────────────────────────────────────────────────────────
 
-const STEP_LABELS_DEFAULT = [
-  "Referral Received",
-  "Patient Enrolled",
-  "Benefits Investigation",
-  "Prior Authorization",
-  "Triage to Pharmacy",
-  "Rx Processing",
-  "Rx Shipped",
-  "Medication Delivered",
-];
-
-// Dispense tail reuses WF1's exact four labels — WF2 has no traditional PA
-// (Prior Authorization is replaced by "PAP Enrolled," the eIncome/PAP
-// milestone), but once CRM dispatches to a pharmacy the rest is driven by
-// the same pharmacyStatus states WF1 uses (see WorkflowEngine.ts's
-// Fax_PAP_Audit branch), so "Triage to Pharmacy / Rx Processing / Rx
-// Shipped / Medication Delivered" describes it accurately — unlike the
-// "First Dispense / Audit Initiated / PA Approved" labels this replaced,
-// which didn't correspond to anything the demo actually does (no audit or
-// PA ever runs for this flow).
-const STEP_LABELS_PAP_AUDIT = [
-  "Referral Received",
-  "Patient Enrolled",
-  "Benefits Investigation",
-  "PAP Enrolled",
-  "Triage to Pharmacy",
-  "Rx Processing",
-  "Rx Shipped",
-  "Medication Delivered",
-];
-
-// WF5 (iAssist_PAP) — WF4's STEP_LABELS_DEFAULT with one extra "Appeal"
-// milestone inserted after Prior Authorization (matching this flow's
-// denied-PA-then-appeal path — see computeIAssistPapStepDone above), but
-// WITHOUT WF4's Rx Processing/Rx Shipped/Medication Delivered tail: WF5
-// dispenses "Keanu to facility" (a site of care, not a pharmacy shipment —
-// see crm/pages/Index.tsx's SITES_OF_CARE/officeDispenseOptions), so
-// "Triage to Pharmacy" is this flow's final, terminal step.
-const STEP_LABELS_IASSIST_PAP = [
-  "Referral Received",
-  "Patient Enrolled",
-  "Benefits Investigation",
-  "Prior Authorization",
-  "Appeal",
-  "Triage to Pharmacy",
-];
-
-// Buy and Bill: the HCP buys and bills, so there is no triage, order, or tracking. The bar ends at the PA decision.
-const STEP_LABELS_BUY_AND_BILL = [
-  "Referral Received",
-  "Patient Enrolled",
-  "Benefits Investigation",
-  "Prior Authorization",
-];
-
-// Free drug (PAP): no PA. The bar ends when the application is approved and the order goes to the site of care.
-const STEP_LABELS_FREE_DRUG = [
-  "Referral Received",
-  "Patient Enrolled",
-  "Benefits Investigation",
-  "Free Drug Application",
-  "Triage to Site of Care",
-];
-
-// "Copay Enrollment" and "Patient Payment" used to be two separate steps,
-// but Benefit Pricing covers Retail/Mail/Copay uniformly now (see
-// BenefitPricing.tsx) — there's no distinct "enrollment" milestone that
-// applies to all three pricing paths, just one "Payment" phase that runs
-// from PA approval through the actual charge. Merged into a single step so
-// the bar doesn't show enrollment as a separate, checkable milestone that
-// doesn't apply to two-thirds of patients.
-// "Prior Authorization" gets its own step (CoA_DTP does go through a real
-// PA submission/approval cycle — see coaDtp.ts's paSubmitted/paApproved
-// states), and the dispense tail reuses WF1's exact four labels since
-// CoA_DTP's rxProcessing/rxReady/rxShipped/rxDelivered states now mirror
-// WF1's order sub-machine one-for-one (see coaDtp.ts's READY_RX handling).
-const STEP_LABELS_COA = [
-  "eRx Received",
-  "Consent",
-  "Benefits Investigation",
-  "Prior Authorization",
-  "Payment",
-  "Triage to Pharmacy",
-  "Rx Processing",
-  "Rx Shipped",
-  "Medication Delivered",
-];
-
-// CoA_Copay's Retail and Mail Order paths (pricingOption === "retail" or
-// "mail_order", see isCopayRetailFlow in StepBar below and
-// crm/pages/Index.tsx's own isCopayRetailFlow) — STEP_LABELS_COA's exact
-// same first six labels, but without the Rx Processing/Rx Shipped/
-// Medication Delivered tail. Same reasoning as STEP_LABELS_IASSIST_PAP
-// dropping that tail for its own out-of-pipeline dispense: both are filled
-// outside AssistRx's own dispensing pipeline (a retail counter, or the
-// mail-order pharmacy's own facility), so "Triage to Pharmacy" is this
-// path's final, terminal step either way. CoA_DTP keeps the full 9-step
-// STEP_LABELS_COA bar.
-const STEP_LABELS_COA_COPAY_RETAIL = [
-  "eRx Received",
-  "Consent",
-  "Benefits Investigation",
-  "Prior Authorization",
-  "Payment",
-  "Triage to Pharmacy",
-];
-
-// CoA_Coverage (one Benefits Investigation, three coverage outcomes — see
-// workflows/coassist/'s header comment) — mirrors CoA_DTP's own
-// STEP_LABELS_COA bar (same "eRx Received"/"Consent" naming, same
-// eRx-to-fulfillment shape), just without a Prior Authorization step at all
-// — only Scenario 3 (neither covered, cash pay) never submits one; Scenario
-// 1 (pharmacy covered) now does, see STEP_LABELS_COVERAGE_PHARMACY below. Used
-// for Scenario 3 only now (neither covered, cash pay) — Scenario 1 (pharmacy
-// covered) has its own, shorter STEP_LABELS_COVERAGE_PHARMACY bar below. Scenario
-// 2 (medical covered) is a completely different, much shorter path — see
-// STEP_LABELS_COVERAGE_MEDICAL below — swapped in once medicalBenefitStatus
-// resolves to "covered" (see isCoverageMedicalFlow in StepBar below), the same
-// way isCopayRetailFlow swaps in STEP_LABELS_COA_COPAY_RETAIL once
-// CoA_Copay's own pricingOption resolves.
-const STEP_LABELS_COVERAGE = [
-  "eRx Received",
-  "Consent",
-  "Benefits Investigation",
-  "Payment",
-  "Triage to Pharmacy",
-  "Rx Processing",
-  "Rx Shipped",
-  "Medication Delivered",
-];
-
-// CoA_Coverage Scenario 1 only (pharmacyBenefitStatus === "covered",
-// medicalBenefitStatus !== "covered") — this outcome now requires a real
-// Prior Authorization (mirroring CoA_DTP's own submit/auto-approve/SMS+OTP
-// re-verify pattern, no denial branch — see workflows/coassist/'s header comment and
-// its paSubmitted/paApproved/paApprovedSmsVerified/paApprovedOtpVerified
-// states), then the patient picks a network pharmacy, and fulfillment
-// happens outside AssistRx's own pipeline from there — same shape as
-// STEP_LABELS_COA_COPAY_RETAIL's own 6-step, Triage-to-Pharmacy-terminal bar,
-// just with this flow's own step names. This replaces the scenario's old
-// single automatic tap-through SMS milestone ("Patient Notification")
-// entirely.
-const STEP_LABELS_COVERAGE_PHARMACY = [
-  "eRx Received",
-  "Consent",
-  "Benefits Investigation",
-  "Prior Authorization",
-  "Pharmacy Selection",
-  "Triage to Pharmacy",
-];
-
-// CoA_Coverage Scenario 2 only (medicalBenefitStatus === "covered", medical
-// benefit always wins — see workflows/coassist/) — this outcome ends the
-// moment CoAssist notifies the outside provider (Advanced Diabetes
-// Supply) of the transfer, so it never reaches Payment/Dispatch/fulfillment
-// at all. Same first 3 steps as STEP_LABELS_COVERAGE above (eRx Received/
-// Consent/Benefits Investigation sit at the same positions in both bars),
-// just a different, terminal 4th step instead of continuing on.
-const STEP_LABELS_COVERAGE_MEDICAL = [
-  "eRx Received",
-  "Consent",
-  "Benefits Investigation",
-  "Provider Transfer",
-];
-
-// CoA_DTP-specific step calculation — the generic one below was tuned for
-// WF1's fields (dispatchStatus/paStatus meaning "pharmacy dispatch") and,
-// applied to CoA's different fields, jumped straight to a late step number
-// the instant PA was approved — checking off "Payment" (and, before this
-// merge, "Copay Enrollment") before the patient had even opened Benefit
-// Pricing. This mirrors coaDtp.ts's real milestones instead.
-function computeCoaWorkflowStep(workflowData: ReturnType<typeof usePersonaState>['workflowData']): number {
-  const { pharmacyStatus, biStatus, consentStatus, enrollmentStatus, paStatus, cashOfferStatus, patientShipDate } = workflowData;
-  // No pricing option collects payment through this flow anymore — Retail/
-  // Mail never did (cost is handled at the pharmacy counter), and testing
-  // confirmed Copay/self-pay doesn't either (enrollment at /copay-enroll
-  // only unlocks the reduced price). So a ship date alone means Payment is
-  // done, for all three options uniformly.
-  const paymentDone = patientShipDate !== null;
-  // Mirrors WF1's own "pa === 'approved'" threshold below — a denial alone
-  // doesn't move things forward (WF1 groups submitted+denied into the same
-  // Prior Authorization step); only once the cash-offer alternative is
-  // actually in motion (SEND_CASH_OFFER) does the denied path count as
-  // "PA resolved" and advance into Payment.
-  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
-
-  if (pharmacyStatus === 'delivered') return 10;
-  if (pharmacyStatus === 'shipped') return 8;
-  // Matches WF1's own step bar, which collapses pharmacyStatus
-  // "processing" and "ready" into the same "Rx Processing" step — see the
-  // generic workflowStep calculation below.
-  if (pharmacyStatus === 'processing' || pharmacyStatus === 'ready') return 7;
-  if (paymentDone) return 6;
-  if (paResolved) return 5;
-  if (biStatus === 'complete') return 4;
-  if (biStatus === 'running' || biStatus === 'submitted') return 3;
-  if (consentStatus === 'confirmed') return 3;
-  if (enrollmentStatus !== 'none') return 2;
-  return 1;
-}
-
-// CoA_DTP/CoA_Copay (WF3/WF4) per-step completion — Benefits Investigation no
-// longer waits on patient consent (business rule change: BI can run off the
-// referral/eRx alone — see coaDtp.ts/coaCopay.ts's RUN_BI handlers and
-// crm/pages/Index.tsx's isCoaFlow-scoped auto-trigger effect), so BI can now
-// finish well before the patient has even verified their SMS, let alone
-// confirmed consent. computeCoaWorkflowStep's single scalar above can't
-// represent that gap without lying — returning 4 for "BI complete" also
-// silently marks "Consent" (step 2) as checked off, even when the patient
-// hasn't actually done it yet. This is the same problem
-// computeIAssistStepDone below already solved for iAssist's own BI/PA race
-// ahead of consent — same per-step boolean pattern, applied here to CoA's
-// 9-step (or, for CoA_Copay Retail/Mail Order, 6-step truncated — see
-// STEP_LABELS_COA_COPAY_RETAIL) bar instead. computeCoaWorkflowStep itself is
-// left in place rather than removed — same as how it coexists unused
-// alongside iAssistStepDone for iAssist flows below — StepBar prefers this
-// array whenever isCoaFlow is true.
-function computeCoaStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, paStatus, cashOfferStatus, patientShipDate, pharmacyStatus } = workflowData;
-  // Matches computeCoaWorkflowStep's own thresholds exactly — see that
-  // function's comments for why each one is defined the way it is.
-  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
-  const paymentDone = patientShipDate !== null;
-  // CoA_Copay's Retail/Mail Order paths flip pharmacyStatus to "processing"
-  // via the exact same FILL_RX handler every other pricing option uses (see
-  // coaCopay.ts) — the CRM just doesn't show a separate Pharmacy Status tab
-  // for them (see isCopayRetailFlow in crm/pages/Index.tsx). So a single
-  // pharmacyStatus check works uniformly for every pricing option here, with
-  // no special-casing needed for Retail/Mail Order.
-  const dispatched = pharmacyStatus !== 'none';
-  return [
-    enrollmentStatus !== 'none',                                     // 1 eRx Received
-    consentStatus === 'confirmed',                                   // 2 Consent
-    biStatus === 'complete',                                         // 3 Benefits Investigation
-    paResolved,                                                      // 4 Prior Authorization
-    paymentDone,                                                     // 5 Payment
-    dispatched,                                                      // 6 Triage to Pharmacy
-    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 7 Rx Processing
-    pharmacyStatus === 'delivered',                                  // 8 Rx Shipped
-    pharmacyStatus === 'delivered',                                  // 9 Medication Delivered
-  ];
-}
-
-// CoA_Coverage (medical-benefit coverage) per-step completion — same "BI can race
-// ahead of consent" reasoning as computeCoaStepDone above (CoA_Coverage's own
-// RUN_BI fires off enrollment alone, see crm/pages/Index.tsx's isCoverageFlow-
-// scoped effect), applied to this flow's own 3-step bar (STEP_LABELS_COVERAGE)
-// instead of CoA_DTP's 9-step one. Step 1 (Enrollment) is judged on real
-// consent, not just an invite sent — matches computeIAssistStepDone's own
-// "Patient Enrolled" step for the same reason.
-function computeCoverageStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, medicalBenefitStatus, pharmacyBenefitStatus, providerTransferStatus, pricingOption, paymentVerified, pharmacyStatus, paStatus } = workflowData;
-
-  // Scenario 2 — medical benefit covered (always wins). Same first-3-step
-  // shape as the branches below, but its own short, terminal bar (see
-  // STEP_LABELS_COVERAGE_MEDICAL).
-  if (medicalBenefitStatus === 'covered') {
-    return [
-      enrollmentStatus !== 'none',               // 1 eRx Received
-      consentStatus === 'confirmed',              // 2 Consent
-      biStatus === 'complete',                    // 3 Benefits Investigation
-      providerTransferStatus === 'notified',   // 4 Provider Transfer
-    ];
-  }
-
-  // Scenario 1 — pharmacy covered, medical not. Requires a real PA now (see
-  // workflows/coassist/'s header comment); Step 4 is judged on paStatus === 'approved'
-  // (always true once reached, per the confirmed no-denial design) instead
-  // of this outcome's old single tap-through SMS flag. Once approved, the
-  // patient picks a network pharmacy, then this mirrors CoA_Copay Retail's
-  // own short, Triage-to-Pharmacy-terminal bar (see STEP_LABELS_COVERAGE_PHARMACY/
-  // computeCoaStepDone's own isCopayRetailFlow shape for the analogous
-  // "dispatched" signal).
-  if (pharmacyBenefitStatus === 'covered') {
-    return [
-      enrollmentStatus !== 'none',       // 1 eRx Received
-      consentStatus === 'confirmed',     // 2 Consent
-      biStatus === 'complete',           // 3 Benefits Investigation
-      paStatus === 'approved',           // 4 Prior Authorization
-      pricingOption !== null,            // 5 Pharmacy Selection
-      pharmacyStatus !== 'none',         // 6 Triage to Pharmacy
-    ];
-  }
-
-  // Scenario 3 — neither covered, cash pay. Same 8-step shape as CoA_DTP's
-  // own computeCoaStepDone, minus the Prior Authorization slot this flow
-  // never has. This outcome's pricingOption is always "self_pay," so
-  // Payment is judged on real payment verification, not a ship date.
-  const dispatched = pharmacyStatus !== 'none';
-  return [
-    enrollmentStatus !== 'none',                                     // 1 eRx Received
-    consentStatus === 'confirmed',                                   // 2 Consent
-    biStatus === 'complete',                                         // 3 Benefits Investigation
-    paymentVerified,                                                 // 4 Payment
-    dispatched,                                                      // 5 Triage to Pharmacy
-    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered',  // 6 Rx Processing
-    pharmacyStatus === 'delivered',                                  // 7 Rx Shipped
-    pharmacyStatus === 'delivered',                                  // 8 Medication Delivered
-  ];
-}
-
-// iAssist-specific step completion — unlike WF1/WF2/CoA (where consent,
-// BI, and PA naturally happen in that order, so a single "how far along"
-// number works), iAssist's Rx submission auto-completes BI and auto-submits
-// PA immediately (see iAssist.ts's REFERRAL_RECEIVED handlers on those regions),
-// independent of and often well ahead of the patient's own SMS/OTP/consent
-// progress. A single scalar workflowStep can't represent "PA already
-// submitted, but the patient hasn't consented yet" — the generic threshold
-// calc below would (wrongly) mark Patient Enrolled/Benefits Investigation as
-// done just because a later field advanced. Each step here is judged only
-// by its own field, so the bar can show gaps instead of lying about them.
-function computeIAssistStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, paStatus, dispatchStatus, pharmacyStatus } = workflowData;
-  const dispatched = dispatchStatus === 'selected' || dispatchStatus === 'dispatched';
-  const pastDispatch = pharmacyStatus === 'processing' || pharmacyStatus === 'ready' || pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered';
-  return [
-    enrollmentStatus !== 'none',                 // 1 Referral Received
-    consentStatus === 'confirmed',                // 2 Patient Enrolled — real consent, not just an invite sent
-    biStatus === 'complete',                      // 3 Benefits Investigation
-    paStatus === 'approved',                      // 4 Prior Authorization — "submitted" alone isn't done yet
-    dispatched || pastDispatch,                   // 5 Triage to Pharmacy
-    pharmacyStatus === 'shipped' || pharmacyStatus === 'delivered', // 6 Rx Processing
-    pharmacyStatus === 'delivered',                // 7 Rx Shipped
-    pharmacyStatus === 'delivered',                // 8 Medication Delivered
-  ];
-}
-
-// WF5 (iAssist_PAP) variant of computeIAssistStepDone above — identical
-// except it inserts its own "Appeal" milestone right after Prior
-// Authorization, and has no dispense tail at all: WF5 dispenses "Keanu to
-// facility" (a site of care, not a pharmacy shipment), so "Triage to
-// Pharmacy" (step 6) is this flow's final step — it never touches
-// pharmacyStatus. Step 4 (Prior Authorization) is judged as "resolved" on
-// denial, not approval — this flow's PA never reaches 'approved' (see
-// workflows/iassist/rules.ts) — and step 5 only ticks once the Appeal is
-// actually filed (appealStatus, INITIATE_APPEAL), which is also what
-// unlocks dispatch/fulfillment here.
-function computeIAssistPapStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, paStatus, appealStatus, dispatchStatus } = workflowData;
-  const dispatched = dispatchStatus === 'selected' || dispatchStatus === 'dispatched';
-  return [
-    enrollmentStatus !== 'none',                  // 1 Referral Received
-    consentStatus === 'confirmed',                 // 2 Patient Enrolled
-    biStatus === 'complete',                       // 3 Benefits Investigation
-    paStatus === 'denied' || paStatus === 'approved', // 4 Prior Authorization — this flow resolves to denied
-    // Only 'approved' counts as done — per request, this step shouldn't
-    // check off just because the appeal was sent (appealStatus ===
-    // 'initiated'); it should wait for the payer response (see
-    // workflows/iassist/rules.ts's APPROVE_APPEAL). While 'initiated', StepBar
-    // below gives it the same pending/pulsing treatment as Prior
-    // Authorization while awaiting its own response.
-    appealStatus === 'approved',                   // 5 Appeal
-    dispatched,                                    // 6 Triage to Pharmacy — final step, ticks once a site of care is selected
-  ];
-}
-
-function computeBuyAndBillStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, paStatus } = workflowData;
-  return [
-    enrollmentStatus !== 'none',     // 1 Referral Received
-    consentStatus === 'confirmed',   // 2 Patient Enrolled
-    biStatus === 'complete',         // 3 Benefits Investigation
-    paStatus === 'approved',         // 4 Prior Authorization
-  ];
-}
-
-function computeFreeDrugStepDone(workflowData: ReturnType<typeof usePersonaState>['workflowData']): boolean[] {
-  const { enrollmentStatus, consentStatus, biStatus, papStatus, dispatchStatus } = workflowData;
-  return [
-    enrollmentStatus !== 'none',     // 1 Referral Received
-    consentStatus === 'confirmed',   // 2 Patient Enrolled
-    biStatus === 'complete',         // 3 Benefits Investigation
-    papStatus === 'active',          // 4 Free Drug Application
-    dispatchStatus === 'selected' || dispatchStatus === 'dispatched', // 5 Triage to Site of Care
-  ];
-}
-
 function StepBar() {
   const flowType     = useDemoStore((s) => s.flowType);
   const { workflowData } = usePersonaState('crm');
-  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  // See STEP_LABELS_COA_COPAY_RETAIL above and crm/pages/Index.tsx's own
-  // isCopayRetailFlow — this is the one case where the label set itself
-  // (not just the workflowStep number) needs to change mid-flow, since
-  // which pricing option resolves only once the patient reaches Benefit
-  // Pricing (pricingOption starts null for all three). Covers both Retail
-  // and Mail Order now — both end at Triage to Pharmacy (see
-  // WorkflowEngine.ts's derivePatientRoute) — Copay-enrolled-then-picked
-  // included, since pricingOption is what this checks either way.
-  const isCopayRetailFlow = flowType === "CoA_Copay" && (workflowData.pricingOption === "retail" || workflowData.pricingOption === "mail_order");
-  // Covers WF4 and WF5 (iAssist_PAP, a structural clone of WF4). WF5 uses
-  // its own computeIAssistPapStepDone (extra "Appeal" step) below instead
-  // of WF4's — see isIAssistPapFlow.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
-  // CoA_Coverage (one Benefits Investigation, three coverage outcomes) — see
-  // STEP_LABELS_COVERAGE/STEP_LABELS_COVERAGE_MEDICAL/computeCoverageStepDone above.
-  const isCoverageFlow = flowType === "CoA_Coverage";
-  // Scenario 2 only — swaps in the short, terminal STEP_LABELS_COVERAGE_MEDICAL
-  // bar once medicalBenefitStatus resolves to "covered" (medical always
-  // wins — see workflows/coassist/). Before BI resolves, and for the other
-  // two outcomes, this stays false and the full STEP_LABELS_COVERAGE bar shows
-  // instead — same "swap the label array once the outcome is known" pattern
-  // isCopayRetailFlow already uses for CoA_Copay's own pricingOption.
-  const isCoverageMedicalFlow = isCoverageFlow && workflowData.medicalBenefitStatus === "covered";
-  // Scenario 1 only — swaps in the short, Triage-to-Pharmacy-terminal
-  // STEP_LABELS_COVERAGE_PHARMACY bar (no pricing/address/date/payment step at
-  // all in this outcome anymore — see workflows/coassist/'s header comment). Checked
-  // before the fallback STEP_LABELS_COVERAGE bar below, which now only applies
-  // to Scenario 3 (neither covered, cash pay).
-  const isCoveragePharmacyFlow = isCoverageFlow && workflowData.pharmacyBenefitStatus === "covered" && workflowData.medicalBenefitStatus !== "covered";
-  const isBuyAndBill = isBuyAndBillScenario(flowType);
-  const isFreeDrug = isFreeDrugScenario(flowType);
-  const iAssistStepDone = isBuyAndBill
-    ? computeBuyAndBillStepDone(workflowData)
-    : isFreeDrug
-    ? computeFreeDrugStepDone(workflowData)
-    : isIAssistPapFlow
-    ? computeIAssistPapStepDone(workflowData)
-    : isIAssistFlow
-    ? computeIAssistStepDone(workflowData)
-    : null;
-  // See computeCoaStepDone's header comment — same "BI can race ahead of
-  // consent" problem iAssistStepDone above solves, now also true for CoA.
-  const coaStepDone = isCoaFlow ? computeCoaStepDone(workflowData) : null;
-  const coverageStepDone = isCoverageFlow ? computeCoverageStepDone(workflowData) : null;
-  const pspBar = pspStepBar(flowType);
-  const stepDone = pspBar ? pspBar.map((step) => step.done(workflowData)) : (iAssistStepDone ?? coaStepDone ?? coverageStepDone);
-
-  const workflowStep = isCoaFlow ? computeCoaWorkflowStep(workflowData) : (() => {
-    const p = workflowData.pharmacyStatus;
-    const d = workflowData.dispatchStatus;
-    const pa = workflowData.paStatus;
-    const bi = workflowData.biStatus;
-    const consent = workflowData.consentStatus;
-    const enrollment = workflowData.enrollmentStatus;
-
-    if (p === 'delivered') return 9;
-    if (p === 'shipped') return 7;
-    if (p === 'processing' || p === 'ready') return 6;
-    if (d === 'pending_selection' || d === 'selected' || d === 'dispatched') return 5;
-    if (pa === 'approved') return 5;
-    if (pa === 'submitted' || pa === 'denied') return 4;
-    if (bi === 'running' || bi === 'submitted') return 3;
-    if (bi === 'complete') return 4;
-    if (consent === 'confirmed') return 3;
-    if (enrollment === 'enrolled') return 2;
-    return 1;
-  })();
+  const { labels: STEP_LABELS, stepDone, workflowStep, paRingApplies, rxRingsOff, rxProcessingStepN, rxShippedStepN } = stepBarModel(flowType, workflowData);
 
   const biStatus        = workflowData.biStatus;
   const paStatus        = workflowData.paStatus;
   const appealStatus    = workflowData.appealStatus;
   const pharmacyStatus  = workflowData.pharmacyStatus;
-  const STEP_LABELS     = pspBar ? pspBar.map((step) => step.label)
-    : isBuyAndBill ? STEP_LABELS_BUY_AND_BILL
-    : isFreeDrug ? STEP_LABELS_FREE_DRUG
-    : (flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP") ? STEP_LABELS_PAP_AUDIT
-    : isCopayRetailFlow ? STEP_LABELS_COA_COPAY_RETAIL
-    : isCoaFlow ? STEP_LABELS_COA
-    : isCoverageMedicalFlow ? STEP_LABELS_COVERAGE_MEDICAL
-    : isCoveragePharmacyFlow ? STEP_LABELS_COVERAGE_PHARMACY
-    : isCoverageFlow ? STEP_LABELS_COVERAGE
-    : isIAssistPapFlow ? STEP_LABELS_IASSIST_PAP
-    : STEP_LABELS_DEFAULT;
-  // These pulsing-ring decorations hardcode step positions. CoA_DTP's
-  // 9-step bar now shares WF1's exact Benefits Investigation (n=3) and
-  // Prior Authorization (n=4) positions, so those rings need no per-flow
-  // adjustment. The dispense tail is shifted +1 for CoA (it has an extra
-  // "Payment" step WF1 doesn't), so those two positions are computed below
-  // instead of hardcoded. Fax_PAP_Audit also runs BI through the same
-  // biStatus field (n=3 slot, checking BI for no insurance) and, now that
-  // its dispense tail reuses WF1's exact pharmacyStatus-driven labels at
-  // the exact same n=6/7 positions (Triage to Pharmacy/Rx Processing/Rx
-  // Shipped/Medication Delivered — see STEP_LABELS_PAP_AUDIT), the rx
-  // decorations apply there too. Only paProcessing stays WF1/CoA-only —
-  // WF2 has no Prior Authorization step (paStatus never leaves 'none' for
-  // this flow, see workflowMachine.ts's SEND_PAP_SMS comment), so that ring
-  // guard is moot for WF2 either way.
   const biRunning       = biStatus === "running";
-  const paProcessing    = paStatus === "submitted" && flowType !== "Fax_PAP_Audit" && flowType !== "PrES_PAP";
-  // WF5 (iAssist_PAP) only — appealStatus never leaves 'none' for any other
-  // flow (see engine/types.ts), so no explicit isIAssistPapFlow guard is
-  // needed here, same reasoning as paProcessing's flow exclusions above.
-  // Sits at the dedicated "Appeal" step (n=5, see STEP_LABELS_IASSIST_PAP)
-  // while the appeal has been sent but the payer hasn't responded yet —
-  // same "sent, awaiting response" moment paProcessing captures for PA.
+  const paProcessing    = paStatus === "submitted" && paRingApplies;
+  // appealStatus never leaves 'none' except for iAssist_PAP (see engine/types.ts). The dedicated "Appeal" step
+  // is n=5 while the appeal is sent and the payer has not responded.
   const appealPending   = appealStatus === "initiated";
   const appealStepN     = 5;
-  // isCoveragePharmacyFlow's own 6-step bar ends at Triage to Pharmacy (n=6, same
-  // terminal position as STEP_LABELS_COA_COPAY_RETAIL) with no Rx
-  // Processing/Rx Shipped steps at all — FILL_RX (CRM's "Triage to
-  // Pharmacy") can still flip pharmacyStatus to "processing" for this flow
-  // (same as isCopayRetailFlow), but there's no further stage left to
-  // advance it, so this ring would otherwise land on the terminal Dispatch
-  // dot itself and imply a "still in transit" state that doesn't apply.
-  const rxInTransit     = pharmacyStatus === "processing" && !isCoveragePharmacyFlow;
-  const rxProcessing    = pharmacyStatus === "ready" && !isCoveragePharmacyFlow;
-  const rxShipping      = pharmacyStatus === "shipped" && !isCoveragePharmacyFlow;
-  // WF1: Rx Processing/Rx Shipped sit at n=6/7. CoA_DTP: n=7/8 (Payment
-  // pushes everything after it back by one). WF5 (iAssist_PAP) has no Rx
-  // Processing/Rx Shipped steps at all anymore (dispatch to a site of care
-  // is this flow's final step — see STEP_LABELS_IASSIST_PAP/
-  // computeIAssistPapStepDone above), so it no longer needs an offset here;
-  // pharmacyStatus stays 'none' for this flow forever either way, so these
-  // constants are simply unreachable for WF5's own bar.
-  const rxProcessingStepN = isCoaFlow ? 7 : 6;
-  const rxShippedStepN    = isCoaFlow ? 8 : 7;
-  // Benefits Investigation sits at n=3 for every flow's bar now, including
-  // both of CoA_Coverage's own bars (STEP_LABELS_COVERAGE/STEP_LABELS_COVERAGE_MEDICAL both
-  // put "eRx Received"/"Consent" ahead of it, same as CoA_DTP's bar) — no
-  // per-flow adjustment needed.
+  // A bar that ends at Triage to Pharmacy has no Rx Processing or Rx Shipped steps, so the Rx rings stay off.
+  const rxInTransit     = pharmacyStatus === "processing" && !rxRingsOff;
+  const rxProcessing    = pharmacyStatus === "ready" && !rxRingsOff;
+  const rxShipping      = pharmacyStatus === "shipped" && !rxRingsOff;
+  // Benefits Investigation sits at n=3 on every flow's bar.
   const biRunningStepN    = 3;
 
 
@@ -920,7 +427,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
   // into the phone frame by accident.
   const { workflowData } = usePersonaState('patient');
   const showPesPapUpdateSmsPhone =
-    flowType === 'PrES_PAP' && workflowData.papSmsSent && !workflowData.papSmsVerified;
+    scenarioFacts(flowType).isPres && workflowData.papSmsSent && !workflowData.papSmsVerified;
 
   return (
     <div className="flex flex-col flex-1 min-w-0 border-r border-slate-700/50 last:border-r-0">
@@ -962,7 +469,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * (showPesPapUpdateSmsPhone, computed above) — that one screen still
        * uses the phone frame, matching every other flow's SMS screens.
        */}
-      {portal === "patient" && (flowType !== "PrES_PAP" || showPesPapUpdateSmsPhone) ? (
+      {portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
@@ -1051,26 +558,27 @@ export default function DemoShell() {
   // tab-visibility-adjacent behavior; the reset ladder and stage-button
   // labels branch on isIAssistPapFlow specifically where WF5's denied-PA
   // path actually diverges from WF4's approved-PA path.
-  const isIAssistFlow = IASSIST_FLOWS.includes(flowType as FlowType);
+  const facts = scenarioFacts(flowType);
+  const isIAssistFlow = facts.isIassistSource;
   // WF5 (iAssist_PAP) — structural clone of WF4, but the demo's PA resolves
   // to Denied instead of Approved (see engine/types.ts's FlowType comment),
   // so its reset ladder and stage-button labels need their own short list
   // instead of reusing WF4's approved-path one below.
-  const isIAssistPapFlow = flowType === "iAssist_PAP";
+  const isIAssistPapFlow = facts.isIassistAppeal;
   // PrES_PAP (WF6) shares WF2's ladder here — its dedicated machine
   // (presPap.ts) accepts the identical event sequence, so the same
   // stage-jump steps apply. See STEP_LABELS_PAP_AUDIT/getPortals above for
   // where WF5 intentionally does NOT follow WF2 (its provider tab stays
   // visible).
-  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  const isPapFlow = facts.isNoPaIntake;
   // CoA_Coverage — its own resetActorToStage branch below (this file's StepBar()
   // component above has its own separate isCoverageFlow local, unrelated scope).
-  const isCoverageFlow = flowType === "CoA_Coverage";
+  const isCoverageFlow = facts.isCoverageScenario;
   // CoA_DTP/CoA_Copay — own resetActorToStage branch below too (see the
   // generic block's header comment for why this used to silently break past
   // Prior Authorization for both flows). Same isCoaFlow local StepBar()
   // above already has, unrelated scope.
-  const isCoaFlow = flowType === "CoA_DTP" || flowType === "CoA_Copay";
+  const isCoaFlow = facts.hasPricingFork;
   const resetPatient = usePatientStore((s) => s.reset);
   // WF5's own captured-application-data store — reset alongside patientStore
   // wherever patientStore itself gets a full reset() call below (stale
@@ -1230,7 +738,7 @@ export default function DemoShell() {
 
     // The free drug program ladder follows the scenario's own `bi` fork rungs, like Coverage's.
     if (scenarioHasModule(flowType, "pap_transfer")) {
-      for (const event of coassistStageEvents("CoA_PAP", stage, forkChoices)) actor.send(event as any);
+      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) actor.send(event as any);
       return;
     }
 
@@ -1238,7 +746,7 @@ export default function DemoShell() {
     // coassistLadders.ts so the headless tests run the same event lists.
     if (isCoverageFlow || isCoaFlow) {
       // RESET keeps the current choices, so the jump lands on the selected branch.
-      for (const event of coassistStageEvents(isCoverageFlow ? 'CoA_Coverage' : (flowType as 'CoA_DTP' | 'CoA_Copay'), stage, forkChoices)) {
+      for (const event of coassistStageEvents(flowType as CoassistLadderFlow, stage, forkChoices)) {
         actor.send(event as any);
       }
       return;
@@ -1418,7 +926,7 @@ export default function DemoShell() {
                   >
                     Reset All
                   </button>
-                  {((flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP")
+                  {(isPapFlow
                     ? [
                       { stage: 1, label: "Referral Received" },
                       { stage: 2, label: "Patient Enrolled" },
@@ -1460,7 +968,7 @@ export default function DemoShell() {
                     : scenarioHasModule(flowType, "pap_transfer")
                     ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     : isCoverageFlow
-                    ? forkStageList(biForkFor("CoA_Coverage"), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic

@@ -37,6 +37,7 @@ import { scenarioHasModule } from "@/workflows/scenarios";
 import { caseDocuments } from "@/brand/caseDocuments";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { BrandDocument } from "@/brand/schema";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
 // CRM's enrollment fax, iAssist, the live tasks above) — referenced by the
@@ -209,7 +210,7 @@ export default function FieldPortal() {
   const pharmacyStatus = state.pharmacy_status;
   // The Enrollment Application fax only exists for the two fax-intake
   // flows — same gate CRM's Related Documents tab uses (isFaxFlow there).
-  const isFaxFlow = state.flow_type === "Fax_QS_PA_Approved" || state.flow_type === "Fax_PAP_Audit";
+  const { isFax: isFaxFlow, isNoPaIntake: isPapFlow, isFreeDrug } = scenarioFacts(state.flow_type);
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -220,8 +221,6 @@ export default function FieldPortal() {
   const [previewItem, setPreviewItem] = useState<Case | null>(null);
   const isBuyAndBill = scenarioHasModule(state.flow_type, "copay");
   // Free drug (PAP): eMedBV with the `financial_assistance` module. No PA or copay, and the drug goes to the site of care.
-  const isFreeDrug = scenarioHasModule(state.flow_type, "financial_assistance") && scenarioHasModule(state.flow_type, "benefit_verification");
-  const isPapFlow = state.flow_type === "Fax_PAP_Audit" || state.flow_type === "PrES_PAP";
   const [viewedDoc, setViewedDoc] = useState<BrandDocument | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [alsoAddToRelated, setAlsoAddToRelated] = useState(false);

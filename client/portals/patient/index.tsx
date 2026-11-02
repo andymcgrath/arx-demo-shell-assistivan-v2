@@ -84,6 +84,7 @@ import ProviderTransferSms from "./pages/ProviderTransferSms";
 import PapTransferSms from "./pages/PapTransferSms";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 
 /** True when the patient should stay on this screen. Each workflow marks its `sticky` screens in workflows/<name>/screens.ts. */
@@ -157,7 +158,7 @@ function PatientRoutes() {
   // flow keeps h-full unchanged (their phone-mockup ancestor is a fixed,
   // overflow:hidden box either way, so min-h-full wouldn't help them and
   // risks changing behavior that already works for those flows).
-  const isWideFlow = workflowData.flowType === 'PrES_PAP';
+  const isWideFlow = scenarioFacts(workflowData.flowType).isWideFlow;
 
   // Show header and footer starting from phone verification onwards
   // (not for lock-screen and sms-message which should feel like a phone).
@@ -243,7 +244,7 @@ export default function PatientPortal() {
   // root div needs the same min-h-full-instead-of-h-full treatment for WF5,
   // otherwise this box caps back to one viewport height one level higher up
   // and the fix inside PatientRoutes never gets the chance to matter.
-  const isWideFlow = actor.getSnapshot().context.workflowData.flowType === 'PrES_PAP';
+  const isWideFlow = scenarioFacts(actor.getSnapshot().context.workflowData.flowType).isWideFlow;
   return (
     <div className={`portal-patient flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
       <PortalRouter initialPath={initialPath}>

@@ -1,6 +1,7 @@
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { useRecipeModule } from "@/hooks/useRecipeModule";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 export default function EnrollmentComplete() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
@@ -20,7 +21,7 @@ export default function EnrollmentComplete() {
   // (OrderTracker.tsx's RetailPharmacyTracker, broadened to also cover
   // pricingOption === 'mail_order').
   const isCopayMailOrder =
-    workflowData.flowType === "CoA_Copay" && workflowData.pricingOption === "mail_order";
+    scenarioFacts(workflowData.flowType).hasCopayFork && workflowData.pricingOption === "mail_order";
 
   return (
     <main className="flex-grow flex items-center justify-center px-6 py-12 bg-arx-hero">

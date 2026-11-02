@@ -15,9 +15,8 @@ import {
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
 import type { FlowType, WorkflowData } from "@/engine/types";
-import { COASSIST_FLOWS } from "@/workflows/coassist/scenarios";
 // WF4's own dashboard — reused as-is for CoA_DTP's post-PA screen (see the
-// isCoA branch in ProviderPortal below). Not a copy; if WF4's Dashboard
+// isCoassistSource branch in ProviderPortal below). Not a copy; if WF4's Dashboard
 // changes, this picks it up automatically.
 import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
 // Dashboard calls useNavigate() from portalRouter, which throws unless it's
@@ -29,6 +28,7 @@ import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
 // limitation of reusing WF4's dashboard outside its own portal.
 import { PortalRouter } from "@/lib/portalRouter";
 import "./styles.css";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 type Step = "email" | "login" | "pa-questions" | "pa-submitted" | "income-verify" | "income-submitted" | "coa-dashboard" | "coa-rx" | "coa-sent"
   // WF5 (PrES_PAP) provider flow — see PresPapProviderExperience below.
@@ -1100,7 +1100,7 @@ function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   // once BI completes (paStatus stays 'none' forever for CoA_Coverage, same as
   // pharmacyStatus) and surface a "Start Prior Auth" button
   // (PrescriptionsIdlePanel) this flow's machine has no handler for at all.
-  if (workflowData.flowType === "CoA_Coverage") {
+  if (scenarioFacts(workflowData.flowType).isCoverageScenario) {
     if (workflowData.providerTransferStatus === "notified") {
       return { label: "Transferred to Provider", color: "success", dots: ["completed", consentDot, "completed", "completed", "disabled", "disabled"] };
     }
@@ -1208,7 +1208,7 @@ function PrescriptionsIdlePanel({
 
 // Composes the chart shell with whichever CoA_DTP step is active. This is
 // the only place that mounts EhrChartShell, and it's only ever rendered when
-// flowType === "CoA_DTP" (see the isCoA branch in ProviderPortal below) — so
+// flowType === "CoA_DTP" (see the isCoassistSource branch in ProviderPortal below) — so
 // none of this reaches WF1/WF2/WF4.
 // ── WF5 (PrES_PAP) provider experience ──────────────────────────────────────
 //
@@ -2899,8 +2899,9 @@ export default function ProviderPortal() {
   // same way once the provider is past this starting screen).
   const [step, setStep] = useState<Step>(() => {
     const initialFlowType = useDemoStore.getState().flowType;
-    if (COASSIST_FLOWS.includes(initialFlowType as FlowType)) return 'coa-dashboard';
-    if (initialFlowType === 'PrES_PAP') return computeInitialPresProviderStep(workflowData);
+    const initialFacts = scenarioFacts(initialFlowType);
+    if (initialFacts.isCoassistSource) return 'coa-dashboard';
+    if (initialFacts.isPres) return computeInitialPresProviderStep(workflowData);
     return 'login';
   });
   const dispatch = useWorkflowDispatch();
@@ -2916,17 +2917,17 @@ export default function ProviderPortal() {
   // (paStatus stays 'none' forever for CoA_Coverage, see workflows/coassist/),
   // and deriveKeanuStatus below has its own coverage-specific branch so this
   // flow's Prescriptions panel never mislabels itself "PA Required".
-  const isCoA = COASSIST_FLOWS.includes(flowType as FlowType);
+  const isCoassistSource = scenarioFacts(flowType).isCoassistSource;
   // WF5 (PrES_PAP) gets its own dedicated provider screen — a condensed
   // multi-step enrollment flow — instead of falling into the generic
   // WF1/WF2 "Recent Submissions" chain below. See PresPapProviderExperience.
-  const isPres = flowType === "PrES_PAP";
+  const isPres = scenarioFacts(flowType).isPres;
   const biStatus = workflowData.biStatus;
 
   const storeFlowType = useDemoStore((s) => s.flowType);
 
   useEffect(() => {
-    if (storeFlowType !== 'CoA_DTP' && storeFlowType !== 'CoA_Copay') {
+    if (!scenarioFacts(storeFlowType).hasPricingFork) {
       return;
     }
     // BI completing means "PA Required" just appeared — skip the idle EHR
@@ -2969,7 +2970,7 @@ export default function ProviderPortal() {
   // 'email' before the provider could do anything on the login screen.
   const emailSurfacedRef = useRef(false);
   useEffect(() => {
-    if (storeFlowType !== 'Fax_QS_PA_Approved') return;
+    if (!scenarioFacts(storeFlowType).isStandardFaxPa) return;
     if (!(biStatus === 'complete' && paStatus === 'none')) {
       // Conditions no longer hold (reset, new cycle, PA submitted) — allow
       // the next completion to surface the email again.
@@ -2994,7 +2995,8 @@ export default function ProviderPortal() {
     if (resetNonce === lastResetNonceRef.current) return;
     lastResetNonceRef.current = resetNonce;
     emailSurfacedRef.current = false;
-    setStep(COASSIST_FLOWS.includes(storeFlowType as FlowType) ? 'coa-dashboard' : storeFlowType === 'PrES_PAP' ? 'pres-home' : 'login');
+    const storeFacts = scenarioFacts(storeFlowType);
+    setStep(storeFacts.isCoassistSource ? 'coa-dashboard' : storeFacts.isPres ? 'pres-home' : 'login');
   }, [resetNonce, storeFlowType]);
 
   if (isBranded) {
@@ -3024,7 +3026,7 @@ export default function ProviderPortal() {
   // and persists across remounts/tab switches regardless of how the PA got
   // there — it isn't tied to the `step` state machine below, which stops
   // mattering once we're here.
-  if (isCoA) {
+  if (isCoassistSource) {
     if (paStatus !== 'none') {
       return (
         <PortalRouter initialPath="/">
@@ -3066,7 +3068,7 @@ export default function ProviderPortal() {
   //
   // WF2 (Fax_PAP_Audit) wasn't part of this request and keeps the original
   // "Recent Submissions" screen below.
-  if (paStatus !== 'none' && flowType === "Fax_QS_PA_Approved") {
+  if (paStatus !== 'none' && scenarioFacts(flowType).isStandardFaxPa) {
     return (
       <PortalRouter initialPath="/">
         <IAssistDashboardPage />

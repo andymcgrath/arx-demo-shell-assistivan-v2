@@ -1,6 +1,6 @@
 # Plan: remove `flowType ===` checks from the UI (rule 7)
 
-Status: draft for review. No code has changed.
+Status: in progress on branch `rule7-cleanup`. Steps 1 to 5 and the guard test (step 8) are done and tagged. Step 6 (CRM page) has its flags done and its file split started. Step 7 (Client portal) is done, see the progress notes at the end.
 
 CLAUDE.md rule 7: do not add `flowType ===` checks in UI code. Read `workflow` and `scenario` from the definition. Rule 14: a scenario's path changes at forks, not at flow checks. The UI still breaks both rules in about 24 files. Two earlier plans (the medical transfer plans) deferred this as a follow-up.
 
@@ -83,3 +83,28 @@ Replace each check with a read from the scenario definition. Work in order of ri
 - `rg "flowType ===" client/portals client/shell` returns only allowlisted lines.
 - `pnpm test` and `pnpm typecheck:ratchet` pass.
 - Every file touched is under about 600 lines or has a split planned.
+
+## Progress notes (30 Oct 2026)
+
+Tags run `refactor/59` to `refactor/63`, because `refactor/51` to `refactor/58` were already taken by earlier work. Plan step N is tag N+58.
+
+| Plan step | Tag | What landed |
+|---|---|---|
+| Oracle | `59-ui-predicates-oracle` | Test that copies every UI flag verbatim and records it per flow (`__fixtures__/ui/predicates.json`). |
+| Facts | `60-scenario-facts` | `client/workflows/scenarioFacts.ts`: every flag derived from the recipe, intake, and `legacy`. No `ui` block was needed. `isCoA` is now `isCoassistSource` and `hasPricingFork`. `isPapFlow` is now `isFaxPap` and `isNoPaIntake`. |
+| Shell | `61-shell-step-bar` | Step bar moved to `shell/stepBar.ts` (pure, fixture `ui/stepBar.json`). DemoShell reads `scenarioFacts`. Intended change: CoA_PAP's Rx rings now sit on its Delivery step. |
+| Patient | `62-patient-pages` | Every patient page and `patient/index.tsx`. New fact `isStandardFaxPa`. |
+| Provider and rest | `63-provider-field-ladders` | Provider, field, both FulfilmentCenter pages, iAssist NewCasePatient, hooks, ladders. New `scenarioFor` lookup. Provider's `isCoA` is `isCoassistSource`. |
+
+Fixtures stayed identical except the two new ones and the CoA_PAP ring change.
+
+**Left to do**
+
+- Step 6, CRM page (tag `65-crm-flags-and-stage-builder`): flags done, file split not finished.
+  - Done: the stage builder is a pure function (`crm/stages/buildStages.ts`) with a fixture along every golden path (`ui/crmStages.json`, unchanged by the flag swap). `crm/stages/flags.ts` derives the page's flags from `scenarioFacts`. The page has no `flowType` comparison, and its guard allowlist entries are gone. Also split out unchanged: `SfControls`, `StageCard`, `CaseListView`, `caseData.ts`. The page went from 4,160 to 2,984 lines.
+  - Left: the `Index` component is still about 2,760 lines of JSX over about 80 local values (stage panels, benefits panel, fulfillment step, tabs). No jsdom or testing-library, so a render-level check does not exist. Each panel needs its props listed by hand. Split one panel per commit and check the CRM by eye after each, or add a render test setup first.
+- Step 7, Client portal copy: done, tag `66-client-shares-crm-page`. You chose to share, since only the branding differs. The CRM's brand colors now read `--crm-primary`, `-dark`, `-30` and `-80` with the old hex as fallback (CRM renders as before). `client/branding.ts` maps them to `--arx-primary*` on `.portal-client`, and `client/pages/Index.tsx` re-exports the CRM page (3,713 lines gone). The Client page had drifted: no coverage or free-drug flows, no copay tab, its own `setTimeout` effects for BI and PA (rule 10), no shared case documents. It now has all of that. It had no fixture of its own, so there is no before and after. Look at it by eye. Still copied: `client/pages/FulfilmentCenter.tsx` and `client/index.tsx` (both near-duplicates of the CRM ones).
+- Step 8, guard test: done early, tag `64-guard-test`. `client/engine/__tests__/ui.noFlowChecks.test.ts` scans `client/portals` and `client/shell` for `flowType ===`, `flow_type ===`, and quoted flow ids. The allowlist (reason per entry, matched by file and line text) holds the Brand Lab picker list, and two ladder flow-id types. Fax, provider and shell code have no entries. A stale entry fails the test, so removing a line from the CRM or Client page means deleting its entry. The CRM and Client entries are gone.
+- `WorkflowEngine.ts` still branches on `isCoverageFlow` for copy (lines 410 to 548). Separate follow-up, outside the guard.
+- CoA_PAP and iAssist_PAP step bars: iAssist_PAP keeps its Rx ring on the last dot, as before. It has no Rx steps, so this may be the same fault CoA_PAP had. Check by eye before changing.
+- `FLOW_START_PORTAL` in `DemoShell.tsx` is still a map keyed by flow id. The plan's `ui` block would replace it.

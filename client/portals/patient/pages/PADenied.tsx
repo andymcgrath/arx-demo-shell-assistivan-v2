@@ -5,6 +5,7 @@ import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM, CHATBOT_ICON } from "@/portals/patient/config/branding";
 import { hexToColorFilter } from "@/portals/patient/lib/brandFilter";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function PADenied() {
   const navigate = useNavigate();
@@ -12,18 +13,17 @@ export default function PADenied() {
   const { openChat } = useChatContext();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isCoA = flowType === 'CoA_DTP' || flowType === 'CoA_Copay';
+  const { hasPricingFork, isCoverageScenario, isIassistAppeal } = scenarioFacts(flowType);
   // CoA_Coverage Scenario 3 only (neither pharmacy nor medical benefit covered —
   // see workflows/coassist/ and WorkflowEngine.ts's derivePatientRoute).
   // This flow never submits a Prior Authorization at all, so it gets its own
-  // copy below instead of isCoA's "insurance denied coverage" messaging,
+  // copy below instead of hasPricingFork's "insurance denied coverage" messaging,
   // which would incorrectly reference a PA denial that never happened. Its
   // CTA dispatches SELECT_SELF_PAY (added to workflows/coassist/'s biComplete state)
   // instead of navigating straight to /delivery-payment — SELECT_SELF_PAY
   // joins the same pricingSelected state Scenario 1 uses, which needs an
   // address before payment (see derivePatientRoute's CoA_Coverage branch), so
   // this navigates to /delivery-address, not /delivery-payment.
-  const isCoverageFlow = flowType === 'CoA_Coverage';
   // iAssist_PAP (WF5) is the one flow with a real appealStatus field (see
   // workflows/iassist/rules.ts) — its copy below reacts to whether an appeal
   // has actually been filed instead of always claiming one has. Every other
@@ -31,7 +31,6 @@ export default function PADenied() {
   // "we submitted an appeal" copy untouched — appealStatus stays 'none'
   // forever for those flows, so branching on it there would silently change
   // established WF1 behavior no one asked to change.
-  const isIAssistPap = flowType === 'iAssist_PAP';
   // !== 'none' rather than === 'initiated': appealStatus advances to
   // 'approved' once the CRM agent opens the Appeals tab (see
   // workflows/iassist/rules.ts's APPROVE_APPEAL) — this patient-facing "we've
@@ -47,7 +46,7 @@ export default function PADenied() {
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Denied card */}
-          {isCoverageFlow ? (
+          {isCoverageScenario ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
@@ -80,7 +79,7 @@ export default function PADenied() {
                 <span>Have questions? Start a chat</span>
               </button>
             </div>
-          ) : isCoA ? (
+          ) : hasPricingFork ? (
             <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-center justify-between mb-4">
                 <ProgramLogo variant="colors" />
@@ -131,7 +130,7 @@ export default function PADenied() {
               </div>
 
               <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-                {isIAssistPap
+                {isIassistAppeal
                   ? appealFiled
                     ? `Your insurance company denied payment for ${PROGRAM.drugDisplayName}, but we've already filed an appeal on your behalf. We'll let you know when we have an update. It could take up to 10 days.`
                     : `Your insurance company denied payment for ${PROGRAM.drugDisplayName}. We're reviewing your options and will let you know what's next.`
@@ -179,7 +178,7 @@ export default function PADenied() {
           </div>
 
           {/* Prescriptions section - hidden for CoA and CoA_Coverage */}
-          {!isCoA && !isCoverageFlow && (
+          {!hasPricingFork && !isCoverageScenario && (
             <section>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -194,7 +193,7 @@ export default function PADenied() {
                 <ProgramLogo variant="colors" className="flex-shrink-0" />
                 <div className="flex-1 text-left">
                   <p className="text-xs text-arx-body-copy">
-                    {isIAssistPap ? (appealFiled ? "Appeal submitted" : "Reviewing your options") : "Appeal submitted"}
+                    {isIassistAppeal ? (appealFiled ? "Appeal submitted" : "Reviewing your options") : "Appeal submitted"}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-arx-body-copy" />
@@ -203,7 +202,7 @@ export default function PADenied() {
           )}
 
           {/* Suggested section - hidden for CoA and CoA_Coverage */}
-          {!isCoA && !isCoverageFlow && (
+          {!hasPricingFork && !isCoverageScenario && (
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
@@ -223,7 +222,7 @@ export default function PADenied() {
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed mb-5 text-arx-body-copy">
-                  {isIAssistPap
+                  {isIassistAppeal
                     ? appealFiled
                       ? "Your appeal is still under review. Even if your insurance denies coverage, there are available programs to help you."
                       : "Even if your insurance denies coverage, there are available programs to help you."

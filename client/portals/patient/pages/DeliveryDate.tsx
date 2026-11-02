@@ -4,6 +4,7 @@ import { CalendarDays, Check } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { scenarioHasModule } from "@/workflows/scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 function isUnavailable(d: Date): boolean {
   const day = d.getDay();
@@ -33,15 +34,11 @@ export default function DeliveryDate() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const isWorkflow1 = flowType === "Fax_QS_PA_Approved";
-  const isCoA = flowType === "CoA_DTP" || flowType === "CoA_Copay";
-  const isIAssist = flowType === "iAssist_PA_Approved";
-  const isPapFlow = flowType === "Fax_PAP_Audit" || flowType === "PrES_PAP";
+  const { isStandardFaxPa, hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, isPres } = scenarioFacts(flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 — Retail/Mail, pharmacy covered; Scenario 3 — self-pay, neither
-  // covered — see workflows/coassist/). Not folded into isCoA above since
+  // covered — see workflows/coassist/). Not folded into hasPricingFork above since
   // this flow's PA-driven gates elsewhere in this file don't apply to it.
-  const isCoverageFlow = flowType === "CoA_Coverage";
   // The free drug program in CoAssist: read from the recipe, not the flow id. No payment, and it ends on its own confirmation.
   const isPapProgram = scenarioHasModule(flowType, "income_qualification");
   // Copay enrollment (/copay-enroll) only unlocks the reduced price — it
@@ -59,15 +56,15 @@ export default function DeliveryDate() {
   // it's "retail"/"mail_order" with copayEnrolled: true instead, but the
   // "Copay doesn't collect payment through this flow" behavior above still
   // applies to it.
-  // CoA_Coverage is the inverse of isCoA/isIAssist's own self_pay-skips-payment
+  // CoA_Coverage is the inverse of hasPricingFork/isIassistStandardPa's own self_pay-skips-payment
   // gate above: Retail/Mail Order (Scenario 1) skip this screen's payment
   // step (cost is handled at the pharmacy counter, same reasoning as CoA's
   // own Retail/Mail), but self-pay (Scenario 3) does need /delivery-payment
   // — CoA_Coverage's cash-pay scenario is the one path through this screen that
   // actually collects payment here.
-  const skipPayment = isWorkflow1 || isPapFlow || isPapProgram
-    || ((isCoA || isIAssist) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled))
-    || (isCoverageFlow && workflowData.pricingOption !== "self_pay");
+  const skipPayment = isStandardFaxPa || isNoPaIntake || isPapProgram
+    || ((hasPricingFork || isIassistStandardPa) && (workflowData.pricingOption === "self_pay" || workflowData.copayEnrolled))
+    || (isCoverageScenario && workflowData.pricingOption !== "self_pay");
   const available = getAvailableDates();
   const [selected, setSelected] = useState<Date | null>(available[0] ?? null);
   const [open, setOpen] = useState(false);
@@ -78,7 +75,7 @@ export default function DeliveryDate() {
   // set, so a portal remount falls back to an earlier screen).
   function handleSave() {
     if (!selected) return;
-    if (isCoA || isIAssist || isPapFlow || isCoverageFlow || isPapProgram) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
+    if (hasPricingFork || isIassistStandardPa || isNoPaIntake || isCoverageScenario || isPapProgram) dispatch("PATIENT_SELECTS_SHIP_DATE", { portal: "patient" });
     // WF2/WF5 each have their own terminal "nothing more to do" screen
     // (pap-enrollment-complete / pes-confirmation) that derivePatientRoute
     // expects to show once address+date are both done. Routing them through
@@ -87,8 +84,8 @@ export default function DeliveryDate() {
     // StateDrivenNav's guard leaves alone once landed on, so the
     // state-driven correction to the real target route never fires and
     // "Got it" just bounces straight to /order-tracker instead.
-    if (isPapFlow || isPapProgram) {
-      navigate(flowType === "PrES_PAP" ? "/pes-confirmation" : "/pap-enrollment-complete");
+    if (isNoPaIntake || isPapProgram) {
+      navigate(isPres ? "/pes-confirmation" : "/pap-enrollment-complete");
       return;
     }
     navigate(skipPayment ? "/delivery-confirmation" : "/delivery-payment");
@@ -101,7 +98,7 @@ export default function DeliveryDate() {
           title="Please select a delivery date from the available dates below"
           stepsFilled={2}
           stepsTotal={2}
-          wide={flowType === "PrES_PAP"}
+          wide={isPres}
         >
           <div className="space-y-5">
             <p className="text-sm leading-relaxed text-arx-body-copy">

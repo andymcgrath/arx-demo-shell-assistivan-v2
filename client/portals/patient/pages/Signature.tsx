@@ -4,6 +4,7 @@ import { usePatientCase } from "@/hooks/usePatientCase";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { PenLine, ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function Signature() {
   const navigate = useNavigate();
@@ -13,8 +14,8 @@ export default function Signature() {
   // Fax_PAP_Audit (WF2/PAP) patients have no insurance by definition — the
   // "Upload Insurance" step doesn't apply to them. Header.tsx's own nav list
   // already sends them to Income Verification next; this just matches it.
-  const isPapFlow = workflowData.flowType === "Fax_PAP_Audit";
-  const nextPath = isPapFlow ? "/income-qualification" : "/upload-insurance";
+  const { isFaxPap } = scenarioFacts(workflowData.flowType);
+  const nextPath = isFaxPap ? "/income-qualification" : "/upload-insurance";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
@@ -126,7 +127,7 @@ export default function Signature() {
                 // PAP skips Upload Insurance entirely, which is normally
                 // where CONFIRM_CONSENT fires — dispatch it here instead so
                 // consentStatus still flips to 'confirmed' for this flow.
-                if (isPapFlow) dispatch('CONFIRM_CONSENT', { portal: 'patient' });
+                if (isFaxPap) dispatch('CONFIRM_CONSENT', { portal: 'patient' });
                 navigate(nextPath);
               }}
               disabled={!hasSignature}
