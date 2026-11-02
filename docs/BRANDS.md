@@ -27,6 +27,39 @@ A brand sets up to three colors under `program.colors`. Only `brand` is required
 - `action`: the button color. Defaults to `brand`.
 - `source`: where the values came from. Read them from the live site's CSS or the logo file, not from a screenshot.
 
+### Match the client exactly
+
+Set `"fidelity": "exact"` to use the client's colors as given, even where contrast misses AA. The default (`accessible`) moves a color a little to pass AA. An exact brand:
+
+- keeps `brand`, `accent`, and `action` as set, with no darkening and no tint changes;
+- takes text color from `onAction` (buttons) and `onBrand` (badges, check circles, the chat header, the confirmation, the active step row, solid icon tiles) when set, and otherwise from whichever of white and near-black reads better;
+- must set `source`, because the point is to match a named site. The brand test checks it;
+- shows contrast misses as warnings in the Brand Lab and does not fail `pnpm test`.
+
+```json
+"colors": {
+  "brand": "#36b0c9",
+  "fidelity": "exact",
+  "onAction": "#ffffff",
+  "onBrand": "#ffffff",
+  "source": "https://www.lumryzrems.com/"
+}
+```
+
+`onAction` and `onBrand` also work without `exact`. Use one color for the brand and the button, so a screen never shows two versions of the client's color. The Brand Lab flags buttons that differ from brand fills.
+
+### Find the client's colors
+
+```bash
+pnpm brand:scan https://client-site.example
+```
+
+It reads the page and its stylesheets, ranks colors by the role they play (theme-color, brand variables, button fills, links, header), skips hover and status variants and stock framework colors, and prints an exact `colors` block with the evidence beside it. It does not read the logo's pixels, so compare the pick with the logo, then check it in the Brand Lab. A site that builds its styles in JavaScript gives no result, and you set the colors by hand.
+
+### Every screen uses the brand's colors
+
+Patient screens read color from tokens only: `bg-arx-action`, `text-arx-on-primary`, `text-arx-slate`, `bg-arx-white`, `border-arx-borders`, and the `hsl(var(--arx-...))` form in inline styles. Neutrals (white, black, status green) are fixed tokens too. A raw Tailwind palette class (`text-white`, `bg-gray-700`), a hex or rgb literal, or a color word fails `client/brand/__tests__/tokensOnly.test.ts`. The only exceptions are the screens that draw the phone's own interface (the lock screen and the text-message threads), named in that test with their reason. A fill goes with its own text token (`bg-arx-action` with `text-arx-on-action`, `bg-arx-primary` with `text-arx-on-primary`), and `client/engine/__tests__/patient.tokenPairs.test.tsx` renders every golden-path screen to check it.
+
 Buttons keep white text. When white misses WCAG AA on `action`, the fill darkens a little (same hue) until it passes. If that takes a big change, the color stays and the text turns near-black. Buttons use `action`. Headings, links, icons, bars, and confirmation screens use `brand`. Button hover shades derive from `action`. The brand test fails when button text misses AA. Logo and hero images go in `program.assets` (`logoColor`, `logoWhite`, optional `hero` and `background`). Logos must be transparent files. Do not use a CSS filter.
 
 `surfaces` holds style choices for the screens that use these colors. They are not colors, so brand, accent, and action stay the three-color standard. Every key is optional and a missing key takes its default. "Accent" below means the accent color, or the brand color when the brand has no accent.
@@ -56,7 +89,7 @@ Run `pnpm dev` and open `/brand-lab`. It is dev only and left out of client buil
 
 Two pairs are required and fail `pnpm test`: button text on the action color, and the confirmation heading (large text). The rest show as warnings in the Lab. Fix a warning by adjusting the color, not by editing the test.
 
-Code reads these as CSS variables. Brand: `--arx-primary` (same as `--arx-brand`), `--arx-primary-dark`, `--arx-primary-80`, `--arx-primary-30`, `--arx-accent`, `--arx-gradient`. Buttons: `--arx-action`, `--arx-action-hover`, `--arx-on-action`. Use the `bg-arx-action` family of Tailwind classes on buttons and `arx-primary` for everything else. Derivation lives in `client/brand/theme.ts`.
+Code reads these as CSS variables. Text on fills: `--arx-on-action`, `--arx-on-primary`, `--arx-on-hero`. Fixed neutrals: `--arx-white`, `--arx-black`, `--arx-success`. Brand: `--arx-primary` (same as `--arx-brand`), `--arx-primary-dark`, `--arx-primary-80`, `--arx-primary-30`, `--arx-accent`, `--arx-gradient`. Buttons: `--arx-action`, `--arx-action-hover`, `--arx-on-action`. Use the `bg-arx-action` family of Tailwind classes on buttons and `arx-primary` for everything else. Derivation lives in `client/brand/theme.ts`.
 
 ## Start from another brand
 

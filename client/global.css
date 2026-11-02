@@ -75,6 +75,14 @@
     --arx-on-primary: 0 0% 100%;
     --arx-on-primary-invert: 1;
     --arx-on-action-invert: 1;
+    /* Fixed neutrals and status colors. No brand changes these. */
+    --arx-white: 0 0% 100%;
+    --arx-black: 0 0% 0%;
+    --arx-success: 142.1 76.2% 36.3%;
+    --arx-success-bg: 138.5 76.5% 97.1%;
+    --arx-success-border: 141 79% 85%;
+    --arx-success-text: 142.2 64.4% 24.1%;
+    --arx-success-text-soft: 142.1 72.4% 29.2%;
     --arx-brand: 183 100% 22%;
     --arx-tile: var(--arx-sky);
     --arx-on-tile: var(--arx-brand);
@@ -151,6 +159,14 @@
     --arx-on-primary: 0 0% 100%;
     --arx-on-primary-invert: 1;
     --arx-on-action-invert: 1;
+    /* Fixed neutrals and status colors. No brand changes these. */
+    --arx-white: 0 0% 100%;
+    --arx-black: 0 0% 0%;
+    --arx-success: 142.1 76.2% 36.3%;
+    --arx-success-bg: 138.5 76.5% 97.1%;
+    --arx-success-border: 141 79% 85%;
+    --arx-success-text: 142.2 64.4% 24.1%;
+    --arx-success-text-soft: 142.1 72.4% 29.2%;
     --arx-brand: 184 100% 33%;
     --arx-tile: var(--arx-sky);
     --arx-on-tile: var(--arx-brand);
@@ -272,6 +288,14 @@
     --arx-on-primary: 0 0% 100%;
     --arx-on-primary-invert: 1;
     --arx-on-action-invert: 1;
+    /* Fixed neutrals and status colors. No brand changes these. */
+    --arx-white: 0 0% 100%;
+    --arx-black: 0 0% 0%;
+    --arx-success: 142.1 76.2% 36.3%;
+    --arx-success-bg: 138.5 76.5% 97.1%;
+    --arx-success-border: 141 79% 85%;
+    --arx-success-text: 142.2 64.4% 24.1%;
+    --arx-success-text-soft: 142.1 72.4% 29.2%;
     --arx-brand: 183 100% 22%;
     --arx-tile: var(--arx-sky);
     --arx-on-tile: var(--arx-brand);

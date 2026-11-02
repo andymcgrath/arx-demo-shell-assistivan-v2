@@ -8,6 +8,7 @@ import {
   buildTheme,
   contrastRatio,
   contrastReport,
+  FIDELITIES,
   normalizeHex,
   resolveSurfaces,
   rowPasses,
@@ -76,8 +77,11 @@ for (const slug of slugs) {
         if (colors[key] !== undefined) expect(() => normalizeHex(colors[key])).not.toThrow();
       }
       for (const key of Object.keys(colors)) {
-        expect(["brand", "accent", "action", "onAction", "onBrand", "surfaces", "source"].includes(key)).toBe(true);
+        expect(["brand", "accent", "action", "onAction", "onBrand", "fidelity", "surfaces", "source"].includes(key)).toBe(true);
       }
+      if (colors.fidelity !== undefined) expect(FIDELITIES).toContain(colors.fidelity);
+      // An exact brand uses the client's colors as given, so it says where they came from.
+      if (colors.fidelity === "exact") expect(typeof colors.source === "string" && colors.source.length > 0).toBe(true);
       // Throws on an unknown surface or option.
       expect(() => resolveSurfaces(colors.surfaces, !!colors.accent)).not.toThrow();
     });
@@ -86,6 +90,8 @@ for (const slug of slugs) {
       // Required: button text (4.5) and the confirmation heading (3.0, large text).
       // The other pairs are warnings in the Brand Lab (/brand-lab). See contrastReport in client/brand/theme.ts.
       if (KNOWN_LOW_CONTRAST.has(slug)) return;
+      // An exact brand lists its misses as warnings in the Brand Lab.
+      if (brand.program.colors.fidelity === "exact") return;
       const failing = contrastReport(buildTheme(brand.program.colors))
         .filter((r) => r.required && !rowPasses(r))
         .map((r) => `${r.label}: ${r.ratio.toFixed(2)}`);
@@ -94,6 +100,7 @@ for (const slug of slugs) {
 
     it("has readable button text (WCAG AA)", () => {
       if (KNOWN_LOW_CONTRAST.has(slug)) return;
+      if (brand.program.colors.fidelity === "exact") return;
       const theme = buildTheme(brand.program.colors);
       expect(contrastRatio(theme.onAction, theme.action)).toBeGreaterThanOrEqual(AA_CONTRAST);
     });

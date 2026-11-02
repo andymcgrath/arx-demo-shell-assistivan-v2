@@ -105,7 +105,7 @@ export default function DeliveryPayment() {
   return (
     <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
+          <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
 
             {/* Header band */}
             <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
@@ -209,13 +209,13 @@ export default function DeliveryPayment() {
                   <div
                     className="w-5 h-5 rounded flex items-center justify-center transition-colors"
                     style={{
-                      backgroundColor: autoRefill ? "#007178" : "#fff",
-                      border: `2px solid ${autoRefill ? "#007178" : "#E0E0E0"}`,
+                      backgroundColor: autoRefill ? "hsl(var(--arx-primary))" : "hsl(var(--arx-white))",
+                      border: `2px solid ${autoRefill ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))"}`,
                     }}
                   >
                     {autoRefill && (
                       <svg viewBox="0 0 12 9" fill="none" className="w-3 h-3">
-                        <path d="M1 4.5L4.5 8L11 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M1 4.5L4.5 8L11 1" stroke="hsl(var(--arx-white))" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </div>
@@ -231,9 +231,9 @@ export default function DeliveryPayment() {
               {/* Apple Pay */}
               <button
                 onClick={completePayment}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg font-semibold text-white bg-black hover:bg-arx-slate transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg font-semibold text-arx-white bg-arx-black hover:bg-arx-slate transition-colors"
               >
-                <svg viewBox="0 0 60 26" className="h-5 fill-white" aria-hidden="true">
+                <svg viewBox="0 0 60 26" className="h-5 fill-arx-white" aria-hidden="true">
                   <path d="M11.9 3.6c-.8 1-2 1.7-3.3 1.6-.2-1.3.5-2.7 1.2-3.5C10.6.7 12 0 13.1.1c.1 1.4-.4 2.7-1.2 3.5zm1.2 1.8c-1.8-.1-3.4 1-4.3 1-.9 0-2.2-1-3.7-.9C3.3 5.6 1.6 6.7.8 8.4c-1.7 3 .4 7.4 1.9 9.8.7 1.1 1.6 2.4 2.8 2.3 1.1 0 1.5-.7 2.9-.7 1.3 0 1.7.7 2.9.7 1.2 0 2-1.1 2.7-2.2.9-1.3 1.2-2.5 1.2-2.6 0 0-2.4-1-2.4-3.7 0-2.3 1.9-3.4 2-3.5-.9-1.5-2.5-1.7-2.7-1.7z" />
                   <text x="18" y="18" fontSize="14" fontFamily="-apple-system, sans-serif" fontWeight="600">Pay</text>
                 </svg>
@@ -249,7 +249,7 @@ export default function DeliveryPayment() {
               <div className="rounded-xl overflow-hidden border border-arx-borders">
                 <button
                   onClick={() => setCardOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold text-arx-slate bg-white hover:bg-arx-background transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold text-arx-slate bg-arx-white hover:bg-arx-background transition-colors"
                 >
                   <span>Pay with Card</span>
                   {cardOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

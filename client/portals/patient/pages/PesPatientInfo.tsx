@@ -34,7 +34,7 @@ function FloatingInput({ label, value, onChange, required = true, type = "text" 
           top: lifted ? "6px" : "50%",
           transform: lifted ? "none" : "translateY(-50%)",
           fontSize: lifted ? "10px" : "14px",
-          color: focused ? "#007178" : "#6F7276",
+          color: focused ? "hsl(var(--arx-primary))" : "hsl(var(--arx-body-copy))",
         }}
       >
         {label}{required && "*"}
@@ -45,8 +45,8 @@ function FloatingInput({ label, value, onChange, required = true, type = "text" 
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="w-full pt-5 pb-2 px-4 rounded-xl text-sm outline-none transition-colors text-arx-slate bg-white"
-        style={{ border: `1.5px solid ${focused ? "#007178" : "#E0E0E0"}` }}
+        className="w-full pt-5 pb-2 px-4 rounded-xl text-sm outline-none transition-colors text-arx-slate bg-arx-white"
+        style={{ border: `1.5px solid ${focused ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))"}` }}
       />
     </div>
   );
@@ -61,7 +61,7 @@ function SelectField({ label, value, onChange, options, required = true }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-3 px-4 rounded-xl text-sm outline-none text-arx-slate bg-white border border-arx-borders focus:border-arx-primary transition-colors"
+        className="w-full py-3 px-4 rounded-xl text-sm outline-none text-arx-slate bg-arx-white border border-arx-borders focus:border-arx-primary transition-colors"
       >
         <option value="">Select one</option>
         {options.map((o) => (
@@ -148,9 +148,9 @@ export default function PesPatientInfo() {
                     onClick={() => setGender(g)}
                     className="flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-colors"
                     style={{
-                      borderColor: gender === g ? "hsl(var(--arx-primary))" : "#e5e5e5",
-                      backgroundColor: gender === g ? "hsl(var(--arx-sky) / 0.25)" : "white",
-                      color: gender === g ? "hsl(var(--arx-primary))" : "#414042",
+                      borderColor: gender === g ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))",
+                      backgroundColor: gender === g ? "hsl(var(--arx-sky) / 0.25)" : "hsl(var(--arx-white))",
+                      color: gender === g ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
                     }}
                   >
                     {g}
@@ -187,9 +187,9 @@ export default function PesPatientInfo() {
                     onClick={() => setPrimaryPhoneType(t)}
                     className="flex-1 py-2 rounded-lg border text-xs font-semibold transition-colors"
                     style={{
-                      borderColor: primaryPhoneType === t ? "hsl(var(--arx-primary))" : "#e5e5e5",
-                      backgroundColor: primaryPhoneType === t ? "hsl(var(--arx-sky) / 0.25)" : "white",
-                      color: primaryPhoneType === t ? "hsl(var(--arx-primary))" : "#414042",
+                      borderColor: primaryPhoneType === t ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))",
+                      backgroundColor: primaryPhoneType === t ? "hsl(var(--arx-sky) / 0.25)" : "hsl(var(--arx-white))",
+                      color: primaryPhoneType === t ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
                     }}
                   >
                     {t}
@@ -209,9 +209,9 @@ export default function PesPatientInfo() {
                   onClick={() => setPreferredLanguage(l)}
                   className="flex-1 py-2 rounded-lg border text-xs font-semibold transition-colors"
                   style={{
-                    borderColor: preferredLanguage === l ? "hsl(var(--arx-primary))" : "#e5e5e5",
-                    backgroundColor: preferredLanguage === l ? "hsl(var(--arx-sky) / 0.25)" : "white",
-                    color: preferredLanguage === l ? "hsl(var(--arx-primary))" : "#414042",
+                    borderColor: preferredLanguage === l ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))",
+                    backgroundColor: preferredLanguage === l ? "hsl(var(--arx-sky) / 0.25)" : "hsl(var(--arx-white))",
+                    color: preferredLanguage === l ? "hsl(var(--arx-primary))" : "hsl(var(--arx-slate))",
                   }}
                 >
                   {l}

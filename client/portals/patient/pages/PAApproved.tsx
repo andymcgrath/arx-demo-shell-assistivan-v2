@@ -33,7 +33,7 @@ export default function PAApproved() {
         <div className="max-w-lg mx-auto px-4 space-y-5">
 
           {/* PA Approved card */}
-          <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-center justify-between mb-4">
               <ProgramLogo variant="colors" />
               <span className="text-xs text-arx-body-copy">{dateStr}, {timeStr}</span>
@@ -81,7 +81,7 @@ export default function PAApproved() {
               Pricing screen that follows; iAssist_PAP (WF5) dispenses via a
               site of care, not a pharmacy copay, so skip it here too. */}
           {!isStandardFaxPa && !hasPricingFork && !isIAssistPap && (
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h2 className="text-xl font-bold leading-snug text-arx-slate">
                   You might be eligible for the {PROGRAM.drugDisplayName} Copay program!
@@ -134,7 +134,7 @@ export default function PAApproved() {
               <span className="w-2 h-2 rounded-full bg-arx-primary inline-block" />
               <h3 className="font-semibold text-sm text-arx-link">Suggested for you</h3>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+            <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h4 className="text-lg font-bold leading-snug text-arx-slate">Get ready for {PROGRAM.drugDisplayName}</h4>
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-arx-sky">

@@ -8,8 +8,8 @@ const TEAL_FILTER =
 
 interface ManufacturerLogoProps {
   /** "colors" → brand-colored logo, for white/light backgrounds (default)
-   *  "white"  → all-white logo, for teal/dark backgrounds */
-  variant?: "colors" | "white";
+   *  "hsl(var(--arx-white))"  → all-white logo, for teal/dark backgrounds */
+  variant?: "colors" | "hsl(var(--arx-white))";
   /** Standard box. See logoSizes.ts. Default "header". */
   size?: ManufacturerLogoSize;
   /** Extras such as `flex-shrink-0`. Do not set width or height here. */
@@ -23,7 +23,7 @@ export default function ManufacturerLogo({
 }: ManufacturerLogoProps) {
   const classes = `${MANUFACTURER_LOGO_SIZES[size]} ${className ?? ""}`.trim();
 
-  if (variant === "white") {
+  if (variant === "hsl(var(--arx-white))") {
     return <img src={MANUFACTURER.logo.white} alt={MANUFACTURER.name} className={classes} />;
   }
 

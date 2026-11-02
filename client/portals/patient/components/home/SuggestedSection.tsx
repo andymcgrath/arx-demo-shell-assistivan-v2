@@ -35,7 +35,7 @@ export default function SuggestedSection() {
       {/* Suggestion cards */}
       <div className="space-y-4">
         {suggestions.map((item) => (
-          <div key={item.title} className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+          <div key={item.title} className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start justify-between gap-3">
               {/* Shares a row with the icon, so h4. */}
               <h3 className="text-h4 text-arx-slate">{item.title}</h3>

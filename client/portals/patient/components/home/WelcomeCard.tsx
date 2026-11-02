@@ -10,7 +10,7 @@ export default function WelcomeCard() {
   const firstName = patientName.split(" ")[0];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-5 border border-arx-borders">
+    <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
       <div className="flex items-start justify-between gap-3">
         {/* Shares a row with the icon, so h4. */}
         <h2 className="text-h4 text-arx-slate">

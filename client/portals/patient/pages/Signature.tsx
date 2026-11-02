@@ -103,7 +103,7 @@ export default function Signature() {
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-arx-borders bg-white">
+            <div className="rounded-xl overflow-hidden border border-arx-borders bg-arx-white">
               <canvas
                 ref={canvasRef}
                 width={600}

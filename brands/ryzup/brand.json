@@ -43,7 +43,7 @@
     },
     "colors": {
       "brand": "#36b0c9",
-      "action": "#278093",
+      "fidelity": "exact",
       "onAction": "#ffffff",
       "onBrand": "#ffffff",
       "source": "https://www.lumryzrems.com/"

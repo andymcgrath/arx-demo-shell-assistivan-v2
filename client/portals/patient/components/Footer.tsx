@@ -3,7 +3,7 @@ import { MANUFACTURER } from "@/portals/patient/config/branding";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-white border-t border-arx-borders shadow-sm">
+    <footer className="w-full bg-arx-white border-t border-arx-borders shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-2">
 
         {/* Row 1: Logo + tagline inline */}

@@ -80,7 +80,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      style={{ backgroundColor: "rgba(65,64,66,0.5)" }}
+      style={{ backgroundColor: "hsl(var(--arx-slate) / 0.5)" }}
       onClick={onClose}
     >
       {/* Single teal container */}
@@ -92,7 +92,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-arx-on-primary/20">
               <img src={CHATBOT_ICON} alt="" className="w-6 h-6 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
             </div>
             <div className="flex flex-col">
@@ -106,7 +106,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
         </div>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-white/10">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-arx-on-primary/10">
           {messages.map((msg) =>
             msg.role === "bot" ? (
               <BotMessage key={msg.id} text={msg.text} />
@@ -120,7 +120,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
 
         {/* Input row */}
         <div className="flex-shrink-0 px-4 pb-4 pt-3">
-          <div className="flex items-center gap-2 rounded-xl px-4 py-2 bg-white border border-white">
+          <div className="flex items-center gap-2 rounded-xl px-4 py-2 bg-arx-white border border-arx-white">
               <input
                 ref={inputRef}
                 type="text"
@@ -152,10 +152,10 @@ export default function ChatModal({ onClose }: ChatModalProps) {
 function BotMessage({ text }: { text: string }) {
   return (
     <div className="flex items-end gap-2">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-arx-on-primary/20">
         <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
       </div>
-      <div className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed bg-white text-arx-slate">
+      <div className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed bg-arx-white text-arx-slate">
         {text}
       </div>
     </div>
@@ -165,7 +165,7 @@ function BotMessage({ text }: { text: string }) {
 function UserMessage({ text }: { text: string }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-white text-arx-link font-medium">
+      <div className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed bg-arx-white text-arx-link font-medium">
         {text}
       </div>
     </div>
@@ -175,10 +175,10 @@ function UserMessage({ text }: { text: string }) {
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-arx-on-primary/20">
         <img src={CHATBOT_ICON} alt="" className="w-4 h-4 object-contain" style={{ filter: "brightness(0) invert(var(--arx-on-primary-invert))" }} />
       </div>
-      <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center bg-white">
+      <div className="rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center bg-arx-white">
         {[0, 1, 2].map((i) => (
           <span
             key={i}

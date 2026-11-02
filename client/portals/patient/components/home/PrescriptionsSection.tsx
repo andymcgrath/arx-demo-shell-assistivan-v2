@@ -43,7 +43,7 @@ export default function PrescriptionsSection() {
           >
             {/* Logo switches to white on hover */}
             <ProgramLogo
-              variant={hoveredIndex === index ? "white" : "colors"}
+              variant={hoveredIndex === index ? "hsl(var(--arx-white))" : "colors"}
               size="row" className="flex-shrink-0"
             />
             <div className="flex-1 text-left">

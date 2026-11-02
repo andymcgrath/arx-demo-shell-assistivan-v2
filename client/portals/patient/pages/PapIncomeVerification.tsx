@@ -81,7 +81,7 @@ export default function PapIncomeVerification() {
                     setIncomeRaw(e.target.value.replace(/\D/g, ""));
                     if (errors.income) setErrors((p) => ({ ...p, income: undefined }));
                   }}
-                  className="w-full pl-8 pr-4 py-3.5 rounded-xl text-sm outline-none transition-colors border border-arx-borders bg-white text-arx-slate focus:border-arx-primary"
+                  className="w-full pl-8 pr-4 py-3.5 rounded-xl text-sm outline-none transition-colors border border-arx-borders bg-arx-white text-arx-slate focus:border-arx-primary"
                 />
               </div>
               {errors.income && <p className="text-xs text-arx-errors mt-1">{errors.income}</p>}
@@ -103,7 +103,7 @@ export default function PapIncomeVerification() {
                   setHouseholdSize(e.target.value);
                   if (errors.size) setErrors((p) => ({ ...p, size: undefined }));
                 }}
-                className="w-full px-4 py-3.5 rounded-xl text-sm outline-none transition-colors border border-arx-borders bg-white text-arx-slate focus:border-arx-primary"
+                className="w-full px-4 py-3.5 rounded-xl text-sm outline-none transition-colors border border-arx-borders bg-arx-white text-arx-slate focus:border-arx-primary"
               />
               {errors.size && <p className="text-xs text-arx-errors mt-1">{errors.size}</p>}
             </div>
@@ -119,7 +119,7 @@ export default function PapIncomeVerification() {
                   setState(e.target.value);
                   if (errors.state) setErrors((p) => ({ ...p, state: undefined }));
                 }}
-                className="w-full px-4 py-3.5 rounded-xl text-sm outline-none transition-colors appearance-none border border-arx-borders bg-white text-arx-slate focus:border-arx-primary"
+                className="w-full px-4 py-3.5 rounded-xl text-sm outline-none transition-colors appearance-none border border-arx-borders bg-arx-white text-arx-slate focus:border-arx-primary"
               >
                 <option value="">Select your state</option>
                 {US_STATES.map((s) => (

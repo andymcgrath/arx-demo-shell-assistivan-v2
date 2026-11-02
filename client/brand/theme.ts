@@ -58,10 +58,20 @@ export type ResolvedSurfaces = { [K in SurfaceKey]: (typeof SURFACE_OPTIONS)[K][
 export type ConfirmationStyle = (typeof SURFACE_OPTIONS.confirmation)[number];
 export const CONFIRMATION_STYLES: ConfirmationStyle[] = [...SURFACE_OPTIONS.confirmation];
 
+export type Fidelity = "accessible" | "exact";
+export const FIDELITIES: Fidelity[] = ["accessible", "exact"];
+
 export interface BrandColors {
   brand: string;
   accent?: string;
   action?: string;
+  /**
+   * `accessible` (default): the theme moves derived colors to reach WCAG AA, and the brand test fails a brand it cannot fix.
+   * `exact`: every color is used as the client set it. A pair that misses AA is a warning in the Brand Lab and no test
+   * failure. The brand must record `source`. Text defaults to the better of white and near-black unless `onAction` or
+   * `onBrand` is set.
+   */
+  fidelity?: Fidelity;
   /**
    * Text on `action` fills (buttons). Optional. Left out, the theme picks white, or near-black when white misses AA.
    * Set it to fix the color for the whole brand. The fill is then not darkened. A pair that misses AA shows in the Brand Lab.
@@ -402,14 +412,15 @@ export function resolveSurfaces(surfaces: Surfaces | undefined, hasAccent: boole
 
 export interface BuildThemeOptions {
   /**
-   * Move derived colors (the tint, the button fill) to reach AA. Default true. The Brand Lab turns it off to show a
-   * brand as set, so you can see what the adjustment changes.
+   * Move derived colors (the tint, the button fill) to reach AA. Default true, and false for a brand whose
+   * `fidelity` is `exact`. The Brand Lab turns it off to show a brand as set, so you can see what the adjustment changes.
    */
   autoAdjust?: boolean;
 }
 
 export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {}): BrandTheme {
-  const autoAdjust = options.autoAdjust ?? true;
+  const exact = colors.fidelity === "exact";
+  const autoAdjust = options.autoAdjust ?? !exact;
   const brand = normalizeHex(colors.brand);
   const accent = colors.accent ? normalizeHex(colors.accent) : undefined;
   const accentOrBrand = accent ?? brand;
@@ -431,7 +442,8 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     });
   }
   const action = autoAdjust ? button.action : requestedAction;
-  const onAction = explicitOnAction ?? (autoAdjust ? button.onAction : WHITE);
+  // An exact brand keeps the fill, so the text is whichever of white and near-black reads better on it.
+  const onAction = explicitOnAction ?? (exact && options.autoAdjust === undefined ? readableOn(action) : autoAdjust ? button.onAction : WHITE);
   const onBrand = colors.onBrand ? normalizeHex(colors.onBrand) : contrastRatio(WHITE, brand) >= AA_CONTRAST ? WHITE : readableOn(brand);
 
   // Brand text sits on the tint (Rx tile, selected rows). Lighten the tint until it reaches AA 4.5.
@@ -463,7 +475,9 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
   const { hero, stops } = heroFor(surfaces.confirmation, brand, accent, gradient);
 
   const tileBg = surfaces.tiles === "tint" ? tint : accentOrBrand;
-  const tileFg = surfaces.tiles === "tint" ? brand : readableOn(accentOrBrand);
+  // Where a surface is filled with the brand color and the brand file sets `onBrand`, its text follows that choice.
+  const textOn = (bg: string) => (colors.onBrand && bg === brand ? onBrand : readableOn(bg));
+  const tileFg = surfaces.tiles === "tint" ? brand : textOn(accentOrBrand);
   const stepRow = surfaces.stepRow === "accent" ? accentOrBrand : brand;
   // A marker the same color as its row would vanish, so it falls back to white.
   const wanted = surfaces.marker === "accent" ? accentOrBrand : surfaces.marker === "brand" ? brand : WHITE;
@@ -476,14 +490,14 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     surfaces,
     hero,
     heroStops: stops,
-    onHero: readableOverAll(heroTextBackgrounds(stops)),
+    onHero: colors.onBrand && stops[0] === brand && stops[1] === brand ? onBrand : readableOverAll(heroTextBackgrounds(stops)),
     strip: surfaces.strip === "none" ? WHITE : surfaces.strip === "brand" ? brand : accentOrBrand,
     tileBg,
     tileFg,
     stepRow,
-    onStepRow: readableOn(stepRow),
+    onStepRow: textOn(stepRow),
     marker,
-    onMarker: marker === WHITE ? brand : readableOn(marker),
+    onMarker: marker === WHITE ? brand : textOn(marker),
     link: surfaces.headings === "dark" ? dark : brand,
     brand,
     accent,

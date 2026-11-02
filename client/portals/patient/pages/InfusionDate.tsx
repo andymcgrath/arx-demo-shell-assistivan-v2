@@ -69,15 +69,15 @@ export default function InfusionDate() {
               </label>
               <button
                 onClick={() => setOpen(v => !v)}
-                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium text-left bg-white text-arx-slate transition-colors"
-                style={{ border: `1.5px solid ${open ? "#007178" : "#E0E0E0"}` }}
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium text-left bg-arx-white text-arx-slate transition-colors"
+                style={{ border: `1.5px solid ${open ? "hsl(var(--arx-primary))" : "hsl(var(--arx-borders))"}` }}
               >
                 <span>{selected ? formatDate(selected) : "Select a date"}</span>
                 <CalendarDays className="w-5 h-5 flex-shrink-0 text-arx-link" />
               </button>
 
               {open && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg overflow-auto z-20 border border-arx-borders" style={{ maxHeight: "220px" }}>
+                <div className="absolute left-0 right-0 top-full mt-1 bg-arx-white rounded-xl shadow-lg overflow-auto z-20 border border-arx-borders" style={{ maxHeight: "220px" }}>
                   {available.map((d, i) => {
                     const isSelected = selected?.toDateString() === d.toDateString();
                     return (

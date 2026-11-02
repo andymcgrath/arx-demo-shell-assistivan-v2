@@ -56,7 +56,7 @@ export default function EnrollmentShell({
       </div>
 
       {/* Card wrapper */}
-      <div className={`bg-white rounded-2xl shadow-sm border border-arx-borders ${wide ? "p-10" : "p-5"}`}>
+      <div className={`bg-arx-white rounded-2xl shadow-sm border border-arx-borders ${wide ? "p-10" : "p-5"}`}>
         {children}
       </div>
     </div>

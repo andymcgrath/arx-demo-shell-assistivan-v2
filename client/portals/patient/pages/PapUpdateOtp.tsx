@@ -127,7 +127,7 @@ export default function PapUpdateOtp() {
           >
             {isVerifying ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce" />
+                <span className="inline-block w-2 h-2 bg-arx-white rounded-full animate-bounce" />
                 Verifying...
               </span>
             ) : (

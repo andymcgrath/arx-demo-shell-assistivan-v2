@@ -74,7 +74,7 @@ export default function EnrollmentComplete() {
               dispatch('REFERRAL_RECEIVED', { portal: 'patient' });
               navigate(isCopayMailOrder ? "/order-tracker" : "/");
             }}
-            className="w-full bg-white text-arx-brand font-semibold py-4 rounded-lg hover:bg-arx-primary-30 transition-colors"
+            className="w-full bg-arx-white text-arx-brand font-semibold py-4 rounded-lg hover:bg-arx-primary-30 transition-colors"
           >
             Got it
           </button>

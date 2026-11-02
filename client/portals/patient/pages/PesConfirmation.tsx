@@ -37,7 +37,7 @@ export default function PesConfirmation() {
 
         <button
           onClick={() => navigate("/")}
-          className="w-full bg-white text-arx-link font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"
+          className="w-full bg-arx-white text-arx-link font-semibold py-4 rounded-lg hover:bg-arx-sky transition-colors"
         >
           Got it
         </button>

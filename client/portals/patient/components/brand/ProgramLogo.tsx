@@ -3,8 +3,8 @@ import { PROGRAM_LOGO_SIZES, PROGRAM_LOGO_TEXT_SIZES, type ProgramLogoSize } fro
 
 interface ProgramLogoProps {
   /** "colors" → brand-colored logo, for white/light backgrounds (default)
-   *  "white"  → all-white logo, for dark backgrounds */
-  variant?: "colors" | "white";
+   *  "hsl(var(--arx-white))"  → all-white logo, for dark backgrounds */
+  variant?: "colors" | "hsl(var(--arx-white))";
   /** Standard box. See logoSizes.ts. Default "card". */
   size?: ProgramLogoSize;
   /** Extras such as `flex-shrink-0`. Do not set width or height here. */
@@ -21,14 +21,14 @@ export default function ProgramLogo({
   size = "card",
   className,
 }: ProgramLogoProps) {
-  const src = variant === "white" ? PROGRAM.assets.logoWhite : PROGRAM.assets.logoColor;
+  const src = variant === "hsl(var(--arx-white))" ? PROGRAM.assets.logoWhite : PROGRAM.assets.logoColor;
   const box = PROGRAM_LOGO_SIZES[size];
 
   if (!src) {
     return (
       <span
         className={`${PROGRAM_LOGO_TEXT_SIZES[size]} ${className ?? ""} inline-block whitespace-nowrap font-bold tracking-tight leading-none`}
-        style={{ color: variant === "white" ? "#ffffff" : "hsl(var(--arx-brand))" }}
+        style={{ color: variant === "hsl(var(--arx-white))" ? "hsl(var(--arx-white))" : "hsl(var(--arx-brand))" }}
       >
         {PROGRAM.name}
       </span>
