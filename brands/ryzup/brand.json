@@ -18,7 +18,7 @@
     "name": "RyzUp Support Services",
     "tagline": "Patient assistance & medication access program",
     "logo": {
-      "colors": "/brands/alkermes-ryzup/imgi_3_Frame 1321316007.png",
+      "colors": "/brands/ryzup/imgi_3_Frame 1321316007.png",
       "requiresFilter": false
     },
     "support": {
@@ -38,8 +38,8 @@
     "description": "",
     "dosageForm": "Tablet",
     "assets": {
-      "logoColor": "brands/alkermes-ryzup/Lumryz-color.png",
-      "logoWhite": "brands/alkermes-ryzup/Lumryz-white.png"
+      "logoColor": "brands/ryzup/Lumryz-color.png",
+      "logoWhite": "brands/ryzup/Lumryz-white.png"
     },
     "colors": {
       "brand": "#36b0c9",
@@ -54,6 +54,6 @@
       "phone": "(866) 930-4146"
     }
   },
-  "chatbotIcon": "brands/alkermes-ryzup/1786424090136-482GS01.svg",
-  "favicon": "brands/alkermes-ryzup/favicon.ico"
+  "chatbotIcon": "brands/ryzup/1786424090136-482GS01.svg",
+  "favicon": "brands/ryzup/favicon.ico"
 }
