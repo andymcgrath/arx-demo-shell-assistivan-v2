@@ -8,15 +8,11 @@ interface Prescription {
   status: string;
 }
 
-const prescriptions: Prescription[] = [
-  {
-    name: PROGRAM.name,
-    status: "Prescription received",
-  },
-];
+const DEFAULT_STATUS = "Prescription received";
 
-export default function PrescriptionsSection() {
+export default function PrescriptionsSection({ status = DEFAULT_STATUS }: { status?: string }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const prescriptions: Prescription[] = [{ name: PROGRAM.name, status }];
 
   return (
     <div>

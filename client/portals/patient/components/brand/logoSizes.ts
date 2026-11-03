@@ -7,7 +7,7 @@
  */
 export const MANUFACTURER_LOGO_SIZES = {
   /** Top bar. Leaves room for the menu button and the help link on a phone. */
-  header: "w-[140px] h-10 object-contain object-center",
+  header: "w-[140px] h-10 object-contain object-left",
   /** Half the header box (70 x 20 against 140 x 40). Keep it at 50%. */
   footer: "w-[70px] h-5 object-contain object-left",
 } as const;

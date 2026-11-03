@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ArrowRight, ChevronRight, Play, X, Calendar, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Play, X, Calendar, MapPin, Phone } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useChatContext } from "@/portals/patient/components/ChatContext";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
+import PrescriptionsSection from "@/portals/patient/components/home/PrescriptionsSection";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import { useFreeDrug } from "@/hooks/useFreeDrug";
@@ -202,24 +203,7 @@ export default function MedicationDelivered() {
           )}
 
           {/* Prescriptions section */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-arx-primary inline-block" />
-                <span className="font-bold text-arx-slate text-base">Prescriptions</span>
-              </div>
-              <button className="flex items-center gap-1 text-sm font-semibold text-arx-link hover:text-arx-primary-80 transition-colors">
-                View all <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-            <button className="w-full flex items-center gap-4 text-arx-on-primary rounded-xl px-4 py-3.5 bg-arx-primary hover:bg-arx-primary-dark transition-colors">
-              <ProgramLogo variant="hsl(var(--arx-white))" className="flex-shrink-0" />
-              <div className="flex-1 text-left">
-                <p className="text-xs text-arx-on-primary/80">Review prescribing information</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-arx-on-primary/70" />
-            </button>
-          </section>
+          <PrescriptionsSection status="Review prescribing information" />
 
           {/* Suggested section */}
           <section>

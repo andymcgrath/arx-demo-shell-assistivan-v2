@@ -51,7 +51,7 @@ export default function Header() {
           </button>
 
           {/* Logo */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-start">
             <ManufacturerLogo size="header" />
           </div>
 
