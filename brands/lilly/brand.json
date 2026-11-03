@@ -6,7 +6,8 @@
   "manufacturer": {
     "name": "Lilly Support Services",
     "logo": {
-      "colors": "/brands/lilly/lilly-logo.svg",
+      "colors": "/brands/lilly/lilly-red.png",
+      "white": "/brands/lilly/lilly-white.png",
       "requiresFilter": false
     },
     "copyright": "©{{YEAR}} Eli Lilly and Company. All Rights Reserved."
@@ -16,13 +17,13 @@
     "drugDisplayName": "Foundayo (orforglipron) tablets",
     "assets": {
       "logoColor": "brands/lilly/foundayo-color.png",
-      "logoWhite": null
+      "logoWhite": "brands/lilly/foundayo-white.png"
     },
     "colors": {
-      "brand": "#D31710",
+      "brand": "#345db5",
+      "onAction": "#ffffff",
+      "onBrand": "#ffffff",
       "fidelity": "exact",
-      "onAction": "#FFFFFF",
-      "onBrand": "#FFFFFF",
       "source": "https://www.lilly.com/"
     }
   },

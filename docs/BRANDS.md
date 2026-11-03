@@ -56,6 +56,12 @@ pnpm brand:scan https://client-site.example
 
 It reads the page and its stylesheets, ranks colors by the role they play (theme-color, brand variables, button fills, links, header), skips hover and status variants and stock framework colors, and prints an exact `colors` block with the evidence beside it. It does not read the logo's pixels, so compare the pick with the logo, then check it in the Brand Lab. A site that builds its styles in JavaScript gives no result, and you set the colors by hand.
 
+A site that answers 403 blocks scripts. Open it in a browser, choose File > Save Page As (web page, complete), and scan the saved file. Its stylesheets are read from the folder beside it.
+
+```bash
+pnpm brand:scan page.html --source https://client-site.example
+```
+
 ### Every screen uses the brand's colors
 
 Patient screens read color from tokens only: `bg-arx-action`, `text-arx-on-primary`, `text-arx-slate`, `bg-arx-white`, `border-arx-borders`, and the `hsl(var(--arx-...))` form in inline styles. Neutrals (white, black, status green) are fixed tokens too. A raw Tailwind palette class (`text-white`, `bg-gray-700`), a hex or rgb literal, or a color word fails `client/brand/__tests__/tokensOnly.test.ts`. The only exceptions are the screens that draw the phone's own interface (the lock screen and the text-message threads), named in that test with their reason. A fill goes with its own text token (`bg-arx-action` with `text-arx-on-action`, `bg-arx-primary` with `text-arx-on-primary`), and `client/engine/__tests__/patient.tokenPairs.test.tsx` renders every golden-path screen to check it.
