@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./harness";
-import { SCENARIOS } from "./scenarios";
+import { SCENARIOS as GOLDEN_PATHS } from "./scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
+
+/** A web-source scenario has no CRM, and its BI and PA land on system timers (see coassist.web.test.ts), so no agent opens a stage. */
+const SCENARIOS = GOLDEN_PATHS.filter((s) => !scenarioFacts(s.flowType).isWebSource);
 
 /**
  * The CRM's visible 3 second wait. The agent opens the BI stage and sees "Running" for 3 seconds, then the result. Same

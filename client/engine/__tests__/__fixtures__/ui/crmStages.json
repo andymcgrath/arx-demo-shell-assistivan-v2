@@ -4579,6 +4579,452 @@
       }
     ]
   },
+  "coa-web-copay-enroll-while-pa-runs": {
+    "flowType": "CoA_Web_Copay",
+    "steps": [
+      {
+        "after": "(start)",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Pending",
+            "statusDetail": "SMS sent — awaiting patient consent",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Not Started",
+            "statusDetail": "Awaiting case creation",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Stage not started",
+            "statusDetail": "Awaiting BI completion",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "PA Status",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "CO-14281",
+            "name": "Cash Offer",
+            "statusLabel": "Stage not started",
+            "statusDetail": "Awaiting PA denial",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Offer Status",
+                "value": null
+              },
+              {
+                "label": "Payment Verified",
+                "value": "No"
+              },
+              {
+                "label": "Ship Date",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting pharmacy selection",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "WEB_SUBMIT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Complete",
+            "statusDetail": "Enrollment Completed",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Running",
+            "statusDetail": "Investigating patient benefits...",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Complete",
+            "statusDetail": "Complete",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Submitted",
+            "statusDetail": "Awaiting payer decision",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "PA Status",
+                "value": "Submitted"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "WEB_HANDOFF",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "SELECT_SELF_PAY",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "APPROVE_PA",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Approved",
+            "statusDetail": "PA Approved — pricing options sent to patient",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "PA Status",
+                "value": "Approved"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "CO-14281",
+            "name": "Cash Offer",
+            "statusLabel": "Stage not started",
+            "statusDetail": "Awaiting price selection and scheduling",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Offer Status",
+                "value": null
+              },
+              {
+                "label": "Payment Verified",
+                "value": "No"
+              },
+              {
+                "label": "Ship Date",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "VERIFY_PA_APPROVED_SMS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_PA_APPROVED_OTP",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": [
+          {
+            "id": "CO-14281",
+            "name": "Cash Offer",
+            "statusLabel": "Complete",
+            "statusDetail": "Copay Selected (Mail Order)",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Offer Status",
+                "value": null
+              },
+              {
+                "label": "Payment Verified",
+                "value": "No"
+              },
+              {
+                "label": "Ship Date",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Pharmacy selected — awaiting dispatch",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "FutureScripts Home Delivery"
+              },
+              {
+                "label": "Status",
+                "value": "Pharmacy Selected"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": []
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": [
+          {
+            "id": "CO-14281",
+            "name": "Cash Offer",
+            "statusLabel": "Complete",
+            "statusDetail": "Copay Selected (Mail Order)",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Offer Status",
+                "value": null
+              },
+              {
+                "label": "Payment Verified",
+                "value": "No"
+              },
+              {
+                "label": "Ship Date",
+                "value": "1/15/2026"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Complete",
+            "statusDetail": "Dispatched via Mail Order — filled outside AssistRx",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "FutureScripts Home Delivery"
+              },
+              {
+                "label": "Status",
+                "value": "Dispatched"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": []
+      },
+      {
+        "after": "SHIP_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": []
+      },
+      {
+        "after": "DELIVER_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277"
+        ],
+        "changed": []
+      }
+    ]
+  },
   "coa-coverage-1-pharmacy-covered": {
     "flowType": "CoA_Coverage",
     "steps": [

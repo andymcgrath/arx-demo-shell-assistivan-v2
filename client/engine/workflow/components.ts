@@ -9,7 +9,7 @@ import type { ForkExit } from "./types";
  */
 
 /** The scaffold a scenario starts from. It sets the intake, the apps, the first actor, and the opening data. */
-export type SourceId = "coassist" | "iassist" | "fulfillment_center" | "pres" | "pes";
+export type SourceId = "coassist" | "iassist" | "fulfillment_center" | "pres" | "pes" | "web";
 
 /** `system` steps the patient never sees. `patient` steps are reached by a notification such as an SMS magic link. */
 export type ModuleLane = "system" | "patient";
@@ -145,6 +145,10 @@ export type PanelId = "benefits";
 export const SOURCES: Partial<Record<SourceId, SourceDef>> = {
   coassist: { id: "coassist", intake: "erx", provides: ["referralReceived"] },
   iassist: { id: "iassist", intake: "erx", provides: ["referralReceived"] },
+  // A client-managed web page starts the case. The page calls AssistRx's benefit verification and prior authorization
+  // services through the gateway, and hands the patient into the patient experience. There is no CRM in this source.
+  // Intake is `erx` for PA purposes: the page holds what the automated PA needs, so it starts on its own.
+  web: { id: "web", intake: "erx", provides: ["referralReceived"] },
 };
 
 /** Triage rules per exit. Tracking is always required. Transfer forbids scheduling and payment. */

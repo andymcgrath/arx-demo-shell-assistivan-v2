@@ -62,6 +62,11 @@ workflowRegistry.registerWorkflow("CoA_Copay", coassistMachine, {
   description: "CoAssist Copay Program variation — currently a direct copy of CoA_DTP (WF3), pending its own divergent behavior",
 });
 
+workflowRegistry.registerWorkflow("CoA_Web_Copay", coassistMachine, {
+  label: "CoAssist Web Copay (client web page)",
+  description: "A client-managed web page collects consent and details and calls benefit verification and prior authorization through the gateway. The patient taps Enroll and lands on the copay screen of the patient experience while the PA runs. No CRM.",
+});
+
 workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, {
   label: "CoAssist Coverage (Medical Benefit)",
   description: "Commercial medical-benefit coverage — transfers to an outside provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",

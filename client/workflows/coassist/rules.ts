@@ -14,6 +14,7 @@
  * payment before financial_assistance before cash_offer (SELECT_SELF_PAY).
  */
 import { ENROLLMENT_RULES } from "./modules/enrollment";
+import { WEB_HANDOFF_RULES } from "./modules/web_handoff";
 import { SPINE_RULES } from "./modules/spine";
 import { PA_NOTIFICATION_RULES } from "./modules/pa_notification";
 import { PAYMENT_RULES } from "./modules/payment";
@@ -29,6 +30,7 @@ import type { CoaRule } from "./modules/shared";
 
 export const COASSIST_RULES: CoaRule[] = [
   ...ENROLLMENT_RULES,
+  ...WEB_HANDOFF_RULES,
   ...SPINE_RULES,
   ...PA_NOTIFICATION_RULES,
   ...PAYMENT_RULES,

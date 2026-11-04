@@ -11,6 +11,7 @@ import { assignsWithoutPa, resolveBi, submitPaRule } from "../../shared/bi";
 import { assignedPharmacy } from "../../shared/assignment";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
+import { WEB_PA_MS } from "./web_handoff";
 
 export const SPINE_RULES: CoaRule[] = [
   {
@@ -79,7 +80,17 @@ export const SPINE_RULES: CoaRule[] = [
   },
   { id: "spine.leave_stage.bi", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "BI", cancel: ["bi-reveal"] },
   { id: "spine.leave_stage.pa", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
-  submitPaRule<CoassistContent>(),
+  {
+    ...submitPaRule<CoassistContent>(),
+    // The web source has no CRM, so nobody opens the PA stage. The decision lands on its own (APA through the gateway).
+    then: {
+      trigger: "system",
+      id: "web-pa-decision",
+      after: WEB_PA_MS,
+      when: (_d, _e, s) => s.recipe?.source === "web",
+      send: (d) => ({ type: exitFor(PA_FORK, d).id === "denied" ? "DENY_PA" : "APPROVE_PA" }),
+    },
+  },
   {
     id: "spine.approve_pa",
     on: "APPROVE_PA",

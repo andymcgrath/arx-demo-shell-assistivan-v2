@@ -39,6 +39,7 @@ export function createInitialWorkflowData(
     patientShipDate: null,
     pricingOption: null,
     copayEnrolled: false,
+    webHandoff: false,
     paApprovedSmsVerified: false,
     paApprovedOtpVerified: false,
     appealStatus: "none",

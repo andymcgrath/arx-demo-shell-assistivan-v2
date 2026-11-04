@@ -50,6 +50,29 @@ export const COA_COPAY_RECIPE: ScenarioRecipe = {
   ],
 };
 
+/**
+ * The client's web page starts the case (source `web`). The page collects consent, patient and Rx details, then calls
+ * benefit verification, and the PA starts on its own once BI says one is required. The patient taps Enroll on the page
+ * and lands in the patient experience on the copay screen, with the PA still running. So the `enrollment` block's `web`
+ * variant has no SMS, one-time code, or consent step. The patient is verified at the PA-approved text and code.
+ * The tail is Copay's. No `copay` pin: the patient enrolls live on the copay screen.
+ */
+export const COA_WEB_COPAY_RECIPE: ScenarioRecipe = {
+  source: "web",
+  forks: ["bi", "pa", "copay", "pricing"],
+  choices: { bi: "pharmacy_covered", pa: "approved" },
+  modules: [
+    { id: "enrollment", props: { variant: "web" } },
+    { id: "pa_notification" },
+    { id: "cash_offer", props: { variant: "pa_denied" } },
+    { id: "payment" },
+    { id: "financial_assistance", props: { variant: "copay" } },
+    { id: "pharmacy_selection", props: { variant: "store" } },
+    { id: "scheduling" },
+    { id: "tracking" },
+  ],
+};
+
 /** Coverage never offers Retail or Mail Order. The `bi` fork picks the branch. */
 export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
   source: "coassist",
@@ -130,6 +153,7 @@ export const COA_COMMERCIAL_TRANSFER_RECIPE: ScenarioRecipe = {
 export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,
+  CoA_Web_Copay: COA_WEB_COPAY_RECIPE,
   CoA_Coverage: COA_COVERAGE_RECIPE,
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
   CoA_PAP: COA_PAP_RECIPE,

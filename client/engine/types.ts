@@ -41,7 +41,7 @@ export interface CopayClaim {
   submittedAt: string;
 }
 
-export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "iAssist_Buy_And_Bill" | "iAssist_Buy_And_Bill_PAP" | "CoA_Medical_Transfer" | "CoA_PAP";
+export type FlowType = "Fax_QS_PA_Approved" | "Fax_PAP_Audit" | "CoA_DTP" | "CoA_Copay" | "iAssist_PA_Approved" | "iAssist_PAP" | "PrES_PAP" | "CoA_Coverage" | "iAssist_Medical_Transfer" | "iAssist_Buy_And_Bill" | "iAssist_Buy_And_Bill_PAP" | "CoA_Medical_Transfer" | "CoA_PAP" | "CoA_Web_Copay";
 
 export interface Pharmacy {
   name: string;
@@ -107,6 +107,9 @@ export interface WorkflowData {
    *  pricingOption ever being 'self_pay' for this flow. Stays false for
    *  every other flow, including CoA_DTP. */
   copayEnrolled: boolean;
+  /** CoA_Web_Copay only: true once the patient taps Enroll on the client's web page and lands in the AssistRx patient
+   *  experience. The client page has already verified and consented them, so the SMS and one-time code step is skipped. */
+  webHandoff: boolean;
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

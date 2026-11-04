@@ -1,7 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -48,6 +48,18 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
     selfPay: SELF_PAY,
     transferPharmacy: TRANSFER_PHARMACY,
   },
+};
+
+/**
+ * The client's web page starts the case and hands the patient to the copay screen. Same content as Copay: only the
+ * entry differs. Intake is `erx`, so the PA starts on its own once BI says one is required.
+ */
+export const COA_WEB_COPAY: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_Web_Copay",
+  intake: "erx",
+  choices: { bi: "pharmacy_covered", pa: "approved" },
+  recipe: COA_WEB_COPAY_RECIPE,
+  content: COA_COPAY.content,
 };
 
 /** Coverage never offers Retail or Mail Order. The patient picks a network pharmacy, or pays cash through CoAssist's own. */
@@ -100,4 +112,4 @@ export const COA_PAP: ScenarioDefinition<CoassistContent> = {
 };
 
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"];

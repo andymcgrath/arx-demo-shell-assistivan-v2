@@ -17,6 +17,16 @@ export const ENROLLMENT_ROUTES: CoaRoute[] = [
   { id: "enrollment.otp", slot: "gate", path: "/otp-verification", when: (d) => d.smsVerified && !d.otpVerified },
   { id: "enrollment.confirm_details", slot: "gate", path: "/confirm-details", when: (d) => d.otpVerified && d.consentStatus === "pending" },
 
+  // A patient who taps Enroll on the client's web page lands on the copay screen, even while the PA still runs or has
+  // already decided. Once they enroll, the waiting screen or the PA-approved text takes over.
+  {
+    id: "enrollment.web_handoff",
+    slot: "awaiting",
+    path: "/copay-enroll",
+    scope: { module: "enrollment", props: { variant: "web" } },
+    when: (d) => d.webHandoff && !d.copayEnrolled && d.pricingOption === null,
+  },
+
   // DTP and Copay wait on /enrollment-complete: first for BI, then for the PA decision.
   {
     id: "enrollment.waiting_for_bi",

@@ -1,0 +1,248 @@
+{
+  "flowType": "CoA_Web_Copay",
+  "steps": [
+    {
+      "event": "WEB_SUBMIT",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "smsVerified": true,
+        "otpVerified": true,
+        "consentStatus": "confirmed",
+        "biStatus": "running"
+      },
+      "newEvents": [
+        {
+          "eventType": "WEB_SUBMIT",
+          "portal": "patient",
+          "workflowStep": 1
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
+        }
+      ]
+    },
+    {
+      "event": "COMPLETE_BI",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "paStatus": "submitted",
+        "biStatus": "complete",
+        "biResult": "coverage_found",
+        "paRequired": true,
+        "paSubmittedAt": "2026-01-15T12:00:00.000Z",
+        "pharmacyBenefitStatus": "covered",
+        "medicalBenefitStatus": "not_covered"
+      },
+      "newEvents": [
+        {
+          "eventType": "COMPLETE_BI",
+          "portal": "analytics",
+          "workflowStep": 7
+        },
+        {
+          "eventType": "SUBMIT_PA",
+          "portal": "provider",
+          "workflowStep": 8
+        }
+      ]
+    },
+    {
+      "event": "WEB_HANDOFF",
+      "accepted": true,
+      "route": "/copay-enroll",
+      "changed": {
+        "webHandoff": true
+      },
+      "newEvents": [
+        {
+          "eventType": "WEB_HANDOFF",
+          "portal": "patient",
+          "workflowStep": 2
+        }
+      ]
+    },
+    {
+      "event": "SELECT_SELF_PAY",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "copayEnrolled": true
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_SELF_PAY",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "APPROVE_PA",
+      "accepted": true,
+      "route": "/pa-approved-sms",
+      "changed": {
+        "paStatus": "approved",
+        "paApprovedAt": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "APPROVE_PA",
+          "portal": "provider",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_SMS",
+      "accepted": true,
+      "route": "/pa-approved-otp",
+      "changed": {
+        "paApprovedSmsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_SMS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PA_APPROVED_OTP",
+      "accepted": true,
+      "route": "/benefit-pricing",
+      "changed": {
+        "paApprovedOtpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_PA_APPROVED_OTP",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "SELECT_PRICING_OPTION",
+      "payload": {
+        "option": "mail_order"
+      },
+      "accepted": true,
+      "route": "/delivery-address",
+      "changed": {
+        "selectedPharmacy": {
+          "name": "FutureScripts Home Delivery",
+          "address": "2200 Commerce Pkwy",
+          "city": "Fort Worth",
+          "state": "TX",
+          "zip": "76102",
+          "phone": "(866) 555-0199"
+        },
+        "pricingOption": "mail_order"
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_PRICING_OPTION",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SETS_ADDRESS",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "dispatchStatus": "selected"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "FILL_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "processing",
+        "dispatchStatus": "dispatched"
+      },
+      "newEvents": [
+        {
+          "eventType": "FILL_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "READY_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "ready"
+      },
+      "newEvents": [
+        {
+          "eventType": "READY_RX",
+          "portal": "field",
+          "workflowStep": 10
+        }
+      ]
+    },
+    {
+      "event": "SHIP_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "shipped"
+      },
+      "newEvents": [
+        {
+          "eventType": "SHIP_RX",
+          "portal": "field",
+          "workflowStep": 11
+        }
+      ]
+    },
+    {
+      "event": "DELIVER_RX",
+      "accepted": true,
+      "route": "/order-tracker",
+      "changed": {
+        "pharmacyStatus": "delivered"
+      },
+      "newEvents": [
+        {
+          "eventType": "DELIVER_RX",
+          "portal": "field",
+          "workflowStep": 12
+        }
+      ]
+    }
+  ]
+}

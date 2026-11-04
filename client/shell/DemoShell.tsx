@@ -57,8 +57,10 @@ import FieldPortal    from "@/portals/field/index";
 import ProviderPortal from "@/portals/provider/index";
 import IAssistPortal from "@/portals/iassist/index";
 import RulesPortal from "@/portals/rules/index";
+import WebPortal from "@/portals/web/index";
+import GatewayPortal from "@/portals/gateway/index";
 
-export type PortalId = "crm" | "client" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist" | "rules";
+export type PortalId = "crm" | "client" | "patient" | "analytics" | "insights" | "field" | "provider" | "iassist" | "rules" | "web" | "gateway";
 
 // NOTE: the iAssist portal tab's URL slug is "iassist-hub", NOT "iassist".
 // "/iassist" is a separate, pre-existing top-level deep-link route (see
@@ -79,6 +81,8 @@ export const PORTAL_SLUG: Record<PortalId, string> = {
   provider: "provider",
   iassist: "iassist-hub",
   rules: "rules",
+  web: "web",
+  gateway: "gateway",
 };
 
 const SLUG_TO_PORTAL: Record<string, PortalId> = {
@@ -91,6 +95,8 @@ const SLUG_TO_PORTAL: Record<string, PortalId> = {
   provider: "provider",
   "iassist-hub": "iassist",
   rules: "rules",
+  web: "web",
+  gateway: "gateway",
 };
 
 /**
@@ -110,6 +116,8 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // CoA_Copay (WF4) is currently a direct copy of CoA_DTP (WF3) — same
   // starting portal, see coaCopay.ts.
   CoA_Copay: "provider",
+  // CoA_Web_Copay: a client-managed web page starts the case (source `web`). There is no provider or CRM.
+  CoA_Web_Copay: "web",
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
@@ -141,6 +149,8 @@ function getProviderPortalLabel(flowType: string): string {
 // label "Analytics") is a newer, separate placeholder tab — sits directly to
 // the left of Workforce, visible in every workflow.
 const PORTALS_BASE: { id: PortalId; color: string }[] = [
+  // The client's web page and the gateway view exist only in a web-source scenario (see getPortals).
+  { id: "web",       color: "#2563eb" },
   { id: "crm",       color: "#0176d3" },
   // "Client" — a straight duplicate of the HUB/CRM tab (same portal
   // component, same shared workflow state), placed directly to its right.
@@ -149,6 +159,7 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
   // touching the original HUB/CRM tab.
   { id: "client",    color: "#0ea5e9" },
   { id: "patient",   color: "#16a34a" },
+  { id: "gateway",   color: "#475569" },
   { id: "provider",  color: "#7c3aed" },
   { id: "iassist",   color: "#d97706" },
   { id: "field",     color: "#14b8a6" },
@@ -163,13 +174,17 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow } = scenarioFacts(flowType);
+  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource } = scenarioFacts(flowType);
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
   // has no provider screen at all.
 
   return PORTALS_BASE.filter(p => {
+    // A web-source scenario starts on the client's web page and calls AssistRx through the gateway. The client owns the
+    // CRM, so the HUB/CRM, Client, Provider, and Rules tabs are hidden. Every other scenario hides the web and gateway tabs.
+    if (p.id === "web" || p.id === "gateway") return isWebSource;
+    if (isWebSource && (p.id === "crm" || p.id === "client" || p.id === "provider" || p.id === "rules")) return false;
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
     // (Fax_PAP_Audit never requires a traditional PA, so there's no
@@ -198,6 +213,8 @@ function getPortals(flowType: string) {
       insights: "Analytics",
       field: "Field",
       rules: "Rules",
+      web: "Client web page",
+      gateway: "Gateway",
     };
     return { ...p, id: p.id as PortalId, label: baseLabels[p.id] };
   });
@@ -215,6 +232,8 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "provider":  return <ProviderPortal key={flowType} />;
     case "iassist":   return <IAssistPortal branded={false} />;
     case "rules":     return <RulesPortal />;
+    case "web":       return <WebPortal />;
+    case "gateway":   return <GatewayPortal />;
   }
 }
 
@@ -469,7 +488,8 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * (showPesPapUpdateSmsPhone, computed above) — that one screen still
        * uses the phone frame, matching every other flow's SMS screens.
        */}
-      {portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone) ? (
+      {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. */}
+      {portal === "web" || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{

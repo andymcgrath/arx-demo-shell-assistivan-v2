@@ -111,19 +111,27 @@
       "spine.view_stage.bi",
       "spine.view_stage.pa",
       "provider_transfer.view_stage"
+    ],
+    "WEB_HANDOFF": [
+      "web_handoff.handoff"
+    ],
+    "WEB_SUBMIT": [
+      "web_handoff.submit"
     ]
   },
   "applies": {
     "cash_offer.deny_pa": [
       "CoA_DTP",
-      "CoA_Copay"
+      "CoA_Copay",
+      "CoA_Web_Copay"
     ],
     "cash_offer.select_self_pay.coverage": [
       "CoA_Coverage"
     ],
     "cash_offer.send_cash_offer": [
       "CoA_DTP",
-      "CoA_Copay"
+      "CoA_Copay",
+      "CoA_Web_Copay"
     ],
     "cash_offer.verify_sms": [
       "CoA_Coverage"
@@ -131,6 +139,7 @@
     "enrollment.confirm_consent": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -138,6 +147,7 @@
     "enrollment.referral_received": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -145,6 +155,7 @@
     "enrollment.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -152,12 +163,14 @@
     "enrollment.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
     ],
     "financial_assistance.select_self_pay.copay": [
-      "CoA_Copay"
+      "CoA_Copay",
+      "CoA_Web_Copay"
     ],
     "income_qualification.send_pap_sms": [
       "CoA_PAP"
@@ -177,6 +190,7 @@
     "pa_notification.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -184,6 +198,7 @@
     "pa_notification.verify_sms": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -197,11 +212,13 @@
     "payment.patient_pays": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage"
     ],
     "payment.select_pricing_option": [
       "CoA_DTP",
-      "CoA_Copay"
+      "CoA_Copay",
+      "CoA_Web_Copay"
     ],
     "payment.select_self_pay.dtp": [
       "CoA_DTP"
@@ -209,11 +226,13 @@
     "payment.verify_payment": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage"
     ],
     "pharmacy_selection.select_pharmacy": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -224,6 +243,7 @@
     "provider_transfer.leave_stage": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -240,18 +260,21 @@
     "scheduling.patient_selects_ship_date": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_PAP"
     ],
     "scheduling.patient_sets_address": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_PAP"
     ],
     "spine.approve_pa": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -259,6 +282,7 @@
     "spine.complete_bi": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -266,6 +290,7 @@
     "spine.leave_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -273,6 +298,7 @@
     "spine.leave_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -280,6 +306,7 @@
     "spine.run_bi": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -287,6 +314,7 @@
     "spine.submit_pa": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -294,6 +322,7 @@
     "spine.view_stage.bi": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -301,6 +330,7 @@
     "spine.view_stage.pa": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -308,6 +338,7 @@
     "tracking.deliver_rx": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -315,6 +346,7 @@
     "tracking.fill_rx": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -322,6 +354,7 @@
     "tracking.ready_rx": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
@@ -329,9 +362,16 @@
     "tracking.ship_rx": [
       "CoA_DTP",
       "CoA_Copay",
+      "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP"
+    ],
+    "web_handoff.handoff": [
+      "CoA_Web_Copay"
+    ],
+    "web_handoff.submit": [
+      "CoA_Web_Copay"
     ]
   }
 }

@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -139,7 +139,7 @@ export const PA_FORK: ForkDefinition = {
   label: "Prior authorization decision",
   chooser: "story",
   // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },
@@ -188,7 +188,7 @@ export const COPAY_FORK: ForkDefinition = {
   id: "copay",
   label: "Copay program",
   chooser: "patient",
-  scenarios: ["CoA_Copay"],
+  scenarios: ["CoA_Copay", "CoA_Web_Copay"],
   resolved: (d) => d.copayEnrolled || d.pricingOption !== null,
   picked: (d) => (d.copayEnrolled ? "enroll" : d.pricingOption !== null ? "decline" : null),
   exits: [
@@ -201,7 +201,7 @@ export const COPAY_PRICING_FORK: ForkDefinition = {
   id: "pricing",
   label: "Pricing option",
   chooser: "patient",
-  scenarios: ["CoA_Copay"],
+  scenarios: ["CoA_Copay", "CoA_Web_Copay"],
   resolved: (d) => d.pricingOption !== null,
   picked: (d) => d.pricingOption,
   exits: [

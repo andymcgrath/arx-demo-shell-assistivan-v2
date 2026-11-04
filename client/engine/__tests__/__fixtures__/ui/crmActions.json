@@ -1309,6 +1309,127 @@
       }
     ]
   },
+  "coa-web-copay-enroll-while-pa-runs": {
+    "flowType": "CoA_Web_Copay",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "WEB_SUBMIT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PRICING_OPTION",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": true
+          },
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.send",
+            "label": "Send Cash Offer",
+            "kind": "primary",
+            "enabled": false
+          },
+          {
+            "stage": "CO-14281",
+            "id": "cash_offer.verify",
+            "label": "Verify Payment",
+            "kind": "primary",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
   "coa-coverage-1-pharmacy-covered": {
     "flowType": "CoA_Coverage",
     "entries": [

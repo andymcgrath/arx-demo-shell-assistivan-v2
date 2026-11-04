@@ -21,10 +21,12 @@ import { expectMatchesFixture } from "./harness";
  */
 
 // shell/DemoShell.tsx:618, crm/pages/Index.tsx:853, patient/pages/DeliveryDate.tsx:37 (and PADenied, PAApproved, CopayEnroll, DeliveryPayment, DeliveryAddress)
-const isCoaFlow_dtpCopay = (flowType: string) => flowType === "CoA_DTP" || flowType === "CoA_Copay";
+// CoA_Web_Copay was added after these were copied. It has the pricing fork and the copay fork, so it counts here.
+const isCoaFlow_dtpCopay = (flowType: string) => flowType === "CoA_DTP" || flowType === "CoA_Copay" || flowType === "CoA_Web_Copay";
 
 // provider/index.tsx:2919
-const isCoA_providerAnyCoassist = (flowType: string) => COASSIST_FLOWS.includes(flowType as FlowType);
+// CoA_Web_Copay is in COASSIST_FLOWS but its source is `web`, so the provider portal does not treat it as CoAssist (no provider tab).
+const isCoA_providerAnyCoassist = (flowType: string) => flowType !== "CoA_Web_Copay" && COASSIST_FLOWS.includes(flowType as FlowType);
 
 // shell/DemoShell.tsx:635, crm/pages/Index.tsx:858, patient/pages/DeliveryDate.tsx:44 (and DeliveryAddress, DeliveryPayment, PADenied, PaApprovedSms)
 const isCoverageFlow = (flowType: string) => flowType === "CoA_Coverage";
@@ -54,10 +56,10 @@ const isIAssistPapFlow_crmWithFreeDrug = (flowType: string) => flowType === "iAs
 
 // shell/DemoShell.tsx:627, crm/pages/Index.tsx:875, client/pages/Index.tsx:825
 const isCopayRetailFlow = (flowType: string, pricingOption: string | null) =>
-  flowType === "CoA_Copay" && (pricingOption === "retail" || pricingOption === "mail_order");
+  (flowType === "CoA_Copay" || flowType === "CoA_Web_Copay") && (pricingOption === "retail" || pricingOption === "mail_order");
 
-// patient/pages/CopayEnroll.tsx:16
-const isCopayWorkflow = (flowType: string) => flowType === "CoA_Copay";
+// patient/pages/CopayEnroll.tsx:16 (CoA_Web_Copay added: it runs the same copay screens)
+const isCopayWorkflow = (flowType: string) => flowType === "CoA_Copay" || flowType === "CoA_Web_Copay";
 
 // provider/index.tsx:2923
 const isPres = (flowType: string) => flowType === "PrES_PAP";

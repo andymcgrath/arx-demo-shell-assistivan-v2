@@ -11,7 +11,9 @@ export const FINANCIAL_ASSISTANCE_RULES: CoaRule[] = [
     id: "financial_assistance.select_self_pay.copay",
     on: "SELECT_SELF_PAY",
     scope: { fork: "copay" },
-    when: (d) => d.paApprovedOtpVerified && d.pricingOption === null && !d.copayEnrolled,
+    // A patient who arrives from a client web page (`webHandoff`) enrolls while the PA still runs. Copay needs no
+    // separate insurance approval, so enrolling does not wait for the PA decision.
+    when: (d) => (d.paApprovedOtpVerified || d.webHandoff) && d.pricingOption === null && !d.copayEnrolled,
     set: () => COPAY_FORK.exits.find((e) => e.id === "enroll")!.data,
     emit: { portal: "patient", step: 9 },
   },

@@ -3,6 +3,74 @@
   "slug": "lilly",
   "name": "Lilly",
   "title": "Foundayo Demo",
+  "demos": [
+    {
+      "id": "fax-qs-pa-approved",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "1. Standard",
+      "description": "Standard enrollment with fax quick-start and PA approval"
+    },
+    {
+      "id": "fax-pap-audit",
+      "flow": "Fax_PAP_Audit",
+      "label": "2. PAP",
+      "description": "Patient assistance program workflow with income-qualification audit"
+    },
+    {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "3. CoAssist DTP",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+    },
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "4. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    },
+    {
+      "id": "coa-coverage",
+      "flow": "CoA_Coverage",
+      "label": "5. CoAssist Coverage",
+      "description": "Medical-benefit CGM sensor coverage, three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)"
+    },
+    {
+      "id": "coa-medical-transfer",
+      "flow": "CoA_Medical_Transfer",
+      "label": "6. CoAssist Medical Transfer",
+      "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned site of care and the order ends there"
+    },
+    {
+      "id": "iassist-pa-approved",
+      "flow": "iAssist_PA_Approved",
+      "label": "7. iAssist",
+      "description": "Internal iAssist platform workflow with prior authorization approval"
+    },
+    {
+      "id": "iassist-pap",
+      "flow": "iAssist_PAP",
+      "label": "8. iAssist Appeal",
+      "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
+    },
+    {
+      "id": "iassist-medical-transfer",
+      "flow": "iAssist_Medical_Transfer",
+      "label": "9. iAssist Medical Transfer",
+      "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned pharmacy and the order ends there"
+    },
+    {
+      "id": "pres-pap",
+      "flow": "PrES_PAP",
+      "label": "10. PrES PAP",
+      "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
+    },
+    {
+      "id": "coa-web-copay",
+      "flow": "CoA_Web_Copay",
+      "label": "11. CoAssist Web Copay",
+      "description": "Lilly's web page starts the case. It calls benefit verification and prior authorization through the gateway, then hands the patient to the copay screen of the patient experience. No CRM"
+    }
+  ],
   "manufacturer": {
     "name": "Lilly Support Services",
     "logo": {

@@ -7,7 +7,11 @@ import { useDemoStore } from "@/store/demoStore";
 import { buildCrmStages } from "@/portals/crm/stages/buildStages";
 import Index from "@/portals/crm/pages/Index";
 import { ctx, expectMatchesFixture, startFlow } from "./harness";
-import { SCENARIOS } from "./scenarios";
+import { SCENARIOS as GOLDEN_PATHS } from "./scenarios";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
+
+/** A web-source scenario has no CRM (the client owns it), and its BI and PA land on system timers, so this page does not apply. */
+const SCENARIOS = GOLDEN_PATHS.filter((s) => !scenarioFacts(s.flowType).isWebSource);
 
 /**
  * The CRM page as the agent sees it. It renders the real page (portals/crm/pages/Index.tsx, which the Client tab

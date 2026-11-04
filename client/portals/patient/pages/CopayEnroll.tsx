@@ -2,13 +2,15 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { ArrowRight, CreditCard, ShoppingBag, CheckCircle, Sparkles, Loader2 } from "lucide-react";
-import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function CopayEnroll() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const actor = useWorkflowActor();
   const { workflowData } = usePersonaState('patient');
   const showPatientToast = usePatientToastStore((s) => s.show);
   const flowType = workflowData.flowType;
@@ -51,7 +53,8 @@ export default function CopayEnroll() {
       dispatch("SELECT_SELF_PAY", { portal: "patient" });
       setIsVerifying(false);
       showPatientToast(`You're enrolled in the ${PROGRAM.drugDisplayName} Copay Program`);
-      navigate("/benefit-pricing");
+      // Web handoff: the PA may still run, and the PA-approved text and code come before pricing. Follow the state.
+      navigate(workflowData.webHandoff ? derivePatientRoute(actor.getSnapshot().context) : "/benefit-pricing");
     }, 1800);
   }
 

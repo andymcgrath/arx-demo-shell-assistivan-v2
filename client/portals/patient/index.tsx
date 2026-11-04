@@ -122,10 +122,17 @@ function StateDrivenNav() {
   const undoNonce = useDemoStore((s) => s.undoNonce);
   const lastUndoNonceRef = useRef(undoNonce);
 
+  // The web page's Enroll tap (WEB_HANDOFF) moves the patient to the copay screen from wherever they wait, even a
+  // sticky screen like /enrollment-complete. Only the flip to true forces it. Later changes stay sticky.
+  const webHandoff = useSelector(actor, (snapshot) => !!snapshot.context.workflowData.webHandoff);
+  const lastWebHandoffRef = useRef(webHandoff);
+
   useEffect(() => {
+    const isHandoff = webHandoff && !lastWebHandoffRef.current;
+    lastWebHandoffRef.current = webHandoff;
     const isUndo = undoNonce !== lastUndoNonceRef.current;
     lastUndoNonceRef.current = undoNonce;
-    const isReset = resetNonce !== lastResetNonceRef.current || isUndo;
+    const isReset = resetNonce !== lastResetNonceRef.current || isUndo || isHandoff;
     lastResetNonceRef.current = resetNonce;
 
     // Compare against actual current path, not last-navigated-by-this-hook,
@@ -134,10 +141,13 @@ function StateDrivenNav() {
 
     // Don't interrupt delivery/order flows — user may have manually navigated.
     // A reset overrides this: the screen must always land on the correct step.
-    if (!isReset && isStaying(actor.getSnapshot().context.workflowData.flowType, pathnameRef.current)) return;
+    // After a web handoff, /enrollment-complete is a plain wait for the PA decision, not a one-time confirmation.
+    const data = actor.getSnapshot().context.workflowData;
+    const waitingOnPa = data.webHandoff && pathnameRef.current === "/enrollment-complete";
+    if (!isReset && !waitingOnPa && isStaying(data.flowType, pathnameRef.current)) return;
 
     navigate(targetRoute, { replace: true });
-  }, [targetRoute, navigate, resetNonce, undoNonce, actor]);
+  }, [targetRoute, navigate, resetNonce, undoNonce, webHandoff, actor]);
 
   return null;
 }

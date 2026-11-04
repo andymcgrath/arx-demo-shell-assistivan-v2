@@ -22,6 +22,7 @@
 import { biForkFor, ENROLL_AND_VERIFY } from "@/workflows/coassist/forks";
 import { forkStageEvents } from "@/engine/workflow/forks";
 import { isTransferScenario, transferStageEvents } from "./transferLadders";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export interface LadderEvent {
   type: string;
@@ -46,13 +47,44 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 /** The flows with a CoAssist stage-jump ladder. */
-export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
+export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
+
+/**
+ * The web scenario's rungs. The client page's submit starts BI. Stage 4 is BI back, the handoff, copay enrolled, and
+ * the PA approved and verified. Stage 5 picks Mail Order and sets the delivery. 6 to 8 are fulfillment, as elsewhere.
+ */
+function webStageEvents(stage: number): LadderEvent[] {
+  const out: LadderEvent[] = [];
+  if (stage >= 2) out.push(ev("WEB_SUBMIT", "patient"));
+  if (stage >= 4) {
+    out.push(
+      ev("COMPLETE_BI", "crm"),
+      ev("WEB_HANDOFF", "patient"),
+      ev("SELECT_SELF_PAY", "patient"),
+      ev("APPROVE_PA", "crm"),
+      ev("VERIFY_PA_APPROVED_SMS", "patient"),
+      ev("VERIFY_PA_APPROVED_OTP", "patient"),
+    );
+  }
+  if (stage >= 5) {
+    out.push(
+      ev("SELECT_PRICING_OPTION", "patient", { option: "mail_order" }),
+      ev("PATIENT_SETS_ADDRESS", "patient"),
+      ev("PATIENT_SELECTS_SHIP_DATE", "patient"),
+    );
+  }
+  if (stage >= 6) out.push(ev("FILL_RX", "crm"));
+  if (stage >= 7) out.push(ev("READY_RX", "field"), ev("SHIP_RX", "crm"));
+  if (stage >= 8) out.push(ev("DELIVER_RX", "crm"));
+  return out;
+}
 
 export function coassistStageEvents(
   flowType: CoassistLadderFlow,
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
+  if (scenarioFacts(flowType).isWebSource) return webStageEvents(stage);
   if (isTransferScenario(flowType)) return transferStageEvents(stage);
   // A scenario with its own rungs after the `bi` fork reads them from the fork.
   const biFork = biForkFor(flowType);

@@ -26,6 +26,7 @@ import { ctx, expectMatchesFixture, runSteps, startFlow, withFrozenClock } from 
 const LADDERS = [
   { flowType: "CoA_DTP", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_DTP", stage) },
   { flowType: "CoA_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Copay", stage) },
+  { flowType: "CoA_Web_Copay", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Web_Copay", stage) },
   { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
   { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => coassistStageEvents("CoA_Medical_Transfer", stage) },
   { flowType: "CoA_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => coassistStageEvents("CoA_PAP", stage) },
@@ -85,6 +86,7 @@ describe("Coverage stage jump follows the selected branch", () => {
 const KNOWN_GAPS: Record<string, string[]> = {
   CoA_DTP: ["no_coverage"],
   CoA_Copay: ["no_coverage"],
+  CoA_Web_Copay: ["no_coverage"],
   CoA_Coverage: [],
   // `pharmacy_covered` needs no module, so the recipe can pick it, but the scenario has no pricing screens for it.
   CoA_Medical_Transfer: ["pharmacy_covered"],
