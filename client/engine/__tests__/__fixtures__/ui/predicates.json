@@ -116,6 +116,28 @@
         "copay": false
       }
     },
+    "CoA_HCP_Enroll": {
+      "isCoaFlow_dtpCopay": false,
+      "isCoA_providerAnyCoassist": false,
+      "isCoverageFlow": false,
+      "isPapFlow_faxAuditOnly": false,
+      "isPapFlow_faxAuditAndPres": false,
+      "isFaxFlow": false,
+      "isIAssistFlow": false,
+      "isIAssist": false,
+      "isIAssistPapFlow_idOnly": false,
+      "isIAssistPapFlow_crmWithFreeDrug": false,
+      "isCopayWorkflow": false,
+      "isPres": false,
+      "isWideFlow": false,
+      "isCopayRetailFlow_byPricingOption": {
+        "null": false,
+        "dtp": false,
+        "retail": false,
+        "mail_order": false,
+        "copay": false
+      }
+    },
     "CoA_Coverage": {
       "isCoaFlow_dtpCopay": false,
       "isCoA_providerAnyCoassist": true,

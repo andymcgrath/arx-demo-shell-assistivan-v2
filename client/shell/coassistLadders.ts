@@ -47,7 +47,7 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 /** The flows with a CoAssist stage-jump ladder. */
-export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
+export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_HCP_Enroll" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
 
 /**
  * The web scenario's rungs. The client page's submit starts BI. Stage 4 is BI back, the handoff, copay enrolled, and
@@ -79,11 +79,25 @@ function webStageEvents(stage: number): LadderEvent[] {
   return out;
 }
 
+/**
+ * The HCP enrollment rungs. 2 is the HCP's submit (the patient is texted), 3 the patient opens the link and verifies the
+ * phone, 4 the one-time code, 5 consent. The case ends there.
+ */
+function hcpStageEvents(stage: number): LadderEvent[] {
+  const out: LadderEvent[] = [];
+  if (stage >= 2) out.push(ev("HCP_ENROLL_SUBMIT", "patient"));
+  if (stage >= 3) out.push(ev("VERIFY_SMS", "patient"));
+  if (stage >= 4) out.push(ev("VERIFY_OTP", "patient"));
+  if (stage >= 5) out.push(ev("CONFIRM_CONSENT", "patient"));
+  return out;
+}
+
 export function coassistStageEvents(
   flowType: CoassistLadderFlow,
   stage: number,
   choices: Record<string, string> = {},
 ): LadderEvent[] {
+  if (scenarioFacts(flowType).isHcpEnrollment) return hcpStageEvents(stage);
   if (scenarioFacts(flowType).isWebSource) return webStageEvents(stage);
   if (isTransferScenario(flowType)) return transferStageEvents(stage);
   // A scenario with its own rungs after the `bi` fork reads them from the fork.

@@ -24,6 +24,8 @@ export interface ScenarioFacts {
   hasCopayFork: boolean;
   /** A client-managed web page starts the case (source `web`). The page calls ABV and APA through the gateway. No CRM. */
   isWebSource: boolean;
+  /** An HCP enrolls the patient on the client's web page (the `hcp` enrollment variant). The case ends at patient consent. */
+  isHcpEnrollment: boolean;
   /** Medical-benefit coverage outcomes: a cash offer SMS and a provider transfer, with no PA or pricing. */
   isCoverageScenario: boolean;
   /** Fax intake. */
@@ -76,6 +78,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     hasPricingFork: hasFork("pricing"),
     hasCopayFork,
     isWebSource: recipe?.source === "web",
+    isHcpEnrollment: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp"),
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     isStandardFaxPa: !!scenario && !recipe && !noPa && intake === "fax",

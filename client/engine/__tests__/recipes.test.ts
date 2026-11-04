@@ -44,6 +44,11 @@ describe("CoAssist recipes", () => {
 
   it("every recipe passes through the bi fork, and the pa fork unless no PA runs", () => {
     for (const [flowType, r] of Object.entries(COASSIST_RECIPES)) {
+      // HCP enrollment ends at consent, so it passes through no fork at all.
+      if (flowType === "CoA_HCP_Enroll") {
+        expect(r.forks).toEqual([]);
+        continue;
+      }
       expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" ? ["bi"] : ["bi", "pa"]));
     }
     expect(COASSIST_RECIPES.CoA_PAP.forks).not.toContain("pa");

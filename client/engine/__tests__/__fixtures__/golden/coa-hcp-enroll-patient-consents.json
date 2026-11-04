@@ -1,0 +1,70 @@
+{
+  "flowType": "CoA_HCP_Enroll",
+  "steps": [
+    {
+      "event": "HCP_ENROLL_SUBMIT",
+      "payload": {
+        "prescriberNpi": "1234567893"
+      },
+      "accepted": true,
+      "route": "/sms-message",
+      "changed": {
+        "enrollmentStatus": "enrolled",
+        "enrollmentInviteSent": true,
+        "prescriberNpi": "1234567893"
+      },
+      "newEvents": [
+        {
+          "eventType": "HCP_ENROLL_SUBMIT",
+          "portal": "patient",
+          "workflowStep": 1
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_SMS",
+      "accepted": true,
+      "route": "/otp-verification",
+      "changed": {
+        "smsVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_SMS",
+          "portal": "patient",
+          "workflowStep": 3
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_OTP",
+      "accepted": true,
+      "route": "/confirm-details",
+      "changed": {
+        "otpVerified": true
+      },
+      "newEvents": [
+        {
+          "eventType": "VERIFY_OTP",
+          "portal": "patient",
+          "workflowStep": 4
+        }
+      ]
+    },
+    {
+      "event": "CONFIRM_CONSENT",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "consentStatus": "confirmed"
+      },
+      "newEvents": [
+        {
+          "eventType": "CONFIRM_CONSENT",
+          "portal": "patient",
+          "workflowStep": 5
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "stage": 2,
+    "ignored": [],
+    "route": "/sms-message",
+    "biStatus": "none",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 3,
+    "ignored": [],
+    "route": "/otp-verification",
+    "biStatus": "none",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 4,
+    "ignored": [],
+    "route": "/confirm-details",
+    "biStatus": "none",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  },
+  {
+    "stage": 5,
+    "ignored": [],
+    "route": "/enrollment-complete",
+    "biStatus": "none",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "none",
+    "pharmacyStatus": "none"
+  }
+]

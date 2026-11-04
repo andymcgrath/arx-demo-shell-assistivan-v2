@@ -1750,6 +1750,68 @@
       }
     ]
   },
+  "coa-hcp-enroll-patient-consents": {
+    "flowType": "CoA_HCP_Enroll",
+    "labelSets": [
+      [
+        "HCP Enrolled Patient",
+        "Patient Verified",
+        "Consent Confirmed"
+      ]
+    ],
+    "steps": [
+      {
+        "after": "(start)",
+        "labelSet": 0,
+        "done": "...",
+        "workflowStep": 1,
+        "paRingApplies": false,
+        "rxRingsOff": true,
+        "rxProcessingStepN": 0,
+        "rxShippedStepN": 0
+      },
+      {
+        "after": "HCP_ENROLL_SUBMIT",
+        "labelSet": 0,
+        "done": "x..",
+        "workflowStep": 2,
+        "paRingApplies": false,
+        "rxRingsOff": true,
+        "rxProcessingStepN": 0,
+        "rxShippedStepN": 0
+      },
+      {
+        "after": "VERIFY_SMS",
+        "labelSet": 0,
+        "done": "x..",
+        "workflowStep": 2,
+        "paRingApplies": false,
+        "rxRingsOff": true,
+        "rxProcessingStepN": 0,
+        "rxShippedStepN": 0
+      },
+      {
+        "after": "VERIFY_OTP",
+        "labelSet": 0,
+        "done": "xx.",
+        "workflowStep": 3,
+        "paRingApplies": false,
+        "rxRingsOff": true,
+        "rxProcessingStepN": 0,
+        "rxShippedStepN": 0
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "labelSet": 0,
+        "done": "xxx",
+        "workflowStep": 3,
+        "paRingApplies": false,
+        "rxRingsOff": true,
+        "rxProcessingStepN": 0,
+        "rxShippedStepN": 0
+      }
+    ]
+  },
   "coa-coverage-1-pharmacy-covered": {
     "flowType": "CoA_Coverage",
     "labelSets": [

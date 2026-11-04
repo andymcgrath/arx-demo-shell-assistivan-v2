@@ -5025,6 +5025,134 @@
       }
     ]
   },
+  "coa-hcp-enroll-patient-consents": {
+    "flowType": "CoA_HCP_Enroll",
+    "steps": [
+      {
+        "after": "(start)",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting patient consent",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Not Started",
+            "statusDetail": "Waiting for patient consent",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting pharmacy selection",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "HCP_ENROLL_SUBMIT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_SMS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_OTP",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Complete",
+            "statusDetail": "Enrollment Completed",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          }
+        ]
+      }
+    ]
+  },
   "coa-coverage-1-pharmacy-covered": {
     "flowType": "CoA_Coverage",
     "steps": [

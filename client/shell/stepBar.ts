@@ -406,8 +406,27 @@ export interface StepBarModel {
 /** The 1-based position of a labelled step, or 0 when the bar has none. */
 const stepNumberOf = (labels: string[], label: string): number => labels.indexOf(label) + 1;
 
+/** HCP enrollment: the case ends at patient consent, so the bar has three steps and no Rx steps. */
+const HCP_ENROLLMENT_BAR: { label: string; done: (d: WorkflowData) => boolean }[] = [
+  { label: "HCP Enrolled Patient", done: (d) => d.enrollmentStatus !== "none" },
+  { label: "Patient Verified", done: (d) => d.smsVerified && d.otpVerified },
+  { label: "Consent Confirmed", done: (d) => d.consentStatus === "confirmed" },
+];
+
 export function stepBarModel(flowType: string, workflowData: WorkflowData): StepBarModel {
   const facts = scenarioFacts(flowType);
+  if (facts.isHcpEnrollment) {
+    const stepDone = HCP_ENROLLMENT_BAR.map((step) => step.done(workflowData));
+    return {
+      labels: HCP_ENROLLMENT_BAR.map((step) => step.label),
+      stepDone,
+      workflowStep: Math.min(stepDone.filter(Boolean).length + 1, stepDone.length),
+      paRingApplies: false,
+      rxRingsOff: true,
+      rxProcessingStepN: 0,
+      rxShippedStepN: 0,
+    };
+  }
   // The patient picks a pricing option: CoA_DTP and CoA_Copay.
   const isCoaFlow = facts.hasPricingFork;
   // Covers both Retail and Mail Order: both end at Triage to Pharmacy (see derivePatientRoute).

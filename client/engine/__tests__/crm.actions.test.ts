@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildCrmStages } from "@/portals/crm/stages/buildStages";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { CASE_HOME, CRM_ACTION_EVENTS, crmActions, type CrmCan } from "@/portals/crm/stages/actions";
 import { forksForFlow } from "@/workflows/forks";
 import { choiceProblems, forksForScenario } from "@/engine/workflow/forks";
@@ -60,6 +61,8 @@ describe("CRM actions along the golden paths", () => {
     });
 
     it(`${scenario.name}: Check Status alone reaches the outcome the scenario picks`, () => {
+      // HCP enrollment has no CRM and runs no BI, so there is no Check Status button.
+      if (scenarioFacts(scenario.flowType).isHcpEnrollment) return;
       withFrozenClock(() => {
         const forks = forksForFlow(scenario.flowType);
         const biFork = forksForScenario(forks, scenario.flowType).find((f) => f.id === "bi");

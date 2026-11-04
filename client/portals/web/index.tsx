@@ -23,6 +23,8 @@ import PatientForm from "./PatientForm";
 import SafetySummary from "./SafetySummary";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
+import HcpSite from "./hcp/HcpSite";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 const DOSES = ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
 const STEPS = ["intro", "hipaa", "patient", "rx", "results"] as const;
@@ -30,7 +32,13 @@ type Step = (typeof STEPS)[number];
 
 const primary = "inline-flex items-center justify-center gap-2 rounded-full bg-arx-action px-6 py-2.5 text-sm font-semibold text-arx-on-action disabled:opacity-40";
 
+/** The web tab. A scenario where an HCP enrolls the patient shows the HCP site. Every other web scenario shows the consumer page. */
 export default function WebPortal() {
+  const { workflowData } = usePersonaState("patient");
+  return scenarioFacts(workflowData.flowType).isHcpEnrollment ? <HcpSite /> : <ConsumerWebPortal />;
+}
+
+function ConsumerWebPortal() {
   const dispatch = useWorkflowDispatch();
   const navigate = useNavigate();
   const { workflowData: w } = usePersonaState("patient");

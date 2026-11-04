@@ -73,6 +73,18 @@ export const COA_WEB_COPAY_RECIPE: ScenarioRecipe = {
   ],
 };
 
+/**
+ * An HCP enrolls the patient on the client's web page (source `web`). The page sends the enrollment, and the platform
+ * texts the patient. The patient follows the link into the patient experience and runs the enrollment recipe: SMS, one-time
+ * code, details and consent. The scenario ends on the enrollment confirmation. No BI, PA, pricing, or order.
+ */
+export const COA_HCP_ENROLL_RECIPE: ScenarioRecipe = {
+  source: "web",
+  forks: [],
+  choices: {},
+  modules: [{ id: "enrollment", props: { variant: "hcp" } }],
+};
+
 /** Coverage never offers Retail or Mail Order. The `bi` fork picks the branch. */
 export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
   source: "coassist",
@@ -154,6 +166,7 @@ export const COASSIST_RECIPES = {
   CoA_DTP: COA_DTP_RECIPE,
   CoA_Copay: COA_COPAY_RECIPE,
   CoA_Web_Copay: COA_WEB_COPAY_RECIPE,
+  CoA_HCP_Enroll: COA_HCP_ENROLL_RECIPE,
   CoA_Coverage: COA_COVERAGE_RECIPE,
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
   CoA_PAP: COA_PAP_RECIPE,

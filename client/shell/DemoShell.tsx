@@ -118,6 +118,8 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   CoA_Copay: "provider",
   // CoA_Web_Copay: a client-managed web page starts the case (source `web`). There is no provider or CRM.
   CoA_Web_Copay: "web",
+  // CoA_HCP_Enroll: the client's HCP web page starts the case (source `web`). No CRM.
+  CoA_HCP_Enroll: "web",
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
@@ -174,7 +176,7 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource } = scenarioFacts(flowType);
+  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource, isHcpEnrollment } = scenarioFacts(flowType);
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
@@ -183,7 +185,9 @@ function getPortals(flowType: string) {
   return PORTALS_BASE.filter(p => {
     // A web-source scenario starts on the client's web page and calls AssistRx through the gateway. The client owns the
     // CRM, so the HUB/CRM, Client, Provider, and Rules tabs are hidden. Every other scenario hides the web and gateway tabs.
-    if (p.id === "web" || p.id === "gateway") return isWebSource;
+    // The gateway view shows ABV and APA calls. An HCP enrollment makes neither, so it has no gateway tab.
+    if (p.id === "gateway") return isWebSource && !isHcpEnrollment;
+    if (p.id === "web") return isWebSource;
     if (isWebSource && (p.id === "crm" || p.id === "client" || p.id === "provider" || p.id === "rules")) return false;
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
@@ -488,8 +492,8 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * (showPesPapUpdateSmsPhone, computed above) — that one screen still
        * uses the phone frame, matching every other flow's SMS screens.
        */}
-      {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. */}
-      {portal === "web" || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
+      {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. The HCP site is a desktop page, so it does not. */}
+      {(portal === "web" && !scenarioFacts(flowType).isHcpEnrollment) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{

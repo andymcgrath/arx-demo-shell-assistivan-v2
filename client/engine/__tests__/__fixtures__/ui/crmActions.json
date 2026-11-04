@@ -1430,6 +1430,27 @@
       }
     ]
   },
+  "coa-hcp-enroll-patient-consents": {
+    "flowType": "CoA_HCP_Enroll",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "HCP_ENROLL_SUBMIT",
+        "actions": []
+      }
+    ]
+  },
   "coa-coverage-1-pharmacy-covered": {
     "flowType": "CoA_Coverage",
     "entries": [

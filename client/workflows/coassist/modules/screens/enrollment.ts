@@ -27,6 +27,15 @@ export const ENROLLMENT_ROUTES: CoaRoute[] = [
     when: (d) => d.webHandoff && !d.copayEnrolled && d.pricingOption === null,
   },
 
+  // HCP enrollment ends here. Consent is in, and there is no BI, PA, or order to wait for.
+  {
+    id: "enrollment.hcp_complete",
+    slot: "awaiting",
+    path: "/enrollment-complete",
+    scope: { module: "enrollment", props: { variant: "hcp" } },
+    when: (d) => d.consentStatus === "confirmed",
+  },
+
   // DTP and Copay wait on /enrollment-complete: first for BI, then for the PA decision.
   {
     id: "enrollment.waiting_for_bi",
