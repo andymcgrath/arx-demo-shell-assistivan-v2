@@ -110,6 +110,9 @@ export interface WorkflowData {
   /** CoA_Web_Copay only: true once the patient taps Enroll on the client's web page and lands in the AssistRx patient
    *  experience. The client page has already verified and consented them, so the SMS and one-time code step is skipped. */
   webHandoff: boolean;
+  /** CoA_Web_Copay only: the prescriber's NPI, typed or picked on the client web page. Benefit verification (ABV) and prior
+   *  authorization (APA) both use it. Null until the page submits. */
+  prescriberNpi: string | null;
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

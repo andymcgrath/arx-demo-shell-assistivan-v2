@@ -1,6 +1,7 @@
 /**
- * "Find your provider" card from the live Rx page. A name search over a short mock list. Representative people only.
- * On a phone it sits under the dose list, not beside it. Picking a provider shows a summary with a way to change it.
+ * The provider card from the live Rx page. Benefit verification and prior authorization both need the prescriber's
+ * NPI. The patient either types the number or finds the provider by name, so no one has to know it. A name search runs
+ * over a short mock list. Representative people only. On a phone the card sits under the dose list.
  */
 import { useState } from "react";
 import { Search } from "lucide-react";
@@ -29,29 +30,52 @@ const detail = (p: Provider) => (
   </>
 );
 
-export default function ProviderSearch({ value, onChange }: { value: Provider | null; onChange: (p: Provider | null) => void }) {
+export const isNpi = (s: string) => /^\d{10}$/.test(s);
+
+interface Props {
+  value: Provider | null;
+  onChange: (p: Provider | null) => void;
+  npi: string;
+  onNpi: (npi: string) => void;
+}
+
+export default function ProviderSearch({ value, onChange, npi, onNpi }: Props) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const results = q ? PROVIDERS.filter((p) => p.name.toLowerCase().includes(q)) : [];
 
   return (
     <div className="rounded-lg border border-arx-borders bg-white p-4">
-      <h2 className="mb-3 text-base font-semibold text-arx-neutral-800">Find your provider</h2>
+      <h2 className="mb-1 text-base font-semibold text-arx-neutral-800">Your provider</h2>
+      <p className="mb-3 text-xs text-arx-body-copy">We use your provider's NPI to check your coverage. Enter it, or find your provider by name.</p>
 
       {value ? (
         <div className="rounded-lg border border-arx-borders bg-arx-neutral-100 p-3">
           {detail(value)}
-          <button type="button" className="mt-2 text-xs font-semibold text-arx-link" onClick={() => onChange(null)}>
+          <button type="button" className="mt-2 text-xs font-semibold text-arx-link" onClick={() => { onChange(null); onNpi(""); }}>
             Change provider
           </button>
         </div>
       ) : (
         <>
+          <label className="mb-1 block text-xs font-medium text-arx-neutral-800" htmlFor="web-npi">NPI number</label>
+          <input
+            id="web-npi"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 digits"
+            value={npi}
+            onChange={(e) => onNpi(e.target.value.replace(/\D/g, ""))}
+            className="mb-1 w-full rounded-lg border border-arx-borders bg-white px-3 py-2 text-sm"
+          />
+          {npi && !isNpi(npi) && <p className="mb-2 text-xs text-arx-errors">An NPI has 10 digits.</p>}
+          <p className="my-3 text-center text-xs text-arx-body-copy">or</p>
+          <label className="mb-1 block text-xs font-medium text-arx-neutral-800" htmlFor="web-provider-search">Find your provider</label>
           <div className="relative mb-3">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-arx-body-copy" />
             <input
               type="text"
-              aria-label="Search provider name"
+              id="web-provider-search"
               placeholder="Search provider name..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -65,7 +89,7 @@ export default function ProviderSearch({ value, onChange }: { value: Provider | 
                   <button
                     type="button"
                     className="w-full rounded-lg border border-arx-borders p-3 text-left"
-                    onClick={() => { onChange(p); setQuery(""); }}
+                    onClick={() => { onChange(p); onNpi(p.npi); setQuery(""); }}
                   >
                     {detail(p)}
                   </button>
@@ -74,7 +98,6 @@ export default function ProviderSearch({ value, onChange }: { value: Provider | 
             </ul>
           )}
           {q && results.length === 0 && <p className="py-2 text-center text-sm text-arx-body-copy">No providers found</p>}
-          {!q && <p className="text-xs text-arx-body-copy">Search by name, for example "Chen".</p>}
         </>
       )}
     </div>

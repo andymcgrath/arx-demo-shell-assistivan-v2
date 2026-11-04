@@ -18,7 +18,8 @@ import { MANUFACTURER, PROGRAM } from "@/portals/patient/config/branding";
 import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLogo";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import Hero from "./Hero";
-import ProviderSearch, { type Provider } from "./ProviderSearch";
+import ProviderSearch, { isNpi, type Provider } from "./ProviderSearch";
+import PatientForm from "./PatientForm";
 import SafetySummary from "./SafetySummary";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
@@ -27,7 +28,6 @@ const DOSES = ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
 const STEPS = ["intro", "hipaa", "patient", "rx", "results"] as const;
 type Step = (typeof STEPS)[number];
 
-const field = "w-full rounded-full border border-arx-borders bg-white px-4 py-2.5 text-sm text-arx-neutral-800";
 const primary = "inline-flex items-center justify-center gap-2 rounded-full bg-arx-action px-6 py-2.5 text-sm font-semibold text-arx-on-action disabled:opacity-40";
 
 export default function WebPortal() {
@@ -41,17 +41,20 @@ export default function WebPortal() {
   const [dose, setDose] = useState("");
   const [prescribed, setPrescribed] = useState("");
   const [provider, setProvider] = useState<Provider | null>(null);
+  const [npi, setNpi] = useState("");
+  const [gender, setGender] = useState("");
+  const [zip, setZip] = useState("");
+  const [ongoing, setOngoing] = useState("");
   useEffect(() => {
     if (w.enrollmentStatus === "none") setStep((s) => (s === "results" ? "intro" : s));
   }, [w.enrollmentStatus]);
 
-  const [first, ...rest] = patient.patientName.split(" ");
   const next = () => setStep(STEPS[STEPS.indexOf(step) + 1]);
   const back = () => setStep(STEPS[STEPS.indexOf(step) - 1]);
   const n = STEPS.indexOf(step);
 
   function submitRx() {
-    dispatch("WEB_SUBMIT", { portal: "patient" });
+    dispatch("WEB_SUBMIT", { portal: "patient", prescriberNpi: npi });
     setStep("results");
   }
   function enroll() {
@@ -89,22 +92,17 @@ export default function WebPortal() {
         )}
 
         {step === "patient" && (
-          <section>
-            <h1 className="mb-2 text-2xl font-extrabold">Patient information</h1>
-            <p className="mb-4 text-sm text-arx-neutral-800">Fill out your information to check your insurance coverage.</p>
-            <div className="mb-6 space-y-3">
-              <input className={field} aria-label="First name" defaultValue={first} />
-              <input className={field} aria-label="Last name" defaultValue={rest.join(" ")} />
-              <input className={field} aria-label="Date of birth" defaultValue={patient.patientDob} />
-              <input className={field} aria-label="Email" defaultValue={patient.email} />
-              <input className={field} aria-label="Phone number (optional)" placeholder="Phone number (optional)" defaultValue={patient.phone} />
-            </div>
-            <p className="mb-6 text-[11px] leading-relaxed text-arx-body-copy">By providing your telephone number and selecting Continue, you agree to receive automated marketing calls and texts about your {PROGRAM.name} treatment journey from and on behalf of {MANUFACTURER.name}. Message and data rates may apply.</p>
-            <div className="flex gap-3">
-              <button className={primary} onClick={next}>Continue <ArrowRight className="h-4 w-4" /></button>
-              <button className="rounded-full border border-arx-borders px-5 py-2.5 text-sm" onClick={back}>Back</button>
-            </div>
-          </section>
+          <PatientForm
+            patient={patient}
+            gender={gender}
+            onGender={setGender}
+            zip={zip}
+            onZip={setZip}
+            ongoing={ongoing}
+            onOngoing={setOngoing}
+            onNext={next}
+            onBack={back}
+          />
         )}
 
         {step === "rx" && (
@@ -131,10 +129,10 @@ export default function WebPortal() {
               ))}
             </div>
 
-            <div className="mb-6"><ProviderSearch value={provider} onChange={setProvider} /></div>
+            <div className="mb-6"><ProviderSearch value={provider} onChange={setProvider} npi={npi} onNpi={setNpi} /></div>
 
             <div className="flex gap-3">
-              <button className={primary} disabled={!dose || !prescribed} onClick={submitRx}>Get results <ArrowRight className="h-4 w-4" /></button>
+              <button className={primary} disabled={!dose || !prescribed || !isNpi(npi)} onClick={submitRx}>Get results <ArrowRight className="h-4 w-4" /></button>
               <button className="rounded-full border border-arx-borders px-5 py-2.5 text-sm" onClick={back}>Back</button>
             </div>
           </section>
@@ -151,7 +149,7 @@ export default function WebPortal() {
             ) : (
               <>
                 <div className="mb-5 flex items-start gap-2 rounded-lg border border-arx-borders bg-white p-4">
-                  <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-arx-primary text-arx-on-primary"><Check className="h-3 w-3" /></span>
+                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-arx-primary text-arx-on-primary"><Check className="h-3 w-3" /></span>
                   <div className="text-sm">
                     <p className="font-semibold">Great news! {PROGRAM.name} is covered by your insurance.</p>
                     {w.paRequired && <p className="text-xs text-arx-neutral-800">Prior Authorization is required.</p>}

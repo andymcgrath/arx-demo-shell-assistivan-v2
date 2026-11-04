@@ -72,6 +72,7 @@
     }
   ],
   "manufacturer": {
+    "legalName": "Eli Lilly and Company",
     "name": "Lilly Support Services",
     "logo": {
       "colors": "/brands/lilly/lilly-red.png",

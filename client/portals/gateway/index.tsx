@@ -37,7 +37,7 @@ export default function GatewayPortal() {
           route="POST /v1/benefit-verification"
           state={abv}
           latency={abv === "ok" ? `${(WEB_BI_MS / 1000).toFixed(1)} s` : "pending"}
-          request={{ drug: PROGRAM.drugDisplayName, caseId: patient.caseId, prescriberNpi: patient.npi }}
+          request={{ drug: PROGRAM.drugDisplayName, caseId: patient.caseId, prescriberNpi: w.prescriberNpi ?? patient.npi }}
           response={
             abv === "ok"
               ? {

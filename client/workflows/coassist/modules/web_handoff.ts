@@ -3,7 +3,8 @@
  * already collected consent and the patient's details, so there is no SMS, one-time code, or consent step here.
  *
  * Two events cross from the client page into the platform, one per gateway call and one for the handoff:
- * - WEB_SUBMIT: the patient finishes the Rx screen. The page calls benefit verification (ABV). BI runs and lands on its
+ * - WEB_SUBMIT: the patient finishes the Rx screen. The event carries `prescriberNpi`, typed or picked from the provider
+ *   search. ABV and APA both use it. The page calls benefit verification (ABV). BI runs and lands on its
  *   own after a short delay. The PA (APA) then starts on its own and decides on its own (see spine.ts), so no agent
  *   opens a stage. Every step here is a `system` trigger.
  * - WEB_HANDOFF: the patient taps Enroll once BI is back. They land on the copay screen of the patient experience,
@@ -25,7 +26,13 @@ export const WEB_HANDOFF_RULES: CoaRule[] = [
     scope: WEB,
     when: (d) => d.enrollmentStatus === "none",
     // The client page verified and consented the patient, so the platform treats them as verified.
-    set: () => ({ enrollmentStatus: "enrolled", smsVerified: true, otpVerified: true, consentStatus: "confirmed" }),
+    set: (_d, e) => ({
+      enrollmentStatus: "enrolled",
+      smsVerified: true,
+      otpVerified: true,
+      consentStatus: "confirmed",
+      prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null,
+    }),
     emit: { portal: "patient", step: 1 },
     then: [
       { trigger: "system", send: () => ({ type: "RUN_BI" }) },

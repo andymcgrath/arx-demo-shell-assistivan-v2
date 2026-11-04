@@ -94,6 +94,8 @@ export interface BrandConfig {
   showClientTab?: boolean;
   manufacturer: {
     name: string;
+    /** The company's legal name, for consent text on a client web page. Optional. Falls back to `name`. */
+    legalName?: string;
     tagline: string;
     logo: BrandLogo;
     support: { label: string; phone: string };

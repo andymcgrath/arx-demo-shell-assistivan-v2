@@ -77,6 +77,15 @@ describe("CoA_Web_Copay", () => {
     });
   });
 
+  it("carries the prescriber NPI from the page into the case, for ABV and APA", () => {
+    withFrozenClock(() => {
+      const { actor, data } = start();
+      expect(data().prescriberNpi).toBeNull();
+      runSteps(actor, [{ type: "WEB_SUBMIT", prescriberNpi: "0987654321" }]);
+      expect(data().prescriberNpi).toBe("0987654321");
+    });
+  });
+
   it("keeps the patient on the copay screen when the PA decides before they enroll", () => {
     withFrozenClock(() => {
       const { actor, clock, data, route } = start();
