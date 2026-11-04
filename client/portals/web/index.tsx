@@ -58,7 +58,7 @@ export default function WebPortal() {
   }
 
   return (
-    <div className="portal-patient flex min-h-full flex-col bg-arx-neutral-100 text-arx-neutral-800">
+    <div className="portal-patient flex h-full flex-col overflow-y-auto overflow-x-hidden bg-arx-neutral-100 text-arx-neutral-800">
       <SiteHeader />
 
       {step === "intro" && <Hero onStart={next} />}
