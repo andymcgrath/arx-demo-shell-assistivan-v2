@@ -9,7 +9,8 @@
  * Which screen shows is local, except the last one: it reads BI from the machine, so it waits for the gateway.
  * Nothing here calls a real service. All data is representative.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
@@ -60,6 +61,8 @@ function ConsumerWebPortal() {
   const next = () => setStep(STEPS[STEPS.indexOf(step) + 1]);
   const back = () => setStep(STEPS[STEPS.indexOf(step) - 1]);
   const n = STEPS.indexOf(step);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useScrollTopOnChange(rootRef, step);
 
   function submitRx() {
     dispatch("WEB_SUBMIT", { portal: "patient", prescriberNpi: npi });
@@ -72,7 +75,7 @@ function ConsumerWebPortal() {
   }
 
   return (
-    <div className="portal-patient flex h-full flex-col overflow-y-auto overflow-x-hidden bg-arx-neutral-100 text-arx-neutral-800">
+    <div ref={rootRef} className="portal-patient flex h-full flex-col overflow-y-auto overflow-x-hidden bg-arx-neutral-100 text-arx-neutral-800">
       <SiteHeader />
 
       {step === "intro" && <Hero onStart={next} />}

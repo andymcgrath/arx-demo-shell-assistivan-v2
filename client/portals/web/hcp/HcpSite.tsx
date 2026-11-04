@@ -5,7 +5,8 @@
  *
  * Which page shows is local, except the last one: a reload or Reset All lands on the right page from the machine.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
@@ -26,13 +27,16 @@ export default function HcpSite() {
     if (w.enrollmentStatus === "none") setPage((p) => (p === "submitted" ? "product" : p));
   }, [w.enrollmentStatus]);
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  useScrollTopOnChange(rootRef, page);
+
   function submit(npi: string) {
     dispatch("HCP_ENROLL_SUBMIT", { portal: "patient", prescriberNpi: npi });
     setPage("submitted");
   }
 
   return (
-    <div className="portal-patient flex h-full flex-col overflow-y-auto bg-arx-neutral-100 text-arx-neutral-800">
+    <div ref={rootRef} className="portal-patient flex h-full flex-col overflow-y-auto bg-arx-neutral-100 text-arx-neutral-800">
       <SiteHeader page={page} go={setPage} />
       <main className="flex-1">
         {page === "product" && <ProductPage onSupport={() => setPage("support")} />}

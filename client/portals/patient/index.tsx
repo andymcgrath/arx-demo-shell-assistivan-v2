@@ -20,6 +20,7 @@
  *   (default)                  → /         (welcome / not yet enrolled)
  */
 import { useEffect, useRef } from "react";
+import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { PortalRouter, Routes, Route, useNavigate, useLocation } from "@/lib/portalRouter";
 import { ChatProvider, useChatContext } from "./components/ChatContext";
 import ChatModal from "./components/ChatModal";
@@ -183,8 +184,11 @@ function PatientRoutes() {
   // screen (AppointmentConfirmation.tsx).
   const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation" && pathname !== "/cash-offer-sms" && pathname !== "/provider-transfer-sms";
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  useScrollTopOnChange(rootRef, pathname);
+
   return (
-    <div className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
+    <div ref={rootRef} className={`flex flex-col ${isWideFlow ? "min-h-full" : "h-full"}`}>
       {showHeaderFooter && <Header />}
       <div className="flex-1 overflow-x-hidden">
         <StateDrivenNav />
