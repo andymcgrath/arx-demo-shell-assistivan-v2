@@ -18,6 +18,7 @@ import { MANUFACTURER, PROGRAM } from "@/portals/patient/config/branding";
 import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLogo";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import Hero from "./Hero";
+import ProviderSearch, { type Provider } from "./ProviderSearch";
 import SafetySummary from "./SafetySummary";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
@@ -38,6 +39,8 @@ export default function WebPortal() {
   const [step, setStep] = useState<Step>(w.enrollmentStatus === "none" ? "intro" : "results");
   const [agreed, setAgreed] = useState(false);
   const [dose, setDose] = useState("");
+  const [prescribed, setPrescribed] = useState("");
+  const [provider, setProvider] = useState<Provider | null>(null);
   useEffect(() => {
     if (w.enrollmentStatus === "none") setStep((s) => (s === "results" ? "intro" : s));
   }, [w.enrollmentStatus]);
@@ -107,7 +110,18 @@ export default function WebPortal() {
         {step === "rx" && (
           <section>
             <h1 className="mb-2 text-2xl font-extrabold">Prescription information</h1>
-            <p className="mb-4 text-sm text-arx-neutral-800">Share your current {PROGRAM.name} dose below.</p>
+            <p className="mb-1 text-sm text-arx-neutral-800">Share your current {PROGRAM.name} dose below.</p>
+            <p className="mb-5 text-xs text-arx-body-copy">All fields are required unless noted as optional.</p>
+
+            <p className="mb-2 text-sm font-medium">Has your healthcare provider prescribed you {PROGRAM.name}?</p>
+            <div className="mb-5 space-y-2">
+              {["Yes", "No"].map((o) => (
+                <label key={o} className="flex items-center gap-2 text-sm">
+                  <input type="radio" name="prescribed" checked={prescribed === o} onChange={() => setPrescribed(o)} /> {o}
+                </label>
+              ))}
+            </div>
+
             <p className="mb-2 text-sm font-medium">Current prescribed dose</p>
             <div className="mb-6 space-y-2">
               {DOSES.map((d) => (
@@ -116,8 +130,11 @@ export default function WebPortal() {
                 </label>
               ))}
             </div>
+
+            <div className="mb-6"><ProviderSearch value={provider} onChange={setProvider} /></div>
+
             <div className="flex gap-3">
-              <button className={primary} disabled={!dose} onClick={submitRx}>Get results <ArrowRight className="h-4 w-4" /></button>
+              <button className={primary} disabled={!dose || !prescribed} onClick={submitRx}>Get results <ArrowRight className="h-4 w-4" /></button>
               <button className="rounded-full border border-arx-borders px-5 py-2.5 text-sm" onClick={back}>Back</button>
             </div>
           </section>
