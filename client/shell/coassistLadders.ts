@@ -50,20 +50,21 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
 export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP";
 
 /**
- * The web scenario's rungs. The client page's submit starts BI. Stage 4 is BI back, the handoff, copay enrolled, and
- * the PA approved and verified. Stage 5 picks Mail Order and sets the delivery. 6 to 8 are fulfillment, as elsewhere.
+ * The web scenario's rungs. The client page's submit starts BI. Stage 4 is the Gateway opened (BI back, PA approved), the
+ * patient checking pricing (no PA text), and copay enrolled. Stage 5 picks Mail Order and sets the delivery. 6 to 8 are
+ * fulfillment, as elsewhere.
  */
 function webStageEvents(stage: number): LadderEvent[] {
   const out: LadderEvent[] = [];
   if (stage >= 2) out.push(ev("WEB_SUBMIT", "patient"));
   if (stage >= 4) {
     out.push(
+      // Opening the Gateway releases BI. The decisions arrive on timers in the demo, so the ladder sends them.
+      ev("VIEW_GATEWAY", "patient"),
       ev("COMPLETE_BI", "crm"),
-      ev("WEB_HANDOFF", "patient"),
-      ev("SELECT_SELF_PAY", "patient"),
       ev("APPROVE_PA", "crm"),
-      ev("VERIFY_PA_APPROVED_SMS", "patient"),
-      ev("VERIFY_PA_APPROVED_OTP", "patient"),
+      ev("CHECK_PRICING", "patient"),
+      ev("SELECT_SELF_PAY", "patient"),
     );
   }
   if (stage >= 5) {

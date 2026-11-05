@@ -47,28 +47,6 @@
     "linkedItemLabel": "View Task: Prior Authorization Requested"
   },
   {
-    "eventType": "WEB_HANDOFF",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Web Handoff - Test Patient",
-    "bodyParagraphs": [
-      "Web Handoff occurred for Test Patient."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
-    "eventType": "SELECT_SELF_PAY",
-    "to": "Test FRM",
-    "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Select Self Pay - Test Patient",
-    "bodyParagraphs": [
-      "Select Self Pay occurred for Test Patient."
-    ],
-    "linkedItemId": "LIVE-CASE-AS164543",
-    "linkedItemLabel": "View Case"
-  },
-  {
     "eventType": "APPROVE_PA",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
@@ -81,23 +59,23 @@
     "linkedItemLabel": "View Task: Prior Authorization Requested"
   },
   {
-    "eventType": "VERIFY_PA_APPROVED_SMS",
+    "eventType": "CHECK_PRICING",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Verify Pa Approved Sms - Test Patient",
+    "subject": "Status Update: Check Pricing - Test Patient",
     "bodyParagraphs": [
-      "Verify Pa Approved Sms occurred for Test Patient."
+      "Check Pricing occurred for Test Patient."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "VERIFY_PA_APPROVED_OTP",
+    "eventType": "SELECT_SELF_PAY",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Verify Pa Approved Otp - Test Patient",
+    "subject": "Status Update: Select Self Pay - Test Patient",
     "bodyParagraphs": [
-      "Verify Pa Approved Otp occurred for Test Patient."
+      "Select Self Pay occurred for Test Patient."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"

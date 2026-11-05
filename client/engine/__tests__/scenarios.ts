@@ -192,19 +192,21 @@ export const SCENARIOS: Scenario[] = [
   },
 
   // ── CoAssist: Web Copay (a client web page starts the case; no CRM) ──────
-  // WEB_SUBMIT starts BI on its own. COMPLETE_BI and APPROVE_PA are system triggers on a delay in the demo, so the
-  // golden path sends them. The patient enrolls in copay on the copay screen while the PA still runs.
+  // WEB_SUBMIT starts BI, which stays in flight until the presenter opens the Gateway (VIEW_GATEWAY). COMPLETE_BI and
+  // APPROVE_PA are system triggers on a delay in the demo, so the golden path sends them. The patient checks pricing on
+  // the coverage summary (no PA text), enrolls in copay, then picks Mail Order.
   {
-    name: "coa-web-copay-enroll-while-pa-runs",
+    name: "coa-web-copay-check-pricing-then-copay",
 
     endsAt: "delivered",
     flowType: "CoA_Web_Copay",
     steps: [
       { type: "WEB_SUBMIT" },
+      { type: "VIEW_GATEWAY" },
       { type: "COMPLETE_BI" },
-      { type: "WEB_HANDOFF" },
+      { type: "APPROVE_PA" },
+      { type: "CHECK_PRICING" },
       { type: "SELECT_SELF_PAY" },
-      { type: "APPROVE_PA" }, ...paApprovedReverify,
       { type: "SELECT_PRICING_OPTION", option: "mail_order" },
       ...addressAndDate, ...fulfillment,
     ],

@@ -2,18 +2,22 @@
 import type { Screen } from "@/engine/workflow/screens";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
+/** The web variant skips the text and code: the coverage summary already showed the approval. */
+const NOT_WEB = { not: { module: "pa_notification", props: { variant: "web" } } } as const;
+const TEXTED = [{ module: "pa_notification" }, NOT_WEB] as const;
+
 export const PA_NOTIFICATION_SCREENS: Screen[] = [
-  { path: "/pa-approved-sms", label: "PA Approved SMS", group: "Prior authorization", scope: { module: "pa_notification" }, sticky: true },
-  { path: "/pa-approved-otp", label: "PA Approved OTP", group: "Prior authorization", scope: { module: "pa_notification" }, sticky: true },
+  { path: "/pa-approved-sms", label: "PA Approved SMS", group: "Prior authorization", scope: [...TEXTED], sticky: true },
+  { path: "/pa-approved-otp", label: "PA Approved OTP", group: "Prior authorization", scope: [...TEXTED], sticky: true },
 ];
 
 export const PA_NOTIFICATION_ROUTES: CoaRoute[] = [
-  { id: "pa_notification.sms", slot: "pa_notice", path: "/pa-approved-sms", scope: PRICING_JOURNEY, when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
+  { id: "pa_notification.sms", slot: "pa_notice", path: "/pa-approved-sms", scope: [PRICING_JOURNEY, NOT_WEB], when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
   {
     id: "pa_notification.otp",
     slot: "pa_notice",
     path: "/pa-approved-otp",
-    scope: PRICING_JOURNEY,
+    scope: [PRICING_JOURNEY, NOT_WEB],
     when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
   },
   // Coverage, pharmacy covered: wait for the PA, then SMS and OTP again.

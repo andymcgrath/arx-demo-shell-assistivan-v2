@@ -26,6 +26,15 @@
       ]
     },
     {
+      "event": "VIEW_GATEWAY",
+      "accepted": true,
+      "route": "/lock-screen",
+      "changed": {
+        "gatewayViewed": true
+      },
+      "newEvents": []
+    },
+    {
       "event": "COMPLETE_BI",
       "accepted": true,
       "route": "/lock-screen",
@@ -52,39 +61,9 @@
       ]
     },
     {
-      "event": "WEB_HANDOFF",
-      "accepted": true,
-      "route": "/copay-enroll",
-      "changed": {
-        "webHandoff": true
-      },
-      "newEvents": [
-        {
-          "eventType": "WEB_HANDOFF",
-          "portal": "patient",
-          "workflowStep": 2
-        }
-      ]
-    },
-    {
-      "event": "SELECT_SELF_PAY",
-      "accepted": true,
-      "route": "/enrollment-complete",
-      "changed": {
-        "copayEnrolled": true
-      },
-      "newEvents": [
-        {
-          "eventType": "SELECT_SELF_PAY",
-          "portal": "patient",
-          "workflowStep": 9
-        }
-      ]
-    },
-    {
       "event": "APPROVE_PA",
       "accepted": true,
-      "route": "/pa-approved-sms",
+      "route": "/coverage-summary",
       "changed": {
         "paStatus": "approved",
         "paApprovedAt": "2026-01-15T12:00:00.000Z"
@@ -98,30 +77,32 @@
       ]
     },
     {
-      "event": "VERIFY_PA_APPROVED_SMS",
-      "accepted": true,
-      "route": "/pa-approved-otp",
-      "changed": {
-        "paApprovedSmsVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_PA_APPROVED_SMS",
-          "portal": "patient",
-          "workflowStep": 9
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_PA_APPROVED_OTP",
+      "event": "CHECK_PRICING",
       "accepted": true,
       "route": "/benefit-pricing",
       "changed": {
+        "pricingChecked": true,
+        "paApprovedSmsVerified": true,
         "paApprovedOtpVerified": true
       },
       "newEvents": [
         {
-          "eventType": "VERIFY_PA_APPROVED_OTP",
+          "eventType": "CHECK_PRICING",
+          "portal": "patient",
+          "workflowStep": 2
+        }
+      ]
+    },
+    {
+      "event": "SELECT_SELF_PAY",
+      "accepted": true,
+      "route": "/benefit-pricing",
+      "changed": {
+        "copayEnrolled": true
+      },
+      "newEvents": [
+        {
+          "eventType": "SELECT_SELF_PAY",
           "portal": "patient",
           "workflowStep": 9
         }

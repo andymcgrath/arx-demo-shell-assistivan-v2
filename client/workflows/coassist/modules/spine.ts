@@ -82,6 +82,8 @@ export const SPINE_RULES: CoaRule[] = [
   { id: "spine.leave_stage.pa", on: "LEAVE_STAGE", snapshot: false, when: (_d, e) => e.stage === "PA", cancel: ["pa-decision"] },
   {
     ...submitPaRule<CoassistContent>(),
+    // The web source holds the PA until the presenter opens the Gateway after the patient enrolls (web_handoff.ts).
+    when: (d, e, s) => (submitPaRule<CoassistContent>().when?.(d, e, s) ?? true) && (s.recipe?.source !== "web" || d.gatewayViewed),
     // The web source has no CRM, so nobody opens the PA stage. The decision lands on its own (APA through the gateway).
     then: {
       trigger: "system",

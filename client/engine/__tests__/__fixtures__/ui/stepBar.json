@@ -1574,7 +1574,7 @@
       }
     ]
   },
-  "coa-web-copay-enroll-while-pa-runs": {
+  "coa-web-copay-check-pricing-then-copay": {
     "flowType": "CoA_Web_Copay",
     "labelSets": [
       [
@@ -1619,27 +1619,17 @@
         "rxShippedStepN": 8
       },
       {
+        "after": "VIEW_GATEWAY",
+        "labelSet": 0,
+        "done": "xx.......",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 7,
+        "rxShippedStepN": 8
+      },
+      {
         "after": "COMPLETE_BI",
-        "labelSet": 0,
-        "done": "xxx......",
-        "workflowStep": 4,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 7,
-        "rxShippedStepN": 8
-      },
-      {
-        "after": "WEB_HANDOFF",
-        "labelSet": 0,
-        "done": "xxx......",
-        "workflowStep": 4,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 7,
-        "rxShippedStepN": 8
-      },
-      {
-        "after": "SELECT_SELF_PAY",
         "labelSet": 0,
         "done": "xxx......",
         "workflowStep": 4,
@@ -1659,7 +1649,7 @@
         "rxShippedStepN": 8
       },
       {
-        "after": "VERIFY_PA_APPROVED_SMS",
+        "after": "CHECK_PRICING",
         "labelSet": 0,
         "done": "xxxx.....",
         "workflowStep": 5,
@@ -1669,7 +1659,7 @@
         "rxShippedStepN": 8
       },
       {
-        "after": "VERIFY_PA_APPROVED_OTP",
+        "after": "SELECT_SELF_PAY",
         "labelSet": 0,
         "done": "xxxx.....",
         "workflowStep": 5,

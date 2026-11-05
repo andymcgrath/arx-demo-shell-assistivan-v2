@@ -955,3 +955,13 @@
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
 }
+
+/* Gateway tab: a call in flight pulses its border. Slow and soft, so it draws the eye without distracting. */
+@keyframes gateway-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50%      { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+}
+.gateway-pulse { animation: gateway-pulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .gateway-pulse { animation: none; }
+}

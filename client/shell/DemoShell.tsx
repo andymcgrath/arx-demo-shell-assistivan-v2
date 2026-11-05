@@ -719,6 +719,15 @@ export default function DemoShell() {
   // In 1up mode, always derive the active portal from the URL
   const activePanels = layout === "1up" ? [{ portal: urlPortal }] : panels;
 
+  // Every tab stays mounted, hidden, so a tab cannot tell when it is shown. The shell can. It only reports that the
+  // Gateway is on screen (the web scenario's APA call waits for that). The machine decides what it starts.
+  const gatewayShown = activePanels.some((p) => p.portal === "gateway");
+  // Side by side, the Gateway can already be on screen when the page submits. Run again then, so the call is not missed.
+  const submitted = useSelector(actor, (s) => s.context.workflowData.enrollmentStatus !== "none");
+  useEffect(() => {
+    if (gatewayShown) actor.send({ type: "VIEW_GATEWAY", portal: "patient" } as any);
+  }, [gatewayShown, submitted, actor]);
+
   const resetActorToStage = useCallback((stage: number) => {
     // Bump resetNonce so portals with their own navigation guards (e.g. the
     // patient portal's StateDrivenNav) know this is a reset and force-navigate

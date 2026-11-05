@@ -71,7 +71,8 @@ function CallCard({ title, route, state, latency, request, response }: {
   response: Record<string, unknown> | null;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    // A call in flight pulses its border, so the eye finds what is happening.
+    <section className={`rounded-lg border bg-white p-4 ${state === "pending" ? "gateway-pulse border-amber-300" : "border-slate-200"}`}>
       <div className="mb-1 flex items-center justify-between">
         <h2 className="text-sm font-semibold">{title}</h2>
         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${pill[state]}`}>{pillText[state]}</span>

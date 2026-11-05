@@ -63,7 +63,7 @@ export const COA_WEB_COPAY_RECIPE: ScenarioRecipe = {
   choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment", props: { variant: "web" } },
-    { id: "pa_notification" },
+    { id: "pa_notification", props: { variant: "web" } },
     { id: "cash_offer", props: { variant: "pa_denied" } },
     { id: "payment" },
     { id: "financial_assistance", props: { variant: "copay" } },

@@ -3,6 +3,9 @@
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
+    "CHECK_PRICING": [
+      "web_handoff.check_pricing"
+    ],
     "COMPLETE_BI": [
       "spine.complete_bi"
     ],
@@ -107,13 +110,13 @@
     "VERIFY_SMS": [
       "enrollment.verify_sms"
     ],
+    "VIEW_GATEWAY": [
+      "web_handoff.view_gateway"
+    ],
     "VIEW_STAGE": [
       "spine.view_stage.bi",
       "spine.view_stage.pa",
       "provider_transfer.view_stage"
-    ],
-    "WEB_HANDOFF": [
-      "web_handoff.handoff"
     ],
     "WEB_SUBMIT": [
       "web_handoff.submit"
@@ -367,10 +370,13 @@
       "CoA_Medical_Transfer",
       "CoA_PAP"
     ],
-    "web_handoff.handoff": [
+    "web_handoff.check_pricing": [
       "CoA_Web_Copay"
     ],
     "web_handoff.submit": [
+      "CoA_Web_Copay"
+    ],
+    "web_handoff.view_gateway": [
       "CoA_Web_Copay"
     ]
   }

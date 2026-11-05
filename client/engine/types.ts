@@ -107,9 +107,12 @@ export interface WorkflowData {
    *  pricingOption ever being 'self_pay' for this flow. Stays false for
    *  every other flow, including CoA_DTP. */
   copayEnrolled: boolean;
-  /** CoA_Web_Copay only: true once the patient taps Enroll on the client's web page and lands in the AssistRx patient
-   *  experience. The client page has already verified and consented them, so the SMS and one-time code step is skipped. */
-  webHandoff: boolean;
+  /** CoA_Web_Copay only: true once the patient taps Check Pricing on the coverage summary. The PA approval was shown there, so
+   *  the PA-approved text and code are skipped. */
+  pricingChecked: boolean;
+  /** CoA_Web_Copay only: true once the Gateway tab has been viewed after the patient enrolled in copay. The prior authorization
+   *  call (APA) waits for it, so a presenter can show the call going out. */
+  gatewayViewed: boolean;
   /** CoA_Web_Copay only: the prescriber's NPI, typed or picked on the client web page. Benefit verification (ABV) and prior
    *  authorization (APA) both use it. Null until the page submits. */
   prescriberNpi: string | null;

@@ -4579,7 +4579,7 @@
       }
     ]
   },
-  "coa-web-copay-enroll-while-pa-runs": {
+  "coa-web-copay-check-pricing-then-copay": {
     "flowType": "CoA_Web_Copay",
     "steps": [
       {
@@ -4715,6 +4715,18 @@
         ]
       },
       {
+        "after": "VIEW_GATEWAY",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "CO-14281",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
         "after": "COMPLETE_BI",
         "order": [
           "EA-14272",
@@ -4753,30 +4765,6 @@
             "lastUpdatedAgo": "today"
           }
         ]
-      },
-      {
-        "after": "WEB_HANDOFF",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PA-14274",
-          "CO-14281",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
-      },
-      {
-        "after": "SELECT_SELF_PAY",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PA-14274",
-          "CO-14281",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
       },
       {
         "after": "APPROVE_PA",
@@ -4832,7 +4820,7 @@
         ]
       },
       {
-        "after": "VERIFY_PA_APPROVED_SMS",
+        "after": "CHECK_PRICING",
         "order": [
           "EA-14272",
           "BI-14273",
@@ -4844,7 +4832,7 @@
         "changed": []
       },
       {
-        "after": "VERIFY_PA_APPROVED_OTP",
+        "after": "SELECT_SELF_PAY",
         "order": [
           "EA-14272",
           "BI-14273",

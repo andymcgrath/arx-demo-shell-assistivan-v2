@@ -4,17 +4,15 @@
  * What AssistRx owns is the hook: the two calls into the platform.
  *
  * - After the Rx screen, the page sends WEB_SUBMIT. That is the benefit verification (ABV) call through the gateway.
- * - On Enroll, the page sends WEB_HANDOFF and the shell moves to the Patient tab, on the copay screen.
+ *   The page then waits on "Checking your coverage" until the gateway returns, which the presenter releases from the
+ *   Gateway tab. The patient's coverage summary then appears in the patient experience.
  *
  * Which screen shows is local, except the last one: it reads BI from the machine, so it waits for the gateway.
  * Nothing here calls a real service. All data is representative.
  */
 import { useEffect, useRef, useState } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
-import { useNavigate } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
-import PricingCard, { CoverageBanner } from "@/portals/patient/components/pricing/PricingCard";
-import { COPAY_PRE_ENROLL_OPTIONS } from "@/portals/patient/components/pricing/pricingOptions";
 import { useDemoStore } from "@/store/demoStore";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
@@ -43,7 +41,6 @@ export default function WebPortal() {
 
 function ConsumerWebPortal() {
   const dispatch = useWorkflowDispatch();
-  const navigate = useNavigate();
   const { workflowData: w } = usePersonaState("patient");
   const { data: patient } = usePatientCase();
   const caseGender = usePatientStore((s) => s.gender);
@@ -73,11 +70,6 @@ function ConsumerWebPortal() {
   function submitRx() {
     dispatch("WEB_SUBMIT", { portal: "patient", prescriberNpi: npi });
     setStep("results");
-  }
-  function enroll() {
-    dispatch("WEB_HANDOFF", { portal: "patient" });
-    // The Patient tab's URL slug. Not imported from DemoShell, which imports this file.
-    navigate("/patient");
   }
 
   return (
@@ -159,23 +151,17 @@ function ConsumerWebPortal() {
 
         {step === "results" && (
           <section>
-            <h1 className="mb-1 text-2xl font-extrabold">Benefit pricing</h1>
-            <p className="mb-4 text-sm text-arx-neutral-800">Your {PROGRAM.name} coverage and pricing options.</p>
+            <h1 className="mb-1 text-2xl font-extrabold">Checking your coverage</h1>
+            <p className="mb-4 text-sm text-arx-neutral-800">We are checking your {PROGRAM.name} benefits with your insurance.</p>
             {w.biStatus !== "complete" ? (
               <div className="flex items-center gap-3 rounded-lg border border-arx-borders bg-white p-4 text-sm text-arx-neutral-800">
                 <Loader2 className="h-4 w-4 animate-spin" /> Checking your coverage…
               </div>
             ) : (
-              <>
-                {/* The patient's own banner, cards and options, so the hand-off keeps one look. Copay leads, and only
-                    its Enroll acts here, because Enroll is what hands the patient over. */}
-                <div className="flex flex-col gap-4">
-                  <CoverageBanner priorAuthRequired={w.paRequired} />
-                  {COPAY_PRE_ENROLL_OPTIONS.map((option) => (
-                    <PricingCard key={option.key} option={option} primary={option.key === "self_pay"} onSelect={option.key === "self_pay" ? enroll : undefined} />
-                  ))}
-                </div>
-              </>
+              <div className="rounded-lg border border-arx-borders bg-white p-4 text-sm text-arx-neutral-800">
+                <p className="font-semibold">Your coverage check is done.</p>
+                <p className="mt-1 text-xs text-arx-body-copy">Your coverage summary is ready in your patient experience.</p>
+              </div>
             )}
           </section>
         )}

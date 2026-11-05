@@ -1309,7 +1309,7 @@
       }
     ]
   },
-  "coa-web-copay-enroll-while-pa-runs": {
+  "coa-web-copay-check-pricing-then-copay": {
     "flowType": "CoA_Web_Copay",
     "entries": [
       {
