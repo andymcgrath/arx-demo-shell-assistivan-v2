@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./harness";
+import { menuPaths, routedPaths } from "@/engine/workflow/screens";
+import { COASSIST_SCREENS } from "@/workflows/coassist/screens";
 import { WEB_BI_MS, WEB_PA_MS } from "@/workflows/coassist/modules/web_handoff";
 
 /**
@@ -108,5 +110,46 @@ describe("CoA_Web_Copay", () => {
       expect(actor.getSnapshot().can({ type: "SELECT_SELF_PAY" } as any)).toBe(false);
       expect(actor.getSnapshot().can({ type: "WEB_SUBMIT" } as any)).toBe(false);
     });
+  });
+  it("keeps the phone idle until the patient taps Enroll on the page", () => {
+    withFrozenClock(() => {
+      const { actor, clock, route } = start();
+      expect(route()).toBe("/lock-screen");
+      runSteps(actor, [{ type: "WEB_SUBMIT" }]);
+      expect(route()).toBe("/lock-screen");
+      clock.increment(WEB_BI_MS);
+      clock.increment(WEB_PA_MS);
+      expect(route()).toBe("/lock-screen");
+      runSteps(actor, [{ type: "WEB_HANDOFF" }]);
+      expect(route()).toBe("/copay-enroll");
+    });
+  });
+
+  it("undoes one step at a time, back to the idle phone, and never lands on a screen the scenario skips", () => {
+    withFrozenClock(() => {
+      const { actor, clock, route, data } = start();
+      runSteps(actor, [{ type: "WEB_SUBMIT" }]);
+      clock.increment(WEB_BI_MS);
+      runSteps(actor, [{ type: "WEB_HANDOFF" }, { type: "SELECT_SELF_PAY" }]);
+      clock.increment(WEB_PA_MS);
+      runSteps(actor, [{ type: "VERIFY_PA_APPROVED_SMS" }, { type: "VERIFY_PA_APPROVED_OTP" }]);
+      const menu = new Set([...menuPaths(COASSIST_SCREENS, "CoA_Web_Copay"), "/lock-screen"]);
+      const seen: string[] = [];
+      for (let i = 0; i < 20 && actor.getSnapshot().can({ type: "UNDO" } as any); i++) {
+        actor.send({ type: "UNDO" } as any);
+        seen.push(route());
+      }
+      expect(seen.every((p) => menu.has(p))).toBe(true);
+      expect(route()).toBe("/lock-screen");
+      expect(data().enrollmentStatus).toBe("none");
+      expect(data().webHandoff).toBe(false);
+    });
+  });
+
+  it("does not borrow the SMS, phone, code or consent screens from the other CoAssist scenarios", () => {
+    const borrowed = ["/", "/sms-message", "/phone-verification", "/otp-verification", "/confirm-details"];
+    expect(menuPaths(COASSIST_SCREENS, "CoA_Web_Copay").filter((p) => borrowed.includes(p))).toEqual([]);
+    expect(routedPaths(COASSIST_SCREENS, "CoA_Web_Copay").filter((p) => borrowed.includes(p))).toEqual([]);
+    expect(menuPaths(COASSIST_SCREENS, "CoA_Copay")).toEqual(expect.arrayContaining(borrowed));
   });
 });

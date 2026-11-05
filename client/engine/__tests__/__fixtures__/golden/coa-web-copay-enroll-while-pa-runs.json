@@ -4,7 +4,7 @@
     {
       "event": "WEB_SUBMIT",
       "accepted": true,
-      "route": "/enrollment-complete",
+      "route": "/lock-screen",
       "changed": {
         "enrollmentStatus": "enrolled",
         "smsVerified": true,
@@ -28,7 +28,7 @@
     {
       "event": "COMPLETE_BI",
       "accepted": true,
-      "route": "/enrollment-complete",
+      "route": "/lock-screen",
       "changed": {
         "paStatus": "submitted",
         "biStatus": "complete",

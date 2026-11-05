@@ -134,7 +134,11 @@ export interface ScenarioDefinition<Content = unknown> {
  * - `{ module, props? }`: scenarios whose recipe includes the module, with matching props.
  * - `{ fork, exit? }`: scenarios where that fork applies, and has that exit when one is named.
  */
-export type RuleScope = { module: string; props?: Record<string, unknown> } | { fork: string; exit?: string };
+export type RuleScope =
+  | { module: string; props?: Record<string, unknown> }
+  | { fork: string; exit?: string }
+  /** Scenarios outside the inner scope. A screen the web variant never reaches says `{ not: WEB }`. */
+  | { not: { module: string; props?: Record<string, unknown> } | { fork: string; exit?: string } };
 
 /**
  * One scope, or a list that must all hold. A route rule owned by a module on one branch uses a list: the module

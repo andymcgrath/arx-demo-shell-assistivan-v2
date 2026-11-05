@@ -688,7 +688,8 @@ export default function DemoShell() {
     const availablePortals = getPortals(flowType).map(p => p.id);
     if (layout === "1up" && !availablePortals.includes(urlPortal)) {
       const fallbackPortal = availablePortals[0] || "crm";
-      navigate(`/${PORTAL_SLUG[fallbackPortal]}`);
+      // Replace, so Back does not return to a tab this scenario does not have.
+      navigate(`/${PORTAL_SLUG[fallbackPortal]}`, { replace: true });
     }
   }, [flowType, layout, urlPortal]);
 
@@ -859,7 +860,7 @@ export default function DemoShell() {
                   setLayout("1up");
                   const startPortal = FLOW_START_PORTAL[demo.flow];
                   setPanels([{ portal: startPortal }]);
-                  navigate(`/${PORTAL_SLUG[startPortal]}`);
+                  navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
                 }}
                 title={DEMO_OPTIONS.find((d) => d.id === demoId)?.description}
                 className="appearance-none text-[11px] bg-white/10 border border-white/20 text-white rounded px-2 py-1.5 pr-6 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -940,7 +941,7 @@ export default function DemoShell() {
                       setLayout("1up");
                       const startPortal = FLOW_START_PORTAL[flowType];
                       setPanels([{ portal: startPortal }]);
-                      navigate(`/${PORTAL_SLUG[startPortal]}`);
+                      navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
                     }}
                     className="block w-full text-left px-4 py-2.5 text-[12px] font-medium text-white hover:bg-indigo-500/30 border-b border-indigo-400/50 transition-colors"
                   >

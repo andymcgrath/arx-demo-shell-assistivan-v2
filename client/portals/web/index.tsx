@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { useDemoStore } from "@/store/demoStore";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { MANUFACTURER, PROGRAM } from "@/portals/patient/config/branding";
@@ -31,7 +32,13 @@ type Step = (typeof STEPS)[number];
 
 const primary = "inline-flex items-center justify-center gap-2 rounded-full bg-arx-action px-6 py-2.5 text-sm font-semibold text-arx-on-action disabled:opacity-40";
 
+/** Reset All bumps the nonce. The page remounts, so its step and its answers start over with the machine. */
 export default function WebPortal() {
+  const resetNonce = useDemoStore((s) => s.resetNonce);
+  return <ConsumerWebPortal key={resetNonce} />;
+}
+
+function ConsumerWebPortal() {
   const dispatch = useWorkflowDispatch();
   const navigate = useNavigate();
   const { workflowData: w } = usePersonaState("patient");
@@ -46,8 +53,10 @@ export default function WebPortal() {
   const [gender, setGender] = useState("");
   const [zip, setZip] = useState("");
   const [ongoing, setOngoing] = useState("");
+  // Undo of the submit puts the patient back on the Rx screen with their answers kept. Reset All remounts the page
+  // (see WebPortal), which starts at the intro.
   useEffect(() => {
-    if (w.enrollmentStatus === "none") setStep((s) => (s === "results" ? "intro" : s));
+    if (w.enrollmentStatus === "none") setStep((s) => (s === "results" ? "rx" : s));
   }, [w.enrollmentStatus]);
 
   const next = () => setStep(STEPS[STEPS.indexOf(step) + 1]);

@@ -2,20 +2,26 @@
 import type { Screen } from "@/engine/workflow/screens";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
+const WEB = { module: "enrollment", props: { variant: "web" } } as const;
+/** The web page collected consent and verified the patient, so the SMS, phone, code and consent screens never show. */
+const NOT_WEB = { not: WEB } as const;
+
 export const ENROLLMENT_SCREENS: Screen[] = [
-  { path: "/", label: "Home", group: "" },
-  { path: "/sms-message", label: "SMS Verification", group: "Enrollment" },
-  { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true },
-  { path: "/otp-verification", label: "OTP Verification", group: "Enrollment" },
-  { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment" },
+  { path: "/", label: "Home", group: "", scope: NOT_WEB },
+  { path: "/sms-message", label: "SMS Verification", group: "Enrollment", scope: NOT_WEB },
+  { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true, scope: NOT_WEB },
+  { path: "/otp-verification", label: "OTP Verification", group: "Enrollment", scope: NOT_WEB },
+  { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment", scope: NOT_WEB },
   { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment", sticky: true },
 ];
 
 export const ENROLLMENT_ROUTES: CoaRoute[] = [
   { id: "enrollment.lock_screen", slot: "gate", path: "/lock-screen", when: (d) => d.enrollmentStatus === "none" },
-  { id: "enrollment.sms", slot: "gate", path: "/sms-message", when: (d) => d.enrollmentInviteSent && !d.smsVerified },
-  { id: "enrollment.otp", slot: "gate", path: "/otp-verification", when: (d) => d.smsVerified && !d.otpVerified },
-  { id: "enrollment.confirm_details", slot: "gate", path: "/confirm-details", when: (d) => d.otpVerified && d.consentStatus === "pending" },
+  // The patient is still on the client's web page until they tap Enroll there, so the phone stays idle.
+  { id: "enrollment.web_waiting_on_page", slot: "gate", path: "/lock-screen", scope: WEB, when: (d) => !d.webHandoff },
+  { id: "enrollment.sms", slot: "gate", path: "/sms-message", scope: NOT_WEB, when: (d) => d.enrollmentInviteSent && !d.smsVerified },
+  { id: "enrollment.otp", slot: "gate", path: "/otp-verification", scope: NOT_WEB, when: (d) => d.smsVerified && !d.otpVerified },
+  { id: "enrollment.confirm_details", slot: "gate", path: "/confirm-details", scope: NOT_WEB, when: (d) => d.otpVerified && d.consentStatus === "pending" },
 
   // A patient who taps Enroll on the client's web page lands on the copay screen, even while the PA still runs or has
   // already decided. Once they enroll, the waiting screen or the PA-approved text takes over.

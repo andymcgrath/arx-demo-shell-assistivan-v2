@@ -19,6 +19,7 @@ export function inScope(scope: Scope, scenario: ScenarioDefinition<any>, forks: 
 }
 
 function inOneScope(scope: RuleScope, scenario: ScenarioDefinition<any>, forks: ForkDefinition[]): boolean {
+  if ("not" in scope) return !inOneScope(scope.not, scenario, forks);
   if ("module" in scope) {
     return !!scenario.recipe?.modules.some((m) => m.id === scope.module && propsMatch(m.props, scope.props));
   }
@@ -57,7 +58,9 @@ export function scopeProblems(rules: Rule<any, any>[], scenarios: ScenarioDefini
   for (const rule of rules) {
     if (!rule.scope) continue;
     const name = rule.id ?? rule.on;
-    for (const scope of listOf(rule.scope)) {
+    for (const wrapped of listOf(rule.scope)) {
+      // A negated scope names the same thing as its inner scope, so it is checked the same way.
+      const scope = "not" in wrapped ? wrapped.not : wrapped;
       if ("fork" in scope) {
         const declared = forks.filter((f) => f.id === scope.fork);
         if (!declared.length) problems.push(`rule "${name}" is scoped to fork "${scope.fork}", which no fork declares`);
