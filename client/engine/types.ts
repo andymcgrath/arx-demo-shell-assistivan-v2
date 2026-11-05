@@ -225,8 +225,21 @@ export interface DemoEvent {
   createdAt: string;
 }
 
+/**
+ * A delayed automation that has not fired yet. XState keeps the timer in memory and a saved snapshot does not carry
+ * it, so the machine records it here. A reload, a flow switch or an UNDO re-arms what is listed.
+ */
+export interface PendingTimer {
+  id: string;
+  event: { type: string; [key: string]: unknown };
+  /** The full delay. A re-armed timer starts over. */
+  after: number;
+}
+
 export interface MachineContext {
   workflowData: WorkflowData;
   events: DemoEvent[];
   _snapshots: MachineContext[];
+  /** Absent in snapshots saved before timers were tracked. */
+  _timers?: PendingTimer[];
 }

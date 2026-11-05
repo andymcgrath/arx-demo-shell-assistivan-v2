@@ -73,7 +73,8 @@ const actorSnapshots = new Map<FlowType, unknown>();
 // state-graph machines cannot restore. Bump this whenever a machine's shape changes.
 // v4: workflowData gained `choices` (fork picks), so older snapshots lack it.
 // v5: a fresh machine now starts on the selected demo's branches, so older snapshots hold the wrong branch.
-const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v5";
+// v6: snapshots now list pending delayed automations (`_timers`). Older ones saved mid-wait cannot resume.
+const SNAPSHOT_STORAGE_KEY = "arx-workflow-snapshots-v6";
 
 function readSnapshotStore(): Partial<Record<FlowType, unknown>> {
   try {
@@ -242,6 +243,8 @@ function createActorForFlow(
     actor = freshActor();
   }
   actor.start();
+  // A restored run was saved with delayed automations that did not survive. Re-arm them, or the run waits forever.
+  if (restoreFrom) actor.send({ type: "REARM_TIMERS" } as any);
 
   // Keep sessionStorage in sync with every future transition on this actor,
   // not just at flow-switch time — a reload mid-flow (e.g. mid-enrollment,

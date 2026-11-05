@@ -931,7 +931,8 @@ export default function DemoShell() {
                       // WF1" reports.
                       sessionStorage.removeItem('arx-patient-identity');
                       sessionStorage.removeItem('arx-prespap-application');
-                      sessionStorage.removeItem('arx-demo-session');
+                      // Keep 'arx-demo-session'. Removing it made the next load look like a new session and reset the
+                      // selected scenario to the first one, so a reload after Reset All changed scenarios.
                       setShowStageReset(false);
                       // Reset means "start over" — return to this flow's
                       // canonical opening screen (FLOW_START_PORTAL), as a

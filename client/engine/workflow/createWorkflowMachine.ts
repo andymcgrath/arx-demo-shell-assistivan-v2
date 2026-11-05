@@ -11,7 +11,7 @@
  * workflowData.flowType, so persisted snapshots restore with it.
  */
 import { assign, enqueueActions, setup } from "xstate";
-import type { DemoEvent, FlowType, MachineContext } from "@/engine/types";
+import type { DemoEvent, FlowType, MachineContext, PendingTimer } from "@/engine/types";
 import { createInitialWorkflowData } from "./baseData";
 import { choiceProblems } from "./forks";
 import { ruleAppliesTo, scopeProblems } from "./scope";
@@ -118,6 +118,8 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
             workflowData: data,
             events: [...context.events, ...emitted],
             _snapshots: takeSnapshot ? pushSnapshot(context._snapshots, context) : context._snapshots,
+            // A delayed event that just fired is no longer pending.
+            _timers: ((context._timers ?? []) as PendingTimer[]).filter((t) => t.id !== event._timer),
           };
         }),
         // Runs after the assign above, so `context` already holds the new data.
@@ -127,19 +129,32 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
                 for (const id of rule.cancel ?? []) enqueue.cancel(id);
                 const data = context.workflowData;
                 const scenario = scenarioFor(data.flowType);
+                let timers: PendingTimer[] = (context._timers ?? []).filter((t: PendingTimer) => !(rule.cancel ?? []).includes(t.id));
                 for (const a of toArray(rule.then)) {
                   if (a.when && !a.when(data, event, scenario)) continue;
                   const next = a.send(data, event, scenario);
                   // A delayed automation is a visible step (the reveal), so it can be undone. A same-step one is not.
-                  if (a.after) enqueue.raise(next, { delay: a.after, id: a.id });
-                  else enqueue.raise({ ...next, _auto: true });
+                  if (a.after) {
+                    const timed = { ...next, _timer: a.id };
+                    enqueue.raise(timed, { delay: a.after, id: a.id });
+                    timers = [...timers.filter((t) => t.id !== a.id), { id: a.id!, event: timed, after: a.after }];
+                  } else enqueue.raise({ ...next, _auto: true });
                 }
+                enqueue.assign({ _timers: timers });
               }),
             ]
           : []),
       ],
     }));
   }
+
+  /** Raises every recorded timer again, each with its full delay. */
+  const rearmTimers = ({ context, enqueue }: any) => {
+    for (const t of (context._timers ?? []) as PendingTimer[]) {
+      enqueue.cancel(t.id);
+      enqueue.raise(t.event, { delay: t.after, id: t.id });
+    }
+  };
 
   return setup({
     types: {
@@ -153,6 +168,7 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
       workflowData: startingData(input?.flowType, input?.choices),
       events: [],
       _snapshots: [],
+      _timers: [],
     }),
     initial: "active",
     states: {
@@ -170,8 +186,12 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
                 const last = context._snapshots[context._snapshots.length - 1];
                 return { ...last, _snapshots: context._snapshots.slice(0, -1) };
               }),
+              // The step we returned to may still have been waiting on a timer. Without this it would wait forever.
+              enqueueActions(rearmTimers),
             ],
           },
+          // Sent after a snapshot is restored (a reload or a flow switch), because the timers did not survive it.
+          REARM_TIMERS: { actions: enqueueActions(rearmTimers) },
           // RESET keeps the running scenario and its fork choices. `choices` on the event changes some of them.
           RESET: {
             actions: [
@@ -186,6 +206,7 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
                 }),
                 events: [],
                 _snapshots: [],
+                _timers: [],
               })),
             ],
           },

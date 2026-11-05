@@ -54,7 +54,7 @@ export default function GatewayPortal() {
           route="POST /v1/prior-authorization"
           state={apa}
           latency={apa === "ok" ? `${(WEB_PA_MS / 1000).toFixed(1)} s` : "pending"}
-          request={apa === "idle" ? null : { drug: PROGRAM.drugDisplayName, caseId: patient.caseId, trigger: "ABV result: prior authorization required" }}
+          request={apa === "idle" ? null : { drug: PROGRAM.drugDisplayName, caseId: patient.caseId, prescriberNpi: w.prescriberNpi ?? patient.npi, trigger: "ABV result: prior authorization required" }}
           response={apa === "ok" ? { decision: w.paStatus, decidedAt: w.paApprovedAt ?? "n/a" } : null}
         />
       </div>

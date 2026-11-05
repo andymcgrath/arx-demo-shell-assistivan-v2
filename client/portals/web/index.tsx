@@ -12,7 +12,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import PricingCard, { CoverageBanner } from "@/portals/patient/components/pricing/PricingCard";
+import { COPAY_PRE_ENROLL_OPTIONS } from "@/portals/patient/components/pricing/pricingOptions";
 import { useDemoStore } from "@/store/demoStore";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
@@ -21,10 +23,11 @@ import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLog
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import Hero from "./Hero";
 import ProviderSearch, { isNpi, type Provider } from "./ProviderSearch";
-import PatientForm from "./PatientForm";
+import PatientForm, { GENDERS } from "./PatientForm";
+import { usePatientStore } from "@/store/patientStore";
 import SafetySummary from "./SafetySummary";
 import SiteHeader from "./SiteHeader";
-import SiteFooter from "./SiteFooter";
+import Footer from "@/portals/patient/components/Footer";
 
 const DOSES = ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
 const STEPS = ["intro", "hipaa", "patient", "rx", "results"] as const;
@@ -43,6 +46,7 @@ function ConsumerWebPortal() {
   const navigate = useNavigate();
   const { workflowData: w } = usePersonaState("patient");
   const { data: patient } = usePatientCase();
+  const caseGender = usePatientStore((s) => s.gender);
   // A reload or a Reset All must land on the right screen: before the submit it is the intro, after it the results.
   const [step, setStep] = useState<Step>(w.enrollmentStatus === "none" ? "intro" : "results");
   const [agreed, setAgreed] = useState(false);
@@ -50,8 +54,9 @@ function ConsumerWebPortal() {
   const [prescribed, setPrescribed] = useState("");
   const [provider, setProvider] = useState<Provider | null>(null);
   const [npi, setNpi] = useState("");
-  const [gender, setGender] = useState("");
-  const [zip, setZip] = useState("");
+  // Like the other patient fields, gender and zip start filled from the case so the demo keeps moving.
+  const [gender, setGender] = useState(() => (GENDERS.includes(caseGender) ? caseGender : ""));
+  const [zip, setZip] = useState(() => patient.deliveryAddress.match(/\b(\d{5})(?:-\d{4})?\s*$/)?.[1] ?? "");
   const [ongoing, setOngoing] = useState("");
   // Undo of the submit puts the patient back on the Rx screen with their answers kept. Reset All remounts the page
   // (see WebPortal), which starts at the intro.
@@ -76,7 +81,9 @@ function ConsumerWebPortal() {
   }
 
   return (
-    <div ref={rootRef} className="portal-patient flex h-full flex-col overflow-y-auto overflow-x-hidden bg-arx-neutral-100 text-arx-neutral-800">
+    <div ref={rootRef} className="portal-patient h-full overflow-y-auto overflow-x-hidden bg-arx-neutral-100 text-arx-neutral-800">
+      {/* min-h-full makes the column at least one screen tall, so a short step still ends with the footer at the bottom. */}
+      <div className="flex min-h-full flex-col">
       <SiteHeader />
 
       {step === "intro" && <Hero onStart={next} />}
@@ -160,17 +167,13 @@ function ConsumerWebPortal() {
               </div>
             ) : (
               <>
-                <div className="mb-5 flex items-start gap-2 rounded-lg border border-arx-borders bg-white p-4">
-                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-arx-primary text-arx-on-primary"><Check className="h-3 w-3" /></span>
-                  <div className="text-sm">
-                    <p className="font-semibold">Great news! {PROGRAM.name} is covered by your insurance.</p>
-                    {w.paRequired && <p className="text-xs text-arx-neutral-800">Prior Authorization is required.</p>}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <PriceTile title="Retail price" price="$50" supply="30 tablets / 30 days" />
-                  <PriceTile title="Mail order price" price="$100" supply="90 tablets / 90 days" />
-                  <PriceTile title="Copay price" price="$25" supply="30 tablets / 30 days" badge="Best value" onEnroll={enroll} />
+                {/* The patient's own banner, cards and options, so the hand-off keeps one look. Copay leads, and only
+                    its Enroll acts here, because Enroll is what hands the patient over. */}
+                <div className="flex flex-col gap-4">
+                  <CoverageBanner priorAuthRequired={w.paRequired} />
+                  {COPAY_PRE_ENROLL_OPTIONS.map((option) => (
+                    <PricingCard key={option.key} option={option} primary={option.key === "self_pay"} onSelect={option.key === "self_pay" ? enroll : undefined} />
+                  ))}
                 </div>
               </>
             )}
@@ -179,23 +182,8 @@ function ConsumerWebPortal() {
       </main>
 
       {step === "intro" && <SafetySummary />}
-      <SiteFooter />
-    </div>
-  );
-}
-
-function PriceTile({ title, price, supply, badge, onEnroll }: { title: string; price: string; supply: string; badge?: string; onEnroll?: () => void }) {
-  return (
-    <div className={`relative rounded-lg border-2 bg-white p-4 ${onEnroll ? "border-arx-primary" : "border-arx-borders"}`}>
-      {badge && <span className="absolute -top-2.5 right-4 rounded-full bg-arx-primary px-3 py-1 text-[10px] font-bold uppercase text-arx-on-primary">{badge}</span>}
-      <p className="text-xs text-arx-neutral-800">{title}</p>
-      <p className="text-2xl font-bold">{price}</p>
-      <p className="mb-3 text-xs text-arx-body-copy">{supply}</p>
-      {onEnroll ? (
-        <button className={`${primary} w-full`} onClick={onEnroll}>Enroll <ArrowRight className="h-4 w-4" /></button>
-      ) : (
-        <span className="text-sm font-semibold text-arx-link">Select →</span>
-      )}
+      <Footer />
+      </div>
     </div>
   );
 }

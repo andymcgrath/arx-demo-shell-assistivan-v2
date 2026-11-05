@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { ArrowRight, Store, Truck, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import PricingCard, { CoverageBanner } from "@/portals/patient/components/pricing/PricingCard";
+import { COPAY_POST_ENROLL_OPTIONS, COPAY_PRE_ENROLL_OPTIONS, PRICING_OPTIONS, type PricingKey } from "@/portals/patient/components/pricing/pricingOptions";
 import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { PROGRAM } from "@/portals/patient/config/branding";
@@ -45,113 +47,6 @@ import { scenarioFacts } from "@/workflows/scenarioFacts";
  * Pharmacy #3795". Mail Order keeps dispatching immediately, same as
  * CoA_DTP/iAssist. See CopayBenefitPricing's handleSelect below.
  */
-
-type PricingKey = "retail" | "mail_order" | "self_pay";
-
-interface PricingOption {
-  key: PricingKey;
-  icon: typeof Store;
-  label: string;
-  price: number;
-  cadence?: string;
-  supply?: string;
-  pharmacy?: string;
-  description?: string;
-  cta: string;
-  badge?: string;
-}
-
-const PRICING_OPTIONS: PricingOption[] = [
-  {
-    key: "retail",
-    icon: Store,
-    label: "Retail Pharmacy",
-    price: 50,
-    supply: "1.0 mg Dose / 30 days",
-    pharmacy: "CVS Pharmacy #3795",
-    cta: "Select",
-  },
-  {
-    key: "mail_order",
-    icon: Truck,
-    label: "Mail Order",
-    price: 100,
-    supply: "1.0 mg Dose / 90 days",
-    pharmacy: "FutureScripts Home Delivery",
-    cta: "Select",
-  },
-  {
-    key: "self_pay",
-    icon: Sparkles,
-    label: `${PROGRAM.drugDisplayName} Copay Program`,
-    price: 25,
-    cadence: "/month",
-    description: `Pay a reduced price by filling through the CoAssist Pharmacy — no separate insurance approval needed for this option.`,
-    cta: "Enroll",
-    badge: "Best Value",
-  },
-];
-
-// CoA_Copay only — not yet enrolled. Copay leads (styled as the main CTA in
-// CopayBenefitPricing below), followed by Retail/Mail at their normal,
-// un-enrolled prices — enrolling is what unlocks the discount below.
-const COPAY_PRE_ENROLL_OPTIONS: PricingOption[] = [
-  {
-    key: "self_pay",
-    icon: Sparkles,
-    label: `${PROGRAM.drugDisplayName} Copay Program`,
-    price: 25,
-    cadence: "/month",
-    description: `As low as $25/month — enroll, then pick Retail or Mail Order for pickup or delivery at the discounted rate. No separate insurance approval needed.`,
-    cta: "Enroll",
-    badge: "Best Value",
-  },
-  {
-    key: "retail",
-    icon: Store,
-    label: "Retail Pharmacy",
-    price: 50,
-    supply: "1.0 mg Dose / 30 days",
-    pharmacy: "CVS Pharmacy #3795",
-    cta: "Select",
-  },
-  {
-    key: "mail_order",
-    icon: Truck,
-    label: "Mail Order",
-    price: 100,
-    supply: "1.0 mg Dose / 90 days",
-    pharmacy: "FutureScripts Home Delivery",
-    cta: "Select",
-  },
-];
-
-// CoA_Copay only — already enrolled (copayEnrolled true, pricingOption still
-// null). Copay's card is gone (already chosen); Retail/Mail now show the
-// discounted Copay rate instead of their normal price, since that's the
-// whole point of having enrolled.
-const COPAY_POST_ENROLL_OPTIONS: PricingOption[] = [
-  {
-    key: "retail",
-    icon: Store,
-    label: "Retail Pharmacy",
-    price: 25,
-    cadence: "/month",
-    supply: "1.0 mg Dose / 30 days",
-    pharmacy: "CVS Pharmacy #3795",
-    cta: "Select",
-  },
-  {
-    key: "mail_order",
-    icon: Truck,
-    label: "Mail Order",
-    price: 50,
-    cadence: "/month",
-    supply: "1.0 mg Dose / 90 days",
-    pharmacy: "FutureScripts Home Delivery",
-    cta: "Select",
-  },
-];
 
 export default function BenefitPricing() {
   const { workflowData } = usePersonaState('patient');
@@ -221,57 +116,14 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
           </div>
 
           <div className="px-5 py-5 space-y-4">
-            {/* Coverage banner */}
-            <div className="rounded-xl p-4 bg-arx-sky border border-arx-borders">
-              <p className="font-bold text-base text-arx-slate">
-                Great news! {PROGRAM.drugDisplayName} is covered by your insurance
-              </p>
-              {/* CoA_Coverage (hideSelfPay) never submits a Prior Authorization —
-                  see workflows/coassist/'s header comment — so this banner
-                  drops that line for this flow only. */}
-              {!hideSelfPay && <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>}
-            </div>
+            {/* CoA_Coverage (hideSelfPay) never submits a Prior Authorization, so its banner drops that line. */}
+            <CoverageBanner priorAuthRequired={!hideSelfPay} />
 
             {/* Retail, Mail Order, then Copay — stacked vertically */}
             <div className="flex flex-col gap-4">
-              {pricingOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <button
-                    key={option.key}
-                    onClick={() => handleSelect(option.key)}
-                    className="relative text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
-                  >
-                    {option.badge && (
-                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-arx-on-primary text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
-                        {option.badge}
-                      </span>
-                    )}
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-arx-sky flex-shrink-0">
-                        <Icon className="w-4 h-4 text-arx-link" />
-                      </div>
-                      <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
-                    </div>
-                    <p className="text-2xl font-bold text-arx-slate mb-1">
-                      ${option.price}
-                      {option.cadence && <span className="text-sm font-semibold">{option.cadence}</span>}
-                    </p>
-                    {option.description ? (
-                      <p className="text-xs text-arx-body-copy">{option.description}</p>
-                    ) : (
-                      <>
-                        <p className="text-xs text-arx-body-copy">{option.supply}</p>
-                        <p className="text-xs text-arx-body-copy">Pharmacy: {option.pharmacy}</p>
-                      </>
-                    )}
-                    <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-link">
-                      <span>{option.cta}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </button>
-                );
-              })}
+              {pricingOptions.map((option) => (
+                <PricingCard key={option.key} option={option} onSelect={() => handleSelect(option.key)} />
+              ))}
             </div>
           </div>
         </div>
@@ -319,13 +171,7 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
           </div>
 
           <div className="px-5 py-5 space-y-4">
-            {/* Coverage banner */}
-            <div className="rounded-xl p-4 bg-arx-sky border border-arx-borders">
-              <p className="font-bold text-base text-arx-slate">
-                Great news! {PROGRAM.drugDisplayName} is covered by your insurance
-              </p>
-              <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>
-            </div>
+            <CoverageBanner priorAuthRequired />
 
             {copayEnrolled && (
               <div className="rounded-xl p-4 bg-arx-primary/10 border border-arx-primary/30">
@@ -340,59 +186,11 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
             )}
 
             <div className="flex flex-col gap-4">
-              {options.map((option) => {
-                const Icon = option.icon;
-                // Copay's card is the main CTA only while it's still on
-                // offer (pre-enroll, always first in this list) — once
-                // enrolled, Retail/Mail are both equally valid, plain picks.
-                const isPrimary = !copayEnrolled && option.key === "self_pay";
-                return (
-                  <button
-                    key={option.key}
-                    onClick={() => handleSelect(option.key)}
-                    className={
-                      isPrimary
-                        ? "relative text-left rounded-xl p-4 border-2 border-arx-primary bg-arx-primary/5 hover:bg-arx-primary/10 transition-colors"
-                        : "relative text-left rounded-xl p-4 border-2 border-arx-borders hover:border-arx-primary hover:bg-arx-sky/20 transition-colors"
-                    }
-                  >
-                    {option.badge && (
-                      <span className="absolute -top-2.5 right-4 bg-arx-primary text-arx-on-primary text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 shadow-sm">
-                        {option.badge}
-                      </span>
-                    )}
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isPrimary ? "bg-arx-primary" : "bg-arx-sky"}`}>
-                        <Icon className={`w-4 h-4 ${isPrimary ? "text-arx-on-primary" : "text-arx-link"}`} />
-                      </div>
-                      <span className="font-semibold text-sm text-arx-slate">{option.label}</span>
-                    </div>
-                    <p className="text-2xl font-bold text-arx-slate mb-1">
-                      ${option.price}
-                      {option.cadence && <span className="text-sm font-semibold">{option.cadence}</span>}
-                    </p>
-                    {option.description ? (
-                      <p className="text-xs text-arx-body-copy">{option.description}</p>
-                    ) : (
-                      <>
-                        <p className="text-xs text-arx-body-copy">{option.supply}</p>
-                        <p className="text-xs text-arx-body-copy">Pharmacy: {option.pharmacy}</p>
-                      </>
-                    )}
-                    {isPrimary ? (
-                      <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-arx-primary text-arx-on-primary font-semibold text-sm py-2.5">
-                        <span>{option.cta}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
-                    ) : (
-                      <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-arx-link">
-                        <span>{option.cta}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+              {options.map((option) => (
+                // Copay's card is the main CTA only while it is still on offer (pre-enroll, always first).
+                // Once enrolled, Retail and Mail are both plain picks.
+                <PricingCard key={option.key} option={option} primary={!copayEnrolled && option.key === "self_pay"} onSelect={() => handleSelect(option.key)} />
+              ))}
             </div>
           </div>
         </div>

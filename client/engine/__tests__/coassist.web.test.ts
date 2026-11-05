@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { createActor } from "xstate";
+import { workflowRegistry } from "@/engine/WorkflowRegistry";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 import { menuPaths, routedPaths } from "@/engine/workflow/screens";
@@ -151,5 +153,47 @@ describe("CoA_Web_Copay", () => {
     expect(menuPaths(COASSIST_SCREENS, "CoA_Web_Copay").filter((p) => borrowed.includes(p))).toEqual([]);
     expect(routedPaths(COASSIST_SCREENS, "CoA_Web_Copay").filter((p) => borrowed.includes(p))).toEqual([]);
     expect(menuPaths(COASSIST_SCREENS, "CoA_Copay")).toEqual(expect.arrayContaining(borrowed));
+  });
+  it("finishes BI and the PA after a reload mid-wait", () => {
+    withFrozenClock(() => {
+      const { actor } = start();
+      runSteps(actor, [{ type: "WEB_SUBMIT" }]);
+      // What sessionStorage holds: JSON. The timers did not survive it.
+      const saved = JSON.parse(JSON.stringify(actor.getPersistedSnapshot()));
+      const clock = new SimulatedClock();
+      const restored = createActor(workflowRegistry.getWorkflow("CoA_Web_Copay")!, { snapshot: saved, clock } as any);
+      restored.start();
+      restored.send({ type: "REARM_TIMERS" } as any);
+      const d = () => ctx(restored).workflowData;
+      expect(d().biStatus).toBe("running");
+      clock.increment(WEB_BI_MS);
+      expect(d()).toMatchObject({ biStatus: "complete", paStatus: "submitted" });
+      clock.increment(WEB_PA_MS);
+      expect(d().paStatus).toBe("approved");
+    });
+  });
+
+  it("does not leave a timer behind once it fires, so a later reload does not repeat it", () => {
+    withFrozenClock(() => {
+      const { actor, clock } = start();
+      runSteps(actor, [{ type: "WEB_SUBMIT" }]);
+      clock.increment(WEB_BI_MS);
+      clock.increment(WEB_PA_MS);
+      expect(ctx(actor)._timers).toEqual([]);
+    });
+  });
+
+  it("keeps waiting after an undo to a step that was waiting on a timer", () => {
+    withFrozenClock(() => {
+      const { actor, clock, data } = start();
+      runSteps(actor, [{ type: "WEB_SUBMIT" }]);
+      clock.increment(WEB_BI_MS);
+      clock.increment(WEB_PA_MS);
+      expect(data().paStatus).toBe("approved");
+      actor.send({ type: "UNDO" } as any); // back to: PA submitted, decision pending
+      expect(data().paStatus).toBe("submitted");
+      clock.increment(WEB_PA_MS);
+      expect(data().paStatus).toBe("approved");
+    });
   });
 });

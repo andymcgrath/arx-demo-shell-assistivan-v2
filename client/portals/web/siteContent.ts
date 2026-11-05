@@ -63,22 +63,3 @@ export const INDICATION = {
     "{drug} has not been studied enough to know if it is effective for use in children.",
   ],
 };
-
-export interface FooterGroup {
-  title: string;
-  /** `{company}` becomes the manufacturer name. */
-  links: string[];
-}
-
-export const FOOTER_GROUPS: FooterGroup[] = [
-  { title: "Conditions", links: ["Alzheimer's disease", "Autoimmune", "Cancer", "Dermatology", "Diabetes", "Migraine", "Obesity", "Sleep apnea"] },
-  { title: "Care", links: ["Telehealth", "In-person care", "Health checks", "Well-being library"] },
-  { title: "{company}", links: ["Available medicines", "For providers", "How it works", "Pipeline", "Partners"] },
-  { title: "Science", links: ["Clinical trials", "Research and development", "Pipeline development"] },
-  { title: "Medicines", links: ["Our medicines", "Safety", "Report a product concern", "Disposal", "Access and affordability"] },
-  { title: "About us", links: ["Our history", "Leadership", "Careers", "Suppliers", "Contact us"] },
-  { title: "For providers", links: ["Provider resources", "Medical information"] },
-  { title: "News and stories", links: ["Press releases", "Stories", "Media", "Investors"] },
-];
-
-export const LEGAL_LINKS = ["Terms of use", "Privacy statement", "Communication preferences", "Consumer health privacy notice", "Accessibility statement", "Sitemap"];

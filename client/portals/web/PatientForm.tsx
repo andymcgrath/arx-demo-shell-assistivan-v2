@@ -10,7 +10,7 @@ import type { PatientCase } from "@/hooks/usePatientCase";
 const field = "w-full rounded-full border border-arx-borders bg-white px-4 py-2.5 text-sm text-arx-neutral-800";
 const label = "mb-1 block text-xs font-medium text-arx-neutral-800";
 const fine = "text-[11px] leading-relaxed text-arx-body-copy";
-const GENDERS = ["Female", "Male", "Non-binary", "Prefer not to say"];
+export const GENDERS = ["Female", "Male", "Non-binary", "Prefer not to say"];
 
 function Policy() {
   return (
