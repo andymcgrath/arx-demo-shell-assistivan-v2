@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "@/lib/portalRouter";
-import { Sparkles } from "lucide-react";
-import PricingCard, { CoverageBanner } from "@/portals/patient/components/pricing/PricingCard";
+import PricingCard, { PricingBanner } from "@/portals/patient/components/pricing/PricingCard";
+import { pricingBanner } from "@/portals/patient/components/pricing/pricingBanner";
 import { COPAY_POST_ENROLL_OPTIONS, COPAY_PRE_ENROLL_OPTIONS, PRICING_OPTIONS, type PricingKey } from "@/portals/patient/components/pricing/pricingOptions";
 import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
@@ -70,7 +70,7 @@ export default function BenefitPricing() {
   // Every other flow (CoA_DTP, iAssist_PA_Approved) keeps the original,
   // untouched rendering below.
   if (scenarioFacts(workflowData.flowType).hasCopayFork) {
-    return <CopayBenefitPricing copayEnrolled={workflowData.copayEnrolled} />;
+    return <CopayBenefitPricing />;
   }
 
   // CoA_Coverage only reaches this screen for Scenario 1 (pharmacy covered,
@@ -88,6 +88,7 @@ export default function BenefitPricing() {
 function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean }) {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const { workflowData } = usePersonaState("patient");
 
   const pricingOptions = hideSelfPay ? PRICING_OPTIONS.filter((o) => o.key !== "self_pay") : PRICING_OPTIONS;
 
@@ -112,12 +113,11 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
         <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
           {/* Header band */}
           <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
-            <h1 className="text-xl font-bold text-arx-slate mb-1">Benefit Pricing</h1>
+            <h1 className="text-xl font-bold text-arx-slate mb-1">Your price options</h1>
           </div>
 
           <div className="px-5 py-5 space-y-4">
-            {/* CoA_Coverage (hideSelfPay) never submits a Prior Authorization, so its banner drops that line. */}
-            <CoverageBanner priorAuthRequired={!hideSelfPay} />
+            <PricingBanner copy={pricingBanner(workflowData, PROGRAM.drugDisplayName)} />
 
             {/* Retail, Mail Order, then Copay — stacked vertically */}
             <div className="flex flex-col gap-4">
@@ -138,9 +138,11 @@ function DefaultBenefitPricing({ hideSelfPay = false }: { hideSelfPay?: boolean 
 // renderer so the Copay card can be styled as the primary CTA (filled
 // button instead of the plain text+arrow link Retail/Mail/DefaultBenefitPricing
 // use) without touching that shared styling for every other flow.
-function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
+function CopayBenefitPricing() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const { workflowData } = usePersonaState("patient");
+  const copayEnrolled = workflowData.copayEnrolled;
 
   function handleSelect(key: PricingKey) {
     if (key === "self_pay") {
@@ -167,23 +169,11 @@ function CopayBenefitPricing({ copayEnrolled }: { copayEnrolled: boolean }) {
         <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
           {/* Header band */}
           <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
-            <h1 className="text-xl font-bold text-arx-slate mb-1">Benefit Pricing</h1>
+            <h1 className="text-xl font-bold text-arx-slate mb-1">Your price options</h1>
           </div>
 
           <div className="px-5 py-5 space-y-4">
-            <CoverageBanner priorAuthRequired />
-
-            {copayEnrolled && (
-              <div className="rounded-xl p-4 bg-arx-primary/10 border border-arx-primary/30">
-                <p className="font-bold text-sm text-arx-link flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  You're enrolled in the {PROGRAM.drugDisplayName} Copay Program
-                </p>
-                <p className="text-xs mt-1 text-arx-body-copy">
-                  Pick Retail or Mail Order below to lock in your discounted rate.
-                </p>
-              </div>
-            )}
+            <PricingBanner copy={pricingBanner(workflowData, PROGRAM.drugDisplayName)} />
 
             <div className="flex flex-col gap-4">
               {options.map((option) => (

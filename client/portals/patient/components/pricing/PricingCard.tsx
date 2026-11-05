@@ -1,17 +1,29 @@
 /**
- * One pricing card and the coverage banner above the list. The patient's Benefit Pricing screen and the client web
+ * One pricing card and the banner above the list. The patient's Benefit Pricing screen and the client web
  * page both draw them, so the hand-off from the page to the app keeps one look. A card is a button. `primary` is the
  * filled call to action (the Copay card, while it is still on offer).
  */
-import { ArrowRight } from "lucide-react";
-import { PROGRAM } from "@/portals/patient/config/branding";
+import { ArrowRight, Sparkles } from "lucide-react";
 import type { PricingOption } from "./pricingOptions";
+import type { PricingBannerCopy } from "./pricingBanner";
 
-export function CoverageBanner({ priorAuthRequired }: { priorAuthRequired: boolean }) {
+/** The banner above the cards. Its words come from pricingBanner.ts. */
+export function PricingBanner({ copy }: { copy: PricingBannerCopy }) {
+  if (copy.kind === "enrolled") {
+    return (
+      <div className="rounded-xl p-4 bg-arx-primary/10 border border-arx-primary/30">
+        <p className="font-bold text-sm text-arx-link flex items-center gap-2">
+          <Sparkles className="w-4 h-4" aria-hidden="true" />
+          {copy.title}
+        </p>
+        <p className="text-xs mt-1 text-arx-body-copy">{copy.detail}</p>
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl p-4 bg-arx-sky border border-arx-borders">
-      <p className="font-bold text-base text-arx-slate">Great news! {PROGRAM.drugDisplayName} is covered by your insurance</p>
-      {priorAuthRequired && <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>}
+      <p className="font-bold text-base text-arx-slate">{copy.title}</p>
+      <p className="text-sm mt-1 text-arx-body-copy">{copy.detail}</p>
     </div>
   );
 }
