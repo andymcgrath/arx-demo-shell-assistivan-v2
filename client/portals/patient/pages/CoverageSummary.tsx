@@ -1,8 +1,9 @@
-import { ArrowRight } from "lucide-react";
+import type { ReactNode } from "react";
+import { ArrowRight, Check, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
-import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
-import { CoverageBanner } from "@/portals/patient/components/pricing/PricingCard";
+import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * Coverage summary: CoA_Web_Copay only. The client's web page started the case, benefit verification and the prior
@@ -15,7 +16,6 @@ export default function CoverageSummary() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const actor = useWorkflowActor();
-  const { workflowData: w } = usePersonaState("patient");
 
   function checkPricing() {
     dispatch("CHECK_PRICING", { portal: "patient" });
@@ -24,24 +24,32 @@ export default function CoverageSummary() {
 
   return (
     <main className="flex-grow pt-5 pb-8">
-      <div className="max-w-2xl mx-auto px-4 space-y-5">
+      <div className="max-w-2xl mx-auto px-4">
         <div className="bg-arx-white rounded-2xl shadow-sm border border-arx-borders overflow-hidden">
-          <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
-            <h1 className="text-xl font-bold text-arx-slate mb-1">Coverage Summary</h1>
+          <div className="px-5 pt-6 pb-5 bg-arx-sky border-b border-arx-borders text-center">
+            <CheckCircle2 className="w-10 h-10 text-arx-primary mx-auto mb-3" aria-hidden="true" />
+            <h1 className="text-xl font-bold text-arx-slate mb-1">Good news! You're covered.</h1>
+            <p className="text-sm text-arx-body-copy">
+              Your insurance approved {PROGRAM.drugDisplayName}. You don't need to do anything else to get approved.
+            </p>
           </div>
-          <div className="px-5 py-5 space-y-4">
-            <CoverageBanner priorAuthRequired={false} note="Prior Authorization approved" />
-            <dl className="rounded-xl border border-arx-borders divide-y divide-arx-borders text-sm">
-              <Row label="Pharmacy benefit" value={w.pharmacyBenefitStatus === "covered" ? "Covered" : "Not covered"} />
-              <Row label="Medical benefit" value={w.medicalBenefitStatus === "covered" ? "Covered" : "Not covered"} />
-              <Row label="Prior authorization" value="Approved" />
-            </dl>
+          <div className="px-5 py-5 space-y-5">
+            <ul className="space-y-3 text-sm text-arx-slate">
+              <Item>Your plan covers it at the pharmacy</Item>
+              <Item>Your insurance approved it</Item>
+            </ul>
+            <div>
+              <h2 className="text-sm font-bold text-arx-slate mb-1">What happens next</h2>
+              <p className="text-sm text-arx-body-copy">
+                We'll show you what you may pay and ways to save. It takes about a minute. You won't be charged yet.
+              </p>
+            </div>
             <button
               type="button"
               onClick={checkPricing}
               className="w-full flex items-center justify-center gap-2 rounded-lg bg-arx-primary text-arx-on-primary font-semibold text-sm py-3"
             >
-              Check Pricing
+              See my price
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -51,11 +59,11 @@ export default function CoverageSummary() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Item({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <dt className="text-arx-body-copy">{label}</dt>
-      <dd className="font-semibold text-arx-slate">{value}</dd>
-    </div>
+    <li className="flex items-start gap-3">
+      <Check className="w-5 h-5 shrink-0 text-arx-primary" aria-hidden="true" />
+      <span>{children}</span>
+    </li>
   );
 }

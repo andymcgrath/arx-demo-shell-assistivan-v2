@@ -7,14 +7,11 @@ import { ArrowRight } from "lucide-react";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import type { PricingOption } from "./pricingOptions";
 
-/** `note` replaces the prior authorization line, for a screen that shows the outcome. */
-export function CoverageBanner({ priorAuthRequired, note }: { priorAuthRequired: boolean; note?: string }) {
+export function CoverageBanner({ priorAuthRequired }: { priorAuthRequired: boolean }) {
   return (
     <div className="rounded-xl p-4 bg-arx-sky border border-arx-borders">
       <p className="font-bold text-base text-arx-slate">Great news! {PROGRAM.drugDisplayName} is covered by your insurance</p>
-      {(note ?? (priorAuthRequired ? "Prior Authorization Required" : null)) && (
-        <p className="text-sm mt-1 text-arx-body-copy">{note ?? "Prior Authorization Required"}</p>
-      )}
+      {priorAuthRequired && <p className="text-sm mt-1 text-arx-body-copy">Prior Authorization Required</p>}
     </div>
   );
 }

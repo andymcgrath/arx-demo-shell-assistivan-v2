@@ -16,6 +16,7 @@
  * State is always shared — all panels read from the same Zustand store, so
  * switching a panel from Patient to Analytics shows the same workflow step.
  */
+import { SHOW_PATIENT_EVENT, START_OVER_EVENT } from "@/portals/web/events";
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
@@ -708,6 +709,58 @@ export default function DemoShell() {
     }
   }
 
+  /** Reset All: a fresh machine and a fresh page, back on the scenario's opening screen. The web page's Start a new check uses it too. */
+  function resetAll() {
+    resetDemo();
+    resetPatient();
+    resetPresPap();
+    // Wipe every OTHER flow's cached progress too, not just
+    // the active one — resetDemo()/resetCurrentWorkflowActor
+    // only clear the current flow's slot, so an older
+    // (possibly stale or structurally outdated) snapshot for
+    // another flow could otherwise survive "Reset All" and
+    // silently resurface the next time someone switched to
+    // it, looking like the demo had reverted.
+    resetAllWorkflowSnapshots();
+    switchWorkflow(flowType);
+    // The fresh machine starts on the scenario's default branch. Restart the
+    // selected demo on its own branch.
+    const selectedDemo = findDemo(demoId);
+    if (selectedDemo) applyDemoChoices(selectedDemo);
+    // WF5-only: undo the "Initiate Appeal — Upon PA
+    // Denial" rule's live activation (see
+    // rulesPortalStore.ts) so the "no rule exists; build
+    // one live" moment can be repeated from scratch on the
+    // next run-through, without touching any other flow's
+    // reset (that store's rule state has nothing to do
+    // with WF1-4/6).
+    if (isIAssistPapFlow) {
+      deactivateAppealRule();
+  }
+  sessionStorage.removeItem('arxWorkflow_v2');
+  // NOTE: do NOT removeItem('arx-demo-shell') here — resetDemo()
+  // above already wrote the correct flowType into that key via
+  // zustand's own persisted set(). Wiping it afterward leaves the
+  // store with nothing to rehydrate from, so any reload before the
+  // next write (e.g. a dev-server HMR reload) silently falls back
+  // to WF1. This was the root cause of "workflow flips back to
+  // WF1" reports.
+  sessionStorage.removeItem('arx-patient-identity');
+  sessionStorage.removeItem('arx-prespap-application');
+  // Keep 'arx-demo-session'. Removing it made the next load look like a new session and reset the
+  // selected scenario to the first one, so a reload after Reset All changed scenarios.
+  setShowStageReset(false);
+  // Reset means "start over" — return to this flow's
+  // canonical opening screen (FLOW_START_PORTAL), as a
+  // single panel. In 2up/3up layouts "panels" is
+  // independent local state that navigate() alone
+  // doesn't touch, so reset both explicitly.
+  setLayout("1up");
+  const startPortal = FLOW_START_PORTAL[flowType];
+  setPanels([{ portal: startPortal }]);
+  navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
+  }
+
   const handleUndo = () => {
     actor.send({ type: 'UNDO' });
     // Tell the patient portal to re-sync its screen, even from a sticky one.
@@ -727,6 +780,21 @@ export default function DemoShell() {
   useEffect(() => {
     if (gatewayShown) actor.send({ type: "VIEW_GATEWAY", portal: "patient" } as any);
   }, [gatewayShown, submitted, actor]);
+
+  // The web page's "View my coverage summary" asks for the Patient Experience, as the hand-off link would.
+  useEffect(() => {
+    const show = () => {
+      if (activePanels.some((p) => p.portal === "patient")) return;
+      const i = activePanels.findIndex((p) => p.portal === "web");
+      updatePanel(i === -1 ? 0 : i, "patient");
+    };
+    window.addEventListener(SHOW_PATIENT_EVENT, show);
+    window.addEventListener(START_OVER_EVENT, resetAll);
+    return () => {
+      window.removeEventListener(SHOW_PATIENT_EVENT, show);
+      window.removeEventListener(START_OVER_EVENT, resetAll);
+    };
+  });
 
   const resetActorToStage = useCallback((stage: number) => {
     // Bump resetNonce so portals with their own navigation guards (e.g. the
@@ -903,56 +971,7 @@ export default function DemoShell() {
               {showStageReset && (
                 <div className="absolute top-full right-0 mt-1 bg-[#1a1f3a] border-2 border-indigo-400 rounded shadow-xl z-50 min-w-max">
                   <button
-                    onClick={() => {
-                      resetDemo();
-                      resetPatient();
-                      resetPresPap();
-                      // Wipe every OTHER flow's cached progress too, not just
-                      // the active one — resetDemo()/resetCurrentWorkflowActor
-                      // only clear the current flow's slot, so an older
-                      // (possibly stale or structurally outdated) snapshot for
-                      // another flow could otherwise survive "Reset All" and
-                      // silently resurface the next time someone switched to
-                      // it, looking like the demo had reverted.
-                      resetAllWorkflowSnapshots();
-                      switchWorkflow(flowType);
-                      // The fresh machine starts on the scenario's default branch. Restart the
-                      // selected demo on its own branch.
-                      const selectedDemo = findDemo(demoId);
-                      if (selectedDemo) applyDemoChoices(selectedDemo);
-                      // WF5-only: undo the "Initiate Appeal — Upon PA
-                      // Denial" rule's live activation (see
-                      // rulesPortalStore.ts) so the "no rule exists; build
-                      // one live" moment can be repeated from scratch on the
-                      // next run-through, without touching any other flow's
-                      // reset (that store's rule state has nothing to do
-                      // with WF1-4/6).
-                      if (isIAssistPapFlow) {
-                        deactivateAppealRule();
-                      }
-                      sessionStorage.removeItem('arxWorkflow_v2');
-                      // NOTE: do NOT removeItem('arx-demo-shell') here — resetDemo()
-                      // above already wrote the correct flowType into that key via
-                      // zustand's own persisted set(). Wiping it afterward leaves the
-                      // store with nothing to rehydrate from, so any reload before the
-                      // next write (e.g. a dev-server HMR reload) silently falls back
-                      // to WF1. This was the root cause of "workflow flips back to
-                      // WF1" reports.
-                      sessionStorage.removeItem('arx-patient-identity');
-                      sessionStorage.removeItem('arx-prespap-application');
-                      // Keep 'arx-demo-session'. Removing it made the next load look like a new session and reset the
-                      // selected scenario to the first one, so a reload after Reset All changed scenarios.
-                      setShowStageReset(false);
-                      // Reset means "start over" — return to this flow's
-                      // canonical opening screen (FLOW_START_PORTAL), as a
-                      // single panel. In 2up/3up layouts "panels" is
-                      // independent local state that navigate() alone
-                      // doesn't touch, so reset both explicitly.
-                      setLayout("1up");
-                      const startPortal = FLOW_START_PORTAL[flowType];
-                      setPanels([{ portal: startPortal }]);
-                      navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
-                    }}
+                    onClick={resetAll}
                     className="block w-full text-left px-4 py-2.5 text-[12px] font-medium text-white hover:bg-indigo-500/30 border-b border-indigo-400/50 transition-colors"
                   >
                     Reset All

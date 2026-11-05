@@ -12,7 +12,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useDemoStore } from "@/store/demoStore";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
@@ -20,6 +20,7 @@ import { MANUFACTURER, PROGRAM } from "@/portals/patient/config/branding";
 import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLogo";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import Hero from "./Hero";
+import { SHOW_PATIENT_EVENT, START_OVER_EVENT } from "./events";
 import ProviderSearch, { isNpi, type Provider } from "./ProviderSearch";
 import PatientForm, { GENDERS } from "./PatientForm";
 import { usePatientStore } from "@/store/patientStore";
@@ -81,7 +82,7 @@ function ConsumerWebPortal() {
       {step === "intro" && <Hero onStart={next} />}
 
       <main className={step === "intro" ? "hidden" : "flex-1 px-5 py-6"}>
-        {n > 0 && <p className="mb-2 text-right text-xs font-semibold text-arx-neutral-800">{n} / 4</p>}
+        {n > 0 && step !== "results" && <p className="mb-2 text-right text-xs font-semibold text-arx-neutral-800">{n} / 4</p>}
 
         {step === "hipaa" && (
           <section>
@@ -149,27 +150,77 @@ function ConsumerWebPortal() {
           </section>
         )}
 
-        {step === "results" && (
-          <section>
-            <h1 className="mb-1 text-2xl font-extrabold">Checking your coverage</h1>
-            <p className="mb-4 text-sm text-arx-neutral-800">We are checking your {PROGRAM.name} benefits with your insurance.</p>
-            {w.biStatus !== "complete" ? (
-              <div className="flex items-center gap-3 rounded-lg border border-arx-borders bg-white p-4 text-sm text-arx-neutral-800">
-                <Loader2 className="h-4 w-4 animate-spin" /> Checking your coverage…
-              </div>
-            ) : (
-              <div className="rounded-lg border border-arx-borders bg-white p-4 text-sm text-arx-neutral-800">
-                <p className="font-semibold">Your coverage check is done.</p>
-                <p className="mt-1 text-xs text-arx-body-copy">Your coverage summary is ready in your patient experience.</p>
-              </div>
-            )}
-          </section>
-        )}
+        {step === "results" && <Results ready={w.paStatus === "approved"} benefitsFound={w.biStatus === "complete"} />}
       </main>
 
       {step === "intro" && <SafetySummary />}
       <Footer />
       </div>
     </div>
+  );
+}
+
+/**
+ * The last step. While the gateway works, the patient sees what is happening and how long it takes. When the coverage
+ * summary is ready, the page says so and offers the way forward. It reads the machine, so coming back to this page
+ * from the Patient Experience shows the right state, never a dead end.
+ */
+function Results({ ready, benefitsFound }: { ready: boolean; benefitsFound: boolean }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  // Move focus to the new heading when the status changes, so a screen reader hears it.
+  useEffect(() => {
+    if (ready) heading.current?.focus();
+  }, [ready]);
+
+  const [confirming, setConfirming] = useState(false);
+
+  return (
+    <section aria-live="polite">
+      <div className="rounded-2xl border border-arx-borders bg-white p-6 text-center">
+        {ready ? (
+          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-arx-primary" aria-hidden="true" />
+        ) : (
+          <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-arx-primary" aria-hidden="true" />
+        )}
+        <h1 ref={heading} tabIndex={-1} className="mb-2 text-2xl font-extrabold outline-none">
+          {ready ? "Your coverage check is done" : "Checking your coverage"}
+        </h1>
+        <p className="text-sm text-arx-neutral-800">
+          {ready
+            ? `We checked your ${PROGRAM.name} benefits. Your summary is ready.`
+            : benefitsFound
+              ? "We found your benefits. We are finishing one last step."
+              : `We are checking your ${PROGRAM.name} benefits with your insurance. This usually takes about a minute. You can keep this page open.`}
+        </p>
+        {ready && (
+          <button
+            type="button"
+            className={`${primary} mt-5 w-full justify-center`}
+            onClick={() => window.dispatchEvent(new Event(SHOW_PATIENT_EVENT))}
+          >
+            View my coverage summary <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
+        {ready && !confirming && (
+          <button type="button" className="mt-4 text-sm font-semibold text-arx-action underline" onClick={() => setConfirming(true)}>
+            Start a new check
+          </button>
+        )}
+        {ready && confirming && (
+          <div className="mt-4 rounded-lg bg-arx-neutral-100 p-4 text-left text-sm" role="alertdialog" aria-label="Start a new check">
+            <p className="font-semibold">Start a new coverage check?</p>
+            <p className="mt-1 text-xs text-arx-body-copy">Your current results will be replaced.</p>
+            <div className="mt-3 flex gap-3">
+              <button type="button" className={primary} onClick={() => window.dispatchEvent(new Event(START_OVER_EVENT))}>
+                Start new check
+              </button>
+              <button type="button" className="rounded-full border border-arx-borders px-5 py-2.5 text-sm" onClick={() => setConfirming(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
