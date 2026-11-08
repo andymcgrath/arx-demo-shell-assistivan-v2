@@ -12,8 +12,6 @@ export const CATALOG_WHOLE_DEMOS: CatalogWholeDemo[] = [
     summary: "A faxed referral, coverage found, and a manual PA that the provider submits and that is approved.",
     aliases: ["standard", "fax", "quick start", "QS"],
     apps: ["crm", "patient", "provider", "field"],
-    draft: true,
-    question: "Is QS short for Quick Start? I guessed it from the flow id.",
   },
   {
     flowType: "Fax_PAP_Audit",
