@@ -13,7 +13,8 @@
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
     "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
-    "brand:scan": "node scripts/brand-scan.mjs"
+    "brand:scan": "node scripts/brand-scan.mjs",
+    "demo:apply": "node scripts/demo-apply.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
