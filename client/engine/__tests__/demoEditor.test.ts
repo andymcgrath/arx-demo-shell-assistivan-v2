@@ -126,7 +126,8 @@ describe("what blocks an export", () => {
 
   it("blocks blocks in the wrong order, in sales words", () => {
     const d = ready();
-    const swapped = moveCard(d, 0, 1);
+    // Enrollment moves behind the PA result text, which needs the patient's consent first.
+    const swapped = moveCard(moveCard(d, 0, 1), 1, 1);
     expect(editorProblems(swapped).join()).toMatch(/needs "Patient onboarding" before it|must come after/);
   });
 

@@ -20,6 +20,7 @@ export type ModuleId =
   | "copay"
   | "copay_claim"
   | "patient_record"
+  | "prior_authorization"
   | "pa_notification"
   | "cash_offer"
   | "financial_assistance"
@@ -195,6 +196,16 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     needs: ["consentVerified"],
     sets: ["patientRecord"],
     trackerSteps: [],
+  },
+  // How the PA starts. `auto`: the PA submits on its own once BI says one is required (the demo today). `apa`: the
+  // prescriber is emailed a form and submits it. `apa_skip`: the form email goes out and the demo submits for them.
+  // A recipe without this module behaves as `auto`. The `pa` fork still decides approved or denied.
+  prior_authorization: {
+    id: "prior_authorization",
+    lane: "system",
+    needs: ["fork:bi"],
+    sets: ["paSubmitted"],
+    trackerSteps: ["PA submitted"],
   },
   pa_notification: {
     id: "pa_notification",

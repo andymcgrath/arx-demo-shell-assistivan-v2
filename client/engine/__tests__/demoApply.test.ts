@@ -55,7 +55,8 @@ describe("planApply", () => {
   });
 
   it("rejects blocks no recipe has, and says how far off the closest recipe is", () => {
-    const plan = planApply(removeCard(request("iAssist_PA_Approved"), 5), undefined, PARENT);
+    const d = request("iAssist_PA_Approved");
+    const plan = planApply(removeCard(d, d.cards.findIndex((c) => c.kind === "block" && c.moduleId === "tracking")), undefined, PARENT);
     expect(plan.ok).toBe(false);
     expect(!plan.ok && plan.problems.join()).toMatch(/Closest is iAssist_PA_Approved, which also has tracking:default/);
     expect(!plan.ok && plan.problems.join()).toContain("Use the generated prompt");

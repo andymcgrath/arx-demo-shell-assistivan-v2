@@ -19,6 +19,7 @@ export const IA_PA_APPROVED_RECIPE: ScenarioRecipe = {
   choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "payment" },
     { id: "pharmacy_selection", props: { variant: "crm" } },
@@ -34,6 +35,7 @@ export const IA_PA_DENIED_APPEAL_RECIPE: ScenarioRecipe = {
   choices: { bi: "pharmacy_covered", pa: "denied" },
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "appeal" },
     { id: "scheduling", props: { variant: "infusion" } },
     { id: "pharmacy_selection", props: { variant: "site_of_care" } },
@@ -54,6 +56,7 @@ export const IA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
   panels: ["benefits"],
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "pharmacy_selection", props: { variant: "assigned" } },
     { id: "tracking" },
@@ -75,6 +78,7 @@ export const IA_BUY_AND_BILL_RECIPE: ScenarioRecipe = {
     { id: "benefit_verification", props: { benefit: "medical" } },
     { id: "copay", props: { enrolledBy: "hcp" } },
     { id: "enrollment", props: { variant: "no_rx" } },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification", props: { variant: "hcp_administered" } },
     { id: "patient_record" },
     { id: "copay_claim" },

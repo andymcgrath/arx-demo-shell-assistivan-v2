@@ -26,6 +26,7 @@ export const COA_DTP_RECIPE: ScenarioRecipe = {
   choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "cash_offer", props: { variant: "pa_denied" } },
     { id: "payment" },
@@ -40,6 +41,7 @@ export const COA_COPAY_RECIPE: ScenarioRecipe = {
   choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "cash_offer", props: { variant: "pa_denied" } },
     { id: "payment" },
@@ -81,6 +83,7 @@ export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
   panels: ["benefits"],
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "provider_transfer" },
     { id: "cash_offer", props: { variant: "sms" } },
@@ -104,6 +107,7 @@ export const COA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
   panels: ["benefits"],
   modules: [
     { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "auto" } },
     { id: "pa_notification" },
     { id: "pharmacy_selection", props: { variant: "assigned" } },
     { id: "tracking" },

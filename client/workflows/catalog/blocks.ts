@@ -89,6 +89,26 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     lane: "hcp",
     trigger: "view",
   },
+  prior_authorization: {
+    id: "prior_authorization",
+    name: "Prior authorization",
+    summary: "Once the benefits check says a PA is required, the PA starts and gets a decision.",
+    aliases: ["PA", "prior auth", "PA submission", "AutoPA", "APA", "advanced prior authorization"],
+    apps: ["crm", "provider"],
+    lane: "system",
+    trigger: "automatic",
+    variants: [
+      {
+        id: "auto",
+        label: "AutoPA",
+        summary: "The PA submits on its own the moment the benefits check says one is required. The decision lands when the agent opens the PA stage.",
+        steps: [
+          step("The PA submits on its own after the benefits check", "system", "automatic"),
+          step("Agent opens the PA stage in the CRM, and the decision lands a moment later", "agent", "click"),
+        ],
+      },
+    ],
+  },
   pa_notification: {
     id: "pa_notification",
     name: "Prior authorization result text",
