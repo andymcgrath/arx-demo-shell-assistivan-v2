@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import fs from "fs";
 import { brandChain, pruneBrandAssets, resolveBrand } from "./client/brand/resolve";
+import { demoLabExportPlugin } from "./scripts/demoLabExport";
 
 /**
  * The brand is chosen at build time. Set BRAND=<slug> to bundle brands/<slug>/brand.json.
@@ -49,7 +50,7 @@ function brandHtmlPlugin(brand: { title?: string; favicon?: string }): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), brandHtmlPlugin(brand), brandAssetIsolationPlugin(brandChain(brandsDir, brandSlug))],
+  plugins: [react(), brandHtmlPlugin(brand), brandAssetIsolationPlugin(brandChain(brandsDir, brandSlug)), demoLabExportPlugin(__dirname)],
   define: { __BRAND__: JSON.stringify(brand) },
   resolve: {
     alias: {
