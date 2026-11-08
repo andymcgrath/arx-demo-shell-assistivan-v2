@@ -7,7 +7,7 @@ import type { CatalogFork } from "./types";
 export const CATALOG_FORKS: CatalogFork[] = [
   {
     id: "bi",
-    aliases: ["ABV", "BV", "eMedBV", "BI", "benefits investigation", "benefit verification", "coverage check"],
+    aliases: ["BI", "benefits investigation", "benefit verification", "coverage check"],
     exits: [
       { id: "pharmacy_covered", aliases: ["pharmacy benefit", "commercial", "covered with PA", "retail coverage"] },
       { id: "pharmacy_transfer", aliases: ["transfer to SP", "assigned pharmacy", "pharmacy transfer"] },

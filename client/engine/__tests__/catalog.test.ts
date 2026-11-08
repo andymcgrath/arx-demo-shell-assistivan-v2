@@ -14,6 +14,7 @@ import {
   catalogFork,
   paletteCards,
   DEFAULT_VARIANT,
+  CATALOG_PAYERS,
   type Draftable,
 } from "@/workflows/catalog";
 
@@ -220,5 +221,52 @@ describe("catalog drafts", () => {
   // The tag step runs `CATALOG_NO_DRAFTS=1 pnpm test`. A draft the user has not cleared fails it.
   it.runIf(process.env.CATALOG_NO_DRAFTS)("has no entry still marked draft", () => {
     expect(all.filter((a) => a.entry.draft).map((a) => a.where)).toEqual([]);
+  });
+});
+
+describe("catalog payers", () => {
+  // Who pays and whether a PA is needed, derived from each bi exit's data. Not written by hand.
+  const TABLE: Record<string, { payer: string; paRequired: boolean }> = {
+    pharmacy_covered: { payer: "pharmacy", paRequired: true },
+    pharmacy_transfer: { payer: "pharmacy", paRequired: true },
+    medical_covered: { payer: "medical", paRequired: false },
+    medical_pa_required: { payer: "medical", paRequired: true },
+    medical_buy_and_bill: { payer: "medical", paRequired: true },
+    no_coverage: { payer: "none", paRequired: false },
+    no_coverage_pap: { payer: "none", paRequired: false },
+  };
+  const biExits = [...new Set(ALL_FORKS.filter((f) => f.id === "bi").flatMap((f) => f.exits.map((e) => e.id)))];
+
+  it("derives a payer and paRequired for every bi exit, matching the table", () => {
+    expect(biExits.sort()).toEqual(Object.keys(TABLE).sort());
+    for (const id of biExits) {
+      const c = catalogExit("bi", id)!;
+      expect({ payer: c.payer, paRequired: c.paRequired }, id).toEqual(TABLE[id]);
+    }
+  });
+
+  it("gives no payer to an exit of any other fork", () => {
+    expect(catalogExit("pa", "approved")!.payer).toBeUndefined();
+  });
+
+  it("has a label and aliases for every payer, unique across payers", () => {
+    expect(Object.keys(CATALOG_PAYERS).sort()).toEqual(["medical", "none", "pharmacy"]);
+    for (const p of Object.values(CATALOG_PAYERS)) {
+      expect(p.label.trim()).not.toBe("");
+      expect(p.aliases.length).toBeGreaterThan(0);
+    }
+    expect(duplicates(Object.entries(CATALOG_PAYERS).map(([key, p]) => ({ key, aliases: p.aliases })))).toEqual([]);
+  });
+
+  it("keeps the pharmacy and medical check names on the payers, not on the bi fork", () => {
+    const bi = CATALOG_FORKS.find((f) => f.id === "bi")!.aliases.map((a) => a.toLowerCase());
+    for (const a of ["abv", "bv", "emedbv"]) expect(bi).not.toContain(a);
+    expect(CATALOG_PAYERS.pharmacy.aliases).toEqual(expect.arrayContaining(["ABV", "BV"]));
+    expect(CATALOG_PAYERS.medical.aliases).toContain("eMedBV");
+  });
+
+  it("keeps ABV, BV, and BI off the benefit_verification block", () => {
+    const aliases = CATALOG_BLOCKS.benefit_verification.aliases.map((a) => a.toLowerCase());
+    for (const a of ["abv", "bv", "bi"]) expect(aliases).not.toContain(a);
   });
 });

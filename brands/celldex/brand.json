@@ -19,7 +19,7 @@
       "id": "iassist-medical-transfer",
       "flow": "iAssist_Medical_Transfer",
       "label": "3. iAssist Medical Transfer",
-      "description": "The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Rx transfers to an assigned pharmacy with no payment or scheduling"
+      "description": "The medical benefit covers it and a PA is required. The Rx transfers to an assigned pharmacy for dispensing, with no payment or scheduling"
     },
     {
       "id": "iassist-buy-and-bill",

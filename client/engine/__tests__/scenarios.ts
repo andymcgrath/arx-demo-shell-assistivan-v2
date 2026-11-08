@@ -314,8 +314,8 @@ export const SCENARIOS: Scenario[] = [
   },
 
   {
-    // The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Rx transfers to an
-    // assigned pharmacy once the PA-approved OTP verifies. No pricing, scheduling, payment, or fulfillment.
+    // The medical benefit covers it and a PA is required. The Rx transfers to an
+    // assigned pharmacy for dispensing once the PA-approved OTP verifies. No pricing, scheduling, payment, or fulfillment.
     name: "iassist-medical-transfer",
     endsAt: "pharmacy_transferred",
     flowType: "iAssist_Medical_Transfer",

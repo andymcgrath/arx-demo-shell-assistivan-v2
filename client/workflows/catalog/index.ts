@@ -1,14 +1,16 @@
 import { MODULE_CONTRACTS, type ModuleId } from "@/engine/workflow/components";
-import type { ForkDefinition } from "@/engine/workflow/types";
+import type { ForkDefinition, ForkExit } from "@/engine/workflow/types";
 import { ALL_FORKS } from "../forks";
 import { CATALOG_BLOCKS } from "./blocks";
 import { CATALOG_FORKS } from "./forks";
+import type { CatalogPayer } from "./payers";
 import { DEFAULT_VARIANT, type CatalogApp, type CatalogBlock, type CatalogExit, type CatalogFork, type CatalogLane, type CatalogStep, type CatalogTrigger, type CatalogVariant } from "./types";
 
 export { CATALOG_BLOCKS } from "./blocks";
 export { CATALOG_FORKS } from "./forks";
 export { CATALOG_WHOLE_DEMOS } from "./demos";
 export * from "./types";
+export { CATALOG_PAYERS, type CatalogPayer } from "./payers";
 
 /** What a block needs and sets, read from the module contract. Not copied into the catalog. */
 export const blockContract = (id: ModuleId) => {
@@ -72,12 +74,30 @@ export const catalogFork = (forkId: string): (CatalogFork & { label: string }) |
 };
 
 /**
+ * Who pays and whether a PA is needed, read from a `bi` exit's `data`. The precedence is `deriveBiResult`'s
+ * (workflows/shared/bi.ts): the medical benefit wins when it covers, then the pharmacy benefit, else neither.
+ */
+const biFacts = (exit: ForkExit): { payer: CatalogPayer; paRequired: boolean } => ({
+  payer: exit.data.medicalBenefitStatus === "covered" ? "medical" : exit.data.pharmacyBenefitStatus === "covered" ? "pharmacy" : "none",
+  paRequired: !!exit.data.paRequired,
+});
+
+/**
  * A fork exit as the lab shows it: sales label and description (the catalog's, else `forks.ts`), aliases, and the
  * blocks a recipe must include to pick it (`requires`, from the fork, not copied).
  * The `bi` fork has one exit list per workflow, so the first declared exit with this id supplies the fallback text.
  */
-export const catalogExit = (forkId: string, exitId: string): (CatalogExit & { label: string; description: string; requires: string[] }) | undefined => {
+export const catalogExit = (forkId: string, exitId: string): (CatalogExit & { label: string; description: string; requires: string[]; payer?: CatalogPayer; paRequired?: boolean }) | undefined => {
   const entry = CATALOG_FORKS.find((f) => f.id === forkId)?.exits.find((e) => e.id === exitId);
   const exit = ALL_FORKS.filter((f) => f.id === forkId).flatMap((f) => f.exits).find((e) => e.id === exitId);
-  return entry && exit && { ...entry, label: entry.label ?? exit.label, description: entry.description ?? exit.description ?? "", requires: exit.requires ?? [] };
+  return (
+    entry &&
+    exit && {
+      ...entry,
+      label: entry.label ?? exit.label,
+      description: entry.description ?? exit.description ?? "",
+      requires: exit.requires ?? [],
+      ...(forkId === "bi" ? biFacts(exit) : {}),
+    }
+  );
 };

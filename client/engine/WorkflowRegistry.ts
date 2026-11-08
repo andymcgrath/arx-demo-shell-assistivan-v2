@@ -74,7 +74,7 @@ workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, {
 
 workflowRegistry.registerWorkflow("CoA_Medical_Transfer", coassistMachine, {
   label: "CoAssist Medical Transfer",
-  description: "CoAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned site of care with no payment or scheduling",
+  description: "CoAssist scenario where the medical benefit covers it and a PA is required. The Rx transfers to an assigned site of care for dispensing with no payment or scheduling",
 });
 
 workflowRegistry.registerWorkflow("CoA_PAP", coassistMachine, {
@@ -94,7 +94,7 @@ workflowRegistry.registerWorkflow("iAssist_PAP", iassistMachine, {
 
 workflowRegistry.registerWorkflow("iAssist_Medical_Transfer", iassistMachine, {
   label: "iAssist Medical Transfer",
-  description: "iAssist scenario where the medical benefit covers it and a PA is required. HCP administered (Buy & Bill), so the Rx transfers to an assigned pharmacy with no payment or scheduling",
+  description: "iAssist scenario where the medical benefit covers it and a PA is required. The Rx transfers to an assigned pharmacy for dispensing with no payment or scheduling",
 });
 
 workflowRegistry.registerWorkflow("iAssist_Buy_And_Bill", iassistMachine, {

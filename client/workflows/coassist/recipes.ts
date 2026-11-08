@@ -92,7 +92,7 @@ export const COA_COVERAGE_RECIPE: ScenarioRecipe = {
 };
 
 /**
- * The medical benefit covers it and a PA is required. HCP administered (Buy & Bill): the Triage `transfer` exit, so no
+ * The medical benefit covers it and a PA is required. The Rx transfers for dispensing (the Triage `transfer` exit), so no
  * payment and no scheduling. The BI exit assigns the site of care, so the patient sees its contact details and nothing
  * else. The same outcome as the iAssist medical transfer, from a CoAssist start.
  */
