@@ -31,9 +31,9 @@ interface Allowed {
 
 const ALLOWED: Allowed[] = [
   {
-    file: "client/shell/BrandLabDemos.tsx",
+    file: "client/shell/DemoLabDemos.tsx",
     text: '{ id: "',
-    reason: "The Brand Lab's list of flows to preview. It is data for a picker (id and label), not a branch on the flow.",
+    reason: "The Demo Lab's list of flows to preview. It is data for a picker (id and label), not a branch on the flow.",
   },
   {
     file: "client/shell/coassistLadders.ts",

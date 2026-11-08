@@ -1,5 +1,5 @@
 /**
- * Brand Lab. A dev-only page at /brand-lab for trying brand colors before they go in brand.json.
+ * Demo Lab. A dev-only page at /demo-lab for trying brand colors before they go in brand.json.
  *
  * Pick brand, accent, action, and the surface styles (confirmation background, header strip, icon tiles,
  * step row and marker, heading color). The mock screens and the contrast table update as you type.
@@ -8,8 +8,8 @@
  *
  * App.tsx mounts it only when `import.meta.env.DEV` is true, so client builds do not include it.
  */
-import DemosLab from "./BrandLabDemos";
-import FidelityPanel from "./BrandLabFidelity";
+import DemosLab from "./DemoLabDemos";
+import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
 import { BRAND } from "@/brand";
 import {
@@ -225,7 +225,7 @@ function Mocks({ vars }: { vars: CSSProperties }) {
   };
 
   return (
-    <div style={vars} className="portal-patient flex flex-wrap items-start gap-6" data-testid="brand-lab-mocks">
+    <div style={vars} className="portal-patient flex flex-wrap items-start gap-6" data-testid="demo-lab-mocks">
       <div className="w-[300px] overflow-hidden rounded-xl border border-[#cbd5e1] bg-white">
         <div className="px-4 py-3 text-center text-lg font-bold text-arx-link">Logo area</div>
         <div className="border-t border-arx-borders py-1.5 text-center text-[11px] font-semibold text-arx-link">
@@ -451,16 +451,17 @@ function ColorsLab() {
   );
 }
 
-type Tab = "colors" | "demos";
+type Tab = "storyboard" | "demos" | "colors";
+const TAB_LABELS: Record<Tab, string> = { storyboard: "Storyboard", demos: "Demos", colors: "Colors" };
 
-export default function BrandLab() {
-  const [tab, setTab] = useState<Tab>("colors");
+export default function DemoLab() {
+  const [tab, setTab] = useState<Tab>("storyboard");
   return (
     <div className="flex h-screen flex-col bg-[#f8fafc] text-[#0f172a]">
       <header className="flex shrink-0 items-center gap-4 border-b border-[#cbd5e1] bg-white px-5 py-2.5">
-        <h1 className="text-lg font-bold">Brand Lab</h1>
-        <nav className="flex gap-1" aria-label="Brand Lab sections">
-          {(["colors", "demos"] as Tab[]).map((t) => (
+        <h1 className="text-lg font-bold">Demo Lab</h1>
+        <nav className="flex gap-1" aria-label="Demo Lab sections">
+          {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
             <button
               key={t}
               type="button"
@@ -470,7 +471,7 @@ export default function BrandLab() {
                 tab === t ? "bg-[#0f172a] text-white" : "border border-[#cbd5e1] bg-white text-[#0f172a]"
               }`}
             >
-              {t === "colors" ? "Colors" : "Demos"}
+              {TAB_LABELS[t]}
             </button>
           ))}
         </nav>
@@ -479,7 +480,15 @@ export default function BrandLab() {
           <code>brands/{BRAND.slug}/brand.json</code>. Dev only.
         </p>
       </header>
-      {tab === "colors" ? <ColorsLab /> : <DemosLab />}
+      {tab === "storyboard" ? (
+        <main className="p-5 text-sm text-[#475569]" data-testid="storyboard-empty">
+          The storyboard is empty for now. It will draw every demo here.
+        </main>
+      ) : tab === "demos" ? (
+        <DemosLab />
+      ) : (
+        <ColorsLab />
+      )}
     </div>
   );
 }

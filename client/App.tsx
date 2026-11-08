@@ -56,7 +56,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 }
 
 // Dev only. `import.meta.env.DEV` is false in a build, so the page and its route drop out of client bundles.
-const BrandLab = import.meta.env.DEV ? lazy(() => import("@/shell/BrandLab")) : null;
+const DemoLab = import.meta.env.DEV ? lazy(() => import("@/shell/DemoLab")) : null;
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -71,8 +71,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/hub" replace />} />
             <Route path="/iassist" element={<IAssistRedirect />} />
-            {BrandLab && (
-              <Route path="/brand-lab" element={<Suspense fallback={null}><BrandLab /></Suspense>} />
+            {DemoLab && <Route path="/brand-lab" element={<Navigate to="/demo-lab" replace />} />}
+            {DemoLab && (
+              <Route path="/demo-lab" element={<Suspense fallback={null}><DemoLab /></Suspense>} />
             )}
             <Route path="/:portal" element={<DemoShell />} />
             <Route path="*" element={<Navigate to="/hub" replace />} />

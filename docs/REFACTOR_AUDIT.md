@@ -155,7 +155,7 @@ Not done yet:
 
 Summarized from the tag messages on 27 Oct 2026. The type-error baseline held at 2 throughout. Tests grew from 211 (step 15) to 583 (step 58).
 
-- **14 to 16, 20, 21: brand build.** Asset isolation (a build keeps only the active brand's images), brand tokens with the brand, accent, and action color split, and the dev-only `/brand-lab` page.
+- **14 to 16, 20, 21: brand build.** Asset isolation (a build keeps only the active brand's images), brand tokens with the brand, accent, and action color split, and the dev-only `/demo-lab` page.
 - **17 to 19, 48: forks and demos.** Forks and demos became platform concepts, with a fork-aware stage-jump ladder. A fresh machine starts on the selected demo's branches. The journeys branch merged to `main` (571 tests).
 - **22 to 34: CoAssist as recipes.** Component types and recipes as data. BI, PA, pricing, and copay became forks. Rules got ids, moved into module files, and take their scope from recipes and forks. Screen route rules got ids and moved into modules. A composition proof and scenario end-state tests followed.
 - **35 to 38: iAssist as recipes.** Recipes, forks, and rule modules for iAssist, plus a Servier pharmacy-transfer golden path.
@@ -169,14 +169,14 @@ Tests went from 993 to 1056. The type-error baseline held at 2. No engine fixtur
 
 **Why.** A client's colors must show as the client set them, even below WCAG AA, and every patient screen must use the same colors. Before, the theme moved client colors to pass AA, the brand test rejected any it could not fix, and about 330 raw Tailwind palette classes plus inline hex values (including the old default teal `#007178` in input focus borders) sat outside the brand tokens. One brand could show two teals and two text colors.
 
-- **Exact mode.** `colors.fidelity: "exact"` uses the colors as set, defaults text to the better of white and near-black, and needs a `source`. Contrast misses are warnings in the Brand Lab, not test failures. `onAction` and `onBrand` fix the text color for buttons and for brand fills (badges, check circles, chat header, confirmation, step row, solid tiles). RyzUp is exact with one teal and white text.
+- **Exact mode.** `colors.fidelity: "exact"` uses the colors as set, defaults text to the better of white and near-black, and needs a `source`. Contrast misses are warnings in the Demo Lab, not test failures. `onAction` and `onBrand` fix the text color for buttons and for brand fills (badges, check circles, chat header, confirmation, step row, solid tiles). RyzUp is exact with one teal and white text.
 - **Tokens only.** Added fixed neutral and status tokens (`arx-white`, `arx-black`, `arx-success*`, `--arx-on-primary`, icon inversion variables). Every patient screen outside the phone-chrome screens reads tokens. `tokensOnly.test.ts` fails on a raw palette class, hex, rgb, or color word. `patient.tokenPairs.test.tsx` renders every step of every golden path and checks that each brand fill carries its own text token and inline styles use tokens. Both were checked against a deliberate violation.
-- **Fidelity report.** `client/brand/fidelity.ts` measures each applied color against the client's (OKLab distance), lists every color the journey draws with, and flags buttons that differ from brand fills. The Brand Lab shows it and its form sets `onAction`, `onBrand`, and exact mode.
+- **Fidelity report.** `client/brand/fidelity.ts` measures each applied color against the client's (OKLab distance), lists every color the journey draws with, and flags buttons that differ from brand fills. The Demo Lab shows it and its form sets `onAction`, `onBrand`, and exact mode.
 - **Scanner.** `pnpm brand:scan <url>` proposes an exact colors block with evidence. It ignores hover and status variants and stock framework colors. On the RyzUp source site it finds the brand teal and proposes no accent or action.
 
 **Fixed along the way.** `OrderTracker` formed its date at import time, which made the patient render fixture change daily (patient-view branch). A few small value changes from tokenizing: the 404 page's gray and blue became body-copy and link tokens, the Header's inline grays became slate and body-copy, and input focus borders now follow the brand.
 
-**Not run in a browser.** Patient screens in a real layout. I read the Brand Lab's fidelity panel for RyzUp in a browser and checked generated CSS variables, nothing more. The rendered test reads classes and styles in jsdom, not pixels, and covers the screens the golden paths reach. Screens off those paths are covered by the source test only. The scanner was run once against one site.
+**Not run in a browser.** Patient screens in a real layout. I read the Demo Lab's fidelity panel for RyzUp in a browser and checked generated CSS variables, nothing more. The rendered test reads classes and styles in jsdom, not pixels, and covers the screens the golden paths reach. Screens off those paths are covered by the source test only. The scanner was run once against one site.
 
 **Merge note.** The patient-view branch adds two text-message screens under `portals/patient/skins/patient/`. `tokensOnly.test.ts` already lists them as phone chrome. Its skin screens and `TwoFactorShell` must pass the test when that branch merges.
 

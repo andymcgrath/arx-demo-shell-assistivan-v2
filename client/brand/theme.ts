@@ -67,14 +67,14 @@ export interface BrandColors {
   action?: string;
   /**
    * `accessible` (default): the theme moves derived colors to reach WCAG AA, and the brand test fails a brand it cannot fix.
-   * `exact`: every color is used as the client set it. A pair that misses AA is a warning in the Brand Lab and no test
+   * `exact`: every color is used as the client set it. A pair that misses AA is a warning in the Demo Lab and no test
    * failure. The brand must record `source`. Text defaults to the better of white and near-black unless `onAction` or
    * `onBrand` is set.
    */
   fidelity?: Fidelity;
   /**
    * Text on `action` fills (buttons). Optional. Left out, the theme picks white, or near-black when white misses AA.
-   * Set it to fix the color for the whole brand. The fill is then not darkened. A pair that misses AA shows in the Brand Lab.
+   * Set it to fix the color for the whole brand. The fill is then not darkened. A pair that misses AA shows in the Demo Lab.
    */
   onAction?: string;
   /** Text on `brand` fills (badges, check circles, the chat header). Optional. Left out, white when it reaches AA, else near-black. */
@@ -254,7 +254,7 @@ export function buttonColors(action: string): { action: string; onAction: string
 /**
  * The shared fix for a derived color that misses its contrast target. `fixed` stays as it is. `adjustable`
  * moves in small OKLCH lightness steps (hue and chroma hold) until the pair reaches `target`. If that takes more
- * than `maxShift`, the color is left alone and the pair stays a warning in the Brand Lab.
+ * than `maxShift`, the color is left alone and the pair stays a warning in the Demo Lab.
  * Use it on derived colors only. Brand, accent, and action come from the client and are never moved.
  */
 export function ensureContrast(
@@ -274,7 +274,7 @@ export function ensureContrast(
   return { color: adjustable, adjusted: false, met: false };
 }
 
-/** A color the theme moved to reach a contrast target. The Brand Lab lists these. */
+/** A color the theme moved to reach a contrast target. The Demo Lab lists these. */
 export interface Adjustment {
   id: string;
   message: string;
@@ -346,7 +346,7 @@ export interface ContrastRow {
   /** The worst ratio when the background changes across the pair (a gradient). */
   ratio: number;
   levels: WcagLevels;
-  /** A required row fails the brand test when it misses its level. The others are warnings in the Brand Lab. */
+  /** A required row fails the brand test when it misses its level. The others are warnings in the Demo Lab. */
   required: boolean;
 }
 
@@ -356,7 +356,7 @@ export function rowPasses(row: ContrastRow): boolean {
 }
 
 /**
- * Every pair of colors a brand puts on screen, scored. The brand test and the Brand Lab read this one list.
+ * Every pair of colors a brand puts on screen, scored. The brand test and the Demo Lab read this one list.
  * Gradients score at the worst point of the text area.
  */
 export function contrastReport(theme: BrandTheme): ContrastRow[] {
@@ -413,7 +413,7 @@ export function resolveSurfaces(surfaces: Surfaces | undefined, hasAccent: boole
 export interface BuildThemeOptions {
   /**
    * Move derived colors (the tint, the button fill) to reach AA. Default true, and false for a brand whose
-   * `fidelity` is `exact`. The Brand Lab turns it off to show a brand as set, so you can see what the adjustment changes.
+   * `fidelity` is `exact`. The Demo Lab turns it off to show a brand as set, so you can see what the adjustment changes.
    */
   autoAdjust?: boolean;
 }

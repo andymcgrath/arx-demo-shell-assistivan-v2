@@ -4,7 +4,7 @@
  *
  * Reads a client's public page and its stylesheets, ranks the brand colors by the role they play, and prints a proposed
  * `program.colors` block for brands/<slug>/brand.json. The block is a starting point with its evidence beside it.
- * Check it in the Brand Lab (/brand-lab) before it goes in the file. The logo's own colors are not read: the scan sees CSS
+ * Check it in the Demo Lab (/demo-lab) before it goes in the file. The logo's own colors are not read: the scan sees CSS
  * and meta tags, not images, so compare the pick with the logo by eye.
  *
  * A site that blocks scripts answers 403. Open it in a browser, choose File > Save Page As (web page, complete), and scan
@@ -60,11 +60,11 @@ const { colors, ranked } = propose({ html, css, url: source ?? url });
 
 console.error(`Scanned ${url}: ${sheets.length} stylesheet(s) and the page's own styles.\n`);
 if (!colors) {
-  console.error("No brand color found. The site may build its styles in JavaScript. Set the colors by hand in the Brand Lab.");
+  console.error("No brand color found. The site may build its styles in JavaScript. Set the colors by hand in the Demo Lab.");
   process.exit(2);
 }
 for (const [i, r] of ranked.entries()) {
   console.error(`${String(i + 1).padStart(2)}. ${r.hex}  score ${r.score.toFixed(1)}  ${r.evidence.slice(0, 3).join("; ")}`);
 }
-console.error("\nProposed colors. Open /brand-lab, paste these in, and compare with the logo before saving.\n");
+console.error("\nProposed colors. Open /demo-lab, paste these in, and compare with the logo before saving.\n");
 console.log(JSON.stringify(colors, null, 2));

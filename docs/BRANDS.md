@@ -34,7 +34,7 @@ Set `"fidelity": "exact"` to use the client's colors as given, even where contra
 - keeps `brand`, `accent`, and `action` as set, with no darkening and no tint changes;
 - takes text color from `onAction` (buttons) and `onBrand` (badges, check circles, the chat header, the confirmation, the active step row, solid icon tiles) when set, and otherwise from whichever of white and near-black reads better;
 - must set `source`, because the point is to match a named site. The brand test checks it;
-- shows contrast misses as warnings in the Brand Lab and does not fail `pnpm test`.
+- shows contrast misses as warnings in the Demo Lab and does not fail `pnpm test`.
 
 ```json
 "colors": {
@@ -46,7 +46,7 @@ Set `"fidelity": "exact"` to use the client's colors as given, even where contra
 }
 ```
 
-`onAction` and `onBrand` also work without `exact`. Use one color for the brand and the button, so a screen never shows two versions of the client's color. The Brand Lab flags buttons that differ from brand fills.
+`onAction` and `onBrand` also work without `exact`. Use one color for the brand and the button, so a screen never shows two versions of the client's color. The Demo Lab flags buttons that differ from brand fills.
 
 ### Find the client's colors
 
@@ -54,7 +54,7 @@ Set `"fidelity": "exact"` to use the client's colors as given, even where contra
 pnpm brand:scan https://client-site.example
 ```
 
-It reads the page and its stylesheets, ranks colors by the role they play (theme-color, brand variables, button fills, links, header), skips hover and status variants and stock framework colors, and prints an exact `colors` block with the evidence beside it. It does not read the logo's pixels, so compare the pick with the logo, then check it in the Brand Lab. A site that builds its styles in JavaScript gives no result, and you set the colors by hand.
+It reads the page and its stylesheets, ranks colors by the role they play (theme-color, brand variables, button fills, links, header), skips hover and status variants and stock framework colors, and prints an exact `colors` block with the evidence beside it. It does not read the logo's pixels, so compare the pick with the logo, then check it in the Demo Lab. A site that builds its styles in JavaScript gives no result, and you set the colors by hand.
 
 A site that answers 403 blocks scripts. Open it in a browser, choose File > Save Page As (web page, complete), and scan the saved file. Its stylesheets are read from the folder beside it.
 
@@ -91,7 +91,7 @@ Text on a confirmation screen, the step row, and a solid tile is white or near-b
 
 ### Preview and score a choice
 
-Run `pnpm dev` and open `/brand-lab`. It is dev only and left out of client builds. Pick brand, accent, action, and each surface style. The mock screens and the contrast table update as you type. Each pair shows its ratio and the four WCAG levels (AA large 3.0, AA 4.5, AAA large 4.5, AAA 7.0). Text pairs need AA 4.5. Large text and UI parts need AA large 3.0. Copy the JSON into `program.colors` when you like it.
+Run `pnpm dev` and open `/demo-lab`. It is dev only and left out of client builds. Pick brand, accent, action, and each surface style. The mock screens and the contrast table update as you type. Each pair shows its ratio and the four WCAG levels (AA large 3.0, AA 4.5, AAA large 4.5, AAA 7.0). Text pairs need AA 4.5. Large text and UI parts need AA large 3.0. Copy the JSON into `program.colors` when you like it.
 
 Two pairs are required and fail `pnpm test`: button text on the action color, and the confirmation heading (large text). The rest show as warnings in the Lab. Fix a warning by adjusting the color, not by editing the test.
 
@@ -171,9 +171,9 @@ A brand change costs one redeploy. There is no runtime fetch, no Netlify Blobs, 
 
 Some brand and drug names still sit in source (patient copy, sample patients, the provider portal). See `REFACTOR_AUDIT.md`, Step 10.
 
-## Pharmacy transfer and the Brand Lab Demos tab
+## Pharmacy transfer and the Demo Lab Demos tab
 
-`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to every `bi` exit that assigns a pharmacy: `pharmacy_transfer` in CoA_Coverage and `medical_pa_required` in iAssist_Medical_Transfer. The patient does not pick a pharmacy on those branches. When the brand names no partner, a placeholder pharmacy (CVS Pharmacy #3795) shows. Add it to `brand.json` by hand: the Brand Lab has no editor for it, and it saves nothing.
+`program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to every `bi` exit that assigns a pharmacy: `pharmacy_transfer` in CoA_Coverage and `medical_pa_required` in iAssist_Medical_Transfer. The patient does not pick a pharmacy on those branches. When the brand names no partner, a placeholder pharmacy (CVS Pharmacy #3795) shows. Add it to `brand.json` by hand: the Demo Lab has no editor for it, and it saves nothing.
 
 `CoA_PAP` (the free drug program) uses it too: the `no_coverage_pap` exit assigns the pharmacy and runs no PA. The patient never picks one. `program.name` is the patient support program the case transfers to. The `ryzup` brand sets both.
 
@@ -181,6 +181,6 @@ A demo can pin only a `bi` exit its scenario can reach. `CoA_PAP` reaches `no_co
 
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 
-The Brand Lab at `/brand-lab` has two tabs. Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
+The Demo Lab at `/demo-lab` has three tabs. Storyboard is empty for now. Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
 
 `brands/_template/brand.json` lists every field. Required: `slug`, `name`, `title`, at least one demo, `manufacturer`, `program` with `drugDisplayName` and `colors.brand`, `manufacturer.legal.privacyUrl`, and `chatbotIcon`. Everything else is optional. The tests also need every local image path to point at a committed file.

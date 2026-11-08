@@ -1,5 +1,5 @@
 /**
- * The Brand Lab's fidelity panel: how far each color the demo shows is from the one the client set, and every color the
+ * The Demo Lab's fidelity panel: how far each color the demo shows is from the one the client set, and every color the
  * journey draws with. Numbers come from `@/brand/fidelity`, so a match is measured and not judged by eye.
  */
 import { journeyPalette, fidelityReport, isChromatic, type Verdict } from "@/brand/fidelity";

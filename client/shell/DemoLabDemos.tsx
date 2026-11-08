@@ -6,7 +6,7 @@ import { forkStageList, forksForScenario } from "@/engine/workflow/forks";
 import { ALL_FORKS } from "@/workflows/forks";
 
 /**
- * Brand Lab, Demos tab. Pick a flow, pick each declared fork's exit, name the demo, and copy the
+ * Demo Lab, Demos tab. Pick a flow, pick each declared fork's exit, name the demo, and copy the
  * `demos` JSON for the brand file. Forks are read only here. A new fork needs rule code.
  */
 

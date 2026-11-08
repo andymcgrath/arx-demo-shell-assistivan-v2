@@ -88,9 +88,9 @@ for (const slug of slugs) {
 
     it("meets WCAG AA on the required color pairs", () => {
       // Required: button text (4.5) and the confirmation heading (3.0, large text).
-      // The other pairs are warnings in the Brand Lab (/brand-lab). See contrastReport in client/brand/theme.ts.
+      // The other pairs are warnings in the Demo Lab (/demo-lab). See contrastReport in client/brand/theme.ts.
       if (KNOWN_LOW_CONTRAST.has(slug)) return;
-      // An exact brand lists its misses as warnings in the Brand Lab.
+      // An exact brand lists its misses as warnings in the Demo Lab.
       if (brand.program.colors.fidelity === "exact") return;
       const failing = contrastReport(buildTheme(brand.program.colors))
         .filter((r) => r.required && !rowPasses(r))

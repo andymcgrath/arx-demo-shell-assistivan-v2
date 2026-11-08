@@ -1,6 +1,6 @@
 /**
  * Fidelity: how far the colors a demo shows are from the colors the client set, as numbers, so a match is measured and
- * not judged by eye. Pure functions over `BrandColors` and `BrandTheme`. The Brand Lab shows them.
+ * not judged by eye. Pure functions over `BrandColors` and `BrandTheme`. The Demo Lab shows them.
  *
  * Distance is the Euclidean distance in OKLab, times 100. Under about 1 the eye cannot tell two colors apart. Under 3 a
  * side-by-side comparison barely shows it. Past that the demo shows a different color from the client's.
