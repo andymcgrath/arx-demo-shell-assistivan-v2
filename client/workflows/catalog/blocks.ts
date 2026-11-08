@@ -203,8 +203,6 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
         summary: "The patient picks a store from the list.",
         lane: "patient",
         steps: [step("Patient picks a retail store", "patient", "click")],
-        draft: true,
-        question: "The only rule for this variant is the generic SELECT_PHARMACY, which emits to the CRM portal, not the patient. Does the patient pick the store, or does the agent?",
       },
       { id: "network", label: "Patient taps a network pharmacy", summary: "One tap on the network pharmacy.", lane: "patient", steps: [step("Patient taps the network pharmacy", "patient", "click")] },
       { id: "crm", label: "Agent can change the pharmacy", summary: "Once a price is chosen, the agent can change the dispensing pharmacy in the CRM.", steps: [step("Agent changes the dispensing pharmacy in the CRM", "agent", "click")] },
