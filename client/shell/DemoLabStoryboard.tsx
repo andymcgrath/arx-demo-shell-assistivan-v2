@@ -1,11 +1,8 @@
 import { useMemo, useState } from "react";
-import { BRAND } from "@/brand";
-import { workflowRegistry } from "@/engine/WorkflowRegistry";
+import { useItems } from "./DemoLabItems";
 import { buildStoryboard, STORYBOARD_LANES, type AnyStoryboard, type Storyboard, type StoryboardFork } from "@/workflows/catalog/storyboard";
 import type { ModuleId } from "@/engine/workflow/components";
 import { CATALOG_BLOCKS, CATALOG_PAYERS, type CatalogApp, type CatalogLane, type CatalogTrigger } from "@/workflows/catalog";
-import { ALL_SCENARIOS } from "@/workflows/scenarios";
-import type { FlowType } from "@/engine/types";
 
 /**
  * Demo Lab, Storyboard tab. Read only. Draws each recipe and each of the brand's demos from the catalog: a strip of
@@ -21,25 +18,6 @@ const SOFT = "#f1f5f9";
 const LANE_LABEL: Record<CatalogLane, string> = { hcp: "HCP", patient: "Patient", agent: "Agent", system: "System" };
 const TRIGGER_LABEL: Record<CatalogTrigger, string> = { click: "click", text: "text", automatic: "automatic", view: "view" };
 const APP_LABEL: Record<CatalogApp, string> = { crm: "CRM", patient: "Patient", provider: "Provider", field: "Field", iassist: "iAssist", rules: "Rules", web: "Web page", gateway: "Gateway" };
-
-interface Item {
-  key: string;
-  group: string;
-  flow: FlowType;
-  title: string;
-  description?: string;
-  choices?: Record<string, string>;
-}
-
-function useItems(): Item[] {
-  return useMemo(() => {
-    const label = (flow: string) => workflowRegistry.listWorkflows().find((w) => w.id === flow)?.label ?? flow;
-    const demos: Item[] = (BRAND.demos ?? []).map((d) => ({ key: `demo:${d.id}`, group: `Demos in ${BRAND.name}`, flow: d.flow, title: d.label, description: d.description, choices: d.choices }));
-    const recipes: Item[] = ALL_SCENARIOS.filter((s) => s.recipe).map((s) => ({ key: `recipe:${s.flowType}`, group: "Recipes", flow: s.flowType, title: label(s.flowType) }));
-    const whole: Item[] = ALL_SCENARIOS.filter((s) => !s.recipe).map((s) => ({ key: `whole:${s.flowType}`, group: "Whole demos (no recipe yet)", flow: s.flowType, title: label(s.flowType) }));
-    return [...demos, ...recipes, ...whole];
-  }, []);
-}
 
 /** A required block as sales names it. `module:variant` shows the module's name. */
 const blockName = (req: string): string => CATALOG_BLOCKS[req.split(":")[0] as ModuleId]?.name ?? req;

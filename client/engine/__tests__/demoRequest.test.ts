@@ -14,6 +14,7 @@ const request = (over: Record<string, unknown> = {}): Record<string, unknown> =>
   workflow: "iassist",
   intake: "erx",
   apps: ["crm", "patient", "iassist"],
+  forks: ["bi", "pa"],
   cards: [
     { kind: "block", moduleId: "enrollment" },
     { kind: "block", moduleId: "pa_notification", variantId: "hcp_administered" },
@@ -77,6 +78,12 @@ describe("validateDemoRequest", () => {
     expect(problems({ demos: [{ id: "a", label: "A", choices: { bi: "nope" } }] })[0]).toContain('exit "nope"');
     const d = { id: "a", label: "A", choices: {} };
     expect(problems({ demos: [d, d] })).toContain('demos[1].id "a" is used twice');
+  });
+
+  it("requires bi in forks, only declared forks, and a pick only on a fork the request passes through", () => {
+    expect(problems({ forks: ["pa"] })[0]).toContain('forks must include "bi"');
+    expect(problems({ forks: ["bi", "nope"] })).toContain('fork "nope" is not declared by any workflow');
+    expect(problems({ forks: ["bi"] }).join()).toContain('fork "pa", which the request does not pass through');
   });
 
   it("requires the brand inputs and a clean source URL", () => {

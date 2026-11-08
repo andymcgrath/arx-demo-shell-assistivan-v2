@@ -10,6 +10,7 @@
  */
 import DemosLab from "./DemoLabDemos";
 import Storyboard from "./DemoLabStoryboard";
+import Builder from "./DemoLabBuilder";
 import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
 import { BRAND } from "@/brand";
@@ -452,8 +453,8 @@ function ColorsLab() {
   );
 }
 
-type Tab = "storyboard" | "demos" | "colors";
-const TAB_LABELS: Record<Tab, string> = { storyboard: "Storyboard", demos: "Demos", colors: "Colors" };
+type Tab = "storyboard" | "builder" | "demos" | "colors";
+const TAB_LABELS: Record<Tab, string> = { storyboard: "Storyboard", builder: "Builder", demos: "Demos", colors: "Colors" };
 
 export default function DemoLab() {
   const [tab, setTab] = useState<Tab>("storyboard");
@@ -483,6 +484,8 @@ export default function DemoLab() {
       </header>
       {tab === "storyboard" ? (
         <Storyboard />
+      ) : tab === "builder" ? (
+        <Builder />
       ) : tab === "demos" ? (
         <DemosLab />
       ) : (

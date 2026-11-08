@@ -91,7 +91,8 @@ export interface StoryboardInput {
   choices?: Record<string, string>;
 }
 
-const hasModule = (recipe: ScenarioRecipe, req: string): boolean => {
+/** True when the recipe has the module, and the variant when `req` is `module:variant`. */
+export const recipeHas = (recipe: ScenarioRecipe, req: string): boolean => {
   const [id, variant] = req.split(":");
   return recipe.modules.some((m) => m.id === id && (!variant || m.props?.variant === variant));
 };
@@ -170,7 +171,7 @@ export function buildStoryboard(input: StoryboardInput): AnyStoryboard {
             description: c?.description ?? e.description ?? "",
             // A patient's pick is live, so no exit is highlighted for it.
             selected: f.chooser !== "patient" && (picked ? picked === e.id : e.id === f.exits[0].id),
-            missing: (e.requires ?? []).filter((r) => !hasModule(recipe, r)),
+            missing: (e.requires ?? []).filter((r) => !recipeHas(recipe, r)),
             ...(c?.payer ? { payer: c.payer, paRequired: c.paRequired } : {}),
           };
         }),

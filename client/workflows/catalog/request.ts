@@ -75,6 +75,8 @@ export interface DemoRequest {
   workflow: RequestWorkflow;
   intake: RequestIntake;
   apps: CatalogApp[];
+  /** The forks the scenario passes through. `bi` is always one. Each gives `fork:<id>` to the blocks after it. */
+  forks: string[];
   /** In journey order. Blocks and ghost cards share one list so a ghost card has a place. */
   cards: RequestCard[];
   demos: RequestDemo[];
@@ -90,7 +92,7 @@ export type RequestResult = { ok: true; request: DemoRequest } | { ok: false; pr
 /** A folder or file name: lowercase words joined by hyphens. Nothing that could climb out of a folder. */
 export const SAFE_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-const TOP_KEYS = ["version", "client", "slug", "title", "workflow", "intake", "apps", "cards", "demos", "brand", "winTheme", "demoDate", "openQuestions"];
+const TOP_KEYS = ["version", "client", "slug", "title", "workflow", "intake", "apps", "forks", "cards", "demos", "brand", "winTheme", "demoDate", "openQuestions"];
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const text = (v: unknown): v is string => typeof v === "string" && v.trim() !== "";
@@ -124,12 +126,22 @@ export function validateDemoRequest(input: unknown): RequestResult {
   if (!Array.isArray(input.apps) || input.apps.length === 0) problems.push("apps needs at least one app");
   else for (const a of input.apps) if (!APPS.includes(a as CatalogApp)) problems.push(`unknown app "${String(a)}"`);
 
+  const declared = declaredExits();
+  const forkIds: string[] = [];
+  if (!Array.isArray(input.forks) || !input.forks.includes("bi")) problems.push('forks must include "bi": benefits investigation always runs first');
+  else {
+    for (const f of input.forks) {
+      if (typeof f !== "string" || !declared.has(f)) problems.push(`fork "${String(f)}" is not declared by any workflow`);
+      else forkIds.push(f);
+    }
+  }
+
   if (!Array.isArray(input.cards) || input.cards.length === 0) problems.push("cards needs at least one card");
   else input.cards.forEach((c, i) => problems.push(...cardProblems(c, i)));
 
   if (!Array.isArray(input.demos) || input.demos.length === 0) problems.push("demos needs at least one demo");
   else {
-    const exits = declaredExits();
+    const exits = declared;
     const ids = new Set<string>();
     input.demos.forEach((d, i) => {
       const at = `demos[${i}]`;
@@ -140,7 +152,8 @@ export function validateDemoRequest(input: unknown): RequestResult {
       if (!text(d.label)) problems.push(`${at}.label is required`);
       if (!isObject(d.choices)) return problems.push(`${at}.choices must be an object`);
       for (const [fork, exit] of Object.entries(d.choices)) {
-        if (!exits.has(fork)) problems.push(`${at} picks fork "${fork}", which no workflow declares`);
+        if (forkIds.length && exits.has(fork) && !forkIds.includes(fork)) problems.push(`${at} picks fork "${fork}", which the request does not pass through`);
+        else if (!exits.has(fork)) problems.push(`${at} picks fork "${fork}", which no workflow declares`);
         else if (typeof exit !== "string" || !exits.get(fork)!.has(exit)) problems.push(`${at} picks exit "${String(exit)}", which fork "${fork}" does not declare`);
       }
     });

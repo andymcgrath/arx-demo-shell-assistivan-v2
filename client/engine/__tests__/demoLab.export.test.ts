@@ -21,6 +21,7 @@ const REQUEST = {
   workflow: "iassist",
   intake: "erx",
   apps: ["crm"],
+  forks: ["bi"],
   cards: [{ kind: "block", moduleId: "enrollment" }],
   demos: [{ id: "a", label: "A", choices: { bi: "medical_pa_required" } }],
   brand: { name: "M", drug: "D", indication: "I", documents: [] },

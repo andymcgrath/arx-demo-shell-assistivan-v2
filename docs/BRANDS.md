@@ -181,6 +181,6 @@ A demo can pin only a `bi` exit its scenario can reach. `CoA_PAP` reaches `no_co
 
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 
-The Demo Lab at `/demo-lab` has three tabs. Storyboard draws each recipe and the brand's demos as lanes and forks, read only. Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
+The Demo Lab at `/demo-lab` has four tabs. Storyboard draws each recipe and the brand's demos as lanes and forks, read only. Builder makes a demo request from the block palette and exports it under `docs/demos/` (dev only). Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
 
 `brands/_template/brand.json` lists every field. Required: `slug`, `name`, `title`, at least one demo, `manufacturer`, `program` with `drugDisplayName` and `colors.brand`, `manufacturer.legal.privacyUrl`, and `chatbotIcon`. Everything else is optional. The tests also need every local image path to point at a committed file.
