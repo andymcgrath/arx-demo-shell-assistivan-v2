@@ -15,8 +15,21 @@ export type CatalogApp = "crm" | "patient" | "provider" | "field" | "iassist" | 
 /** Who the audience sees acting. */
 export type CatalogLane = "hcp" | "patient" | "agent" | "system";
 
-/** `click`: someone taps or clicks. `text`: the patient acts on an SMS or one-time code. `automatic`: a timer or rule fires it. */
-export type CatalogTrigger = "click" | "text" | "automatic";
+/**
+ * `click`: someone taps or clicks. `text`: the patient acts on an SMS or one-time code. `automatic`: a timer or rule
+ * fires it. `view`: someone opens a screen and no event fires.
+ */
+export type CatalogTrigger = "click" | "text" | "automatic" | "view";
+
+/** One user-visible step, in order. A block with steps takes lane and trigger from them. */
+export interface CatalogStep {
+  label: string;
+  lane: CatalogLane;
+  trigger: CatalogTrigger;
+}
+
+/** The variant id for a module used with no `variant` prop. */
+export const DEFAULT_VARIANT = "default";
 
 /**
  * An entry the user has not signed off on. `draft: true` needs a one-line `question`. The tag step fails while any
@@ -35,6 +48,7 @@ export interface CatalogVariant extends Draftable {
   lane?: CatalogLane;
   trigger?: CatalogTrigger;
   apps?: CatalogApp[];
+  steps?: CatalogStep[];
 }
 
 export interface CatalogBlock extends Draftable {
@@ -48,6 +62,15 @@ export interface CatalogBlock extends Draftable {
   apps: CatalogApp[];
   lane: CatalogLane;
   trigger: CatalogTrigger;
+  /**
+   * One entry per step when the actor or trigger changes inside the block. `lane` and `trigger` above are the default
+   * for a block with one step.
+   */
+  steps?: CatalogStep[];
+  /**
+   * One entry per value of the module's `variant` prop. A module used with no `variant` prop is the `default` entry,
+   * which is required whenever the block has variants and a recipe uses it plain.
+   */
   variants?: CatalogVariant[];
 }
 

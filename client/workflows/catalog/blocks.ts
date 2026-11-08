@@ -1,5 +1,10 @@
 import type { ModuleId } from "@/engine/workflow/components";
-import type { CatalogBlock } from "./types";
+import type { CatalogBlock, CatalogStep } from "./types";
+
+const step = (label: string, lane: CatalogStep["lane"], trigger: CatalogStep["trigger"]): CatalogStep => ({ label, lane, trigger });
+
+/** The patient's side of onboarding, the same after every kind of referral. */
+const PATIENT_ONBOARDING = [step("Patient taps the text", "patient", "text"), step("Patient enters the one-time code", "patient", "text"), step("Patient consents", "patient", "click")];
 
 /**
  * One entry per block (step module). Names are sales vocabulary. The module id is the `id` field.
@@ -18,15 +23,40 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     lane: "patient",
     trigger: "text",
     variants: [
-      { id: "web", label: "Starts on the client's web page", summary: "The page already collected consent and details, so there is no text, code, or consent step. The patient taps Enroll on the page and lands in the patient app.", apps: ["web", "patient"], trigger: "click" },
-      { id: "no_rx", label: "Referral with no Rx", summary: "The HCP submits the enrollment with no prescription (the HCP orders the drug from their own wholesaler). The patient's text, code, and consent follow.", lane: "hcp", apps: ["iassist", "crm", "patient"] },
+      {
+        id: "default",
+        label: "Patient onboarding",
+        summary: "The HCP submits the referral. The patient gets a text, enters a one-time code, and consents.",
+        steps: [step("HCP submits the referral", "hcp", "click"), ...PATIENT_ONBOARDING],
+      },
+      {
+        id: "web",
+        label: "Starts on the client's web page",
+        summary: "The page already collected consent and details, so there is no text, code, or consent step. The patient submits the Rx details, the presenter opens the Gateway tab, and the patient taps Check Pricing on the coverage summary.",
+        apps: ["web", "gateway", "patient"],
+        lane: "patient",
+        trigger: "click",
+        steps: [
+          step("Patient finishes the Rx screen on the client's page", "patient", "click"),
+          step("Presenter opens the Gateway tab, and the benefit check and PA run", "system", "view"),
+          step("Patient taps Check Pricing on the coverage summary", "patient", "click"),
+        ],
+      },
+      {
+        id: "no_rx",
+        label: "Referral with no Rx",
+        summary: "The HCP submits the enrollment with no prescription (the HCP orders the drug from their own wholesaler). The patient's text, code, and consent follow.",
+        lane: "hcp",
+        apps: ["iassist", "crm", "patient"],
+        steps: [step("HCP submits the enrollment with no Rx", "hcp", "click"), ...PATIENT_ONBOARDING],
+      },
     ],
   },
   benefit_verification: {
     id: "benefit_verification",
     name: "Medical benefit check by the HCP (eMedBV)",
     summary: "The HCP runs a medical benefit check in iAssist before submitting the enrollment, and sees the result on the Insurance step.",
-    aliases: ["eMedBV", "ABV", "BV", "BI", "benefit verification", "benefits investigation", "medical BV"],
+    aliases: ["eMedBV", "medical BV", "benefit verification"],
     apps: ["iassist"],
     lane: "hcp",
     trigger: "click",
@@ -57,9 +87,7 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     aliases: ["patient record", "patient status", "patient history", "HCP view"],
     apps: ["iassist"],
     lane: "hcp",
-    trigger: "automatic",
-    draft: true,
-    question: "This block has no event of its own, so I set the trigger to automatic. Is that the right word for a screen the HCP just opens?",
+    trigger: "view",
   },
   pa_notification: {
     id: "pa_notification",
@@ -69,15 +97,23 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     apps: ["patient", "crm"],
     lane: "patient",
     trigger: "text",
+    steps: [step("Patient taps the text", "patient", "text"), step("Patient enters the one-time code", "patient", "text")],
     variants: [
-      { id: "hcp_administered", label: "HCP administered", summary: "After the text and code, the final screen tells the patient to contact their prescriber and that they will hear about next steps." },
+      { id: "default", label: "Prior authorization result text", summary: "The patient taps the text that says the PA was decided and enters a one-time code." },
       {
+        id: "hcp_administered",
+        label: "HCP administered",
+        summary: "After the text and code, the final screen tells the patient to contact their prescriber and that they will hear about next steps.",
+        steps: [step("Patient taps the text", "patient", "text"), step("Patient enters the one-time code", "patient", "text"), step("Patient sees the final screen", "patient", "view")],
+      },
+      {
+        // Checked in web_handoff.ts: CHECK_PRICING marks the text and code verified, and the SMS screen excludes this variant.
         id: "web",
         label: "Shown on the client's web page",
-        summary: "The patient already saw the approval on the coverage summary page.",
+        summary: "No text or code. The patient sees the approval on the coverage summary page, and Check Pricing moves on.",
         apps: ["web", "patient"],
-        draft: true,
-        question: "The recipe comment says the patient is verified at the PA-approved text and code. web_handoff.ts says Check Pricing skips that text and code. Which is true today?",
+        trigger: "view",
+        steps: [step("Patient sees the approval on the coverage summary", "patient", "view")],
       },
     ],
   },
@@ -103,11 +139,27 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     lane: "patient",
     trigger: "text",
     variants: [
-      { id: "copay", label: "Copay savings", summary: "The patient enrolls for the reduced price, then picks Retail or Mail Order." },
-      { id: "pap", label: "Free drug application", summary: "An update text, then a credit check and household income. The application is received and waits for a CRM agent to approve. The patient pays nothing and sees no pricing.", apps: ["patient", "crm", "iassist"] },
+      {
+        id: "copay",
+        label: "Copay savings",
+        summary: "The patient enrolls for the reduced price, then picks Retail or Mail Order.",
+        trigger: "click",
+        steps: [step("Patient enrolls in the copay program", "patient", "click")],
+      },
+      {
+        id: "pap",
+        label: "Free drug application",
+        summary: "An update text, then a credit check and household income. The application is received and waits for a CRM agent to approve. The patient pays nothing and sees no pricing.",
+        apps: ["patient", "crm", "iassist"],
+        steps: [
+          step("The application update text goes out after the benefit check", "system", "automatic"),
+          step("Patient taps the update text and enters the code", "patient", "text"),
+          step("Patient agrees to the credit check and confirms household income", "patient", "click"),
+          step("Agent approves the application in the CRM", "agent", "click"),
+          step("Patient taps the approval text and enters the code", "patient", "text"),
+        ],
+      },
     ],
-    draft: true,
-    question: "One name covers both variants. Do you want copay and free drug as two separate blocks in the palette?",
   },
   provider_transfer: {
     id: "provider_transfer",
@@ -145,14 +197,33 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     lane: "agent",
     trigger: "click",
     variants: [
-      { id: "store", label: "Patient picks a retail store", summary: "The patient picks a store from the list.", lane: "patient" },
-      { id: "network", label: "Patient taps a network pharmacy", summary: "One tap on the network pharmacy.", lane: "patient" },
-      { id: "crm", label: "Agent can change the pharmacy", summary: "Once a price is chosen, the agent can change the dispensing pharmacy in the CRM." },
-      { id: "site_of_care", label: "Agent sends it to the site of care", summary: "The agent triages the Rx to the site of care after the appeal or approval unlocks it." },
-      { id: "assigned", label: "Assigned pharmacy", summary: "Nobody picks. The benefits check assigns a pharmacy and the patient sees its contact details.", lane: "system", trigger: "automatic", apps: ["patient"] },
+      {
+        id: "store",
+        label: "Patient picks a retail store",
+        summary: "The patient picks a store from the list.",
+        lane: "patient",
+        steps: [step("Patient picks a retail store", "patient", "click")],
+        draft: true,
+        question: "The only rule for this variant is the generic SELECT_PHARMACY, which emits to the CRM portal, not the patient. Does the patient pick the store, or does the agent?",
+      },
+      { id: "network", label: "Patient taps a network pharmacy", summary: "One tap on the network pharmacy.", lane: "patient", steps: [step("Patient taps the network pharmacy", "patient", "click")] },
+      { id: "crm", label: "Agent can change the pharmacy", summary: "Once a price is chosen, the agent can change the dispensing pharmacy in the CRM.", steps: [step("Agent changes the dispensing pharmacy in the CRM", "agent", "click")] },
+      {
+        id: "site_of_care",
+        label: "Agent sends it to the site of care",
+        summary: "The agent triages the Rx to the site of care after the appeal or approval unlocks it.",
+        steps: [step("Agent triages the Rx to the site of care", "agent", "click"), step("Free drug only: the dispensing pharmacy starts the order a moment later", "system", "automatic")],
+      },
+      {
+        id: "assigned",
+        label: "Assigned pharmacy",
+        summary: "Nobody picks. The benefits check assigns a pharmacy and the patient sees its contact details.",
+        lane: "system",
+        trigger: "automatic",
+        apps: ["patient"],
+        steps: [step("The benefits check assigns the pharmacy, and the patient sees its contact details", "system", "automatic")],
+      },
     ],
-    draft: true,
-    question: "Triage to SP is a block here, but who acts changes with the variant. Is one block with five variants the right split, or should the palette show them apart?",
   },
   scheduling: {
     id: "scheduling",
@@ -163,6 +234,7 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     lane: "patient",
     trigger: "click",
     variants: [
+      { id: "default", label: "Address and ship date", summary: "The patient enters a delivery address and picks a ship date. This is CoAssist, which sets no variant." },
       { id: "delivery", label: "Address and ship date", summary: "The patient enters a delivery address and picks a ship date." },
       { id: "infusion", label: "Infusion appointment date", summary: "The patient picks an appointment date, then gets a text confirmation. It follows an approval or an appeal." },
     ],
@@ -184,8 +256,10 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     apps: ["rules", "crm"],
     lane: "system",
     trigger: "automatic",
-    draft: true,
-    question: "The rule starts the appeal on its own, but the agent then clicks Approve Appeal in the CRM. Is automatic the right trigger to show?",
+    steps: [
+      step("A rule built in the Rules app files the appeal after the denial", "system", "automatic"),
+      step("Agent opens the Appeal stage in the CRM, and the approval lands a moment later", "agent", "click"),
+    ],
   },
   tracking: {
     id: "tracking",
@@ -195,5 +269,11 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     apps: ["crm", "field", "patient"],
     lane: "agent",
     trigger: "click",
+    steps: [
+      step("The pharmacy starts the order", "agent", "click"),
+      step("Agent marks it ready", "agent", "click"),
+      step("Agent marks it shipped", "agent", "click"),
+      step("Agent marks it delivered", "agent", "click"),
+    ],
   },
 };

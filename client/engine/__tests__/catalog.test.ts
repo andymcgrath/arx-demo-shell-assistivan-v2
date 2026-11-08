@@ -12,6 +12,8 @@ import {
   blockVariant,
   catalogExit,
   catalogFork,
+  paletteCards,
+  DEFAULT_VARIANT,
   type Draftable,
 } from "@/workflows/catalog";
 
@@ -36,12 +38,21 @@ describe("catalog blocks", () => {
     expect(Object.keys(CATALOG_BLOCKS).sort()).toEqual(Object.keys(MODULE_CONTRACTS).sort());
   });
 
-  it("has an entry for every variant a recipe uses", () => {
+  it("has an entry for every variant a recipe uses, and a default entry where a block with variants is used plain", () => {
     for (const r of RECIPES) {
       for (const m of r.modules) {
-        const variant = m.props?.variant;
-        if (typeof variant !== "string") continue;
-        expect(blockVariant(CATALOG_BLOCKS[m.id], variant), `no catalog variant "${variant}" on block "${m.id}"`).toBeDefined();
+        const block = CATALOG_BLOCKS[m.id];
+        const variant = typeof m.props?.variant === "string" ? m.props.variant : DEFAULT_VARIANT;
+        if (!block.variants && variant === DEFAULT_VARIANT) continue;
+        expect(blockVariant(block, variant), `no catalog variant "${variant}" on block "${m.id}"`).toBeDefined();
+      }
+    }
+  });
+
+  it("gives every step a label", () => {
+    for (const b of Object.values(CATALOG_BLOCKS)) {
+      for (const list of [b.steps, ...(b.variants ?? []).map((v) => v.steps)]) {
+        for (const st of list ?? []) expect(st.label.trim(), `${b.id} step`).not.toBe("");
       }
     }
   });
@@ -66,15 +77,75 @@ describe("catalog blocks", () => {
     }
   });
 
-  it("keeps an alias on one block only, so a palette search has one answer", () => {
-    const seen = new Map<string, string>();
-    for (const b of Object.values(CATALOG_BLOCKS)) {
-      for (const a of b.aliases) {
-        const key = a.toLowerCase();
-        expect(seen.get(key) ?? b.id, `alias "${a}" is on both ${seen.get(key)} and ${b.id}`).toBe(b.id);
-        seen.set(key, b.id);
+});
+
+/** Aliases are unique within one kind and may repeat across kinds: the palette groups results by kind. */
+const duplicates = (entries: { key: string; aliases: string[] }[]): string[] => {
+  const seen = new Map<string, string>();
+  const dup: string[] = [];
+  for (const { key, aliases } of entries) {
+    for (const a of aliases) {
+      const alias = a.toLowerCase();
+      if (seen.has(alias) && seen.get(alias) !== key) dup.push(`"${a}" is on both ${seen.get(alias)} and ${key}`);
+      seen.set(alias, key);
+    }
+  }
+  return dup;
+};
+
+describe("catalog aliases", () => {
+  it("are unique across blocks", () => {
+    expect(duplicates(Object.values(CATALOG_BLOCKS).map((b) => ({ key: b.id, aliases: b.aliases })))).toEqual([]);
+  });
+
+  it("are unique across whole demos", () => {
+    expect(duplicates(CATALOG_WHOLE_DEMOS.map((d) => ({ key: d.flowType, aliases: d.aliases })))).toEqual([]);
+  });
+
+  it("are unique across fork ids", () => {
+    expect(duplicates(CATALOG_FORKS.map((f) => ({ key: f.id, aliases: f.aliases })))).toEqual([]);
+  });
+
+  it("are unique across the exits of one fork", () => {
+    for (const f of CATALOG_FORKS) expect(duplicates(f.exits.map((e) => ({ key: `${f.id}.${e.id}`, aliases: e.aliases }))), f.id).toEqual([]);
+  });
+
+  it("may repeat across kinds", () => {
+    expect(CATALOG_BLOCKS.benefit_verification.aliases).toContain("benefit verification");
+    expect(CATALOG_FORKS.find((f) => f.id === "bi")!.aliases).toContain("benefit verification");
+  });
+});
+
+describe("catalog palette cards", () => {
+  const cards = Object.values(CATALOG_BLOCKS).flatMap(paletteCards);
+
+  it("returns one card per variant, or one card for a block with none", () => {
+    for (const b of Object.values(CATALOG_BLOCKS)) expect(paletteCards(b)).toHaveLength(b.variants?.length || 1);
+  });
+
+  it("has a card for every module and variant a recipe uses", () => {
+    for (const r of RECIPES) {
+      for (const m of r.modules) {
+        const variant = typeof m.props?.variant === "string" ? m.props.variant : undefined;
+        expect(cards.find((c) => c.moduleId === m.id && c.variantId === variant), `no card for ${m.id}${variant ? `:${variant}` : ""}`).toBeDefined();
       }
     }
+  });
+
+  it("carries the module id and the variant id, and a step list", () => {
+    const web = cards.find((c) => c.moduleId === "pa_notification" && c.variantId === "web")!;
+    expect(web).toMatchObject({ moduleId: "pa_notification", variantId: "web", lane: "patient", trigger: "view" });
+    for (const c of cards) {
+      expect(c.steps.length, c.label).toBeGreaterThan(0);
+      expect(c.apps.length, c.label).toBeGreaterThan(0);
+    }
+    expect(cards.filter((c) => c.moduleId === "tracking")).toHaveLength(1);
+    expect(cards.find((c) => c.moduleId === "tracking")!.variantId).toBeUndefined();
+  });
+
+  it("gives a plain module's card one step built from its own lane and trigger", () => {
+    const copayClaim = paletteCards(CATALOG_BLOCKS.copay_claim)[0];
+    expect(copayClaim.steps).toEqual([{ label: copayClaim.label, lane: "hcp", trigger: "click" }]);
   });
 });
 

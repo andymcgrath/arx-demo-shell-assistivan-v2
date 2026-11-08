@@ -14,9 +14,9 @@ export const CATALOG_FORKS: CatalogFork[] = [
       { id: "medical_covered", aliases: ["medical benefit", "covered, no PA", "transfer to provider"] },
       {
         id: "medical_pa_required",
-        aliases: ["medical transfer", "HCP administered", "medical PA required"],
+        aliases: ["medical transfer", "medical PA required"],
         draft: true,
-        question: "The iAssist and CoAssist medical transfer recipes call this HCP administered (Buy & Bill). Should Buy and Bill be an alias here, or only on the Buy and Bill exit?",
+        question: "The medical transfer recipes describe this outcome as HCP administered (Buy & Bill). I removed that alias. What should sales call this exit, and is it separate from the Buy and Bill exit?",
       },
       {
         id: "medical_buy_and_bill",

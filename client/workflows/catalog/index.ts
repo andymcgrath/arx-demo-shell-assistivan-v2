@@ -3,7 +3,7 @@ import type { ForkDefinition } from "@/engine/workflow/types";
 import { ALL_FORKS } from "../forks";
 import { CATALOG_BLOCKS } from "./blocks";
 import { CATALOG_FORKS } from "./forks";
-import type { CatalogBlock, CatalogExit, CatalogFork, CatalogLane, CatalogTrigger, CatalogVariant } from "./types";
+import { DEFAULT_VARIANT, type CatalogApp, type CatalogBlock, type CatalogExit, type CatalogFork, type CatalogLane, type CatalogStep, type CatalogTrigger, type CatalogVariant } from "./types";
 
 export { CATALOG_BLOCKS } from "./blocks";
 export { CATALOG_FORKS } from "./forks";
@@ -22,9 +22,47 @@ export const blockVariant = (block: CatalogBlock, variantId: string): (CatalogVa
   return v && { ...v, lane: v.lane ?? block.lane, trigger: v.trigger ?? block.trigger };
 };
 
+/**
+ * A palette card: one block, or one variant of a block. The module id and variant id say what to put in a recipe.
+ * `variantId` is undefined for a block with no variants, and for the `default` variant (a module used with no
+ * `variant` prop). `steps` falls back to one step built from the card's own lane and trigger.
+ */
+export interface PaletteCard {
+  moduleId: ModuleId;
+  variantId?: string;
+  label: string;
+  summary: string;
+  lane: CatalogLane;
+  trigger: CatalogTrigger;
+  apps: CatalogApp[];
+  steps: CatalogStep[];
+}
+
+export const paletteCards = (block: CatalogBlock): PaletteCard[] => {
+  const card = (label: string, summary: string, lane: CatalogLane, trigger: CatalogTrigger, apps: CatalogApp[], steps: CatalogStep[] | undefined, variantId?: string): PaletteCard => ({
+    moduleId: block.id,
+    ...(variantId ? { variantId } : {}),
+    label,
+    summary,
+    lane,
+    trigger,
+    apps,
+    steps: steps ?? [{ label, lane, trigger }],
+  });
+  if (!block.variants?.length) return [card(block.name, block.summary, block.lane, block.trigger, block.apps, block.steps)];
+  return block.variants.map((v) =>
+    card(v.label, v.summary, v.lane ?? block.lane, v.trigger ?? block.trigger, v.apps ?? block.apps, v.steps ?? block.steps, v.id === DEFAULT_VARIANT ? undefined : v.id),
+  );
+};
+
 export const catalogBlock = (id: ModuleId): CatalogBlock => CATALOG_BLOCKS[id];
 
 const forkFor = (forkId: string): ForkDefinition | undefined => ALL_FORKS.find((f) => f.id === forkId);
+
+/**
+ * Aliases are unique within one kind (blocks, whole demos, fork ids, the exits of one fork) and may repeat across
+ * kinds. The palette groups results by kind, so "benefit verification" can name both a block and the `bi` fork.
+ */
 
 /** A fork's catalog entry, with the label from `forks.ts` when the catalog sets none. */
 export const catalogFork = (forkId: string): (CatalogFork & { label: string }) | undefined => {
