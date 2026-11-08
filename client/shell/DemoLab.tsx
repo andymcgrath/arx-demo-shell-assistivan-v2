@@ -9,6 +9,7 @@
  * App.tsx mounts it only when `import.meta.env.DEV` is true, so client builds do not include it.
  */
 import DemosLab from "./DemoLabDemos";
+import Storyboard from "./DemoLabStoryboard";
 import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
 import { BRAND } from "@/brand";
@@ -481,9 +482,7 @@ export default function DemoLab() {
         </p>
       </header>
       {tab === "storyboard" ? (
-        <main className="p-5 text-sm text-[#475569]" data-testid="storyboard-empty">
-          The storyboard is empty for now. It will draw every demo here.
-        </main>
+        <Storyboard />
       ) : tab === "demos" ? (
         <DemosLab />
       ) : (
