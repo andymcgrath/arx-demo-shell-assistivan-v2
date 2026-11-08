@@ -16,6 +16,7 @@
 import { ENROLLMENT_RULES } from "./modules/enrollment";
 import { WEB_HANDOFF_RULES } from "./modules/web_handoff";
 import { SPINE_RULES } from "./modules/spine";
+import { PRIOR_AUTHORIZATION_COA_RULES } from "./modules/prior_authorization";
 import { PA_NOTIFICATION_RULES } from "./modules/pa_notification";
 import { PAYMENT_RULES } from "./modules/payment";
 import { FINANCIAL_ASSISTANCE_RULES } from "./modules/financial_assistance";
@@ -32,6 +33,7 @@ export const COASSIST_RULES: CoaRule[] = [
   ...ENROLLMENT_RULES,
   ...WEB_HANDOFF_RULES,
   ...SPINE_RULES,
+  ...PRIOR_AUTHORIZATION_COA_RULES,
   ...PA_NOTIFICATION_RULES,
   ...PAYMENT_RULES,
   ...FINANCIAL_ASSISTANCE_RULES,

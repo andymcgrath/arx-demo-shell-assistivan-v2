@@ -43,6 +43,33 @@ const coa = (d: WorkflowData): Stage => ({
   lastUpdatedAgo: d.paStatus !== "none" ? "today" : null,
 });
 
+/**
+ * APA (the `prior_authorization` block's `apa` and `apa_skip` variants): the system emails the prescriber a secure form
+ * link, and the stage follows the form until the PA is submitted. Other scenarios never set `paFormStatus`, so their
+ * builders draw as before.
+ */
+const FORM_STATUS: Record<string, { label: string; detail: string }> = {
+  sent: { label: "Form sent", detail: "Secure PA form emailed to the prescriber" },
+  opened: { label: "Form opened", detail: "The prescriber opened the secure link" },
+  verified: { label: "Prescriber verified", detail: "NPI verified. Waiting on the completed form" },
+};
+
+const withPaForm = (build: (d: WorkflowData) => Stage) => (d: WorkflowData): Stage => {
+  const form = d.paStatus === "none" ? FORM_STATUS[d.paFormStatus] : undefined;
+  if (!form) return build(d);
+  return {
+    id: ID,
+    name: NAME,
+    statusLabel: form.label,
+    statusDetail: form.detail,
+    isComplete: false,
+    isNotStarted: false,
+    fields: [{ label: "PA form", value: form.label }],
+    lastUpdated: d.paFormSentAt ? new Date(d.paFormSentAt).toLocaleDateString() : new Date().toLocaleDateString(),
+    lastUpdatedAgo: "just now",
+  };
+};
+
 /** Coverage outcomes with no PA: both benefits covered, or neither covered. */
 const notNeeded = (d: WorkflowData): Stage => ({
   id: ID,
@@ -59,4 +86,4 @@ const notNeeded = (d: WorkflowData): Stage => ({
   lastUpdatedAgo: "today",
 });
 
-export const PA_BUILDERS = { standard, coa, not_needed: notNeeded };
+export const PA_BUILDERS = { standard: withPaForm(standard), coa: withPaForm(coa), not_needed: notNeeded };

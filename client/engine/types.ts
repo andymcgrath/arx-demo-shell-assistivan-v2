@@ -116,6 +116,14 @@ export interface WorkflowData {
   /** CoA_Web_Copay only: the prescriber's NPI, typed or picked on the client web page. Benefit verification (ABV) and prior
    *  authorization (APA) both use it. Null until the page submits. */
   prescriberNpi: string | null;
+  /**
+   * APA (the `prior_authorization` block, `apa` and `apa_skip` variants): where the prescriber's PA form stands.
+   * `sent` once the system emails the link, `opened` when the prescriber clicks it, `verified` after the NPI check,
+   * `submitted` when they submit the prefilled form. `none` for every other scenario.
+   */
+  paFormStatus: 'none' | 'sent' | 'opened' | 'verified' | 'submitted';
+  paFormSentAt: string | null;
+  prescriberVerified: boolean;
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

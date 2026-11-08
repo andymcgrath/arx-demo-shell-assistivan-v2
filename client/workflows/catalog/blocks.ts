@@ -107,6 +107,32 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
           step("Agent opens the PA stage in the CRM, and the decision lands a moment later", "agent", "click"),
         ],
       },
+      {
+        id: "apa",
+        label: "APA: the prescriber completes the form",
+        summary: "Advanced Prior Authorization. The system identifies the form and emails the prescriber a secure link. The prescriber verifies by NPI, completes the prefilled form online, and submits. The submission starts the PA.",
+        apps: ["crm", "provider"],
+        workflows: ["coassist"],
+        steps: [
+          step("The system identifies the form and emails the prescriber a secure link", "system", "automatic"),
+          step("Prescriber opens the link", "hcp", "click"),
+          step("Prescriber verifies by NPI", "hcp", "click"),
+          step("Prescriber completes the prefilled form and submits it", "hcp", "click"),
+          step("Agent opens the PA stage in the CRM, and the decision lands a moment later", "agent", "click"),
+        ],
+      },
+      {
+        id: "apa_skip",
+        label: "APA, skip the prescriber (demo)",
+        summary: "The form email goes out, then the demo submits the PA for the prescriber a moment later. Nobody visits the Provider app. The same outcome as AutoPA, with the APA steps on the tracker.",
+        apps: ["crm"],
+        workflows: ["coassist"],
+        steps: [
+          step("The system identifies the form and emails the prescriber a secure link", "system", "automatic"),
+          step("The demo submits the PA for the prescriber a moment later", "system", "automatic"),
+          step("Agent opens the PA stage in the CRM, and the decision lands a moment later", "agent", "click"),
+        ],
+      },
     ],
   },
   pa_notification: {

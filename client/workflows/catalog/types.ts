@@ -49,6 +49,8 @@ export interface CatalogVariant extends Draftable {
   trigger?: CatalogTrigger;
   apps?: CatalogApp[];
   steps?: CatalogStep[];
+  /** The workflows that build this variant. Omit for every workflow. The palette greys it out elsewhere. */
+  workflows?: string[];
 }
 
 export interface CatalogBlock extends Draftable {

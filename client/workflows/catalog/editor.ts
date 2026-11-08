@@ -107,6 +107,9 @@ export function recipeFor(d: DemoRequest, choices: Record<string, string> = {}):
   };
 }
 
+const WORKFLOW_NAME: Record<string, string> = { coassist: "CoAssist", iassist: "iAssist" };
+const onlyFor = (label: string, workflows: string[]) => `${label} is built for ${workflows.map((w) => WORKFLOW_NAME[w] ?? w).join(" and ")} only.`;
+
 const name = (id: string) => catalogBlock(id.split(":")[0] as ModuleId)?.name ?? id;
 const forkName = (id: string) => catalogFork(id)?.label ?? id;
 /** The block that sets a key, in sales words. */
@@ -130,6 +133,7 @@ export function plainProblem(p: string): string {
 
 /** Why a block cannot go next, in sales words. Empty when it can. */
 export function appendReasons(d: DemoRequest, card: PaletteCard): string[] {
+  if (card.workflows && !card.workflows.includes(d.workflow)) return [onlyFor(card.label, card.workflows)];
   const before = new Set(recipeProblems(recipeFor(d)));
   const next: RequestCard = { kind: "block", moduleId: card.moduleId, ...(card.variantId ? { variantId: card.variantId } : {}) };
   const after = recipeProblems(recipeFor({ ...d, cards: [...d.cards, next] }));
@@ -151,6 +155,11 @@ export function editorProblems(d: DemoRequest): string[] {
   }
   const forks = workflowForks(d.workflow);
   recipeProblems(recipeFor(d)).forEach((p) => out.add(plainProblem(p)));
+  for (const c of d.cards) {
+    if (c.kind !== "block" || !c.variantId) continue;
+    const card = paletteCards(catalogBlock(c.moduleId)).find((p) => p.variantId === c.variantId);
+    if (card?.workflows && !card.workflows.includes(d.workflow)) out.add(onlyFor(card.label, card.workflows));
+  }
   d.demos.forEach((demo, i) => {
     const at = demo.label.trim() ? `Demo "${demo.label}"` : `Demo ${i + 1}`;
     for (const f of forks.filter((x) => d.forks.includes(x.id) && x.chooser === "story")) {

@@ -38,10 +38,12 @@ export interface PaletteCard {
   trigger: CatalogTrigger;
   apps: CatalogApp[];
   steps: CatalogStep[];
+  /** The workflows that build this card. Undefined for every workflow. */
+  workflows?: string[];
 }
 
 export const paletteCards = (block: CatalogBlock): PaletteCard[] => {
-  const card = (label: string, summary: string, lane: CatalogLane, trigger: CatalogTrigger, apps: CatalogApp[], steps: CatalogStep[] | undefined, variantId?: string): PaletteCard => ({
+  const card = (label: string, summary: string, lane: CatalogLane, trigger: CatalogTrigger, apps: CatalogApp[], steps: CatalogStep[] | undefined, variantId?: string, workflows?: string[]): PaletteCard => ({
     moduleId: block.id,
     ...(variantId ? { variantId } : {}),
     label,
@@ -50,10 +52,11 @@ export const paletteCards = (block: CatalogBlock): PaletteCard[] => {
     trigger,
     apps,
     steps: steps ?? [{ label, lane, trigger }],
+    ...(workflows ? { workflows } : {}),
   });
   if (!block.variants?.length) return [card(block.name, block.summary, block.lane, block.trigger, block.apps, block.steps)];
   return block.variants.map((v) =>
-    card(v.label, v.summary, v.lane ?? block.lane, v.trigger ?? block.trigger, v.apps ?? block.apps, v.steps ?? block.steps, v.id === DEFAULT_VARIANT ? undefined : v.id),
+    card(v.label, v.summary, v.lane ?? block.lane, v.trigger ?? block.trigger, v.apps ?? block.apps, v.steps ?? block.steps, v.id === DEFAULT_VARIANT ? undefined : v.id, v.workflows),
   );
 };
 

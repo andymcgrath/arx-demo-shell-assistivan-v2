@@ -82,6 +82,37 @@ describe("the palette", () => {
   });
 });
 
+describe("the prior_authorization variants", () => {
+  const variants = ["auto", "apa", "apa_skip"].map((v) => card("prior_authorization", v));
+
+  it("has a palette card for AutoPA, APA, and the skip override", () => {
+    expect(variants.map((c) => c.label)).toEqual(["AutoPA", "APA: the prescriber completes the form", "APA, skip the prescriber (demo)"]);
+  });
+
+  it("can go in a CoAssist draft, and the APA cards are greyed in an iAssist draft", () => {
+    const coa = blankDraft("coassist");
+    const ia = blankDraft("iassist");
+    for (const c of variants) expect(appendReasons(coa, c), c.label).toEqual([]);
+    expect(appendReasons(ia, variants[0])).toEqual([]);
+    expect(appendReasons(ia, variants[1])).toEqual(["APA: the prescriber completes the form is built for CoAssist only."]);
+    expect(appendReasons(ia, variants[2])[0]).toContain("CoAssist only");
+  });
+
+  it("blocks an export that puts APA in an iAssist draft", () => {
+    const d = filled(draftFromScenario("iAssist_PA_Approved", { title: "Acme" })!);
+    const apa = { ...d, cards: d.cards.map((c) => (c.kind === "block" && c.moduleId === "prior_authorization" ? { ...c, variantId: "apa" } : c)) };
+    expect(editorProblems(d)).toEqual([]);
+    expect(editorProblems(apa).join()).toContain("is built for CoAssist only");
+  });
+
+  it("waits for the benefits check fork, and sits before the PA result text", () => {
+    expect(appendReasons({ ...blankDraft("coassist"), forks: [] }, variants[1]).join()).toContain("fork");
+    const d = filled(draftFromScenario("CoA_DTP", { title: "Acme" })!);
+    const apa = { ...d, cards: d.cards.map((c) => (c.kind === "block" && c.moduleId === "prior_authorization" ? { ...c, variantId: "apa" } : c)) };
+    expect(editorProblems(apa)).toEqual([]);
+  });
+});
+
 describe("fork exits", () => {
   it("greys an exit whose required block is missing, and clears it when the block is added", () => {
     const forks = workflowForks("iassist");

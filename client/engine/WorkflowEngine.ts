@@ -383,6 +383,9 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   'CONFIRM_INCOME',
   // Free drug: the CRM agent approves the application. The patient is told in the app.
   'APPROVE_PAP',
+  // APA: the prescriber's own steps in the Provider app. The form email and the submission have emails below.
+  'OPEN_PA_FORM_LINK',
+  'VERIFY_PRESCRIBER',
 ]);
 
 function formatSentAt(iso: string): string {
@@ -606,6 +609,32 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
           ],
           linkedItemId: LIVE_CASE_ID,
           linkedItemLabel: 'View Case',
+        });
+        break;
+
+      case 'SEND_PA_FORM':
+        emails.push({
+          ...base,
+          subject: `PA Form Sent to Prescriber - ${patientName}`,
+          bodyParagraphs: [
+            `AssistRx identified the prior authorization form for ${patientName} and emailed ${prescriberName} a secure link to complete it.`,
+            `The prescriber verifies by NPI, completes the prefilled form online, and submits it.`,
+          ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
+        });
+        break;
+
+      case 'SUBMIT_PA_FORM':
+        emails.push({
+          ...base,
+          subject: `PA Form Completed by Prescriber - ${patientName}`,
+          bodyParagraphs: [
+            `${prescriberName} verified by NPI and submitted the prior authorization form for ${patientName}.`,
+            `The PA is now with the payer.`,
+          ],
+          linkedItemId: LIVE_PA_TASK_ID,
+          linkedItemLabel: 'View Task: Prior Authorization Requested',
         });
         break;
 

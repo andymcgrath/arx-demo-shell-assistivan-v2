@@ -29,6 +29,9 @@
     "NOTIFY_PROVIDER_TRANSFER": [
       "provider_transfer.notify"
     ],
+    "OPEN_PA_FORM_LINK": [
+      "prior_authorization.open_pa_form_link"
+    ],
     "PATIENT_PAYS": [
       "payment.patient_pays"
     ],
@@ -68,6 +71,9 @@
     "SEND_PAP_SMS": [
       "income_qualification.send_pap_sms"
     ],
+    "SEND_PA_FORM": [
+      "prior_authorization.send_pa_form"
+    ],
     "SHIP_RX": [
       "tracking.ship_rx"
     ],
@@ -76,6 +82,9 @@
     ],
     "SUBMIT_PA": [
       "spine.submit_pa"
+    ],
+    "SUBMIT_PA_FORM": [
+      "prior_authorization.submit_pa_form"
     ],
     "VERIFY_CASH_OFFER_SMS": [
       "cash_offer.verify_sms"
@@ -103,6 +112,9 @@
     ],
     "VERIFY_PA_APPROVED_SMS": [
       "pa_notification.verify_sms"
+    ],
+    "VERIFY_PRESCRIBER": [
+      "prior_authorization.verify_prescriber"
     ],
     "VERIFY_PROVIDER_TRANSFER_SMS": [
       "provider_transfer.verify_sms"
@@ -242,6 +254,30 @@
     ],
     "pharmacy_selection.select_pharmacy.coverage": [
       "CoA_Coverage"
+    ],
+    "prior_authorization.open_pa_form_link": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
+    ],
+    "prior_authorization.send_pa_form": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
+    ],
+    "prior_authorization.submit_pa_form": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
+    ],
+    "prior_authorization.verify_prescriber": [
+      "CoA_DTP",
+      "CoA_Copay",
+      "CoA_Coverage",
+      "CoA_Medical_Transfer"
     ],
     "provider_transfer.leave_stage": [
       "CoA_DTP",

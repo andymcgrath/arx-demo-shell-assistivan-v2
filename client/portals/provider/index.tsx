@@ -18,6 +18,7 @@ import type { FlowType, WorkflowData } from "@/engine/types";
 // WF4's own dashboard — reused as-is for CoA_DTP's post-PA screen (see the
 // isCoassistSource branch in ProviderPortal below). Not a copy; if WF4's Dashboard
 // changes, this picks it up automatically.
+import { isValidNpi, providerFormStep } from "@/workflows/shared/apa";
 import IAssistDashboardPage from "@/portals/iassist/pages/Dashboard";
 // Dashboard calls useNavigate() from portalRouter, which throws unless it's
 // mounted under a <PortalRouter> — WF4's own portal (client/portals/iassist/
@@ -599,7 +600,7 @@ function RadioQuestion({
 
 // ── Email step ────────────────────────────────────────────────────────────────
 
-function EmailStep({ onClickLink }: { onClickLink: () => void }) {
+function EmailStep({ onClickLink, secureLink }: { onClickLink: () => void; /** APA: the tokenized link, shown for the demo. Nothing real is behind it. */ secureLink?: string }) {
   return (
     <main className="provider-content">
       <div className="email-container">
@@ -652,6 +653,8 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
                 </li>
               </ol>
 
+              {secureLink && <p className="email-note">Secure link: {secureLink}</p>}
+
               <p className="email-note">
                 *Your NPI is required to protect against fraudulent activity and to ensure only active prescribers can submit PAs.
               </p>
@@ -680,8 +683,11 @@ function EmailStep({ onClickLink }: { onClickLink: () => void }) {
 function LoginStep({
   onSubmit,
   isLockScreen = false,
+  error,
 }: {
-  onSubmit: () => void;
+  onSubmit: (npi: string, pin: string) => void;
+  /** APA: shown when the NPI check fails. */
+  error?: string;
   /**
    * WF1/WF2 now use this same screen as their default/starting screen (a
    * generic provider lock screen, reached before any actual PA request
@@ -750,9 +756,11 @@ function LoginStep({
         </div>
       </div>
 
+      {error && <p className="email-note" role="alert">{error}</p>}
+
       <div className="pa-action-row">
         <button
-          onClick={onSubmit}
+          onClick={() => onSubmit(npi, pin)}
           disabled={!canSubmit}
           className="pa-btn-primary"
         >
@@ -804,7 +812,7 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false }: { onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
+function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false, submitEvent = 'SUBMIT_PA' }: { /** The event the submit sends. APA sends SUBMIT_PA_FORM, which then starts the PA. */ submitEvent?: string; onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   const [q1, setQ1] = useState<string | null>(null);
   const [q2, setQ2] = useState<string | null>(null);
   const [q3, setQ3] = useState<string | null>(null);
@@ -817,7 +825,7 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
   const payer = usePatientStore((s) => s.payer);
 
   function handleNext() {
-    dispatch('SUBMIT_PA', { source: 'provider_portal', portal: 'provider' });
+    dispatch(submitEvent, { source: 'provider_portal', portal: 'provider' });
     onNext();
   }
 
@@ -1910,6 +1918,11 @@ function CoaProviderExperience({
   workflowData: WorkflowData;
 }) {
   const keanuStatus = deriveKeanuStatus(workflowData);
+  // APA (the prescriber completes the form): the screen follows paFormStatus, set by the machine. No effect moves it.
+  const byPrescriber = scenarioFacts(workflowData.flowType).paFormByPrescriber;
+  const formStep = byPrescriber ? providerFormStep(workflowData) : undefined;
+  const shownStep: Step = formStep === "form" ? "pa-questions" : (formStep ?? step);
+  const [npiError, setNpiError] = useState<string>();
   const isIdle = step === "coa-dashboard";
   const canAddRx = isIdle && !keanuStatus;
   // Local to the provider portal, like CoaRxForm's dosage/refills — see the
@@ -1928,22 +1941,38 @@ function CoaProviderExperience({
   // showLetterOfNecessity is the one deliberate exception — it's CoAssist
   // (CoA_DTP + CoA_Copay) only. WF1's own call site below doesn't pass it,
   // so its PA questionnaire is unaffected.
-  if (step === "email" || step === "login" || step === "pa-questions" || step === "pa-submitted") {
+  if (shownStep === "email" || shownStep === "login" || shownStep === "pa-questions" || shownStep === "pa-submitted") {
     return (
       <div className="provider-portal">
-        {step !== "email" && <BrandSidebar isBranded={false} />}
-        {step === "email" && <EmailStep onClickLink={() => setStep("login")} />}
-        {step === "login" && <LoginStep onSubmit={() => setStep("pa-questions")} />}
-        {step === "pa-questions" && (
+        {shownStep !== "email" && <BrandSidebar isBranded={false} />}
+        {shownStep === "email" && (
+          <EmailStep
+            secureLink={byPrescriber ? "https://pa.assistrx.com/request/7f3a9c1e" : undefined}
+            onClickLink={() => (byPrescriber ? dispatch("OPEN_PA_FORM_LINK", { portal: "provider" }) : setStep("login"))}
+          />
+        )}
+        {shownStep === "login" && (
+          <LoginStep
+            error={npiError}
+            onSubmit={(npi, pin) => {
+              if (!byPrescriber) return setStep("pa-questions");
+              if (!isValidNpi(npi, workflowData)) return setNpiError("We could not verify that NPI. Enter the ten-digit NPI of the prescriber on this request.");
+              setNpiError(undefined);
+              dispatch("VERIFY_PRESCRIBER", { npi, pin, portal: "provider" });
+            }}
+          />
+        )}
+        {shownStep === "pa-questions" && (
           <PaQuestionsStep
             isCoA={false}
             showLetterOfNecessity
-            onBack={() => setStep("login")}
-            onCancel={() => setStep("login")}
-            onNext={() => setStep("pa-submitted")}
+            submitEvent={byPrescriber ? "SUBMIT_PA_FORM" : "SUBMIT_PA"}
+            onBack={() => !byPrescriber && setStep("login")}
+            onCancel={() => !byPrescriber && setStep("login")}
+            onNext={() => !byPrescriber && setStep("pa-submitted")}
           />
         )}
-        {step === "pa-submitted" && (
+        {shownStep === "pa-submitted" && (
           <PaSubmittedStep isCoA={false} onDone={() => setStep("coa-dashboard")} />
         )}
       </div>
@@ -2927,7 +2956,8 @@ export default function ProviderPortal() {
   const storeFlowType = useDemoStore((s) => s.flowType);
 
   useEffect(() => {
-    if (!scenarioFacts(storeFlowType).hasPricingFork) {
+    // APA drives these screens from paFormStatus instead (CoaProviderExperience).
+    if (!scenarioFacts(storeFlowType).hasPricingFork || scenarioFacts(storeFlowType).paFormByPrescriber) {
       return;
     }
     // BI completing means "PA Required" just appeared — skip the idle EHR

@@ -12,6 +12,7 @@ import { assignedPharmacy } from "../../shared/assignment";
 import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 import { WEB_PA_MS } from "./web_handoff";
+import { startsPaOnItsOwn } from "../../shared/apa";
 
 export const SPINE_RULES: CoaRule[] = [
   {
@@ -43,7 +44,9 @@ export const SPINE_RULES: CoaRule[] = [
     // The eRx holds everything the PA needs, so it starts on its own. SUBMIT_PA ignores it unless the exit requires a PA.
     // The free drug program exit has none, and its referral starts on its own instead. Each is ignored where it does not hold.
     then: [
-      { trigger: "system", send: () => ({ type: "SUBMIT_PA" }) },
+      // The `apa` and `apa_skip` variants of `prior_authorization` send the prescriber a form instead (workflows/shared/apa.ts).
+      { trigger: "system", when: (_d, _e, s) => startsPaOnItsOwn(s), send: () => ({ type: "SUBMIT_PA" }) },
+      { trigger: "system", send: () => ({ type: "SEND_PA_FORM" }) },
       { trigger: "system", send: () => ({ type: "REFER_TO_PSP" }) },
     ],
   },
