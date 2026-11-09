@@ -54,6 +54,11 @@
     "drugDisplayName": "Livmarli (maralixibat)",
     "description": "",
     "dosageForm": "15 mg Tablet",
+    "paQuestions": [
+      "Does the patient have a confirmed diagnosis of cholestatic pruritus with Alagille syndrome or progressive familial intrahepatic cholestasis (PFIC)?",
+      "Has the patient tried and failed other treatments for cholestatic pruritus?",
+      "Is supporting clinical documentation of the diagnosis available for this request?"
+    ],
     "assets": {
       "logoColor": "/brands/mirum-accessplus/LIVMARLI-logo-color.png",
       "logoWhite": "/brands/mirum-accessplus/LIVMARLI-logo-white.png"

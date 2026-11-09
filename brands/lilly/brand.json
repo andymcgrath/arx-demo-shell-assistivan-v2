@@ -94,7 +94,13 @@
       "onBrand": "#ffffff",
       "fidelity": "exact",
       "source": "https://www.lilly.com/"
-    }
+    },
+    "ndc": "72266-0180-30",
+    "paQuestions": [
+      "Does the patient have a confirmed diagnosis of obesity or chronic weight management condition?",
+      "Has the patient tried and failed therapy with other weight loss medications or lifestyle modifications?",
+      "Is the patient's current BMI ≥ 30 kg/m² or ≥ 27 kg/m² with weight-related complications?"
+    ]
   },
   "chatbotIcon": "brands/lilly/chat-icon.svg",
   "favicon": "brands/lilly/favicon.jpeg"

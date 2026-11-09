@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
 import { BRAND } from "@/brand";
+import { paQuestionsFor } from "@/brand/paQuestions";
 import { usePresPapStore } from "@/store/presPapStore";
 import { useDemoStore } from "@/store/demoStore";
 import PesHome from "@/components/enrollment/PesHome";
@@ -526,7 +527,7 @@ function PaSummaryTable({ isSubmitted = false, accentColor = "#007178" }: { isSu
   const payer = usePatientStore((s) => s.payer);
 
   const paInfoItems = [
-    { label: "MEDICATION",          value: `${drugName} • NDC: 72266-0180-30`,   done: true },
+    { label: "MEDICATION",          value: BRAND.program.ndc ? `${drugName} • NDC: ${BRAND.program.ndc}` : drugName,   done: true },
     { label: "MEDICATION DETAILS",  value: `${dosageForm} · 30-day supply`,                            done: true },
     { label: "PATIENT",             value: `${patientName} • ${patientDob}`,                         done: true },
     { label: "PRESCRIBER",          value: "Sarah Chen, MD",                                   done: true },
@@ -813,9 +814,9 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
 function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false, submitEvent = 'SUBMIT_PA' }: { /** The event the submit sends. APA sends SUBMIT_PA_FORM, which then starts the PA. */ submitEvent?: string; onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
-  const [q1, setQ1] = useState<string | null>(null);
-  const [q2, setQ2] = useState<string | null>(null);
-  const [q3, setQ3] = useState<string | null>(null);
+  // The questions come from the brand (client/brand/paQuestions.ts), so the form fits the drug.
+  const clinicalQuestions = paQuestionsFor(BRAND.program);
+  const [answers, setAnswers] = useState<Record<number, string | null>>({});
   const [lonRequired, setLonRequired] = useState<string | null>(null);
   const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
   const [lonSubmitted, setLonSubmitted] = useState(false);
@@ -838,24 +839,15 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
 
   const questions = (
     <div className="pa-questions-section">
-      <RadioQuestion
-        question="Does the patient have a confirmed diagnosis of obesity or chronic weight management condition?"
-        value={q1}
-        onChange={setQ1}
-        accentColor={isCoA ? HEROIC_BLUE : undefined}
-      />
-      <RadioQuestion
-        question="Has the patient tried and failed therapy with other weight loss medications or lifestyle modifications?"
-        value={q2}
-        onChange={setQ2}
-        accentColor={isCoA ? HEROIC_BLUE : undefined}
-      />
-      <RadioQuestion
-        question="Is the patient's current BMI ≥ 30 kg/m² or ≥ 27 kg/m² with weight-related complications?"
-        value={q3}
-        onChange={setQ3}
-        accentColor={isCoA ? HEROIC_BLUE : undefined}
-      />
+      {clinicalQuestions.map((question, i) => (
+        <RadioQuestion
+          key={question}
+          question={question}
+          value={answers[i] ?? null}
+          onChange={(v) => setAnswers((prev) => ({ ...prev, [i]: v }))}
+          accentColor={isCoA ? HEROIC_BLUE : undefined}
+        />
+      ))}
       {showLetterOfNecessity && (
         <>
           <RadioQuestion

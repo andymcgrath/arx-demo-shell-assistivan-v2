@@ -123,6 +123,14 @@ export interface BrandConfig {
      * one diagnosis. Optional. A brand with none leaves the diagnosis for the HCP to pick.
      */
     indication?: BrandIndication;
+    /**
+     * The clinical questions the provider's PA form asks, in order. Optional. A brand with none gets questions built
+     * from its `indication` (see client/brand/paQuestions.ts), or generic ones when it has no indication either.
+     * Write each as a yes or no question. The Letter of Necessity question is added by the form, not listed here.
+     */
+    paQuestions?: string[];
+    /** The product's NDC, shown on the PA form's medication row. Optional. A brand with none shows the drug name only. */
+    ndc?: string;
     transferPartner?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
   };
   chatbotIcon: string;

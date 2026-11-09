@@ -190,3 +190,14 @@ The Demo Lab at `/demo-lab` has four tabs. Storyboard draws each recipe and the 
 `pnpm demo:apply <client>/<slug>` reads `docs/demos/<client>/<slug>.request.json` (from the Demo Lab Builder) and writes its demos into `brands/<client>/brand.json`, then runs the brand test. If the test fails, the file goes back as it was. Add `--dry` to see the plan only.
 
 It works only for a request with no ghost cards whose blocks match an existing recipe. It never writes a recipe. A request that matches none goes through the generated prompt instead. A new demo replaces one with the same id, and other demos stay. With no brand file, it makes a minimal one that extends the default brand and sets the brand and drug names. Add colors, logos, and copy by hand.
+
+## The provider's PA form
+
+The clinical questions and the medication row on the provider's PA form come from the brand, so the form fits the drug.
+
+- `program.paQuestions`: an ordered list of yes or no questions. Put a client's real criteria here. It wins over everything else.
+- With no list, the form builds three questions from `program.indication` (a confirmed diagnosis, prior therapy, supporting documentation), each naming the diagnosis.
+- With neither, the form asks three generic questions that name no condition.
+- `program.ndc`: shown on the medication row. A brand with none shows the drug name only.
+
+The Letter of Necessity question stays on the form for every brand. `client/brand/paQuestions.ts` holds the rule, and `paQuestions.test.ts` checks every brand.
