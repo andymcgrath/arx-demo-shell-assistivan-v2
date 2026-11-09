@@ -203,7 +203,7 @@ export default function MedicationDelivered() {
           )}
 
           {/* Prescriptions section */}
-          <PrescriptionsSection status="Review prescribing information" />
+          <PrescriptionsSection status="Review prescribing information" opensTracker={false} />
 
           {/* Suggested section */}
           <section>

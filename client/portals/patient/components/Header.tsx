@@ -52,7 +52,9 @@ export default function Header() {
 
           {/* Logo */}
           <div className="flex-1 flex justify-start">
-            <ManufacturerLogo size="header" />
+            <button type="button" onClick={() => handleNav("/")} aria-label="Home" className="cursor-pointer">
+              <ManufacturerLogo size="header" />
+            </button>
           </div>
 
           {/* Chat / Technical Help */}

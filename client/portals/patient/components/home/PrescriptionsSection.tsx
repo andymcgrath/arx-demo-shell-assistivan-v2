@@ -2,6 +2,9 @@ import { useState } from "react";
 import { ChevronRight, ArrowRight } from "lucide-react";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@/portals/patient/config/branding";
+import { useNavigate } from "@/lib/portalRouter";
+import { usePersonaState } from "@/engine/WorkflowProvider";
+import { scenarioHasModule } from "@/workflows/scenarios";
 
 interface Prescription {
   name: string;
@@ -10,9 +13,14 @@ interface Prescription {
 
 const DEFAULT_STATUS = "Prescription received";
 
-export default function PrescriptionsSection({ status = DEFAULT_STATUS }: { status?: string }) {
+/** `opensTracker`: the card opens the order tracker. The delivered page turns it off, since its card links to prescribing information. */
+export default function PrescriptionsSection({ status = DEFAULT_STATUS, opensTracker = true }: { status?: string; opensTracker?: boolean }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const prescriptions: Prescription[] = [{ name: PROGRAM.name, status }];
+  const navigate = useNavigate();
+  const { workflowData } = usePersonaState("patient");
+  // A scenario with the tracking block has an order tracker, and the prescription opens it.
+  const hasTracker = opensTracker && scenarioHasModule(workflowData.flowType, "tracking");
 
   return (
     <div>
@@ -35,6 +43,7 @@ export default function PrescriptionsSection({ status = DEFAULT_STATUS }: { stat
             key={rx.name}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
+            onClick={() => hasTracker && navigate("/order-tracker")}
             className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors border-2 border-arx-primary text-arx-link bg-transparent hover:bg-arx-primary hover:text-arx-on-primary"
           >
             {/* Logo switches to white on hover */}
