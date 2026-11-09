@@ -107,15 +107,11 @@ export default function Builder() {
               <option value="esign">E-sign</option>
             </select>
           </label>
-          <label className="text-xs font-semibold">
-            Demo date
-            <input type="date" className={field} style={{ borderColor: LINE }} value={draft.demoDate} onChange={(e) => set("demoDate", e.target.value)} />
-          </label>
           <label className="col-span-2 text-xs font-semibold">
             Win theme
             <input className={field} style={{ borderColor: LINE }} value={draft.winTheme} onChange={(e) => set("winTheme", e.target.value)} />
           </label>
-          {(["name", "drug", "indication"] as const).map((k) => (
+          {(["name", "drug"] as const).map((k) => (
             <label key={k} className="text-xs font-semibold">
               Brand {k}
               <input className={field} style={{ borderColor: LINE }} value={draft.brand[k]} onChange={(e) => edit((d) => ({ ...d, brand: { ...d.brand, [k]: e.target.value } }))} />

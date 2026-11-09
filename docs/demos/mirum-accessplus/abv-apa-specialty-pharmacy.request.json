@@ -68,22 +68,18 @@
   "brand": {
     "name": "Mirum",
     "drug": "Livmarli (maralixibat)",
-    "indication": "Cholestatic pruritus (Alagille syndrome, PFIC)",
     "sourceUrl": "https://mirumaccessplus.com/",
     "documents": [
       "Mirum-AccessPlus.html (saved copy of the Mirum Access Plus site)"
     ]
   },
   "winTheme": "One automated handoff from the eRx to a shipped specialty pharmacy order, with the prescriber's PA form completed online.",
-  "demoDate": "2026-12-01",
   "openQuestions": [
     "Who owns patient communications for Mirum? Their agents do, so is the Patient UI branded Mirum or us?",
     "Is the Mirum CRM integration shown on screen or only described?",
     "Is the specialty pharmacy ours?",
     "ABV is the pharmacy-benefit check, and the specialty pharmacy is an assigned dispenser. The only exit that assigns a pharmacy under the pharmacy benefit, `pharmacy_transfer`, requires the outside-provider transfer block, which Mirum does not have. This request picks `pharmacy_covered` so it validates, but `pharmacy_covered` does not assign a pharmacy. Which exit should Mirum use, and should `pharmacy_transfer` require the assigned-pharmacy block instead?",
     "After the prescriber submits the APA form, does the patient still get the PA-result text and code, and does it come from Mirum or from us?",
-    "Does the PA decision land when the agent opens the PA stage, as it does in the other demos, or automatically after the prescriber submits?",
-    "Confirm the demo date. 2026-12-01 is a placeholder.",
-    "Confirm the indication. It was written from the drug name, not from a Mirum document."
+    "Does the PA decision land when the agent opens the PA stage, as it does in the other demos, or automatically after the prescriber submits?"
   ]
 }

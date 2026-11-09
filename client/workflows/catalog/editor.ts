@@ -56,7 +56,7 @@ export function deriveApps(cards: RequestCard[]): CatalogApp[] {
 
 const withApps = (d: DemoRequest): DemoRequest => ({ ...d, apps: deriveApps(d.cards) });
 
-const emptyBrand = { name: "", drug: "", indication: "", documents: [] as string[] };
+const emptyBrand = { name: "", drug: "", documents: [] as string[] };
 
 /** A blank draft: BI is always first, with one empty demo. */
 export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
@@ -73,7 +73,6 @@ export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
     demos: [{ id: "demo-1", label: "", choices: {} }],
     brand: { ...emptyBrand },
     winTheme: "",
-    demoDate: "",
     openQuestions: [],
   };
 }

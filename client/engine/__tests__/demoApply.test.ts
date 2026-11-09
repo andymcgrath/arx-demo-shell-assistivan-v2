@@ -14,9 +14,8 @@ const filled = (d: DemoRequest): DemoRequest => ({
   ...d,
   client: "acme",
   slug: "acme-demo",
-  brand: { name: "Acme", drug: "Acmedrug", indication: "Condition", documents: [] },
+  brand: { name: "Acme", drug: "Acmedrug", documents: [] },
   winTheme: "One handoff",
-  demoDate: "2026-12-01",
   demos: d.demos.map((x, i) => ({ ...x, id: `demo-${i + 1}`, label: x.label || `Demo ${i + 1}` })),
 });
 

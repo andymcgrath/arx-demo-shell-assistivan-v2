@@ -23,9 +23,8 @@ const request = (over: Record<string, unknown> = {}): Record<string, unknown> =>
     { kind: "block", moduleId: "tracking" },
   ],
   demos: [{ id: "specialty-pharmacy", label: "Specialty pharmacy ships", choices: { bi: "medical_pa_required", pa: "approved" } }],
-  brand: { name: "Mirum", drug: "Drug", indication: "Indication", sourceUrl: "https://example.com", documents: ["brochure.pdf"] },
+  brand: { name: "Mirum", drug: "Drug", sourceUrl: "https://example.com", documents: ["brochure.pdf"] },
   winTheme: "One handoff from referral to shipment",
-  demoDate: "2026-12-01",
   openQuestions: ["Is the specialty pharmacy ours?"],
   ...over,
 });
@@ -53,10 +52,9 @@ describe("validateDemoRequest", () => {
     }
   });
 
-  it("requires a win theme and a real date", () => {
+  it("requires a win theme, and takes no demo date or indication", () => {
     expect(problems({ winTheme: "  " })).toContain("win theme is required");
-    expect(problems({ demoDate: "" })).toContain("demo date is required, as YYYY-MM-DD");
-    expect(problems({ demoDate: "2026-13-45" })).toContain("demo date is required, as YYYY-MM-DD");
+    expect(problems({ demoDate: "2026-12-01" })).toContain('unknown field "demoDate"');
   });
 
   it("rejects a block or variant the catalog does not have", () => {
@@ -87,8 +85,8 @@ describe("validateDemoRequest", () => {
   });
 
   it("requires the brand inputs and a clean source URL", () => {
-    expect(problems({ brand: { name: "M", drug: "", indication: "I", documents: [] } })).toContain("brand.drug is required");
-    expect(problems({ brand: { name: "M", drug: "D", indication: "I", sourceUrl: "javascript:x", documents: [] } })).toContain("brand.sourceUrl must be an http or https URL");
+    expect(problems({ brand: { name: "M", drug: "", documents: [] } })).toContain("brand.drug is required");
+    expect(problems({ brand: { name: "M", drug: "D", sourceUrl: "javascript:x", documents: [] } })).toContain("brand.sourceUrl must be an http or https URL");
   });
 });
 

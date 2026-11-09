@@ -18,9 +18,8 @@ const filled = (d: DemoRequest): DemoRequest => ({
   client: "acme",
   slug: "acme-demo",
   title: d.title || "Acme demo",
-  brand: { name: "Acme", drug: "Drug", indication: "Condition", documents: [] },
+  brand: { name: "Acme", drug: "Drug", documents: [] },
   winTheme: "One handoff",
-  demoDate: "2026-12-01",
   demos: d.demos.map((x, i) => ({ ...x, id: `demo-${i + 1}`, label: x.label || `Demo ${i + 1}` })),
 });
 
@@ -140,9 +139,8 @@ describe("what blocks an export", () => {
     expect(editorProblems(ready())).toEqual([]);
   });
 
-  it("blocks an empty win theme and an empty date", () => {
+  it("blocks an empty win theme", () => {
     expect(editorProblems({ ...ready(), winTheme: "" })).toContain("win theme is required");
-    expect(editorProblems({ ...ready(), demoDate: "" })).toContain("demo date is required, as YYYY-MM-DD");
   });
 
   it("blocks a ghost card that lacks a required field, and clears when it is filled", () => {

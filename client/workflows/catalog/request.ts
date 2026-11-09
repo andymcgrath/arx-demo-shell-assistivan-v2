@@ -60,7 +60,6 @@ export interface RequestDemo {
 export interface RequestBrand {
   name: string;
   drug: string;
-  indication: string;
   sourceUrl?: string;
   documents: string[];
 }
@@ -82,8 +81,6 @@ export interface DemoRequest {
   demos: RequestDemo[];
   brand: RequestBrand;
   winTheme: string;
-  /** YYYY-MM-DD. */
-  demoDate: string;
   openQuestions: string[];
 }
 
@@ -92,7 +89,7 @@ export type RequestResult = { ok: true; request: DemoRequest } | { ok: false; pr
 /** A folder or file name: lowercase words joined by hyphens. Nothing that could climb out of a folder. */
 export const SAFE_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-const TOP_KEYS = ["version", "client", "slug", "title", "workflow", "intake", "apps", "forks", "cards", "demos", "brand", "winTheme", "demoDate", "openQuestions"];
+const TOP_KEYS = ["version", "client", "slug", "title", "workflow", "intake", "apps", "forks", "cards", "demos", "brand", "winTheme", "openQuestions"];
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const text = (v: unknown): v is string => typeof v === "string" && v.trim() !== "";
@@ -121,7 +118,6 @@ export function validateDemoRequest(input: unknown): RequestResult {
   if (!(REQUEST_WORKFLOWS as readonly unknown[]).includes(input.workflow)) problems.push(`workflow must be one of ${REQUEST_WORKFLOWS.join(", ")}`);
   if (!(REQUEST_INTAKES as readonly unknown[]).includes(input.intake)) problems.push(`intake must be one of ${REQUEST_INTAKES.join(", ")}`);
   if (!text(input.winTheme)) problems.push("win theme is required");
-  if (typeof input.demoDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(input.demoDate) || Number.isNaN(Date.parse(input.demoDate))) problems.push("demo date is required, as YYYY-MM-DD");
 
   if (!Array.isArray(input.apps) || input.apps.length === 0) problems.push("apps needs at least one app");
   else for (const a of input.apps) if (!APPS.includes(a as CatalogApp)) problems.push(`unknown app "${String(a)}"`);
@@ -162,7 +158,7 @@ export function validateDemoRequest(input: unknown): RequestResult {
   const b = input.brand;
   if (!isObject(b)) problems.push("brand is required");
   else {
-    for (const key of ["name", "drug", "indication"]) if (!text(b[key])) problems.push(`brand.${key} is required`);
+    for (const key of ["name", "drug"]) if (!text(b[key])) problems.push(`brand.${key} is required`);
     if (b.sourceUrl !== undefined && !(typeof b.sourceUrl === "string" && /^https?:\/\//.test(b.sourceUrl))) problems.push("brand.sourceUrl must be an http or https URL");
     if (!Array.isArray(b.documents) || !b.documents.every((d) => typeof d === "string")) problems.push("brand.documents must be a list of text");
   }

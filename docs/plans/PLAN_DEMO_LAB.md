@@ -57,7 +57,7 @@ Goal: sales sees what exists. It also proves the metadata. A recipe that draws w
 
 ### 4. Request schema and export
 
-- Define `DemoRequest` (type plus validator): workflow, intake channel, apps shown, blocks with variants, fork picks per demo, ghost cards, brand inputs (name, drug, indication, source URL, documents), win theme, demo date, open questions.
+- Define `DemoRequest` (type plus validator): workflow, intake channel, apps shown, blocks with variants, fork picks per demo, ghost cards, brand inputs (name, drug, source URL, documents), win theme, open questions. No demo date and no indication: nothing read them.
 - Dev endpoint that writes `docs/demos/<client>/<slug>.request.json` and `<slug>.prompt.md`. It writes under `docs/demos/` only and rejects any other path. It does not exist in a production build. Test both.
 - Generate the prompt from the request (see below).
 
