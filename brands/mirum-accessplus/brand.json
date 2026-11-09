@@ -1,0 +1,69 @@
+{
+  "slug": "mirum-accessplus",
+  "name": "Mirum Access Plus",
+  "title": "Mirum Access Plus",
+  "demos": [
+    {
+      "id": "mirum-abv-apa-sp-ships",
+      "flow": "CoA_APA_Specialty",
+      "label": "1. ABV with APA, specialty pharmacy ships",
+      "description": "eRx initiation and onboarding. The benefit check finds a PA is required, APA emails the prescriber a form, the case is triaged to the specialty pharmacy, and the pharmacy ships.",
+      "choices": { "bi": "pharmacy_transfer", "pa": "approved" }
+    },
+    {
+      "id": "fax-qs-pa-approved",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "1. Standard",
+      "description": "Standard enrollment with fax quick-start and PA approval"
+    },
+    {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "2. CoAssist DTP",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+    },
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "3. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    }
+  ],
+  "showClientTab": false,
+  "manufacturer": {
+    "name": "Mirum",
+    "tagline": "Navigating Together",
+    "logo": {
+      "colors": "/brands/mirum-accessplus/mirum-logo-color.png",
+      "white": "/brands/mirum-accessplus/mirum-logo-white.png"
+    },
+    "support": {
+      "label": "Technical Help",
+      "phone": "877-450-4412"
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": "©{{YEAR}} Mirum. All Rights Reserved."
+  },
+  "program": {
+    "name": "Livmarli",
+    "drugDisplayName": "Livmarli (maralixibat)",
+    "description": "",
+    "dosageForm": "15 mg Tablet",
+    "assets": {
+      "logoColor": "/brands/mirum-accessplus/LIVMARLI-logo-color.png",
+      "logoWhite": "/brands/mirum-accessplus/LIVMARLI-logo-white.png"
+    },
+    "colors": {
+      "brand": "#17324d",
+      "accent": "#da1c5c",
+      "fidelity": "exact",
+      "source": "https://mirumaccessplus.com/"
+    }
+  },
+  "chatbotIcon": "/brands/mirum-accessplus/chat-icon.svg"
+}
