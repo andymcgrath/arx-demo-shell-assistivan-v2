@@ -98,6 +98,39 @@ Two pairs are required and fail `pnpm test`: button text on the action color, an
 
 Code reads these as CSS variables. Text on fills: `--arx-on-action`, `--arx-on-primary`, `--arx-on-hero`. Fixed neutrals: `--arx-white`, `--arx-black`, `--arx-success`. Brand: `--arx-primary` (same as `--arx-brand`), `--arx-primary-dark`, `--arx-primary-80`, `--arx-primary-30`, `--arx-accent`, `--arx-gradient`. Buttons: `--arx-action`, `--arx-action-hover`, `--arx-on-action`. Use the `bg-arx-action` family of Tailwind classes on buttons and `arx-primary` for everything else. Derivation lives in `client/brand/theme.ts`.
 
+## Logo files and sizes
+
+Every logo sits in a fixed box. The app scales the file to fit the box and keeps its aspect ratio, so a rebrand never pushes other controls off the screen. The boxes live in `client/portals/patient/components/brand/logoSizes.ts`.
+
+| Logo | Where | Box (px) |
+|---|---|---|
+| Manufacturer, `header` | Top bar | 140 x 40 |
+| Manufacturer, `footer` | Footer | 70 x 20 (half the header box) |
+| Program, `card` | Cards | 120 x 40 |
+| Program, `small` | Compact lists | 100 x 24 |
+| Program, `row` | Rows | 160 x 32 |
+
+The logo renders at the smaller of two widths: the box width, or the box height times the file's aspect ratio (width divided by height). A logo that is not wide enough is limited by the box height and renders smaller than the box.
+
+Examples in the 70 x 20 footer box:
+
+| File | Aspect | Renders at (px) |
+|---|---|---|
+| Wide wordmark | 3.5 or more | 70 wide, fills the box |
+| Horizontal logo | 2.4 | about 49 x 20 |
+| Logo with a small mark | 1.8 | about 36 x 20 |
+| Square mark | 1.0 | 20 x 20 |
+
+What to supply:
+
+- A transparent PNG or SVG. No CSS filter, and no background.
+- Crop it tight. Transparent padding shrinks the logo, because the padding counts toward the file's size.
+- Make it as wide as the brand allows. Aim for an aspect of 3.5 or more, so it fills the 70 px footer box. A stacked, square, or tall logo always looks small in the footer.
+- Give it at least twice the box in pixels, so it stays sharp on a high-density screen: 280 x 80 for the header and 140 x 40 for the footer. A larger file is fine. The app scales it down.
+- Supply both variants: `colors` for white backgrounds, and `white` for dark ones. A brand footer (`surfaces.footer: "brand"`) shows the white one, so `manufacturer.logo.white` is required with it.
+
+To make a footer logo larger, supply a wider lockup of the white logo. Changing the footer box affects every brand and breaks the 50% rule above, so do it for all brands or not at all.
+
 ## Start from another brand
 
 A brand that looks like the default but shows different flows needs only a short file:
