@@ -67,7 +67,8 @@
       "brand": "#17324d",
       "accent": "#da1c5c",
       "fidelity": "exact",
-      "source": "https://mirumaccessplus.com/"
+      "source": "https://mirumaccessplus.com/",
+      "surfaces": { "footer": "brand" }
     }
   },
   "chatbotIcon": "/brands/mirum-accessplus/chat-icon.svg"

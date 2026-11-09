@@ -48,6 +48,8 @@ export const SURFACE_OPTIONS = {
   marker: ["accent", "white", "brand"],
   /** Color of headings and links. `dark` is the darker brand shade. */
   headings: ["brand", "dark"],
+  /** The patient footer. `white` is the neutral footer. `brand` fills it with the brand color and uses the white logo. */
+  footer: ["white", "brand"],
 } as const;
 
 export type SurfaceKey = keyof typeof SURFACE_OPTIONS;
@@ -126,6 +128,12 @@ export interface BrandTheme {
   onMarker: string;
   /** Headings and links. */
   link: string;
+  /** The patient footer's fill. White unless `footer` is `brand`. */
+  footer: string;
+  /** Text on the footer fill: white or near-black, whichever scores better. Used only when `footer` is `brand`. */
+  onFooter: string;
+  /** The footer's divider lines: the text color mixed toward the fill. Used only when `footer` is `brand`. */
+  footerRule: string;
 }
 
 /** WCAG AA for normal text. */
@@ -388,6 +396,8 @@ export function contrastReport(theme: BrandTheme): ContrastRow[] {
     row("marker", "Step marker number", "text", theme.onMarker, [theme.marker]),
     row("marker-row", "Step marker against its row", "ui", theme.marker, [theme.stepRow]),
     row("step-done", "Completed step check (white on its circle)", "ui", WHITE, [theme.stepDone]),
+    // The neutral footer keeps its own fixed text colors. Only a brand footer picks its text from the brand.
+    ...(theme.surfaces.footer === "brand" ? [row("footer", "Footer text on the brand color", "text", theme.onFooter, [theme.footer])] : []),
   ];
 }
 
@@ -406,6 +416,7 @@ export function resolveSurfaces(surfaces: Surfaces | undefined, hasAccent: boole
     stepRow: "brand",
     marker: hasAccent ? "accent" : "white",
     headings: "brand",
+    footer: "white",
     ...given,
   } as ResolvedSurfaces;
 }
@@ -482,6 +493,8 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
   // A marker the same color as its row would vanish, so it falls back to white.
   const wanted = surfaces.marker === "accent" ? accentOrBrand : surfaces.marker === "brand" ? brand : WHITE;
   const marker = wanted === stepRow ? WHITE : wanted;
+  const footer = surfaces.footer === "brand" ? brand : WHITE;
+  const onFooter = textOn(footer);
 
   return {
     tint,
@@ -499,6 +512,9 @@ export function buildTheme(colors: BrandColors, options: BuildThemeOptions = {})
     marker,
     onMarker: marker === WHITE ? brand : textOn(marker),
     link: surfaces.headings === "dark" ? dark : brand,
+    footer,
+    onFooter,
+    footerRule: mixHex(footer, onFooter, 0.3),
     brand,
     accent,
     action,
@@ -546,6 +562,12 @@ export function themeToCssVars(theme: BrandTheme): Record<string, string> {
     "--arx-marker": hexToHslString(theme.marker),
     "--arx-on-marker": hexToHslString(theme.onMarker),
     "--arx-link": hexToHslString(theme.link),
+    // The patient footer. The neutral footer keeps its fixed text and divider colors, so a brand that does not set
+    // `footer` looks as it always did.
+    "--arx-footer": hexToHslString(theme.footer),
+    "--arx-footer-heading": theme.surfaces.footer === "brand" ? hexToHslString(theme.onFooter) : "var(--arx-slate)",
+    "--arx-footer-text": theme.surfaces.footer === "brand" ? hexToHslString(theme.onFooter) : "var(--arx-body-copy)",
+    "--arx-footer-rule": theme.surfaces.footer === "brand" ? hexToHslString(theme.footerRule) : "var(--arx-borders)",
     // Confirmation screens. A `background-image` value, so a flat fill is a one-color gradient.
     "--arx-hero": theme.hero,
     "--arx-on-hero": hexToHslString(theme.onHero),

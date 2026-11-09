@@ -50,6 +50,7 @@ const SURFACE_LABELS: Record<SurfaceKey, { label: string; hint: string }> = {
   tiles: { label: "Icon tiles", hint: "Tint: light brand tint, brand icon. Accent: solid tile, readable icon." },
   stepRow: { label: "Active step row", hint: "Fill of the current step in the order tracker." },
   marker: { label: "Step marker", hint: "The number circle on the active step." },
+  footer: { label: "Footer", hint: "White: the neutral footer. Brand: the brand color, white logo, readable text." },
   headings: { label: "Headings and links", hint: "Brand color, or the darker shade." },
 };
 
@@ -254,6 +255,10 @@ function Mocks({ vars }: { vars: CSSProperties }) {
           {row("done", 1, "Order received")}
           {row("active", 2, "Routing to pharmacy")}
           {row("pending", 3, "Preparing medication")}
+        </div>
+        <div className="border-t border-arx-footer-rule bg-arx-footer px-4 py-2" data-testid="footer-mock">
+          <p className="text-footer uppercase tracking-wide text-arx-footer-heading">Legal</p>
+          <p className="text-[11px] text-arx-footer-text">Privacy Policy · Terms of Use</p>
         </div>
       </div>
 

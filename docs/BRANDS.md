@@ -86,8 +86,9 @@ Buttons keep white text. When white misses WCAG AA on `action`, the fill darkens
 | `stepRow` | `brand`, `accent` | Fill of the active step in the order tracker. |
 | `marker` | `accent` (`white` with no accent), `white`, `brand` | The number circle on the active step. It shows white when it would match its row. |
 | `headings` | `brand`, `dark` | Color of headings and links. `dark` is the darker brand shade. |
+| `footer` | `white`, `brand` | The patient footer. `brand` fills it with the brand color, uses the manufacturer's white logo (`manufacturer.logo.white`, required with `brand`), and picks white or near-black text. Dividers are the text color mixed toward the fill. |
 
-Text on a confirmation screen, the step row, and a solid tile is white or near-black, whichever scores better. On a gradient it scores across the text area (the middle of the span, not the ends). A typo in a key or option fails the brand test.
+Text on a confirmation screen, the step row, a solid tile, and a brand footer is white or near-black, whichever scores better. On a gradient it scores across the text area (the middle of the span, not the ends). A typo in a key or option fails the brand test.
 
 ### Preview and score a choice
 

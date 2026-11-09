@@ -75,7 +75,7 @@ describe("confirmation style and WCAG report", () => {
 
   it("takes defaults that leave a brand with no accent looking as before", () => {
     const t = buildTheme({ brand: "#007178" });
-    expect(t.surfaces).toEqual({ confirmation: "brand", strip: "none", tiles: "tint", stepRow: "brand", marker: "white", headings: "brand" });
+    expect(t.surfaces).toEqual({ confirmation: "brand", strip: "none", tiles: "tint", stepRow: "brand", marker: "white", headings: "brand", footer: "white" });
     // The tile is the tint, which the theme lightens when brand text on it would miss AA 4.5.
     expect(t.tileBg).toBe(t.tint);
     expect(contrastRatio(t.brand, t.tileBg)).toBeGreaterThanOrEqual(AA_CONTRAST);
