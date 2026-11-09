@@ -89,8 +89,10 @@ const KNOWN_GAPS: Record<string, string[]> = {
   CoA_Web_Copay: ["no_coverage"],
   CoA_Coverage: [],
   // `pharmacy_covered` needs no module, so the recipe can pick it, but the scenario has no pricing screens for it.
-  CoA_Medical_Transfer: ["pharmacy_covered"],
+  // `pharmacy_transfer` needs `pharmacy_selection:assigned`, which this recipe has, so it is pickable here too. No demo uses it.
+  CoA_Medical_Transfer: ["pharmacy_covered", "pharmacy_transfer"],
   CoA_PAP: [],
+  CoA_APA_Specialty: [],
 };
 
 describe("stage ladder coverage of the bi fork", () => {
@@ -100,7 +102,7 @@ describe("stage ladder coverage of the bi fork", () => {
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
       const hasRungs = (id: string) =>
-        flowType === "CoA_Coverage" || flowType === "CoA_PAP"
+        flowType === "CoA_Coverage" || flowType === "CoA_PAP" || flowType === "CoA_APA_Specialty"
           ? !!fork.exits.find((e) => e.id === id)?.stages?.length
           : isTransferScenario(flowType)
           ? TRANSFER_LADDER_EXITS.includes(id)

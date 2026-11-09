@@ -45,6 +45,8 @@ export function createInitialWorkflowData(
     paFormStatus: "none",
     paFormSentAt: null,
     prescriberVerified: false,
+    pharmacyIntakeStatus: "none",
+    crmHandoffStatus: "none",
     paApprovedSmsVerified: false,
     paApprovedOtpVerified: false,
     appealStatus: "none",

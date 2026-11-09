@@ -3430,6 +3430,193 @@
       }
     ]
   },
+  "coa-apa-specialty-pharmacy": {
+    "flowType": "CoA_APA_Specialty",
+    "labelSets": [
+      [
+        "Referral Received",
+        "Patient Enrolled",
+        "Benefits Investigation",
+        "Prior Authorization",
+        "Triage to Pharmacy",
+        "Rx Processing",
+        "Rx Shipped",
+        "Medication Delivered"
+      ]
+    ],
+    "steps": [
+      {
+        "after": "(start)",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 1,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "VERIFY_SMS",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "VERIFY_OTP",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "COMPLETE_BI",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "OPEN_PA_FORM_LINK",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "VERIFY_PRESCRIBER",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "SUBMIT_PA_FORM",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "APPROVE_PA",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "VERIFY_PA_APPROVED_SMS",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "VERIFY_PA_APPROVED_OTP",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "ACCEPT_PHARMACY_INTAKE",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "FILL_RX",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "READY_RX",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "SHIP_RX",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 7,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "DELIVER_RX",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 9,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      }
+    ]
+  },
   "coa-pap": {
     "flowType": "CoA_PAP",
     "labelSets": [

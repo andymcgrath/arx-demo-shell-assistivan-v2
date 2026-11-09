@@ -1,10 +1,13 @@
 /** Tracking: the order tracker, from confirmation to delivery. */
 import type { Screen } from "@/engine/workflow/screens";
+import type { RuleScope } from "@/engine/workflow/types";
 import { neitherCovered } from "../shared";
 import { PAP_JOURNEY, TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 const SCOPE = { module: "tracking" } as const;
 const COPAY = { fork: "copay" } as const;
+/** An assigned pharmacy after a PA: the scenario has the `pa` fork. The free drug program has none. */
+const ASSIGNED_AFTER_PA: RuleScope[] = [{ module: "pharmacy_selection", props: { variant: "assigned" } }, { fork: "pa" }];
 
 export const TRACKING_SCREENS: Screen[] = [
   { path: "/pap-enrollment-complete", label: "Confirmation", group: "{program} order", scope: PAP_JOURNEY },
@@ -30,6 +33,11 @@ export const TRACKING_ROUTES: CoaRoute[] = [
   { id: "tracking.pap_processing", slot: "tracking", path: "/order-tracker", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready" },
   { id: "tracking.pap_shipped", slot: "tracking", path: "/order-shipped", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "shipped" },
   { id: "tracking.pap_delivered", slot: "tracking", path: "/medication-delivered", scope: PAP_JOURNEY, when: (d) => d.pharmacyStatus === "delivered" },
+
+  // An assigned pharmacy ships after its PA (the BI exit assigned it). Without scheduling, the confirmation is the transfer screen.
+  { id: "tracking.assigned_processing", slot: "tracking", path: "/order-tracker", scope: ASSIGNED_AFTER_PA, when: (d) => d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready" },
+  { id: "tracking.assigned_shipped", slot: "tracking", path: "/order-shipped", scope: ASSIGNED_AFTER_PA, when: (d) => d.pharmacyStatus === "shipped" },
+  { id: "tracking.assigned_delivered", slot: "tracking", path: "/medication-delivered", scope: ASSIGNED_AFTER_PA, when: (d) => d.pharmacyStatus === "delivered" },
 
   // Coverage, pharmacy covered: the order ends at the tracker.
   { id: "tracking.coverage_pharmacy_covered", slot: "tracking", path: "/order-tracker", scope: TRANSFER_JOURNEY, when: (d) => d.pharmacyBenefitStatus === "covered" },

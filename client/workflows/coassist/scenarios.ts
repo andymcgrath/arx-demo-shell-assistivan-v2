@@ -1,7 +1,7 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_APA_SPECIALTY_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -111,5 +111,26 @@ export const COA_PAP: ScenarioDefinition<CoassistContent> = {
   },
 };
 
+/** The specialty pharmacy that dispenses when the BI exit assigns one and the client has no partner of its own. */
+const SPECIALTY_PHARMACY: Pharmacy = { name: "CoAssist Specialty Pharmacy", address: "2400 Sand Lake Road, Suite 300", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0188" };
+
+/**
+ * The prescriber completes the PA form (APA), the pharmacy benefit covers it, and the Rx goes to an assigned specialty
+ * pharmacy that accepts it, hands the case to the client's CRM, and ships. The pharmacy is the platform's own, shown
+ * under the client's name on its intake screen.
+ */
+export const COA_APA_SPECIALTY: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_APA_Specialty",
+  intake: "erx",
+  choices: { bi: "pharmacy_transfer", pa: "approved" },
+  recipe: COA_APA_SPECIALTY_RECIPE,
+  content: {
+    retail: COA_DTP.content.retail,
+    mailOrder: MAIL_ORDER,
+    selfPay: SELF_PAY,
+    transferPharmacy: SPECIALTY_PHARMACY,
+  },
+};
+
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"];

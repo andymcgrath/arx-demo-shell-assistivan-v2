@@ -26,8 +26,8 @@ export const PHARMACY_SELECTION_ROUTES: CoaRoute[] = [
   { id: "pharmacy_selection.assigned_waiting", slot: "awaiting", path: "/", scope: ASSIGNED, when: (d) => d.consentStatus === "confirmed" && d.paStatus !== "approved" && !assignedWithoutPa(d) },
   { id: "pharmacy_selection.assigned_sms", slot: "pa_notice", path: "/pa-approved-sms", scope: ASSIGNED_AFTER_PA, when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
   { id: "pharmacy_selection.assigned_otp", slot: "pa_notice", path: "/pa-approved-otp", scope: ASSIGNED_AFTER_PA, when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified },
-  // The OTP verified and the pharmacy was assigned: the order ends here. No pricing, scheduling, or payment.
-  { id: "pharmacy_selection.assigned_transfer", slot: "pharmacy", path: "/pharmacy-transfer", scope: ASSIGNED_AFTER_PA, when: (d) => d.pharmacyAssigned && d.paApprovedOtpVerified },
+  // The OTP verified and the pharmacy was assigned: the patient stays here until the pharmacy starts the order (tracking takes over). No pricing, scheduling, or payment.
+  { id: "pharmacy_selection.assigned_transfer", slot: "pharmacy", path: "/pharmacy-transfer", scope: ASSIGNED_AFTER_PA, when: (d) => d.pharmacyAssigned && d.paApprovedOtpVerified && d.pharmacyStatus === "none" },
   // The scenario assigns the pharmacy: the patient goes from the OTP straight to the transfer confirmation.
   {
     id: "pharmacy_selection.coverage_transfer",

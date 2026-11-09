@@ -115,6 +115,27 @@ export const COA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * The prescriber completes the PA form online (APA). The pharmacy benefit covers it and the Rx goes to an assigned
+ * specialty pharmacy, so the BI exit is `pharmacy_transfer` and no outside-provider transfer runs. The pharmacy accepts the
+ * Rx on its own intake screen, the case goes to the client's CRM, and the pharmacy ships. No pricing, scheduling, or payment.
+ * The pharmacy is assigned, so the patient never picks one.
+ */
+export const COA_APA_SPECIALTY_RECIPE: ScenarioRecipe = {
+  source: "coassist",
+  forks: ["bi", "pa"],
+  choices: { bi: "pharmacy_transfer", pa: "approved" },
+  modules: [
+    { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "apa" } },
+    { id: "pa_notification" },
+    { id: "pharmacy_intake" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "crm_handoff" },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * BI finds no coverage, and the case transfers to the manufacturer's patient support program. The patient applies for the
  * free drug program (Fax PAP income form), and an assigned pharmacy dispenses. No PA, no cash offer, no payment: the
  * `bi` exit `no_coverage_pap` runs none of them, and the recipe lists none. Income is approved only (docs/plans/PLAN_COA_PAP.md).
@@ -161,4 +182,5 @@ export const COASSIST_RECIPES = {
   CoA_Coverage: COA_COVERAGE_RECIPE,
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
   CoA_PAP: COA_PAP_RECIPE,
+  CoA_APA_Specialty: COA_APA_SPECIALTY_RECIPE,
 } as const;

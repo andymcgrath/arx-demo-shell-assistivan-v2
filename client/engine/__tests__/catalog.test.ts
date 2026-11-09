@@ -186,7 +186,7 @@ describe("catalog forks and exits", () => {
   it("has every module an exit requires in the block catalog", () => {
     for (const f of ALL_FORKS) {
       for (const e of f.exits) {
-        for (const req of e.requires ?? []) expect(CATALOG_BLOCKS[req.split(":")[0] as ModuleId], `${f.id}.${e.id} requires "${req}"`).toBeDefined();
+        for (const req of e.requires ?? []) for (const alt of req.split("|")) expect(CATALOG_BLOCKS[alt.split(":")[0] as ModuleId], `${f.id}.${e.id} requires "${req}"`).toBeDefined();
       }
     }
   });

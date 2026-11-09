@@ -36,7 +36,8 @@ export const BI_EXITS = {
     description:
       "The pharmacy benefit covers it and the PA starts on its own. The patient does not choose a pharmacy. The Rx transfers to an assigned one and the patient sees its contact details.",
     data: { pharmacyBenefitStatus: "covered", medicalBenefitStatus: "not_covered", paRequired: true, pharmacyAssigned: true },
-    requires: ["provider_transfer"],
+    // Either an outside-provider transfer (Coverage) or an assigned pharmacy (a specialty pharmacy that dispenses).
+    requires: ["provider_transfer|pharmacy_selection:assigned"],
   },
   medical_covered: {
     label: "Medical Coverage",

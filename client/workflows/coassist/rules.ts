@@ -25,6 +25,8 @@ import { PROVIDER_TRANSFER_RULES } from "./modules/provider_transfer";
 import { PAP_TRANSFER_RULES } from "./modules/pap_transfer";
 import { INCOME_QUALIFICATION_COA_RULES } from "./modules/income_qualification";
 import { PHARMACY_SELECTION_RULES } from "./modules/pharmacy_selection";
+import { PHARMACY_INTAKE_RULES } from "./modules/pharmacy_intake";
+import { CRM_HANDOFF_RULES } from "./modules/crm_handoff";
 import { SCHEDULING_RULES } from "./modules/scheduling";
 import { TRACKING_RULES } from "./modules/tracking";
 import type { CoaRule } from "./modules/shared";
@@ -42,6 +44,8 @@ export const COASSIST_RULES: CoaRule[] = [
   ...PAP_TRANSFER_RULES,
   ...INCOME_QUALIFICATION_COA_RULES,
   ...PHARMACY_SELECTION_RULES,
+  ...PHARMACY_INTAKE_RULES,
+  ...CRM_HANDOFF_RULES,
   ...SCHEDULING_RULES,
   ...TRACKING_RULES,
 ];

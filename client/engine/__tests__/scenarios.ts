@@ -371,6 +371,25 @@ export const SCENARIOS: Scenario[] = [
   },
 
   {
+    // APA with a specialty pharmacy. The pharmacy benefit covers it (`pharmacy_transfer`), so BI says a PA is required and
+    // the form email goes to the prescriber. They open the link, verify by NPI, and submit, which starts the PA. The PA is
+    // approved and the patient verifies it. The assigned pharmacy accepts the Rx on its intake screen, the case goes to the
+    // client's CRM on its own, and the pharmacy ships.
+    name: "coa-apa-specialty-pharmacy",
+    endsAt: "delivered",
+    flowType: "CoA_APA_Specialty",
+    choices: { bi: "pharmacy_transfer", pa: "approved" },
+    steps: [
+      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "OPEN_PA_FORM_LINK" }, { type: "VERIFY_PRESCRIBER", npi: "1234567890", pin: "4321" }, { type: "SUBMIT_PA_FORM" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "ACCEPT_PHARMACY_INTAKE" },
+      ...fulfillment,
+    ],
+  },
+
+  {
     // No coverage. BI finds none, so the case transfers to the patient support program (the referral fires on its own).
     // The patient taps the transfer text, then the application update and its code, enrolls, and verifies income. The
     // assigned pharmacy dispenses. No PA, cash offer, or payment.

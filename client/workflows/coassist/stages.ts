@@ -3,7 +3,7 @@ import type { StageMap } from "@/engine/workflow/stages";
 import type { Scope } from "@/engine/workflow/types";
 import { STAGE_DEFS as S } from "../shared/stageDefs";
 import { COASSIST_FORKS } from "./forks";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COASSIST_FLOWS } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_APA_SPECIALTY, COASSIST_FLOWS } from "./scenarios";
 
 /**
  * The CRM stages for the CoAssist scenarios. A catalog in CRM order, and rules that pick how each stage is drawn.
@@ -26,6 +26,9 @@ const PSP: Scope = { module: "pap_transfer" };
 /** The medical transfer scenario: a PA fork, and the pharmacy assigned to the case. The PAP scenario has no PA fork. */
 const MEDICAL_TRANSFER: Scope = [{ fork: "pa" }, { module: "pharmacy_selection", props: { variant: "assigned" } }];
 
+/** The scenario hands the case to the client's own CRM. */
+const CRM_HANDOFF: Scope = { module: "crm_handoff" };
+
 const biComplete = (d: WorkflowData) => d.biStatus === "complete";
 const medicalCovered = (d: WorkflowData) => d.medicalBenefitStatus === "covered";
 const pharmacyCovered = (d: WorkflowData) => d.pharmacyBenefitStatus === "covered";
@@ -36,10 +39,10 @@ const coverageRetail = (d: WorkflowData) => pharmacyCovered(d) && !medicalCovere
 
 export const COASSIST_STAGES: StageMap = {
   flows: COASSIST_FLOWS,
-  scenarioDefs: [COA_DTP, COA_COPAY, COA_WEB_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP],
+  scenarioDefs: [COA_DTP, COA_COPAY, COA_WEB_COPAY, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP, COA_APA_SPECIALTY],
   forks: COASSIST_FORKS,
 
-  catalog: [S.EA, S.BI, S.PA, S.PT, S.CO, S.A, S.PSP, S.FA, S.TP, S.PS],
+  catalog: [S.EA, S.BI, S.PA, S.PT, S.CO, S.A, S.PSP, S.FA, S.TP, S.PS, S.HO],
 
   rules: [
     { id: "ea.sms_consent.pricing", stage: S.EA.id, variant: "sms_consent", scope: PRICING },
@@ -82,5 +85,7 @@ export const COASSIST_STAGES: StageMap = {
     { id: "ps.coverage.retail", stage: S.PS.id, variant: "retail_not_needed", scope: COVERAGE, when: (d) => biComplete(d) && coverageRetail(d) },
     { id: "ps.copay.outside", stage: S.PS.id, variant: null, scope: COPAY, when: copayFilledOutside },
     { id: "ps.standard", stage: S.PS.id, variant: "standard" },
+
+    { id: "ho.crm_handoff", stage: S.HO.id, variant: "standard", scope: CRM_HANDOFF },
   ],
 };

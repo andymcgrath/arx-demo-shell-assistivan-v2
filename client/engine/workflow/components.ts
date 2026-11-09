@@ -28,6 +28,8 @@ export type ModuleId =
   | "pap_transfer"
   | "income_qualification"
   | "pharmacy_selection"
+  | "pharmacy_intake"
+  | "crm_handoff"
   | "scheduling"
   | "payment"
   | "appeal"
@@ -262,6 +264,22 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     orderedAfter: ["pap_transfer", "income_qualification"],
     sets: ["selectedPharmacy"],
     trackerSteps: ["Pharmacy selected", "Rx transferred"],
+  },
+  // The assigned pharmacy accepts the Rx on its own intake screen in the Field app (an agent step), under the client's name.
+  pharmacy_intake: {
+    id: "pharmacy_intake",
+    lane: "system",
+    needs: ["paNotified"],
+    sets: ["pharmacyIntake"],
+    trackerSteps: ["Rx received by the pharmacy"],
+  },
+  // The case data goes to the client's own CRM once the pharmacy has the Rx. A system step: accepting the intake fires it.
+  crm_handoff: {
+    id: "crm_handoff",
+    lane: "system",
+    needs: ["pharmacyIntake", "selectedPharmacy"],
+    sets: ["crmHandoff"],
+    trackerSteps: ["Case handed to the client's CRM"],
   },
   scheduling: {
     id: "scheduling",

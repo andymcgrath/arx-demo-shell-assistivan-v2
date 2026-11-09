@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -107,6 +107,27 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       ],
     },
   },
+  // APA with an assigned specialty pharmacy. The prescriber's form starts the PA, then the pharmacy accepts the Rx, the case
+  // goes to the client's CRM, and fulfillment follows. No pricing, address, or ship date.
+  CoA_APA_Specialty: {
+    before: [
+      { label: "Referral Received", events: [] },
+      { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
+      { label: "Benefits Investigation", events: [] },
+    ],
+    exits: {
+      pharmacy_transfer: [
+        { label: "Pharmacy Coverage Confirmed (PA form emailed to the prescriber)", events: [completeBi("covered", "not_covered")] },
+        {
+          label: "Prescriber Submitted the PA Form",
+          events: [ev("OPEN_PA_FORM_LINK", "provider"), ev("VERIFY_PRESCRIBER", "provider", { npi: "1234567890", pin: "4321" }), ev("SUBMIT_PA_FORM", "provider")],
+        },
+        { label: "PA Approved, Patient Verified", events: [ev("APPROVE_PA", "crm"), ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient")] },
+        { label: "Pharmacy Accepted the Rx, Case Sent to CRM", events: [ev("ACCEPT_PHARMACY_INTAKE", "field")] },
+        ...fulfillment("Rx Processing"),
+      ],
+    },
+  },
   // The free drug program. BI finds no coverage and no PA runs, so the rungs go from the referral to the income form,
   // then the address and date, then fulfillment.
   CoA_PAP: {
@@ -139,7 +160,7 @@ export const PA_FORK: ForkDefinition = {
   label: "Prior authorization decision",
   chooser: "story",
   // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_APA_Specialty"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },

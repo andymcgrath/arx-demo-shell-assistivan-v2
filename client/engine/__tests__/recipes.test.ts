@@ -174,10 +174,15 @@ describe("recipeProblems and forks", () => {
     const modules: ModuleSpec[] = [{ id: "enrollment" }, { id: "pa_notification" }, { id: "tracking" }];
     for (const bi of ["medical_covered", "pharmacy_transfer"]) {
       const picked = recipe({ ...passthrough, choices: { bi, pa: "approved" }, modules });
-      expect(recipeProblems(picked, dtpForks)).toContain(`fork "bi" exit "${bi}" requires provider_transfer in the recipe`);
+      // `pharmacy_transfer` accepts an assigned pharmacy in place of the provider transfer (`a|b` is any of them).
+      const need = bi === "pharmacy_transfer" ? "provider_transfer|pharmacy_selection:assigned" : "provider_transfer";
+      expect(recipeProblems(picked, dtpForks)).toContain(`fork "bi" exit "${bi}" requires ${need} in the recipe`);
       const withTransfer = recipe({ ...passthrough, choices: { bi, pa: "approved" }, modules: [...modules.slice(0, -1), { id: "provider_transfer" }, { id: "tracking" }] });
       expect(recipeProblems(withTransfer, dtpForks)).toEqual([]);
     }
+    // The assigned pharmacy alone satisfies `pharmacy_transfer`, with no outside-provider transfer.
+    const assigned = recipe({ ...passthrough, choices: { bi: "pharmacy_transfer", pa: "approved" }, modules: [...modules.slice(0, -1), { id: "pharmacy_selection", props: { variant: "assigned" } }, { id: "tracking" }] });
+    expect(recipeProblems(assigned, dtpForks)).toEqual([]);
     const noCoverage = recipe({ ...passthrough, choices: { bi: "no_coverage", pa: "approved" }, modules });
     expect(recipeProblems(noCoverage, dtpForks)).toContain('fork "bi" exit "no_coverage" requires cash_offer in the recipe');
     // The old exit ids no longer exist on any CoAssist scenario.

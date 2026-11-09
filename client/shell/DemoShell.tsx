@@ -124,6 +124,7 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   CoA_Coverage: "provider",
   CoA_Medical_Transfer: "provider",
   CoA_PAP: "provider",
+  CoA_APA_Specialty: "provider",
   // "provider" is hidden for iAssist flows (see getPortals below) — the
   // dedicated "iassist" tab is this flow's dashboard/home, so that's what
   // switching to this flow, resetting it, or deep-linking via /iassist

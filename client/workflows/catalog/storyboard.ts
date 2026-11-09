@@ -1,6 +1,7 @@
 import type { FlowType } from "@/engine/types";
 import { MODULE_CONTRACTS, SOURCES, type ModuleId, type ScenarioRecipe } from "@/engine/workflow/components";
 import { forksForScenario } from "@/engine/workflow/forks";
+import { recipeMeets } from "@/engine/workflow/recipe";
 import { scenarioFor } from "../scenarios";
 import { forksForFlow } from "../forks";
 import { catalogBlock, catalogExit, catalogFork, paletteCards, CATALOG_WHOLE_DEMOS } from "./index";
@@ -92,10 +93,7 @@ export interface StoryboardInput {
 }
 
 /** True when the recipe has the module, and the variant when `req` is `module:variant`. */
-export const recipeHas = (recipe: ScenarioRecipe, req: string): boolean => {
-  const [id, variant] = req.split(":");
-  return recipe.modules.some((m) => m.id === id && (!variant || m.props?.variant === variant));
-};
+export const recipeHas = (recipe: ScenarioRecipe, req: string): boolean => recipeMeets(recipe, req);
 
 /** What a block waits for, from the module contract. Keys the source provides need no wait. */
 function waitsFor(recipe: ScenarioRecipe, index: number): string[] {

@@ -2430,6 +2430,91 @@
       }
     ]
   },
+  "coa-apa-specialty-pharmacy": {
+    "flowType": "CoA_APA_Specialty",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": [
+          {
+            "stage": "case",
+            "id": "enroll",
+            "label": "Enroll Patient",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "REFERRAL_RECEIVED",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "ACCEPT_PHARMACY_INTAKE",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
   "coa-pap": {
     "flowType": "CoA_PAP",
     "entries": [

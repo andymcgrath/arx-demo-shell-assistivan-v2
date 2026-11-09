@@ -84,13 +84,20 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
         continue;
       }
       for (const m of exit.requires ?? []) {
-        // `module:variant` needs that module with that `variant` prop. A bare module id needs the module.
-        const [moduleId, variant] = m.split(":");
-        const found = recipe.modules.some((spec) => spec.id === moduleId && (variant === undefined || spec.props?.variant === variant));
-        if (!found) problems.push(`fork "${forkId}" exit "${exitId}" requires ${m} in the recipe`);
+        if (!recipeMeets(recipe, m)) problems.push(`fork "${forkId}" exit "${exitId}" requires ${m} in the recipe`);
       }
     }
   }
 
   return problems;
 }
+
+/**
+ * A fork exit's `requires` entry. `module` needs that module. `module:variant` needs it with that `variant` prop.
+ * `a|b` is any of them: an exit that two kinds of recipe can reach lists both.
+ */
+export const recipeMeets = (recipe: Pick<ScenarioRecipe, "modules">, req: string): boolean =>
+  req.split("|").some((alt) => {
+    const [moduleId, variant] = alt.split(":");
+    return recipe.modules.some((spec) => spec.id === moduleId && (variant === undefined || spec.props?.variant === variant));
+  });

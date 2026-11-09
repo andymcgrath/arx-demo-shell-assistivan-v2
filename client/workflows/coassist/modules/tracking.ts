@@ -8,7 +8,8 @@ export const TRACKING_RULES: CoaRule[] = [
   {
     id: "tracking.fill_rx",
     on: "FILL_RX",
-    when: inFulfillmentTail,
+    // A recipe with the `crm_handoff` block starts fulfillment only after the case went to the client's CRM.
+    when: (d, _e, s) => inFulfillmentTail(d) && (!s.recipe?.modules.some((m) => m.id === "crm_handoff") || d.crmHandoffStatus === "sent"),
     set: () => ({ pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
     emit: { portal: "field", step: 10 },
   },

@@ -82,6 +82,11 @@ workflowRegistry.registerWorkflow("CoA_PAP", coassistMachine, {
   description: "CoAssist scenario where BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses. No PA, cash offer, or payment.",
 });
 
+workflowRegistry.registerWorkflow("CoA_APA_Specialty", coassistMachine, {
+  label: "CoAssist APA, Specialty Pharmacy",
+  description: "CoAssist scenario where the prescriber completes the PA form online (APA) and the pharmacy benefit covers it. The Rx goes to an assigned specialty pharmacy that accepts it on its own intake screen, the case is handed to the client's CRM, and the pharmacy ships. No pricing, scheduling, or payment.",
+});
+
 workflowRegistry.registerWorkflow("iAssist_PA_Approved", iassistMachine, {
   label: "iAssist PA Approved",
   description: "Internal iAssist platform workflow with prior authorization approval",

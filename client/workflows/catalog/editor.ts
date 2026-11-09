@@ -127,7 +127,7 @@ export function plainProblem(p: string): string {
   if ((m = p.match(/^(\w+) must come after (\w+)$/))) return `${name(m[1])} must come after "${name(m[2])}".`;
   if ((m = p.match(/^module "(\w+)" appears twice$/))) return `"${name(m[1])}" is in the demo twice.`;
   if (p === "tracking must be last") return `"${name("tracking")}" must be last.`;
-  if ((m = p.match(/^fork "(\w+)" exit "(\w+)" requires ([\w:]+) in the recipe$/))) return `The "${forkName(m[1])}" pick "${m[2]}" needs "${name(m[3])}" in the demo.`;
+  if ((m = p.match(/^fork "(\w+)" exit "(\w+)" requires ([\w:|]+) in the recipe$/))) return `The "${forkName(m[1])}" pick "${m[2]}" needs "${m[3].split("|").map(name).join('" or "')}" in the demo.`;
   return p;
 }
 
