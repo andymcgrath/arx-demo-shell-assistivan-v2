@@ -34,8 +34,8 @@
     "name": "Mirum",
     "tagline": "Navigating Together",
     "logo": {
-      "colors": "/brands/mirum-accessplus/mirum-logo-color.png",
-      "white": "/brands/mirum-accessplus/mirum-logo-white.png"
+      "colors": "/brands/mirum-accessplus/mirum-logo-color.svg",
+      "white": "/brands/mirum-accessplus/mirum-logo-white.svg"
     },
     "support": {
       "label": "Technical Help",
