@@ -23,5 +23,4 @@ export const STAGE_DEFS = {
   FA: { id: "FA-14276" },
   TP: { id: "TP-14277" },
   PS: { id: "PS-14278" },
-  HO: { id: "HO-14290" },
 } satisfies Record<string, StageDef>;

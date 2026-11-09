@@ -2,15 +2,13 @@
   "version": 1,
   "client": "mirum-accessplus",
   "slug": "abv-apa-specialty-pharmacy",
-  "title": "Mirum: ABV with APA, triage to the specialty pharmacy, the pharmacy ships",
+  "title": "Mirum: eRx to a specialty pharmacy, with APA and the patient scheduling",
   "workflow": "coassist",
   "intake": "erx",
   "apps": [
     "crm",
     "patient",
-    "provider",
-    "field",
-    "iassist"
+    "provider"
   ],
   "forks": [
     "bi",
@@ -31,23 +29,13 @@
       "moduleId": "pa_notification"
     },
     {
-      "kind": "ghost",
-      "name": "White-label pharmacy intake",
-      "sees": "The specialty pharmacy receives the Rx on an intake screen under Mirum's name, not AssistRx's.",
-      "app": "field",
-      "lane": "agent"
+      "kind": "block",
+      "moduleId": "pharmacy_selection",
+      "variantId": "prescriber"
     },
     {
       "kind": "block",
-      "moduleId": "pharmacy_selection",
-      "variantId": "assigned"
-    },
-    {
-      "kind": "ghost",
-      "name": "Handoff to Mirum's CRM",
-      "sees": "The case data is handed to Mirum's own CRM when the Rx is triaged to the specialty pharmacy.",
-      "app": "crm",
-      "lane": "system"
+      "moduleId": "scheduling"
     },
     {
       "kind": "block",
@@ -58,7 +46,7 @@
     {
       "id": "mirum-abv-apa-sp-ships",
       "label": "1. ABV with APA, specialty pharmacy ships",
-      "description": "eRx initiation and onboarding. The benefit check finds a PA is required, APA emails the prescriber a form, the case is triaged to the specialty pharmacy, and the pharmacy ships.",
+      "description": "The prescriber sends the eRx to Mirum Pharmacy. The patient onboards by text while the benefit check runs and finds a PA is required. APA emails the prescriber a form. After the approval the patient schedules the delivery, the agent dispatches in the CRM, and the pharmacy ships.",
       "choices": {
         "bi": "pharmacy_covered",
         "pa": "approved"
@@ -73,13 +61,11 @@
       "Mirum-AccessPlus.html (saved copy of the Mirum Access Plus site)"
     ]
   },
-  "winTheme": "One automated handoff from the eRx to a shipped specialty pharmacy order, with the prescriber's PA form completed online.",
+  "winTheme": "One eRx starts everything: onboarding, the benefit check, an APA form the prescriber completes online, and a delivery scheduled by the patient and dispatched to Mirum's own pharmacy.",
   "openQuestions": [
     "Who owns patient communications for Mirum? Their agents do, so is the Patient UI branded Mirum or us?",
-    "Is the Mirum CRM integration shown on screen or only described?",
-    "Is the specialty pharmacy ours?",
-    "ABV is the pharmacy-benefit check, and the specialty pharmacy is an assigned dispenser. The only exit that assigns a pharmacy under the pharmacy benefit, `pharmacy_transfer`, requires the outside-provider transfer block, which Mirum does not have. This request picks `pharmacy_covered` so it validates, but `pharmacy_covered` does not assign a pharmacy. Which exit should Mirum use, and should `pharmacy_transfer` require the assigned-pharmacy block instead?",
-    "After the prescriber submits the APA form, does the patient still get the PA-result text and code, and does it come from Mirum or from us?",
+    "Is Mirum Pharmacy a real pharmacy or a stand-in name? The brand file holds a placeholder address and phone number.",
+    "The drug is commercially covered with no copay or price shown. Does the patient ever see a cost?",
     "Does the PA decision land when the agent opens the PA stage, as it does in the other demos, or automatically after the prescriber submits?"
   ]
 }

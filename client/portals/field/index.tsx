@@ -38,8 +38,6 @@ import { caseDocuments } from "@/brand/caseDocuments";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { BrandDocument } from "@/brand/schema";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
-import PharmacyIntake from "./PharmacyIntake";
-import { intakeOpen } from "@/workflows/coassist/modules/pharmacy_intake";
 
 // This patient's one prescriber everywhere else in the app (Provider portal,
 // CRM's enrollment fax, iAssist, the live tasks above) — referenced by the
@@ -650,11 +648,6 @@ export default function FieldPortal() {
   const calendarDays: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  // White-label pharmacy intake: the machine opens it (the `pharmacy_intake` block) and closes it when the pharmacy accepts.
-  if (scenarioHasModule(state.flow_type, "pharmacy_intake") && intakeOpen(workflowDataNow)) {
-    return <PharmacyIntake workflowData={workflowDataNow} />;
-  }
 
   // ── Standalone email client ─────────────────────────────────────────────
   // Field Portal opens directly into this — no sidebar, no header, none of

@@ -107,8 +107,8 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       ],
     },
   },
-  // APA with an assigned specialty pharmacy. The prescriber's form starts the PA, then the pharmacy accepts the Rx, the case
-  // goes to the client's CRM, and fulfillment follows. No pricing, address, or ship date.
+  // APA with the pharmacy the prescriber picked on the eRx. The prescriber's form starts the PA, the patient schedules the
+  // delivery after the approval, and the agent dispatches in the CRM. No pricing and no payment.
   CoA_APA_Specialty: {
     before: [
       { label: "Referral Received", events: [] },
@@ -116,14 +116,14 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       { label: "Benefits Investigation", events: [] },
     ],
     exits: {
-      pharmacy_transfer: [
+      pharmacy_covered: [
         { label: "Pharmacy Coverage Confirmed (PA form emailed to the prescriber)", events: [completeBi("covered", "not_covered")] },
         {
           label: "Prescriber Submitted the PA Form",
           events: [ev("OPEN_PA_FORM_LINK", "provider"), ev("VERIFY_PRESCRIBER", "provider", { npi: "1234567890", pin: "4321" }), ev("SUBMIT_PA_FORM", "provider")],
         },
         { label: "PA Approved, Patient Verified", events: [ev("APPROVE_PA", "crm"), ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient")] },
-        { label: "Pharmacy Accepted the Rx, Case Sent to CRM", events: [ev("ACCEPT_PHARMACY_INTAKE", "field")] },
+        { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),
       ],
     },

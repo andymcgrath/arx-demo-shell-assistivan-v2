@@ -9,7 +9,6 @@ import { FA_BUILDERS } from "./fa";
 import { TRANSFER_BUILDERS, CASH_OFFER_BUILDERS } from "./coverage";
 import { TRIAGE_BUILDERS } from "./triage";
 import { PHARMACY_BUILDERS } from "./pharmacy";
-import { HANDOFF_BUILDERS } from "./handoff";
 
 /**
  * One builder per stage and variant. A workflow's stage map (workflows/<name>/stages.ts) names a variant per stage,
@@ -29,5 +28,4 @@ export const STAGE_BUILDERS: Record<string, Record<string, StageBuilder>> = {
   "CO-14281": CASH_OFFER_BUILDERS,
   "TP-14277": TRIAGE_BUILDERS,
   "PS-14278": PHARMACY_BUILDERS,
-  "HO-14290": HANDOFF_BUILDERS,
 };

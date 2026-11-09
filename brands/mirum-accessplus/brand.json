@@ -8,7 +8,7 @@
       "flow": "CoA_APA_Specialty",
       "label": "1. ABV with APA, specialty pharmacy ships",
       "description": "eRx initiation and onboarding. The benefit check finds a PA is required, APA emails the prescriber a form, the case is triaged to the specialty pharmacy, and the pharmacy ships.",
-      "choices": { "bi": "pharmacy_transfer", "pa": "approved" }
+      "choices": { "bi": "pharmacy_covered", "pa": "approved" }
     },
     {
       "id": "fax-qs-pa-approved",
@@ -54,11 +54,20 @@
     "drugDisplayName": "Livmarli (maralixibat)",
     "description": "",
     "dosageForm": "15 mg Tablet",
+    "dosages": ["10 mg", "15 mg", "20 mg", "30 mg"],
     "paQuestions": [
       "Does the patient have a confirmed diagnosis of cholestatic pruritus with Alagille syndrome or progressive familial intrahepatic cholestasis (PFIC)?",
       "Has the patient tried and failed other treatments for cholestatic pruritus?",
       "Is supporting clinical documentation of the diagnosis available for this request?"
     ],
+    "specialtyPharmacy": {
+      "name": "Mirum Pharmacy",
+      "address": "950 Tower Lane, Suite 300",
+      "city": "Foster City",
+      "state": "CA",
+      "zip": "94404",
+      "phone": "(800) 555-0148"
+    },
     "assets": {
       "logoColor": "/brands/mirum-accessplus/LIVMARLI-logo-color.png",
       "logoWhite": "/brands/mirum-accessplus/LIVMARLI-logo-white.png"
@@ -71,5 +80,6 @@
       "surfaces": { "footer": "brand" }
     }
   },
-  "chatbotIcon": "/brands/mirum-accessplus/chat-icon.svg"
+  "chatbotIcon": "/brands/mirum-accessplus/chat-icon.svg",
+  "favicon": "/brands/mirum-accessplus/favicon.svg"
 }

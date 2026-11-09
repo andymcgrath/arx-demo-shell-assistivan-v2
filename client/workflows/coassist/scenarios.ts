@@ -1,5 +1,6 @@
 import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
+import { BRAND } from "@/brand";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
 import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_APA_SPECIALTY_RECIPE } from "./recipes";
 
@@ -111,18 +112,20 @@ export const COA_PAP: ScenarioDefinition<CoassistContent> = {
   },
 };
 
-/** The specialty pharmacy that dispenses when the BI exit assigns one and the client has no partner of its own. */
-const SPECIALTY_PHARMACY: Pharmacy = { name: "CoAssist Specialty Pharmacy", address: "2400 Sand Lake Road, Suite 300", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0188" };
+/**
+ * The pharmacy the APA scenario uses when the eRx named none (a stage jump replays the eRx with no pick). It is the
+ * client's own pharmacy when the brand file has one (`program.specialtyPharmacy`), and a placeholder otherwise.
+ */
+const SPECIALTY_PHARMACY: Pharmacy = BRAND.program.specialtyPharmacy ?? { name: "CoAssist Specialty Pharmacy", address: "2400 Sand Lake Road, Suite 300", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0188" };
 
 /**
- * The prescriber completes the PA form (APA), the pharmacy benefit covers it, and the Rx goes to an assigned specialty
- * pharmacy that accepts it, hands the case to the client's CRM, and ships. The pharmacy is the platform's own, shown
- * under the client's name on its intake screen.
+ * The prescriber completes the PA form (APA) and the pharmacy benefit covers it. The prescriber picked the pharmacy on
+ * the eRx, the patient schedules the delivery after the PA, and the agent dispatches to that pharmacy in the CRM.
  */
 export const COA_APA_SPECIALTY: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_APA_Specialty",
   intake: "erx",
-  choices: { bi: "pharmacy_transfer", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   recipe: COA_APA_SPECIALTY_RECIPE,
   content: {
     retail: COA_DTP.content.retail,

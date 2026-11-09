@@ -118,23 +118,23 @@
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "ACCEPT_PHARMACY_INTAKE",
+    "eventType": "PATIENT_SETS_ADDRESS",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Accept Pharmacy Intake - Test Patient",
+    "subject": "Shipping Address Confirmed - Test Patient",
     "bodyParagraphs": [
-      "Accept Pharmacy Intake occurred for Test Patient."
+      "Test Patient confirmed the delivery address for their medication shipment."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"
   },
   {
-    "eventType": "HAND_OFF_TO_CRM",
+    "eventType": "PATIENT_SELECTS_SHIP_DATE",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
-    "subject": "Status Update: Hand Off To Crm - Test Patient",
+    "subject": "Preferred Ship Date Selected - Test Patient",
     "bodyParagraphs": [
-      "Hand Off To Crm occurred for Test Patient."
+      "Test Patient selected a preferred ship date for their medication."
     ],
     "linkedItemId": "LIVE-CASE-AS164543",
     "linkedItemLabel": "View Case"

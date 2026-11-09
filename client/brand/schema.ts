@@ -132,6 +132,13 @@ export interface BrandConfig {
     /** The product's NDC, shown on the PA form's medication row. Optional. A brand with none shows the drug name only. */
     ndc?: string;
     transferPartner?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
+    /** The strengths the EHR's eRx form offers, in order. The first is selected. Optional. A brand with none shows 0.5, 1.0 and 2.4 mg. */
+    dosages?: string[];
+    /**
+     * The client's own pharmacy. It joins the dispensing pharmacy list in the EHR's eRx form and in the CRM's triage
+     * dropdown, so a demo can send the eRx to it and the agent dispatches to it. Optional.
+     */
+    specialtyPharmacy?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
   };
   chatbotIcon: string;
   favicon?: string;

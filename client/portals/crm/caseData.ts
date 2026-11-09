@@ -1,5 +1,6 @@
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
 import { daysFromToday } from "@/lib/relativeDate";
+import { BRAND } from "@/brand";
 import { enrollmentFormDocument, paFormDocument } from "@/brand/documents";
 
 // The CRM case page's tab lists, related-document list, and pharmacy and site-of-care options.
@@ -64,6 +65,8 @@ export interface PharmacyOption {
 export const PREFERRED_PHARMACY_NAME = "Accredo Health Group Inc.";
 
 export const SPECIALTY_PHARMACIES: PharmacyOption[] = [
+  // The client's own pharmacy, when its brand file names one (`program.specialtyPharmacy`).
+  ...(BRAND.program.specialtyPharmacy ? [{ address: "", city: "", state: "", zip: "", phone: "", ...BRAND.program.specialtyPharmacy }] : []),
   // Leads the list — AssistRx's own specialty pharmacy, same contact details
   // iAssist.ts's SELF_PAY_PHARMACY and the case wizard's "Preferred Pharmacy"
   // default (NewCaseMedication.tsx) already use, so HUB staff manually

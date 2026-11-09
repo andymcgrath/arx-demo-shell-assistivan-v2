@@ -44,7 +44,7 @@ export default function DeliveryAddress() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const { hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, hasCopayFork, isPres } = scenarioFacts(workflowData.flowType);
+  const { hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, hasCopayFork, isPres, pharmacyFromPrescriber } = scenarioFacts(workflowData.flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 and Scenario 3 — see workflows/coassist/) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
@@ -70,7 +70,7 @@ export default function DeliveryAddress() {
   // Triage tab, this just signals the patient's own part is done.
   function handleContinue() {
     if (!valid) return;
-    if (hasPricingFork || isIassistStandardPa || isNoPaIntake || isCoverageScenario || isPapProgram) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
+    if (hasPricingFork || isIassistStandardPa || isNoPaIntake || isCoverageScenario || isPapProgram || pharmacyFromPrescriber) dispatch("PATIENT_SETS_ADDRESS", { portal: "patient" });
     // CoA_Copay's Mail Order path only — mirrors Retail's "ends the
     // workflow once dispatched" treatment (Retail skips this screen
     // entirely; Mail Order still confirms an address, just no ship date —

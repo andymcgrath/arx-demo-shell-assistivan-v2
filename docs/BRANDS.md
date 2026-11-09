@@ -209,7 +209,11 @@ Some brand and drug names still sit in source (patient copy, sample patients, th
 
 `program.transferPartner` sets the pharmacy a transfer shows (name, address, city, state, zip, phone). It applies to every `bi` exit that assigns a pharmacy: `pharmacy_transfer` in CoA_Coverage and `medical_pa_required` in iAssist_Medical_Transfer. The patient does not pick a pharmacy on those branches. When the brand names no partner, a placeholder pharmacy (CVS Pharmacy #3795) shows. Add it to `brand.json` by hand: the Demo Lab has no editor for it, and it saves nothing.
 
-`CoA_PAP` (the free drug program) uses it too: the `no_coverage_pap` exit assigns the pharmacy and runs no PA. The patient never picks one. `program.name` is the patient support program the case transfers to. The `ryzup` brand sets both.
+`program.dosages` lists the strengths the EHR's eRx form offers, in order, and the first is selected. A brand with none shows 0.5, 1.0 and 2.4 mg.
+
+`program.specialtyPharmacy` (same fields, optional) is the client's own pharmacy. It joins the dispensing pharmacy list in the EHR's eRx form and in the CRM's Triage to Pharmacy dropdown. A recipe with `pharmacy_selection` variant `prescriber` sends the case to whichever pharmacy the prescriber picks on the eRx, and the CRM triage opens with that pharmacy filled in. The `mirum-accessplus` brand sets it.
+
+`CoA_PAP` (the free drug program) uses `transferPartner` too: the `no_coverage_pap` exit assigns the pharmacy and runs no PA. The patient never picks one. `program.name` is the patient support program the case transfers to. The `ryzup` brand sets both.
 
 A demo can pin only a `bi` exit its scenario can reach. `CoA_PAP` reaches `no_coverage_pap` alone, so the brand test rejects any other pin on it, and rejects a pin whose exit needs a module the recipe lacks.
 

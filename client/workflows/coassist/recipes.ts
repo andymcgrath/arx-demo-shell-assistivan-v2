@@ -115,22 +115,20 @@ export const COA_MEDICAL_TRANSFER_RECIPE: ScenarioRecipe = {
 };
 
 /**
- * The prescriber completes the PA form online (APA). The pharmacy benefit covers it and the Rx goes to an assigned
- * specialty pharmacy, so the BI exit is `pharmacy_transfer` and no outside-provider transfer runs. The pharmacy accepts the
- * Rx on its own intake screen, the case goes to the client's CRM, and the pharmacy ships. No pricing, scheduling, or payment.
- * The pharmacy is assigned, so the patient never picks one.
+ * The prescriber completes the PA form online (APA). The pharmacy benefit covers it, so the BI exit is `pharmacy_covered`.
+ * The prescriber picks the pharmacy on the eRx, the patient schedules the delivery after the PA, and the agent
+ * dispatches to that pharmacy in the CRM. No pricing, no payment, and no outside-provider transfer.
  */
 export const COA_APA_SPECIALTY_RECIPE: ScenarioRecipe = {
   source: "coassist",
   forks: ["bi", "pa"],
-  choices: { bi: "pharmacy_transfer", pa: "approved" },
+  choices: { bi: "pharmacy_covered", pa: "approved" },
   modules: [
     { id: "enrollment" },
     { id: "prior_authorization", props: { variant: "apa" } },
     { id: "pa_notification" },
-    { id: "pharmacy_intake" },
-    { id: "pharmacy_selection", props: { variant: "assigned" } },
-    { id: "crm_handoff" },
+    { id: "pharmacy_selection", props: { variant: "prescriber" } },
+    { id: "scheduling" },
     { id: "tracking" },
   ],
 };

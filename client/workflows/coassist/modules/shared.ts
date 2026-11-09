@@ -17,6 +17,13 @@ export const nowIso = () => new Date().toISOString();
 export const inFulfillmentTail = (d: WorkflowData) =>
   d.pharmacyStatus === "none" && (d.pricingOption !== null || d.dispatchStatus !== "none" || d.paymentVerified);
 
+/**
+ * The recipe's pharmacy comes from the prescriber (`pharmacy_selection` variant `prescriber`): the eRx names it, the
+ * patient never picks one, and the agent dispatches to it in the CRM.
+ */
+export const prescriberPharmacy = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): boolean =>
+  !!s.recipe?.modules.some((m) => m.id === "pharmacy_selection" && m.props?.variant === "prescriber");
+
 export const neitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";
 

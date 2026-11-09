@@ -371,20 +371,20 @@ export const SCENARIOS: Scenario[] = [
   },
 
   {
-    // APA with a specialty pharmacy. The pharmacy benefit covers it (`pharmacy_transfer`), so BI says a PA is required and
-    // the form email goes to the prescriber. They open the link, verify by NPI, and submit, which starts the PA. The PA is
-    // approved and the patient verifies it. The assigned pharmacy accepts the Rx on its intake screen, the case goes to the
-    // client's CRM on its own, and the pharmacy ships.
+    // APA with the pharmacy the prescriber picked on the eRx. The pharmacy benefit covers it (`pharmacy_covered`), so BI
+    // says a PA is required and the form email goes to the prescriber. They open the link, verify by NPI, and submit, which
+    // starts the PA. The PA is approved and the patient verifies it, then schedules the delivery. The agent dispatches to the
+    // pharmacy from the eRx, and it ships.
     name: "coa-apa-specialty-pharmacy",
     endsAt: "delivered",
     flowType: "CoA_APA_Specialty",
-    choices: { bi: "pharmacy_transfer", pa: "approved" },
+    choices: { bi: "pharmacy_covered", pa: "approved" },
     steps: [
-      { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
+      { type: "REFERRAL_RECEIVED", pharmacy: { name: "Specialty Pharmacy", address: "1 Main St", city: "Orlando", state: "FL", zip: "32801", phone: "(800) 555-0100" } }, ...verifyIdentity,
       { type: "COMPLETE_BI" },
       { type: "OPEN_PA_FORM_LINK" }, { type: "VERIFY_PRESCRIBER", npi: "1234567890", pin: "4321" }, { type: "SUBMIT_PA_FORM" },
       { type: "APPROVE_PA" }, ...paApprovedReverify,
-      { type: "ACCEPT_PHARMACY_INTAKE" },
+      { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
       ...fulfillment,
     ],
   },

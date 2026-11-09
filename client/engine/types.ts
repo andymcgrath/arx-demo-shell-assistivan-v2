@@ -124,13 +124,6 @@ export interface WorkflowData {
   paFormStatus: 'none' | 'sent' | 'opened' | 'verified' | 'submitted';
   paFormSentAt: string | null;
   prescriberVerified: boolean;
-  /**
-   * `pharmacy_intake` block: the assigned pharmacy accepted the Rx on its intake screen in the Field app. `none` until then,
-   * and for every scenario without the block.
-   */
-  pharmacyIntakeStatus: 'none' | 'accepted';
-  /** `crm_handoff` block: the case data went to the client's own CRM. `none` until then, and for every scenario without the block. */
-  crmHandoffStatus: 'none' | 'sent';
   /** CoA_DTP only: patient re-verification after PA approval (mirrors the
    *  original enrollment SMS/OTP beats). Unused by other flows. */
   paApprovedSmsVerified: boolean;

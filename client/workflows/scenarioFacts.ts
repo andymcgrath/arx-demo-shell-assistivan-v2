@@ -33,6 +33,8 @@ export interface ScenarioFacts {
   isFaxPap: boolean;
   /** The prescriber completes the PA form online (the `apa` variant of `prior_authorization`). The Provider app drives its screens from the data. */
   paFormByPrescriber: boolean;
+  /** The prescriber picked the pharmacy on the eRx (`pharmacy_selection` variant `prescriber`). The patient schedules, with no price and no payment. */
+  pharmacyFromPrescriber: boolean;
   /** Fax intake with a manual PA: coverage is found and the provider's submission starts the PA. */
   isStandardFaxPa: boolean;
   /** Fax or esign intake and BI finds no insurance, so no PA runs. */
@@ -82,6 +84,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     paFormByPrescriber: paVariant({ recipe }) === "apa",
+    pharmacyFromPrescriber: !!recipe?.modules.some((m) => m.id === "pharmacy_selection" && m.props?.variant === "prescriber"),
     isStandardFaxPa: !!scenario && !recipe && !noPa && intake === "fax",
     isFaxPap: noPa && intake === "fax",
     isNoPaIntake: noPa && (intake === "fax" || intake === "esign"),

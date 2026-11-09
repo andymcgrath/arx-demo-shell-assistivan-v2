@@ -1978,7 +1978,9 @@ function CoaProviderExperience({
         pharmacy={pharmacy}
         onPharmacyChange={setPharmacy}
         onSend={() => {
-          dispatch('REFERRAL_RECEIVED', { portal: 'provider' });
+          // The pick travels with the eRx. A recipe whose pharmacy comes from the prescriber (`pharmacy_selection`
+          // variant `prescriber`) keeps it, and the CRM triage opens with it filled in. Other recipes ignore it.
+          dispatch('REFERRAL_RECEIVED', { portal: 'provider', pharmacy });
           setStep("coa-sent");
         }}
         onBack={() => setStep("coa-dashboard")}
@@ -2152,6 +2154,10 @@ interface PharmacyOption {
 }
 
 const PHARMACIES: PharmacyOption[] = [
+  // The client's own pharmacy, when its brand file names one (`program.specialtyPharmacy`). It leads the list.
+  ...(BRAND.program.specialtyPharmacy
+    ? [{ address: "", city: "", state: "", zip: "", phone: "", ...BRAND.program.specialtyPharmacy }]
+    : []),
   { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" },
   { name: "Biologics", address: "456 Specialty Lane", city: "Orlando", state: "FL", zip: "32801", phone: "(407) 555-1234" },
   { name: "Accredo Health Group Inc.", address: "789 Pharma Ave", city: "Tampa", state: "FL", zip: "33602", phone: "(813) 555-5678" },
@@ -2305,7 +2311,9 @@ function CoaRxForm({
   onSend: () => void;
   onBack: () => void;
 }) {
-  const [dosage, setDosage] = useState("0.5 mg");
+  // The strengths come from the brand file (`program.dosages`). A brand with none shows the generic three.
+  const dosages = BRAND.program.dosages?.length ? BRAND.program.dosages : ["0.5 mg", "1.0 mg", "2.4 mg"];
+  const [dosage, setDosage] = useState(dosages[0]);
   const [refills, setRefills] = useState("3");
   // Local to this screen on purpose — not written back to usePatientStore.
   // That store is the single active patient identity shared by every flow
@@ -2336,7 +2344,7 @@ function CoaRxForm({
           <div style={{ flex: "1 1 240px", marginBottom: 24 }}>
             <p className="pa-question__text">Dosage</p>
             <div className="pa-question__options">
-              {["0.5 mg", "1.0 mg", "2.4 mg"].map((d) => (
+              {dosages.map((d) => (
                 <label key={d} className="pa-radio-option">
                   <button
                     type="button"

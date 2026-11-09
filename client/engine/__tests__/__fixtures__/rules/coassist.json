@@ -1,8 +1,5 @@
 {
   "order": {
-    "ACCEPT_PHARMACY_INTAKE": [
-      "pharmacy_intake.accept"
-    ],
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
@@ -23,9 +20,6 @@
     ],
     "FILL_RX": [
       "tracking.fill_rx"
-    ],
-    "HAND_OFF_TO_CRM": [
-      "crm_handoff.send"
     ],
     "LEAVE_STAGE": [
       "spine.leave_stage.bi",
@@ -157,9 +151,6 @@
     "cash_offer.verify_sms": [
       "CoA_Coverage"
     ],
-    "crm_handoff.send": [
-      "CoA_APA_Specialty"
-    ],
     "enrollment.confirm_consent": [
       "CoA_DTP",
       "CoA_Copay",
@@ -259,9 +250,6 @@
       "CoA_Web_Copay",
       "CoA_Coverage"
     ],
-    "pharmacy_intake.accept": [
-      "CoA_APA_Specialty"
-    ],
     "pharmacy_selection.select_pharmacy": [
       "CoA_DTP",
       "CoA_Copay",
@@ -325,14 +313,16 @@
       "CoA_Copay",
       "CoA_Web_Copay",
       "CoA_Coverage",
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_APA_Specialty"
     ],
     "scheduling.patient_sets_address": [
       "CoA_DTP",
       "CoA_Copay",
       "CoA_Web_Copay",
       "CoA_Coverage",
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_APA_Specialty"
     ],
     "spine.approve_pa": [
       "CoA_DTP",

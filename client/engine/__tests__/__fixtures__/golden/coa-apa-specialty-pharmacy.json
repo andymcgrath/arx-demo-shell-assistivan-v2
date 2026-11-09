@@ -3,12 +3,30 @@
   "steps": [
     {
       "event": "REFERRAL_RECEIVED",
+      "payload": {
+        "pharmacy": {
+          "name": "Specialty Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(800) 555-0100"
+        }
+      },
       "accepted": true,
       "route": "/sms-message",
       "changed": {
         "enrollmentStatus": "enrolled",
         "enrollmentInviteSent": true,
-        "biStatus": "running"
+        "biStatus": "running",
+        "selectedPharmacy": {
+          "name": "Specialty Pharmacy",
+          "address": "1 Main St",
+          "city": "Orlando",
+          "state": "FL",
+          "zip": "32801",
+          "phone": "(800) 555-0100"
+        }
       },
       "newEvents": [
         {
@@ -79,7 +97,6 @@
         "paFormStatus": "sent",
         "paFormSentAt": "2026-01-15T12:00:00.000Z",
         "pharmacyBenefitStatus": "covered",
-        "pharmacyAssigned": true,
         "medicalBenefitStatus": "not_covered"
       },
       "newEvents": [
@@ -187,17 +204,9 @@
     {
       "event": "VERIFY_PA_APPROVED_OTP",
       "accepted": true,
-      "route": "/pharmacy-transfer",
+      "route": "/pa-approved",
       "changed": {
-        "selectedPharmacy": {
-          "name": "CoAssist Specialty Pharmacy",
-          "address": "2400 Sand Lake Road, Suite 300",
-          "city": "Orlando",
-          "state": "FL",
-          "zip": "32809",
-          "phone": "(800) 555-0188"
-        },
-        "pricingOption": "retail",
+        "dispatchStatus": "pending_selection",
         "paApprovedOtpVerified": true
       },
       "newEvents": [
@@ -209,23 +218,32 @@
       ]
     },
     {
-      "event": "ACCEPT_PHARMACY_INTAKE",
+      "event": "PATIENT_SETS_ADDRESS",
       "accepted": true,
-      "route": "/pharmacy-transfer",
+      "route": "/delivery-date",
       "changed": {
-        "pharmacyIntakeStatus": "accepted",
-        "crmHandoffStatus": "sent"
+        "dispatchStatus": "selected"
       },
       "newEvents": [
         {
-          "eventType": "ACCEPT_PHARMACY_INTAKE",
-          "portal": "field",
-          "workflowStep": 10
-        },
+          "eventType": "PATIENT_SETS_ADDRESS",
+          "portal": "patient",
+          "workflowStep": 9
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_SELECTS_SHIP_DATE",
+      "accepted": true,
+      "route": "/enrollment-complete",
+      "changed": {
+        "patientShipDate": "2026-01-15T12:00:00.000Z"
+      },
+      "newEvents": [
         {
-          "eventType": "HAND_OFF_TO_CRM",
-          "portal": "crm",
-          "workflowStep": 10
+          "eventType": "PATIENT_SELECTS_SHIP_DATE",
+          "portal": "patient",
+          "workflowStep": 9
         }
       ]
     },

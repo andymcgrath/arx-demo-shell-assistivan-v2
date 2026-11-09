@@ -2,14 +2,15 @@
  * Enrollment: the patient verifies their phone and consents. BI starts off the eRx alone, so it does not wait for them.
  */
 import type { CoaRule } from "./shared";
-import { assignment, prePicked } from "./shared";
+import { assignment, prePicked, prescriberPharmacy } from "./shared";
 
 export const ENROLLMENT_RULES: CoaRule[] = [
   {
     id: "enrollment.referral_received",
     on: "REFERRAL_RECEIVED",
     when: (d) => d.enrollmentStatus === "none",
-    set: () => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true }),
+    // The pharmacy the prescriber picked on the eRx stays with the case when the recipe uses it.
+    set: (_d, e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(prescriberPharmacy(s) && e.pharmacy ? { selectedPharmacy: e.pharmacy } : {}) }),
     emit: { portal: "crm", step: 1 },
     // BI runs off the eRx alone. It does not wait for the patient.
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },

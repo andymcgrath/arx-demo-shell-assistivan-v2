@@ -3566,7 +3566,17 @@
         "rxShippedStepN": 7
       },
       {
-        "after": "ACCEPT_PHARMACY_INTAKE",
+        "after": "PATIENT_SETS_ADDRESS",
+        "labelSet": 0,
+        "done": null,
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 7
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
         "labelSet": 0,
         "done": null,
         "workflowStep": 5,

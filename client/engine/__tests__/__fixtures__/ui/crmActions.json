@@ -2462,7 +2462,7 @@
         "actions": []
       },
       {
-        "after": "ACCEPT_PHARMACY_INTAKE",
+        "after": "PATIENT_SELECTS_SHIP_DATE",
         "actions": [
           {
             "stage": "TP-14277",

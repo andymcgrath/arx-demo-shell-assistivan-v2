@@ -2,7 +2,7 @@
  * PA notification: after a PA decision the patient confirms by SMS and a one-time code. Pricing options reach the patient only after enrollment is complete.
  */
 import type { CoaRule } from "./shared";
-import { assignment, prePicked } from "./shared";
+import { assignment, prePicked, prescriberPharmacy } from "./shared";
 
 export const PA_NOTIFICATION_RULES: CoaRule[] = [
   {
@@ -18,7 +18,13 @@ export const PA_NOTIFICATION_RULES: CoaRule[] = [
     id: "pa_notification.verify_otp",
     on: "VERIFY_PA_APPROVED_OTP",
     when: (d) => d.paApprovedSmsVerified && !d.paApprovedOtpVerified,
-    set: (d, _e, s) => ({ paApprovedOtpVerified: true, ...assignment(d, s), ...prePicked(d, s) }),
+    set: (d, _e, s) => ({
+      paApprovedOtpVerified: true,
+      ...assignment(d, s),
+      ...prePicked(d, s),
+      // The prescriber's pharmacy clears the case to schedule and to dispatch. There is no pricing pick to do that.
+      ...(prescriberPharmacy(s) ? { dispatchStatus: "pending_selection" as const, selectedPharmacy: d.selectedPharmacy ?? s.content.transferPharmacy } : {}),
+    }),
     emit: { portal: "patient", step: 9 },
   },
 ];

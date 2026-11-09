@@ -9735,11 +9735,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -9776,62 +9773,10 @@
             "lastUpdatedAgo": null
           },
           {
-            "id": "A-14275",
-            "name": "Appeals",
-            "statusLabel": "Stage not started",
-            "statusDetail": "No Status available",
-            "isComplete": false,
-            "isNotStarted": true,
-            "fields": [
-              {
-                "label": "Pharmacy Notes",
-                "value": null
-              },
-              {
-                "label": "Shipment Date",
-                "value": null
-              }
-            ],
-            "lastUpdated": null,
-            "lastUpdatedAgo": null
-          },
-          {
-            "id": "FA-14276",
-            "name": "Financial Assistance",
-            "statusLabel": "Stage not started",
-            "statusDetail": "No Status available",
-            "isComplete": false,
-            "isNotStarted": true,
-            "fields": [
-              {
-                "label": "Financial Program",
-                "value": null
-              },
-              {
-                "label": "Effective Date",
-                "value": null
-              },
-              {
-                "label": "Program Approval Date",
-                "value": null
-              },
-              {
-                "label": "Expiration Date",
-                "value": null
-              },
-              {
-                "label": "Program Denial Reason",
-                "value": null
-              }
-            ],
-            "lastUpdated": null,
-            "lastUpdatedAgo": null
-          },
-          {
             "id": "TP-14277",
             "name": "Triage to Pharmacy",
             "statusLabel": "Pending",
-            "statusDetail": "Awaiting pharmacy selection",
+            "statusDetail": "Awaiting PA approval",
             "isComplete": false,
             "isNotStarted": true,
             "fields": [],
@@ -9848,17 +9793,6 @@
             "fields": [],
             "lastUpdated": null,
             "lastUpdatedAgo": null
-          },
-          {
-            "id": "HO-14290",
-            "name": "CRM Handoff",
-            "statusLabel": "Stage not started",
-            "statusDetail": "Waiting for the pharmacy to accept the Rx before the case goes to the client's CRM",
-            "isComplete": false,
-            "isNotStarted": true,
-            "fields": [],
-            "lastUpdated": null,
-            "lastUpdatedAgo": null
           }
         ]
       },
@@ -9868,11 +9802,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -9894,11 +9825,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": []
       },
@@ -9908,11 +9836,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": []
       },
@@ -9922,11 +9847,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -9948,11 +9870,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -9990,11 +9909,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10021,11 +9937,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10052,11 +9965,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10078,11 +9988,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10097,56 +10004,15 @@
             "lastUpdatedAgo": "today"
           },
           {
-            "id": "A-14275",
-            "name": "Appeals",
-            "statusLabel": "Not needed",
-            "statusDetail": "PA Approved",
-            "isComplete": true,
-            "isNotStarted": false,
-            "fields": [
-              {
-                "label": "Pharmacy Notes",
-                "value": null
-              },
-              {
-                "label": "Shipment Date",
-                "value": null
-              }
-            ],
-            "lastUpdated": "1/15/2026",
-            "lastUpdatedAgo": "today"
-          },
-          {
-            "id": "FA-14276",
-            "name": "Financial Assistance",
-            "statusLabel": "Not needed",
-            "statusDetail": "Commercial Insurance",
-            "isComplete": true,
-            "isNotStarted": false,
-            "fields": [
-              {
-                "label": "Financial Program",
-                "value": null
-              },
-              {
-                "label": "Effective Date",
-                "value": null
-              },
-              {
-                "label": "Program Approval Date",
-                "value": null
-              },
-              {
-                "label": "Expiration Date",
-                "value": null
-              },
-              {
-                "label": "Program Denial Reason",
-                "value": null
-              }
-            ],
-            "lastUpdated": "1/15/2026",
-            "lastUpdatedAgo": "today"
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Pending",
+            "statusDetail": "PA approved — awaiting the patient's confirmation",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
           }
         ]
       },
@@ -10156,11 +10022,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": []
       },
@@ -10170,54 +10033,93 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
-        "changed": []
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Pharmacy from the eRx — awaiting the patient's delivery address and date",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Specialty Pharmacy"
+              },
+              {
+                "label": "Status",
+                "value": "Pharmacy From eRx"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
       },
       {
-        "after": "ACCEPT_PHARMACY_INTAKE",
+        "after": "PATIENT_SETS_ADDRESS",
         "order": [
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
-            "id": "HO-14290",
-            "name": "CRM Handoff",
-            "statusLabel": "Sent",
-            "statusDetail": "Case data handed to the client's CRM",
-            "isComplete": true,
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Pharmacy from the eRx — awaiting the patient's delivery date",
+            "isComplete": false,
             "isNotStarted": false,
             "fields": [
               {
-                "label": "Destination",
-                "value": "Client CRM"
+                "label": "Pharmacy",
+                "value": "Specialty Pharmacy"
               },
               {
-                "label": "Sent",
-                "value": "Patient, prescriber, Rx, benefit result, PA decision"
-              },
-              {
-                "label": "Dispensing pharmacy",
-                "value": "CoAssist Specialty Pharmacy"
-              },
-              {
-                "label": "PA decision",
-                "value": "Approved"
+                "label": "Status",
+                "value": "Pharmacy From eRx"
               }
             ],
             "lastUpdated": "1/15/2026",
-            "lastUpdatedAgo": "just now"
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Delivery scheduled — ready to dispatch",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Specialty Pharmacy"
+              },
+              {
+                "label": "Status",
+                "value": "Ready to Dispatch"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
           }
         ]
       },
@@ -10227,11 +10129,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10244,7 +10143,7 @@
             "fields": [
               {
                 "label": "Pharmacy",
-                "value": "CoAssist Specialty Pharmacy"
+                "value": "Specialty Pharmacy"
               },
               {
                 "label": "First Dispense",
@@ -10262,11 +10161,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10279,7 +10175,7 @@
             "fields": [
               {
                 "label": "Pharmacy",
-                "value": "CoAssist Specialty Pharmacy"
+                "value": "Specialty Pharmacy"
               },
               {
                 "label": "First Dispense",
@@ -10297,11 +10193,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {
@@ -10314,7 +10207,7 @@
             "fields": [
               {
                 "label": "Pharmacy",
-                "value": "CoAssist Specialty Pharmacy"
+                "value": "Specialty Pharmacy"
               },
               {
                 "label": "First Dispense",
@@ -10356,11 +10249,8 @@
           "EA-14272",
           "BI-14273",
           "PA-14274",
-          "A-14275",
-          "FA-14276",
           "TP-14277",
-          "PS-14278",
-          "HO-14290"
+          "PS-14278"
         ],
         "changed": [
           {

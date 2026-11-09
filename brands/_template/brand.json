@@ -25,6 +25,7 @@
     "drugDisplayName": "REQUIRED: string (may be empty)",
     "description": "",
     "dosageForm": "",
+    "dosages": ["optional: the strengths the EHR's eRx form offers, for example 15 mg. Leave out for the generic 0.5, 1.0 and 2.4 mg"],
     "ndc": "optional: the product NDC, shown on the provider's PA form. Leave out to show the drug name only",
     "paQuestions": [
       "optional: yes or no questions for the provider's PA form, in order. Leave out to build them from the indication, or use generic ones"
@@ -45,7 +46,8 @@
       "source": "optional URL"
     },
     "educationVideo": { "title": "", "description": "", "thumbnail": "", "embedUrl": "" },
-    "transferPartner": { "name": "", "address": "", "city": "", "state": "", "zip": "", "phone": "" }
+    "transferPartner": { "name": "", "address": "", "city": "", "state": "", "zip": "", "phone": "" },
+    "specialtyPharmacy": { "name": "", "address": "", "city": "", "state": "", "zip": "", "phone": "" }
   },
   "chatbotIcon": "REQUIRED: image path or URL",
   "favicon": "/brands/<slug>/favicon.png"

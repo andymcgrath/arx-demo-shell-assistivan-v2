@@ -657,13 +657,15 @@
         "enrollment.sms -> /sms-message",
         "enrollment.otp -> /otp-verification",
         "enrollment.confirm_details -> /confirm-details",
-        "pharmacy_selection.assigned_waiting -> /",
-        "pharmacy_selection.assigned_sms -> /pa-approved-sms",
-        "pharmacy_selection.assigned_otp -> /pa-approved-otp",
-        "pharmacy_selection.assigned_transfer -> /pharmacy-transfer",
-        "tracking.assigned_processing -> /order-tracker",
-        "tracking.assigned_shipped -> /order-shipped",
-        "tracking.assigned_delivered -> /medication-delivered"
+        "pharmacy_selection.prescriber_waiting -> /",
+        "pharmacy_selection.prescriber_sms -> /pa-approved-sms",
+        "pharmacy_selection.prescriber_otp -> /pa-approved-otp",
+        "pharmacy_selection.prescriber_approved -> /pa-approved",
+        "pharmacy_selection.prescriber_date -> /delivery-date",
+        "pharmacy_selection.prescriber_confirmed -> /enrollment-complete",
+        "pharmacy_selection.prescriber_processing -> /order-tracker",
+        "pharmacy_selection.prescriber_shipped -> /order-shipped",
+        "pharmacy_selection.prescriber_delivered -> /medication-delivered"
       ],
       "menu": [
         {
@@ -705,21 +707,24 @@
             {
               "label": "PA Approved OTP",
               "path": "/pa-approved-otp"
-            }
-          ]
-        },
-        {
-          "group": "Provider transfer",
-          "items": [
+            },
             {
-              "label": "Pharmacy Transfer",
-              "path": "/pharmacy-transfer"
+              "label": "PA Approved: Schedule Delivery",
+              "path": "/pa-approved"
             }
           ]
         },
         {
           "group": "{program} order",
           "items": [
+            {
+              "label": "Delivery Address",
+              "path": "/delivery-address"
+            },
+            {
+              "label": "Delivery Date",
+              "path": "/delivery-date"
+            },
             {
               "label": "Order Tracker",
               "path": "/order-tracker"
@@ -740,7 +745,9 @@
         "/enrollment-complete",
         "/pa-approved-sms",
         "/pa-approved-otp",
-        "/pharmacy-transfer",
+        "/pa-approved",
+        "/delivery-address",
+        "/delivery-date",
         "/order-tracker",
         "/order-shipped",
         "/medication-delivered"

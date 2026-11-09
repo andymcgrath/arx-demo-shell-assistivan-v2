@@ -2,14 +2,14 @@
  * Tracking: fulfillment events that move the order tracker.
  */
 import type { CoaRule } from "./shared";
-import { inFulfillmentTail } from "./shared";
+import { inFulfillmentTail, prescriberPharmacy } from "./shared";
 
 export const TRACKING_RULES: CoaRule[] = [
   {
     id: "tracking.fill_rx",
     on: "FILL_RX",
-    // A recipe with the `crm_handoff` block starts fulfillment only after the case went to the client's CRM.
-    when: (d, _e, s) => inFulfillmentTail(d) && (!s.recipe?.modules.some((m) => m.id === "crm_handoff") || d.crmHandoffStatus === "sent"),
+    // The prescriber's pharmacy ships what the patient scheduled, so it waits for the ship date.
+    when: (d, _e, s) => inFulfillmentTail(d) && (!prescriberPharmacy(s) || d.patientShipDate !== null),
     set: () => ({ pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
     emit: { portal: "field", step: 10 },
   },
