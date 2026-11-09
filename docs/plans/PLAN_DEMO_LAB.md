@@ -18,7 +18,7 @@ Sales can open the lab, see every block and outcome in plain language, and draw 
 
 ## Steps
 
-Each step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed, and is tagged `refactor/NN-short-name`. Put the test count and type-error baseline in the tag message. Work on a short-lived feature branch.
+Each step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed, and is tagged `demo-lab/NN-short-name` (find the next number with `git tag -l 'demo-lab/*'`). Put the test count and type-error baseline in the tag message. Work on a short-lived feature branch.
 
 ### 1. Rename to Demo Lab
 
@@ -32,11 +32,20 @@ Each step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed, and 
 
 Add one entry per module and per fork exit, read by the lab:
 
-- Block: sales name, one-line summary (what the audience sees), apps touched, lane (HCP, patient, agent, system), trigger (click, text, automatic), variants with labels.
-- Fork exit: sales label and description (most already exist in `forks.ts`).
+- Block: sales name, one-line summary (what the audience sees), `aliases` (sales vocabulary, read by the palette search), apps touched, lane (HCP, patient, agent, system), trigger (click, text, automatic), variants with labels.
+- Fork exit: sales label, description (most already exist in `forks.ts`), and `aliases`.
+- Aliases examples: BI is ABV, BV, eMedBV. PA is APA. Pharmacy selection is triage to SP. Enrollment is onboarding. eRx intake is eRx initiation.
 - `needs` and `sets` for each block, taken from its existing rules. Do not duplicate them. Derive them where possible.
 
 Add a test that fails when a module in a recipe, or a fork exit, has no catalog entry. Break it once on purpose to confirm it fails.
+
+Drafting rules for the sales text:
+
+- Draft each name and summary from the module file, its screens, and the prose in `docs/scenarios/recipes.md` and `buy-and-bill.md`. Describe only what a screen or rule does today. Do not promise a screen the block lacks.
+- Mark any entry you are unsure of `draft: true` with a one-line `question`. Never guess silently.
+- Write names in sales vocabulary, not module ids. Keep the module id as a separate field.
+- Stop after drafting and list every draft entry with its question. The user reviews the wording (name, summary, aliases) before the step is tagged. `needs`, `sets`, and lane come from the code and need no review.
+- A catalog entry marked `draft` fails the tag step until the user clears it.
 
 Sources: `client/workflows/*/modules/`, `*/forks.ts`, `*/recipes.ts`. iAssist and CoAssist first. Standard and PAP have no recipes yet, so list their scenarios as whole demos only.
 

@@ -39,6 +39,7 @@ Sales demo shell. One browser tab shows several apps (CRM, Patient, Provider, Fi
 - Expected output lives in `__fixtures__/*.json`. If behavior changes on purpose, run `RECORD=1 pnpm test`, review the fixture diff, and commit it with the change. Never record to make a failing test pass without reading the diff.
 - Add or update a scenario in `scenarios.ts` whenever a flow or branch is added.
 - Checkpoint tags: when a refactor step is finished and `pnpm test` and `pnpm typecheck:ratchet` both pass, commit, then tag it `refactor/NN-short-name` (annotated, numbered in order, for example `refactor/01-coassist-machine`). Put the test count and type-error baseline in the tag message. Never tag a red build. Client-specific work leads with the client slug instead: `<client>/NN-short-name` (for example `lilly/01-web-copay`), numbered in order per client. Run `git tag -l '<client>/*'` to find the next number. Use `refactor/` only for broader changes to existing code and how it works. To go back, `git switch -c <name> <tag>`.
+- Tag prefix: at the start of every new session, ask the user which tag prefix this work uses (`refactor/`, `<client>/`, `demo-lab/`, or another) before the first tag. Do not infer it. Use that prefix for the whole session unless the user changes it.
 - `pnpm typecheck:ratchet` fails if the type-error count rises above `.typecheck-baseline`. Lower the baseline with `--update` whenever the count drops. At zero, switch to plain `pnpm typecheck`.
 
 ## Brand and deploy rules
