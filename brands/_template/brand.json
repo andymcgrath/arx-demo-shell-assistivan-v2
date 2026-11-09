@@ -25,6 +25,17 @@
     "drugDisplayName": "REQUIRED: string (may be empty)",
     "description": "",
     "dosageForm": "",
+    "ndc": "optional: the product NDC, shown on the provider's PA form. Leave out to show the drug name only",
+    "paQuestions": [
+      "optional: yes or no questions for the provider's PA form, in order. Leave out to build them from the indication, or use generic ones"
+    ],
+    "indication": {
+      "name": "optional: what the drug treats, for example Chronic spontaneous urticaria",
+      "icd10": "optional: ICD-10-CM code",
+      "icd10Label": "optional: the code's official description",
+      "currentTreatment": "optional: prefills Current Treatment Plan on the PA",
+      "rationale": "optional: prefills Reason for Prescribing on the PA. {drug} becomes the drug display name"
+    },
     "assets": { "logoColor": null, "logoWhite": null },
     "colors": {
       "brand": "REQUIRED: #rrggbb",
