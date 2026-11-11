@@ -96,14 +96,21 @@ const KNOWN_GAPS: Record<string, string[]> = {
   CoA_PAP: [],
   CoA_Web_PAP: [],
   CoA_APA_Specialty: [],
-  // No `bi` fork: the case ends at enrollment.
-  CoA_HCP_Enroll: [],
 };
 
+/** Scenarios whose case ends before BI. They have no `bi` fork, so there are no exits to need rungs. */
+const NO_BI = ["CoA_HCP_Enroll"];
+
 describe("stage ladder coverage of the bi fork", () => {
-  for (const [flowType, recipe] of Object.entries(COASSIST_RECIPES)) {
+  for (const flowType of NO_BI) {
+    it(`${flowType}: declares no bi fork, so no exit needs rungs`, () => {
+      expect(forksForScenario(COASSIST_FORKS, flowType as FlowType).map((f) => f.id)).not.toContain("bi");
+      expect(COASSIST_RECIPES[flowType as keyof typeof COASSIST_RECIPES].forks).not.toContain("bi");
+    });
+  }
+
+  for (const [flowType, recipe] of Object.entries(COASSIST_RECIPES).filter(([f]) => !NO_BI.includes(f))) {
     it(`${flowType}: every pickable exit has stage-jump rungs, apart from the known gaps`, () => {
-      if (flowType === "CoA_HCP_Enroll") return;
       const forks = forksForScenario(COASSIST_FORKS, flowType as FlowType);
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
