@@ -1,0 +1,79 @@
+{
+  "slug": "sanofi",
+  "name": "Sanofi Patient Connection",
+  "title": "Sanofi Demo",
+  "demos": [
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "1. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    }
+  ],
+  "showClientTab": false,
+  "manufacturer": {
+    "name": "Sanofi",
+    "tagline": "TESTED, TRUSTED, TAKEN",
+    "logo": {
+      "colors": "/brands/sanofi/sanofi-logo-color.svg",
+      "white": "/brands/sanofi/sanofi-logo-white.svg"
+    },
+    "support": { "label": "Support", "phone": "1-800-633-1610" },
+    "legal": {
+      "privacyUrl": "https://www.sanofi.com/en/sanofi-us-privacy-policies",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": "©{{YEAR}} Sanofi. All Rights Reserved."
+  },
+  "program": {
+    "name": "LANTUS",
+    "drugDisplayName": "LANTUS (insulin glargine)",
+    "description": "100 units/ml",
+    "dosageForm": "Subcutaneous Injection",
+    "dosages": [
+      "10 mL multiple-dose vial, 3 mL single-patient-use SoloStar prefilled pen"
+    ],
+    "ndc": "0088-2220-33",
+    "paQuestions": [
+      "Does the patient have a confirmed diagnosis of type 1 or type 2 diabetes mellitus?",
+      "Does the patient require a long-acting (basal) insulin to control blood glucose?",
+      "Has the patient tried and failed, or had an adverse reaction to, a plan-preferred basal insulin?",
+      "Is the requested dose within the FDA-labeled range, with no other basal insulin prescribed at the same time?"
+    ],
+    "indication": {
+      "name": "A long-acting man-made-insulin used to control high blood sugar in adults and children with diabetes mellitus.",
+      "icd10": "E11.9",
+      "icd10Label": "Type 2 diabetes mellitus without complications"
+    },
+    "assets": {
+      "logoColor": "/brands/sanofi/lantus-logo-color.svg",
+      "logoWhite": "/brands/sanofi/lantus-logo-white.svg"
+    },
+    "colors": {
+      "brand": "#211756",
+      "accent": "#e7dff2",
+      "surfaces": { "footer": "brand" },
+      "source": "https://www.lantus.com/"
+    },
+    "transferPartner": {
+      "name": "ARx Patient Solutions Pharmacy",
+      "address": "4500 W 107th St",
+      "city": "Overland Park",
+      "state": "KS",
+      "zip": "66207-4025",
+      "phone": "(866) 930-4146"
+    },
+    "specialtyPharmacy": {
+      "name": "SanofiDirect Pharmacy",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "phone": ""
+    }
+  },
+  "chatbotIcon": "/brands/sanofi/chatbot.svg",
+  "favicon": "/brands/sanofi/favicon.png"
+}

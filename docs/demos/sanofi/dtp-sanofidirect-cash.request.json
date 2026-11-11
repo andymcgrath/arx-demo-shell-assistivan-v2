@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "client": "sanofi",
+  "slug": "dtp-sanofidirect-cash",
+  "title": "Sanofi: DTP, eRx to SanofiDirect Pharmacy, patient picks Cash Dispense",
+  "workflow": "coassist",
+  "intake": "erx",
+  "apps": ["provider", "crm", "patient", "field"],
+  "forks": ["bi", "copay", "pricing"],
+  "cards": [
+    {
+      "kind": "block",
+      "moduleId": "enrollment"
+    },
+    {
+      "kind": "ghost",
+      "name": "Coverage confirmed by ABV in the CRM",
+      "sees": "The agent opens the Benefits Investigation stage in the CRM. The automated benefit verification confirms coverage from the details the patient confirmed, with no PA step.",
+      "app": "crm",
+      "lane": "agent",
+      "trigger": "click"
+    },
+    {
+      "kind": "ghost",
+      "name": "Patient chooses Copay or Cash Dispense",
+      "sees": "The patient sees two options on the price screen, Copay and Cash Dispense, and taps Cash Dispense. The cash dispense is filled by SanofiDirect Pharmacy.",
+      "app": "patient",
+      "lane": "patient",
+      "trigger": "click"
+    },
+    {
+      "kind": "block",
+      "moduleId": "payment"
+    },
+    {
+      "kind": "block",
+      "moduleId": "scheduling"
+    },
+    {
+      "kind": "block",
+      "moduleId": "tracking"
+    }
+  ],
+  "demos": [
+    {
+      "id": "sanofi-dtp-cash-dispense",
+      "label": "2. DTP, Cash Dispense from SanofiDirect",
+      "description": "The HCP sends the eRx to SanofiDirect Pharmacy. The patient gets a text, confirms demographics, and the agent confirms coverage by ABV in the CRM. The patient picks Cash Dispense, pays in the patient app, sets shipment details, and SanofiDirect ships.",
+      "choices": {
+        "bi": "pharmacy_covered"
+      }
+    }
+  ],
+  "brand": {
+    "name": "Sanofi",
+    "drug": "Lantus (insulin glargine)",
+    "sourceUrl": "https://www.sanofipatientconnection.com/",
+    "documents": [
+      "Sanofi & AssistRx PAP & DTC RFP Follow Up_11062026.pptx (SharePoint, RFP Completion Team). Not read: needs access.",
+      "https://www.lantus.com/"
+    ]
+  },
+  "winTheme": "One eRx to SanofiDirect starts everything: a text to the patient, coverage confirmed by ABV in the CRM, and a cash dispense the patient pays and schedules in one app.",
+  "openQuestions": [
+    "You said CoA_Copay is closer. But its menu has no cash option: Copay enrollment leads to Retail or Mail Order. CoA_DTP's menu has a self-pay card that pays through the manufacturer's pharmacy. Should Cash Dispense be a new `pricing` exit next to a Copay card, or a re-labeled self-pay exit?",
+    "The pharmacy that ships is hardcoded as 'CoAssist Pharmacy' in scenario content. Add SanofiDirect Pharmacy through `program.specialtyPharmacy` or `transferPartner` in the brand file?",
+    "Every pharmacy-covered exit runs a PA, and these steps have none. Add a covered-with-no-PA `bi` exit, or accept the AutoPA and PA-approved text?",
+    "Does the patient see the Copay option leading anywhere in this demo, or is it shown and skipped?"
+  ]
+}

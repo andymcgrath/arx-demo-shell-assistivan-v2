@@ -1061,7 +1061,11 @@ export default function DemoShell() {
                     <button
                       key={stage}
                       onClick={() => {
-                        resetActorToStage(stage);
+                        try {
+                          resetActorToStage(stage);
+                        } catch (err) {
+                          console.error(`[DemoShell] Jump to stage ${stage} failed`, err);
+                        }
                         // See "Reset All" button above: resetActorToStage() already
                         // persists the correct flowType via resetDemo(); don't wipe
                         // 'arx-demo-shell' afterward or a reload before the next

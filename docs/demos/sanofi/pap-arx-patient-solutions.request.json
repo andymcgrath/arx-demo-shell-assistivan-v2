@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "client": "sanofi",
+  "slug": "pap-arx-patient-solutions",
+  "title": "Sanofi: PAP, patient enrolls online, ARx Patient Solutions Pharmacy dispenses",
+  "workflow": "coassist",
+  "intake": "erx",
+  "apps": ["web", "crm", "provider", "patient", "field"],
+  "forks": ["bi"],
+  "cards": [
+    {
+      "kind": "ghost",
+      "name": "Patient enrolls on Patient Connection",
+      "sees": "The first page of the Sanofi Patient Connection site has an Enroll Here button. The patient enters their details and coverage information, and searches for their prescriber by NPI so the program can reach out for the Rx. The page says the patient appears to be a candidate for the Patient Assistance Program, then confirms: we will be in touch soon.",
+      "app": "web",
+      "lane": "patient",
+      "trigger": "click"
+    },
+    {
+      "kind": "ghost",
+      "name": "Case lands in the CRM by intake",
+      "sees": "The agent opens the CRM and sees the web enrollment as a new case with the patient, coverage, and prescriber details. No consent or enrollment text goes to the patient.",
+      "app": "crm",
+      "lane": "agent",
+      "trigger": "view"
+    },
+    {
+      "kind": "ghost",
+      "name": "Validate PAP eligibility and ask the HCP for the eRx",
+      "sees": "The agent validates PAP eligibility from the inputs and sends the prescriber an outreach email asking for the eRx.",
+      "app": "crm",
+      "lane": "agent",
+      "trigger": "click"
+    },
+    {
+      "kind": "ghost",
+      "name": "HCP sends the eRx",
+      "sees": "The prescriber opens the outreach and sends the eRx from the EHR, naming ARx Patient Solutions Pharmacy. The eRx arrives in the CRM.",
+      "app": "provider",
+      "lane": "hcp",
+      "trigger": "click"
+    },
+    {
+      "kind": "block",
+      "moduleId": "enrollment"
+    },
+    {
+      "kind": "block",
+      "moduleId": "pharmacy_selection",
+      "variantId": "prescriber"
+    },
+    {
+      "kind": "block",
+      "moduleId": "scheduling"
+    },
+    {
+      "kind": "block",
+      "moduleId": "tracking"
+    }
+  ],
+  "demos": [
+    {
+      "id": "sanofi-pap-arx-patient-solutions",
+      "label": "1. PAP, ARx Patient Solutions Pharmacy",
+      "description": "The patient enrolls on Sanofi Patient Connection. The CRM takes the case, validates PAP eligibility, and asks the HCP for the eRx. When it arrives, the patient confirms their details and picks a shipment. The CRM triages to ARx Patient Solutions Pharmacy, which dispenses.",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
+    }
+  ],
+  "brand": {
+    "name": "Sanofi",
+    "drug": "Lantus (insulin glargine)",
+    "sourceUrl": "https://www.sanofipatientconnection.com/",
+    "documents": [
+      "Sanofi & AssistRx PAP & DTC RFP Follow Up_11062026.pptx (SharePoint, RFP Completion Team). Not read: needs access.",
+      "https://www.lantus.com/"
+    ]
+  },
+  "winTheme": "One online enrollment starts a PAP case with no consent text. AssistRx validates eligibility, gets the eRx from the HCP, and the patient only confirms details and picks a shipment before ARx Patient Solutions Pharmacy dispenses.",
+  "openQuestions": [
+    "The existing `no_coverage_pap` BI exit requires `pap_transfer` and `income_qualification`, which these steps don't use. Should eligibility validation replace BI with a new exit and module, or should this demo reuse the exit and show the transfer text and income form?",
+    "After the eRx, does the patient still take the text, one-time code, and consent steps of `enrollment`, or only open the link and confirm demographics? Consent was not captured on the web page in these steps.",
+    "Does the patient enter household income on the web form, or does the agent validate eligibility from coverage details alone?",
+    "The web page and HCP site pieces live on the `boehringer` branch (CoA_HCP_Enroll, 2 commits ahead, 32 behind main) and in CoA_Web_Copay on main. Merge `boehringer` into main first, or copy only the form pieces?",
+    "Where does the outreach to the HCP go (email only, or fax too), and does the HCP act in the Provider app or by reply?"
+  ]
+}
