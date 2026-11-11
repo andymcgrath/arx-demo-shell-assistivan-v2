@@ -12,7 +12,7 @@
     {
       "id": "coa-web-pap",
       "flow": "CoA_Web_PAP",
-      "label": "2. PAP, web enrollment, ARx Patient Solutions Pharmacy",
+      "label": "2. PAP, Web enrollment",
       "description": "The patient enrolls on Sanofi Patient Connection. Benefits verification finds no coverage, so the case moves to the patient assistance program. The patient confirms by text, completes the income form, and schedules a shipment. ARx Patient Solutions Pharmacy dispenses.",
       "choices": {
         "bi": "no_coverage_pap"
