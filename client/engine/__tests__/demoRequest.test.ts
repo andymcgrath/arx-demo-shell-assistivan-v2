@@ -84,6 +84,12 @@ describe("validateDemoRequest", () => {
     expect(problems({ forks: ["bi"] }).join()).toContain('fork "pa", which the request does not pass through');
   });
 
+  it("lets a request leave out bi only when its variant ends before BI", () => {
+    const hcp = { cards: [{ kind: "block", moduleId: "enrollment", variantId: "hcp" }], forks: [], demos: [{ id: "hcp-enroll", label: "HCP enrolls", choices: {} }] };
+    expect(problems(hcp)).toEqual([]);
+    expect(problems({ ...hcp, cards: [{ kind: "block", moduleId: "enrollment", variantId: "web" }] })[0]).toContain('forks must include "bi"');
+  });
+
   it("requires the brand inputs and a clean source URL", () => {
     expect(problems({ brand: { name: "M", drug: "", documents: [] } })).toContain("brand.drug is required");
     expect(problems({ brand: { name: "M", drug: "D", sourceUrl: "javascript:x", documents: [] } })).toContain("brand.sourceUrl must be an http or https URL");

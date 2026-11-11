@@ -42,6 +42,8 @@ export const END_STATES = {
   /** Buy and Bill: the PA was approved and verified, copay was enrolled, and a claim is in review. No pharmacy, nothing ships. */
   buy_and_bill_claim_filed: (d: WorkflowData) =>
     d.paStatus === "approved" && d.paApprovedOtpVerified && d.copayEnrolled && (d.copayClaims?.length ?? 0) > 0 && !d.pharmacyAssigned && d.pharmacyStatus === "none",
+  /** An HCP enrolled the patient on the client's web page, and the patient verified the phone and consented. No BI, PA, or order follows. */
+  enrolled: (d: WorkflowData) => d.enrollmentStatus === "enrolled" && d.smsVerified && d.otpVerified && d.consentStatus === "confirmed" && d.biStatus === "none",
 } as const;
 
 export type EndState = keyof typeof END_STATES;
@@ -209,6 +211,19 @@ export const SCENARIOS: Scenario[] = [
       { type: "SELECT_SELF_PAY" },
       { type: "SELECT_PRICING_OPTION", option: "mail_order" },
       ...addressAndDate, ...fulfillment,
+    ],
+  },
+
+  // ── CoAssist: HCP enrollment (the HCP enrolls on the client's web page; the patient consents; the case ends) ──
+  {
+    name: "coa-hcp-enroll-patient-consents",
+    endsAt: "enrolled",
+    flowType: "CoA_HCP_Enroll",
+    steps: [
+      { type: "HCP_ENROLL_SUBMIT", prescriberNpi: "1234567893" },
+      { type: "VERIFY_SMS" },
+      { type: "VERIFY_OTP" },
+      { type: "CONFIRM_CONSENT" },
     ],
   },
 

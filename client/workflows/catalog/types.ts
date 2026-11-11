@@ -51,6 +51,8 @@ export interface CatalogVariant extends Draftable {
   steps?: CatalogStep[];
   /** The workflows that build this variant. Omit for every workflow. The palette greys it out elsewhere. */
   workflows?: string[];
+  /** The case ends before benefits investigation, so a request that uses this variant needs no `bi` fork. */
+  endsBeforeBi?: boolean;
 }
 
 export interface CatalogBlock extends Draftable {

@@ -81,6 +81,28 @@ export interface BrandIndication {
   rationale: string;
 }
 
+/** The copy and lists for the HCP enrollment web page (the `CoA_HCP_Enroll` scenario). Optional. */
+export interface BrandHcpSite {
+  /** The patient support program's name, for example the hub the HCP enrolls the patient in. */
+  programName: string;
+  /** The page title on the product page. */
+  headline: string;
+  /** A line under the headline on the product page. */
+  intro: string;
+  /** The Support Services page. */
+  support: { headline: string; intro: string; roles: { title: string; body: string }[] };
+  /** The services the HCP picks from. Only `enabled` ones continue into the form. */
+  services: { id: string; title: string; description: string; enabled: boolean }[];
+  /** The specialty pharmacies on the Rx step. */
+  pharmacies: { name: string; phone: string; fax: string }[];
+  /** The diagnosis choices on the clinical step. */
+  diagnoses: { code: string; label: string }[];
+  /** The drug strengths the HCP can prescribe. */
+  strengths: string[];
+  /** The line shown after the HCP submits. `{patient}` becomes the patient's first name. */
+  submitted: string;
+}
+
 export interface BrandConfig {
   /** Folder name under `brands/`. Equals the `BRAND` env value. */
   slug: string;
@@ -140,6 +162,8 @@ export interface BrandConfig {
      */
     specialtyPharmacy?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
   };
+  /** The HCP enrollment web page. Only a brand with an HCP enrollment demo needs it. */
+  hcpSite?: BrandHcpSite;
   chatbotIcon: string;
   favicon?: string;
 }

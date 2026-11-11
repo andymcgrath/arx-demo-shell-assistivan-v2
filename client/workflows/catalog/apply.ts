@@ -3,7 +3,7 @@ import { forksForScenario, choiceProblems } from "@/engine/workflow/forks";
 import type { BrandDemo } from "@/brand/schema";
 import { forksForFlow } from "../forks";
 import { ALL_SCENARIOS } from "../scenarios";
-import { editorProblems } from "./editor";
+import { editorProblems, scenarioHasBi } from "./editor";
 import { ghostCards, type DemoRequest } from "./request";
 
 /**
@@ -55,7 +55,7 @@ function candidates(r: DemoRequest) {
       order: want,
       missing: want.filter((k) => !have.includes(k)),
       extra: have.filter((k) => !want.includes(k)),
-      forksMatch: sameSet([...new Set(["bi", ...s.recipe!.forks])], forks),
+      forksMatch: sameSet([...new Set([...(scenarioHasBi(s.flowType) ? ["bi"] : []), ...s.recipe!.forks])], forks),
     };
   });
 }

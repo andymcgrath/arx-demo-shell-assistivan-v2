@@ -124,8 +124,16 @@ export function validateDemoRequest(input: unknown): RequestResult {
 
   const declared = declaredExits();
   const forkIds: string[] = [];
-  if (!Array.isArray(input.forks) || !input.forks.includes("bi")) problems.push('forks must include "bi": benefits investigation always runs first');
+  // BI runs first in every request, except one that uses a variant declared `endsBeforeBi` (the HCP enrollment).
+  const endsBeforeBi =
+    Array.isArray(input.cards) &&
+    input.cards.some((c) => {
+      if (!isObject(c) || c.kind !== "block") return false;
+      return !!CATALOG_BLOCKS[c.moduleId as ModuleId]?.variants?.find((v) => v.id === c.variantId)?.endsBeforeBi;
+    });
+  if (!Array.isArray(input.forks)) problems.push("forks must be a list");
   else {
+    if (!input.forks.includes("bi") && !endsBeforeBi) problems.push('forks must include "bi": benefits investigation always runs first');
     for (const f of input.forks) {
       if (typeof f !== "string" || !declared.has(f)) problems.push(`fork "${String(f)}" is not declared by any workflow`);
       else forkIds.push(f);

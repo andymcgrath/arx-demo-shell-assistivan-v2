@@ -67,6 +67,11 @@ workflowRegistry.registerWorkflow("CoA_Web_Copay", coassistMachine, {
   description: "A client-managed web page collects consent and details and calls benefit verification and prior authorization through the gateway. The patient taps Enroll and lands on the copay screen of the patient experience while the PA runs. No CRM.",
 });
 
+workflowRegistry.registerWorkflow("CoA_HCP_Enroll", coassistMachine, {
+  label: "HCP Enrollment (client web page)",
+  description: "An HCP enrolls the patient from the client's web page. The platform texts the patient, who follows the link into the patient experience and consents. The case ends at enrollment. No CRM.",
+});
+
 workflowRegistry.registerWorkflow("CoA_Coverage", coassistMachine, {
   label: "CoAssist Coverage (Medical Benefit)",
   description: "Commercial medical-benefit coverage — transfers to an outside provider (Advanced Diabetes Supply) after Benefits Investigation, no PA or in-house fulfillment.",

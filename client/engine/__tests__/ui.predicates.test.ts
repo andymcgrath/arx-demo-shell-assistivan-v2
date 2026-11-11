@@ -26,7 +26,7 @@ const isCoaFlow_dtpCopay = (flowType: string) => flowType === "CoA_DTP" || flowT
 
 // provider/index.tsx:2919
 // CoA_Web_Copay is in COASSIST_FLOWS but its source is `web`, so the provider portal does not treat it as CoAssist (no provider tab).
-const isCoA_providerAnyCoassist = (flowType: string) => flowType !== "CoA_Web_Copay" && COASSIST_FLOWS.includes(flowType as FlowType);
+const isCoA_providerAnyCoassist = (flowType: string) => flowType !== "CoA_Web_Copay" && flowType !== "CoA_HCP_Enroll" && COASSIST_FLOWS.includes(flowType as FlowType);
 
 // shell/DemoShell.tsx:635, crm/pages/Index.tsx:858, patient/pages/DeliveryDate.tsx:44 (and DeliveryAddress, DeliveryPayment, PADenied, PaApprovedSms)
 const isCoverageFlow = (flowType: string) => flowType === "CoA_Coverage";

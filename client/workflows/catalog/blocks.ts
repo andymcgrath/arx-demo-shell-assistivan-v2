@@ -43,6 +43,16 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
         ],
       },
       {
+        id: "hcp",
+        endsBeforeBi: true,
+        label: "HCP enrolls on the client's web page",
+        summary: "The HCP enrolls the patient on the client's own site with no prescription. The platform texts the patient, who taps the link, enters a one-time code, and consents. The case ends on the enrollment confirmation.",
+        apps: ["web", "crm", "patient"],
+        lane: "hcp",
+        trigger: "click",
+        steps: [step("HCP submits the enrollment on the client's site", "hcp", "click"), ...PATIENT_ONBOARDING],
+      },
+      {
         id: "no_rx",
         label: "Referral with no Rx",
         summary: "The HCP submits the enrollment with no prescription (the HCP orders the drug from their own wholesaler). The patient's text, code, and consent follow.",

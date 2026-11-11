@@ -77,13 +77,16 @@ export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
   };
 }
 
+/** Whether the scenario has a BI fork. The HCP enrollment ends before BI, so its draft and demos carry no pick for it. */
+export const scenarioHasBi = (flow: FlowType): boolean => forksForScenario(ALL_FORKS, flow).some((f) => f.id === "bi");
+
 /** A ready-made draft from a scenario's recipe, and a demo's picks over it. Undefined for a scenario with no recipe. */
 export function draftFromScenario(flow: FlowType, opts: { title: string; client?: string; choices?: Record<string, string> }): DemoRequest | undefined {
   const scenario = scenarioFor(flow);
   const recipe = scenario?.recipe;
   if (!scenario || !recipe) return undefined;
   const workflow: EditorWorkflow = recipe.source === "iassist" ? "iassist" : "coassist";
-  const forks = [...new Set(["bi", ...recipe.forks])];
+  const forks = [...new Set([...(scenarioHasBi(flow) ? ["bi"] : []), ...recipe.forks])];
   const choices = Object.fromEntries(Object.entries({ ...recipe.choices, ...scenario.choices, ...opts.choices }).filter(([k]) => forks.includes(k)));
   return withApps({
     ...blankDraft(workflow, opts.client),

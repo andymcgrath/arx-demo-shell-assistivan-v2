@@ -27,6 +27,8 @@ import { usePatientStore } from "@/store/patientStore";
 import SafetySummary from "./SafetySummary";
 import SiteHeader from "./SiteHeader";
 import Footer from "@/portals/patient/components/Footer";
+import HcpSite from "./hcp/HcpSite";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 const DOSES = ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
 const STEPS = ["intro", "hipaa", "patient", "rx", "results"] as const;
@@ -34,10 +36,11 @@ type Step = (typeof STEPS)[number];
 
 const primary = "inline-flex items-center justify-center gap-2 rounded-full bg-arx-action px-6 py-2.5 text-sm font-semibold text-arx-on-action disabled:opacity-40";
 
-/** Reset All bumps the nonce. The page remounts, so its step and its answers start over with the machine. */
+/** Reset All bumps the nonce. The page remounts, so its step and its answers start over with the machine. A scenario where an HCP enrolls the patient shows the HCP site. Every other web scenario shows the consumer page. */
 export default function WebPortal() {
   const resetNonce = useDemoStore((s) => s.resetNonce);
-  return <ConsumerWebPortal key={resetNonce} />;
+  const { workflowData } = usePersonaState("patient");
+  return scenarioFacts(workflowData.flowType).isHcpEnrollment ? <HcpSite key={resetNonce} /> : <ConsumerWebPortal key={resetNonce} />;
 }
 
 function ConsumerWebPortal() {

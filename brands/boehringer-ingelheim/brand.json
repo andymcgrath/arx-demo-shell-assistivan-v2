@@ -44,6 +44,12 @@
       "flow": "PrES_PAP",
       "label": "8. PrES PAP",
       "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
+    },
+    {
+      "id": "hcp-enroll",
+      "flow": "CoA_HCP_Enroll",
+      "label": "9. HCP Enrollment",
+      "description": "An HCP enrolls the patient from the Support Services page. The patient gets a text, follows the link and consents in the patient experience. The case ends at enrollment."
     }
   ],
   "manufacturer": {
@@ -97,5 +103,109 @@
     }
   },
   "chatbotIcon": "/brands/boehringer-ingelheim/1786424090136-482GS01.svg",
-  "favicon": "/brands/boehringer-ingelheim/1786424540808-apple-touch-icon.png"
+  "favicon": "/brands/boehringer-ingelheim/1786424540808-apple-touch-icon.png",
+  "hcpSite": {
+    "programName": "CareConnect4Me",
+    "headline": "The CareConnect4Me Program can help patients access {drug}",
+    "intro": "Prescription and patient support, from enrollment to the first fill.",
+    "support": {
+      "headline": "Support at every step, right from the start",
+      "intro": "Meet the dedicated CareConnect4Me team available to assist your patients and your practice.",
+      "roles": [
+        {
+          "title": "Patient Navigator",
+          "body": "Guides patients and practices through enrollment and the first fill."
+        },
+        {
+          "title": "Case Manager",
+          "body": "Coordinates insurance coverage, prior authorization and financial assistance."
+        },
+        {
+          "title": "Patient and Community Clinical Educator (PaCE)",
+          "body": "Educates enrolled patients and their caregivers in the home or by phone or video."
+        },
+        {
+          "title": "Reimbursement and Access Associate Director (RAAD)",
+          "body": "Supports your practice with coverage and access questions."
+        }
+      ]
+    },
+    "services": [
+      {
+        "id": "program_enrollment",
+        "title": "CareConnect4Me Enrollment",
+        "description": "Enroll your patient in the prescription and patient support program, with the Rx and your certification.",
+        "enabled": true
+      },
+      {
+        "id": "copay",
+        "title": "Copay Enrollment",
+        "description": "Helps commercially insured, eligible patients with out-of-pocket cost.",
+        "enabled": false
+      },
+      {
+        "id": "nurse_support",
+        "title": "Request Nurse Support from a PaCE",
+        "description": "Ask a clinical educator to support an enrolled patient.",
+        "enabled": false
+      },
+      {
+        "id": "upload_docs",
+        "title": "Upload Documentation",
+        "description": "Upload documentation for program enrollment or sharing with the patient's Case Manager.",
+        "enabled": false
+      }
+    ],
+    "pharmacies": [
+      {
+        "name": "Accredo Health Group Inc.",
+        "phone": "866-344-4874",
+        "fax": "888-445-4581"
+      },
+      {
+        "name": "CenterWell Pharmacy Inc.",
+        "phone": "855-425-3994",
+        "fax": "855-201-4396"
+      },
+      {
+        "name": "CVS/Caremark",
+        "phone": "800-506-5276",
+        "fax": "877-943-1000"
+      },
+      {
+        "name": "OPTUM Specialty Pharmacy",
+        "phone": "855-312-9074",
+        "fax": "877-746-9166"
+      },
+      {
+        "name": "Orsini",
+        "phone": "847-239-5646",
+        "fax": "847-423-6217"
+      },
+      {
+        "name": "Walgreens Specialty Pharmacy",
+        "phone": "800-445-3674",
+        "fax": "866-773-0143"
+      }
+    ],
+    "diagnoses": [
+      {
+        "code": "J84.112",
+        "label": "Idiopathic Pulmonary Fibrosis (IPF)"
+      },
+      {
+        "code": "J84.170",
+        "label": "Interstitial Lung Disease with progressive fibrotic phenotype (PF-ILD) in diseases classified elsewhere"
+      },
+      {
+        "code": "J84.10",
+        "label": "Pulmonary Fibrosis, Unspecified (only select this code if the patient is progressive)"
+      }
+    ],
+    "strengths": [
+      "9 mg",
+      "18 mg"
+    ],
+    "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent."
+  }
 }
