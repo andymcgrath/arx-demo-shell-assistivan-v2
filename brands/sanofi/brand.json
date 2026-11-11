@@ -8,6 +8,15 @@
       "flow": "CoA_Copay",
       "label": "1. CoAssist Copay",
       "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    },
+    {
+      "id": "sanofi-pap-web-arx-patient-solutions",
+      "flow": "CoA_Web_PAP",
+      "label": "2. PAP, web enrollment, ARx Patient Solutions Pharmacy",
+      "description": "The patient enrolls on Sanofi Patient Connection. Benefits verification finds no coverage, so the case moves to the patient assistance program. The patient confirms by text, completes the income form, and schedules a shipment. ARx Patient Solutions Pharmacy dispenses.",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
     }
   ],
   "showClientTab": false,
@@ -15,10 +24,13 @@
     "name": "Sanofi",
     "tagline": "TESTED, TRUSTED, TAKEN",
     "logo": {
-      "colors": "/brands/sanofi/sanofi-logo-color.svg",
-      "white": "/brands/sanofi/sanofi-logo-white.svg"
+      "colors": "/brands/sanofi/sanofi-logo-color.png",
+      "white": "/brands/sanofi/sanofi-logo-white.png"
     },
-    "support": { "label": "Support", "phone": "1-800-633-1610" },
+    "support": {
+      "label": "Support",
+      "phone": "(888) 847-4877"
+    },
     "legal": {
       "privacyUrl": "https://www.sanofi.com/en/sanofi-us-privacy-policies",
       "termsUrl": "#",
@@ -48,13 +60,15 @@
       "icd10Label": "Type 2 diabetes mellitus without complications"
     },
     "assets": {
-      "logoColor": "/brands/sanofi/lantus-logo-color.svg",
-      "logoWhite": "/brands/sanofi/lantus-logo-white.svg"
+      "logoColor": "/brands/sanofi/lantus-logo-color.png",
+      "logoWhite": "/brands/sanofi/lantus-logo-white.png"
     },
     "colors": {
       "brand": "#211756",
       "accent": "#e7dff2",
-      "surfaces": { "footer": "brand" },
+      "surfaces": {
+        "footer": "brand"
+      },
       "source": "https://www.lantus.com/"
     },
     "transferPartner": {
@@ -67,13 +81,13 @@
     },
     "specialtyPharmacy": {
       "name": "SanofiDirect Pharmacy",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zip": "",
-      "phone": ""
+      "address": "125 Discovery Commons, Suite 240",
+      "city": "Morristown",
+      "state": "NJ",
+      "zip": "07960",
+      "phone": "(888) 847-4800"
     }
   },
-  "chatbotIcon": "/brands/sanofi/chatbot.svg",
-  "favicon": "/brands/sanofi/favicon.png"
+  "chatbotIcon": "/brands/sanofi/chat-icon.svg",
+  "favicon": "/brands/sanofi/favicon.ico"
 }
