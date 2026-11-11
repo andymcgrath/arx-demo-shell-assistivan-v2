@@ -5210,18 +5210,6 @@
         ]
       },
       {
-        "after": "VERIFY_PAP_SMS",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
-      },
-      {
         "after": "VERIFY_PAP_OTP",
         "order": [
           "EA-14272",
@@ -11126,18 +11114,6 @@
             "lastUpdatedAgo": "today"
           }
         ]
-      },
-      {
-        "after": "VERIFY_PAP_SMS",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
       },
       {
         "after": "VERIFY_PAP_OTP",

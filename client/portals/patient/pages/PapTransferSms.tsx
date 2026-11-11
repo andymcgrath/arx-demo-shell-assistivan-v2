@@ -5,7 +5,7 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 
 // CoAssist hands a no-coverage case to the manufacturer's patient support program (the `pap_transfer` module, see
 // workflows/coassist/modules/pap_transfer.ts). Same single tap-through shape as ProviderTransferSms. The tap fires
-// VERIFY_PAP_TRANSFER_SMS, and the machine then sends the application update text on its own. derivePatientRoute
+// VERIFY_PAP_TRANSFER_SMS. The machine treats that tap as the application update too, so there is no second text. derivePatientRoute
 // moves the patient on, so the page navigates nowhere itself.
 export default function PapTransferSms() {
   const navigate = useNavigate();

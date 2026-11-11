@@ -1794,16 +1794,6 @@
         "rxShippedStepN": 6
       },
       {
-        "after": "VERIFY_PAP_SMS",
-        "labelSet": 0,
-        "done": "xxxx..",
-        "workflowStep": 4,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
         "after": "VERIFY_PAP_OTP",
         "labelSet": 0,
         "done": "xxxx..",
@@ -3919,16 +3909,6 @@
       },
       {
         "after": "VERIFY_PAP_TRANSFER_SMS",
-        "labelSet": 0,
-        "done": "xxxx..",
-        "workflowStep": 4,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
-        "after": "VERIFY_PAP_SMS",
         "labelSet": 0,
         "done": "xxxx..",
         "workflowStep": 4,

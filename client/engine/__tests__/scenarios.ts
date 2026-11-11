@@ -225,7 +225,8 @@ export const SCENARIOS: Scenario[] = [
       { type: "WEB_SUBMIT" },
       { type: "COMPLETE_BI" },
       { type: "VERIFY_PAP_TRANSFER_SMS" },
-      { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      // The transfer text's tap also confirms the application update, so there is no VERIFY_PAP_SMS.
+      { type: "VERIFY_PAP_OTP" },
       { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
       ...addressAndDate,
       ...fulfillment,
@@ -433,7 +434,8 @@ export const SCENARIOS: Scenario[] = [
       { type: "REFERRAL_RECEIVED" }, ...verifyIdentity,
       { type: "COMPLETE_BI" },
       { type: "VERIFY_PAP_TRANSFER_SMS" },
-      { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      // The transfer text's tap also confirms the application update, so there is no VERIFY_PAP_SMS.
+      { type: "VERIFY_PAP_OTP" },
       { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
       ...addressAndDate,
       ...fulfillment,

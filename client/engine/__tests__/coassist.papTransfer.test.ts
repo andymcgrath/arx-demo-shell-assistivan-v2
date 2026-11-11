@@ -57,9 +57,10 @@ describe("pap_transfer module", () => {
     t.send("VERIFY_PAP_TRANSFER_SMS");
     expect(t.data().papTransferSmsVerified).toBe(true);
     expect(t.can("VERIFY_PAP_TRANSFER_SMS")).toBe(false);
-    // The tap starts the application update text, with no agent.
-    expect(t.data().papSmsSent).toBe(true);
-    expect(t.route()).toBe("/pap-update-sms");
+    // The tap is the only text. It also confirms the application update, so the patient lands on the code screen.
+    expect(t.data()).toMatchObject({ papSmsSent: true, papSmsVerified: true });
+    expect(t.route()).toBe("/pap-update-otp");
+    expect(t.can("VERIFY_PAP_SMS")).toBe(false);
     t.actor.stop();
   });
 

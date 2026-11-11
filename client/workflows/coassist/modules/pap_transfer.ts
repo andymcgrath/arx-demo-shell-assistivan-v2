@@ -35,7 +35,12 @@ export const PAP_TRANSFER_RULES: CoaRule[] = [
     when: (d) => d.papTransferSmsSent && !d.papTransferSmsVerified,
     set: () => ({ papTransferSmsVerified: true }),
     emit: { portal: "patient", step: 9 },
-    // The patient support program texts the application update next. The income module's precondition guards it.
-    then: { trigger: "system", send: () => ({ type: "SEND_PAP_SMS" }) },
+    // The transfer text is the only text. Its tap also opens the application, so the income module's update text goes
+    // out and is confirmed in the same step, and the patient lands on the code screen. The income module's
+    // preconditions guard both events. This module never reads what follows (CLAUDE.md rule 5).
+    then: [
+      { trigger: "system", send: () => ({ type: "SEND_PAP_SMS" }) },
+      { trigger: "system", send: () => ({ type: "VERIFY_PAP_SMS" }) },
+    ],
   },
 ];

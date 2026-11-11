@@ -105,9 +105,10 @@
     {
       "event": "VERIFY_PAP_TRANSFER_SMS",
       "accepted": true,
-      "route": "/pap-update-sms",
+      "route": "/pap-update-otp",
       "changed": {
         "papSmsSent": true,
+        "papSmsVerified": true,
         "papTransferSmsVerified": true
       },
       "newEvents": [
@@ -120,17 +121,7 @@
           "eventType": "SEND_PAP_SMS",
           "portal": "crm",
           "workflowStep": 7
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_PAP_SMS",
-      "accepted": true,
-      "route": "/pap-update-otp",
-      "changed": {
-        "papSmsVerified": true
-      },
-      "newEvents": [
+        },
         {
           "eventType": "VERIFY_PAP_SMS",
           "portal": "patient",

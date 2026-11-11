@@ -32,7 +32,7 @@
   {
     "stage": 5,
     "ignored": [],
-    "route": "/pap-update-sms",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,

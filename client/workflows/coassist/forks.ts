@@ -139,7 +139,7 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       no_coverage_pap: [
         { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
         { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
-        { label: "Application Update Confirmed", events: [ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Application Code Confirmed", events: [ev("VERIFY_PAP_OTP", "patient")] },
         { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
         { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),
@@ -159,7 +159,7 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
         // No statuses on the event: the exit decides. A forced result would drop the assigned pharmacy (resolveBi).
         { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
         { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
-        { label: "Application Update Confirmed", events: [ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Application Code Confirmed", events: [ev("VERIFY_PAP_OTP", "patient")] },
         { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
         { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),
