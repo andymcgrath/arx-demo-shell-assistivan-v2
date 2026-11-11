@@ -4,10 +4,10 @@
   "title": "Sanofi Demo",
   "demos": [
     {
-      "id": "coa-copay",
-      "flow": "CoA_Copay",
-      "label": "1. CoAssist Copay",
-      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "1. CoAssist DTP",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
     },
     {
       "id": "coa-web-pap",
