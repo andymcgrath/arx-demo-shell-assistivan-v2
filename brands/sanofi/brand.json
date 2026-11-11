@@ -10,7 +10,7 @@
       "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
     },
     {
-      "id": "sanofi-pap-web-arx-patient-solutions",
+      "id": "coa-web-pap",
       "flow": "CoA_Web_PAP",
       "label": "2. PAP, web enrollment, ARx Patient Solutions Pharmacy",
       "description": "The patient enrolls on Sanofi Patient Connection. Benefits verification finds no coverage, so the case moves to the patient assistance program. The patient confirms by text, completes the income form, and schedules a shipment. ARx Patient Solutions Pharmacy dispenses.",
@@ -40,12 +40,13 @@
     "copyright": "©{{YEAR}} Sanofi. All Rights Reserved."
   },
   "program": {
-    "name": "LANTUS",
+    "name": "Patient Assistance Connection",
     "drugDisplayName": "LANTUS (insulin glargine)",
     "description": "100 units/ml",
     "dosageForm": "Subcutaneous Injection",
     "dosages": [
-      "10 mL multiple-dose vial, 3 mL single-patient-use SoloStar prefilled pen"
+      "10 mL multiple-dose vial",
+      "3 mL single-patient-use SoloStar prefilled pen"
     ],
     "ndc": "0088-2220-33",
     "paQuestions": [
