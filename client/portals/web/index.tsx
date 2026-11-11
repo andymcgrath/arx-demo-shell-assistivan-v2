@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { BRAND } from "@/brand";
 import { useDemoStore } from "@/store/demoStore";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
@@ -30,7 +31,8 @@ import Footer from "@/portals/patient/components/Footer";
 import HcpSite from "./hcp/HcpSite";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 
-const DOSES = ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
+/** The Rx step's options come from the brand file (`program.dosages`). A brand with none keeps the original four strengths. */
+const DOSES = BRAND.program.dosages?.length ? BRAND.program.dosages : ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
 const STEPS = ["intro", "hipaa", "patient", "rx", "results"] as const;
 type Step = (typeof STEPS)[number];
 

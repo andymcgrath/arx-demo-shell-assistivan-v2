@@ -49,9 +49,10 @@ describe("CoAssist recipes", () => {
         expect(r.forks).toEqual([]);
         continue;
       }
-      expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" ? ["bi"] : ["bi", "pa"]));
+      expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" ? ["bi"] : ["bi", "pa"]));
     }
     expect(COASSIST_RECIPES.CoA_PAP.forks).not.toContain("pa");
+    expect(COASSIST_RECIPES.CoA_Web_PAP.forks).not.toContain("pa");
   });
 
   it("DTP and Copay pass through the patient's pricing pick, and Copay through the copay enrollment", () => {

@@ -226,6 +226,28 @@
         "copay": false
       }
     },
+    "CoA_Web_PAP": {
+      "isCoaFlow_dtpCopay": false,
+      "isCoA_providerAnyCoassist": false,
+      "isCoverageFlow": false,
+      "isPapFlow_faxAuditOnly": false,
+      "isPapFlow_faxAuditAndPres": false,
+      "isFaxFlow": false,
+      "isIAssistFlow": false,
+      "isIAssist": false,
+      "isIAssistPapFlow_idOnly": false,
+      "isIAssistPapFlow_crmWithFreeDrug": false,
+      "isCopayWorkflow": false,
+      "isPres": false,
+      "isWideFlow": false,
+      "isCopayRetailFlow_byPricingOption": {
+        "null": false,
+        "dtp": false,
+        "retail": false,
+        "mail_order": false,
+        "copay": false
+      }
+    },
     "iAssist_PA_Approved": {
       "isCoaFlow_dtpCopay": false,
       "isCoA_providerAnyCoassist": false,

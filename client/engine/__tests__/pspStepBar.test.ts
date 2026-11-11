@@ -20,7 +20,7 @@ describe("pspStepBar", () => {
   it("applies to the scenarios whose recipe has pap_transfer, and no others", () => {
     const withBar = ALL_SCENARIOS.filter((s) => pspStepBar(s.flowType) !== null).map((s) => s.flowType);
     expect(withBar).toEqual(ALL_SCENARIOS.filter((s) => s.recipe?.modules.some((m) => m.id === "pap_transfer")).map((s) => s.flowType));
-    expect(withBar).toEqual(["CoA_PAP"]);
+    expect(withBar).toEqual(["CoA_PAP", "CoA_Web_PAP"]);
   });
 
   it("has the journey labels", () => {

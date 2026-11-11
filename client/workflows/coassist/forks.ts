@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty", "CoA_Web_PAP"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -123,6 +123,24 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
           events: [ev("OPEN_PA_FORM_LINK", "provider"), ev("VERIFY_PRESCRIBER", "provider", { npi: "1234567890", pin: "4321" }), ev("SUBMIT_PA_FORM", "provider")],
         },
         { label: "PA Approved, Patient Verified", events: [ev("APPROVE_PA", "crm"), ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient")] },
+        { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
+        ...fulfillment("Rx Processing"),
+      ],
+    },
+  },
+  // The web page's free drug program. The page submits, the Gateway releases BI, and the rest is PAP's: the transfer text, the
+  // application update text and code, the income form, then the address and date. No enrollment text, code, or consent.
+  CoA_Web_PAP: {
+    before: [
+      { label: "Patient Enrolled", events: [ev("WEB_SUBMIT", "patient")] },
+      { label: "Benefits Investigation", events: [] },
+    ],
+    exits: {
+      no_coverage_pap: [
+        { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
+        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
+        { label: "Application Update Confirmed", events: [ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
         { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),
       ],

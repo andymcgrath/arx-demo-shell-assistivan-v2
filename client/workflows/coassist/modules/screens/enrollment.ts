@@ -1,5 +1,6 @@
 /** Enrollment screens and route rules. Every CoAssist scenario has them. */
 import type { Screen } from "@/engine/workflow/screens";
+import { assignedWithoutPa } from "../shared";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 const WEB = { module: "enrollment", props: { variant: "web" } } as const;
@@ -8,6 +9,8 @@ const NOT_WEB = { not: WEB } as const;
 
 export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/", label: "Home", group: "", scope: NOT_WEB },
+  // The web variant has no Home, except where the free drug program uses it: the waiting screen and the program offer.
+  { path: "/", label: "Home", group: "", scope: [WEB, { module: "income_qualification" }] },
   { path: "/sms-message", label: "SMS Verification", group: "Enrollment", scope: NOT_WEB },
   { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true, scope: NOT_WEB },
   { path: "/otp-verification", label: "OTP Verification", group: "Enrollment", scope: NOT_WEB },
@@ -19,7 +22,7 @@ export const ENROLLMENT_SCREENS: Screen[] = [
 export const ENROLLMENT_ROUTES: CoaRoute[] = [
   { id: "enrollment.lock_screen", slot: "gate", path: "/lock-screen", when: (d) => d.enrollmentStatus === "none" },
   // The patient is on the client's web page while BI and the PA run, so the phone stays idle until the PA decides.
-  { id: "enrollment.web_waiting_on_page", slot: "gate", path: "/lock-screen", scope: WEB, when: (d) => d.paStatus === "none" || d.paStatus === "submitted" },
+  { id: "enrollment.web_waiting_on_page", slot: "gate", path: "/lock-screen", scope: WEB, when: (d) => (d.paStatus === "none" || d.paStatus === "submitted") && !assignedWithoutPa(d) },
   { id: "enrollment.sms", slot: "gate", path: "/sms-message", scope: NOT_WEB, when: (d) => d.enrollmentInviteSent && !d.smsVerified },
   { id: "enrollment.otp", slot: "gate", path: "/otp-verification", scope: NOT_WEB, when: (d) => d.smsVerified && !d.otpVerified },
   { id: "enrollment.confirm_details", slot: "gate", path: "/confirm-details", scope: NOT_WEB, when: (d) => d.otpVerified && d.consentStatus === "pending" },

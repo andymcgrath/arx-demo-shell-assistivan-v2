@@ -214,6 +214,24 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 
+  // ── CoAssist: Web PAP (a client web page starts the case, BI finds no coverage; the case is in the CRM) ──
+  // WEB_SUBMIT starts BI, the agent opens the BI stage in the CRM and it returns, and the free drug program takes over: transfer text, application
+  // update text and code, income form, address and date, then fulfillment. No enrollment text, code, or consent.
+  {
+    name: "coa-web-pap",
+    endsAt: "delivered",
+    flowType: "CoA_Web_PAP",
+    steps: [
+      { type: "WEB_SUBMIT" },
+      { type: "COMPLETE_BI" },
+      { type: "VERIFY_PAP_TRANSFER_SMS" },
+      { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
+      ...fulfillment,
+    ],
+  },
+
   // ── CoAssist: HCP enrollment (the HCP enrolls on the client's web page; the patient consents; the case ends) ──
   {
     name: "coa-hcp-enroll-patient-consents",

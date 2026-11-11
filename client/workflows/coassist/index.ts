@@ -1,7 +1,7 @@
 import { createWorkflowMachine } from "@/engine/workflow/createWorkflowMachine";
 import { COASSIST_FORKS } from "./forks";
 import { COASSIST_RULES } from "./rules";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_WEB_PAP } from "./scenarios";
 
 /** CoAssist: one machine for CoA_DTP, CoA_Copay, CoA_Web_Copay, CoA_Coverage, CoA_Medical_Transfer, and CoA_PAP. The scenario arrives as `input: { flowType }`. */
 export const coassistMachine = createWorkflowMachine({
@@ -18,5 +18,6 @@ export const coassistMachine = createWorkflowMachine({
     CoA_Medical_Transfer: COA_MEDICAL_TRANSFER,
     CoA_PAP: COA_PAP,
     CoA_APA_Specialty: COA_APA_SPECIALTY,
+    CoA_Web_PAP: COA_WEB_PAP,
   },
 });

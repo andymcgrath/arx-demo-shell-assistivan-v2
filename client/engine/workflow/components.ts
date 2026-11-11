@@ -137,6 +137,11 @@ export interface ScenarioRecipe {
   modules: ModuleSpec[];
   /** CRM panels the scenario shows. `benefits` is the pharmacy and medical benefits panel. */
   panels?: PanelId[];
+  /**
+   * A web-source scenario that has the client's CRM. The agent works the case there, so no Gateway tab holds the BI call:
+   * BI returns when the agent opens the BI stage, as in a CoAssist scenario. Absent means no CRM (Web Copay).
+   */
+  crm?: boolean;
 }
 
 /** CRM panels a recipe can turn on. */

@@ -31,6 +31,7 @@ const LADDERS = [
   { flowType: "CoA_Coverage", stages: [2, 3, 4, 5, 6, 7, 8], events: (stage: number) => coassistStageEvents("CoA_Coverage", stage) },
   { flowType: "CoA_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => coassistStageEvents("CoA_Medical_Transfer", stage) },
   { flowType: "CoA_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => coassistStageEvents("CoA_PAP", stage) },
+  { flowType: "CoA_Web_PAP", stages: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], events: (stage: number) => coassistStageEvents("CoA_Web_PAP", stage) },
   { flowType: "iAssist_PA_Approved", stages: [2, 3, 4, 5, 6, 7], events: (stage: number) => iassistStageEvents("iAssist_PA_Approved", stage) },
   { flowType: "iAssist_PAP", stages: [2, 3, 4, 5, 6], events: (stage: number) => iassistStageEvents("iAssist_PAP", stage) },
   { flowType: "iAssist_Medical_Transfer", stages: [2, 3, 4, 5], events: (stage: number) => iassistStageEvents("iAssist_Medical_Transfer", stage) },
@@ -93,6 +94,7 @@ const KNOWN_GAPS: Record<string, string[]> = {
   // `pharmacy_transfer` needs `pharmacy_selection:assigned`, which this recipe has, so it is pickable here too. No demo uses it.
   CoA_Medical_Transfer: ["pharmacy_covered", "pharmacy_transfer"],
   CoA_PAP: [],
+  CoA_Web_PAP: [],
   CoA_APA_Specialty: [],
   // No `bi` fork: the case ends at enrollment.
   CoA_HCP_Enroll: [],
@@ -106,7 +108,7 @@ describe("stage ladder coverage of the bi fork", () => {
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
       const hasRungs = (id: string) =>
-        flowType === "CoA_Coverage" || flowType === "CoA_PAP" || flowType === "CoA_APA_Specialty"
+        flowType === "CoA_Coverage" || flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" || flowType === "CoA_APA_Specialty"
           ? !!fork.exits.find((e) => e.id === id)?.stages?.length
           : isTransferScenario(flowType)
           ? TRANSFER_LADDER_EXITS.includes(id)

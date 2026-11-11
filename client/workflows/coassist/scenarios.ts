@@ -2,7 +2,7 @@ import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { BRAND } from "@/brand";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE, COA_WEB_PAP_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -147,5 +147,18 @@ export const COA_APA_SPECIALTY: ScenarioDefinition<CoassistContent> = {
   },
 };
 
+/**
+ * The client's web page starts the case and BI finds no coverage. The case transfers to the patient support program, and the
+ * `transferPharmacy` dispenses (the brand file's `program.transferPartner`). Intake is `erx`: the web page holds what BI needs.
+ * The agent works the case in the CRM, so BI returns when the agent opens the BI stage.
+ */
+export const COA_WEB_PAP: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_Web_PAP",
+  intake: "erx",
+  choices: { bi: "no_coverage_pap" },
+  recipe: COA_WEB_PAP_RECIPE,
+  content: COA_PAP.content,
+};
+
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_Web_PAP"];

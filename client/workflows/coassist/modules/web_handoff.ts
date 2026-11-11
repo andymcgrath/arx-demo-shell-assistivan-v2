@@ -44,7 +44,8 @@ export const WEB_HANDOFF_RULES: CoaRule[] = [
     id: "web_handoff.view_gateway",
     on: "VIEW_GATEWAY",
     scope: WEB,
-    when: (d) => d.biStatus === "running" && !d.gatewayViewed,
+    // A scenario with a CRM has no Gateway tab. The agent opens the BI stage instead (spine.view_stage.bi).
+    when: (d, _e, s) => !s.recipe?.crm && d.biStatus === "running" && !d.gatewayViewed,
     set: () => ({ gatewayViewed: true }),
     // COMPLETE_BI then sends SUBMIT_PA on its own (spine.ts), and the PA decides on its own.
     then: { trigger: "system", id: "web-bi", after: WEB_BI_MS, send: () => ({ type: "COMPLETE_BI" }) },

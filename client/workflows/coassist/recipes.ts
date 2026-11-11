@@ -166,6 +166,30 @@ export const COA_PAP_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * The client's web page starts the case (source `web`) and the patient has no coverage. The page collected consent, the
+ * patient's details, and the prescriber's NPI, then called benefit verification through the gateway. BI finds nothing,
+ * so the case transfers to the patient support program: the patient gets the transfer text, then the application update
+ * text and code, then the income form. An assigned pharmacy dispenses and the patient schedules the shipment.
+ * The tail is PAP's. The `web` enrollment variant has no SMS, one-time code, or consent step.
+ * The case lands in the client's CRM (`crm`). There is no Gateway tab: the agent opens the BI stage and the result returns.
+ */
+export const COA_WEB_PAP_RECIPE: ScenarioRecipe = {
+  source: "web",
+  crm: true,
+  forks: ["bi"],
+  choices: { bi: "no_coverage_pap" },
+  panels: ["benefits"],
+  modules: [
+    { id: "enrollment", props: { variant: "web" } },
+    { id: "pap_transfer" },
+    { id: "income_qualification" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "scheduling" },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * The composition proof (step 2.6). Commercial coverage, PA approved, the patient's Retail pick, a pharmacy the
  * patient selects, and the Rx handed over: the order tracker shows it. No `scheduling` and no `payment`.
  *
@@ -194,4 +218,5 @@ export const COASSIST_RECIPES = {
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
   CoA_PAP: COA_PAP_RECIPE,
   CoA_APA_Specialty: COA_APA_SPECIALTY_RECIPE,
+  CoA_Web_PAP: COA_WEB_PAP_RECIPE,
 } as const;

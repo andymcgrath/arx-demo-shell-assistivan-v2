@@ -1328,13 +1328,6 @@
             "label": "Verify Payment",
             "kind": "primary",
             "enabled": false
-          },
-          {
-            "stage": "case",
-            "id": "enroll",
-            "label": "Enroll Patient",
-            "kind": "primary",
-            "enabled": true
           }
         ]
       },
@@ -1430,23 +1423,88 @@
       }
     ]
   },
-  "coa-hcp-enroll-patient-consents": {
-    "flowType": "CoA_HCP_Enroll",
+  "coa-web-pap": {
+    "flowType": "CoA_Web_PAP",
     "entries": [
       {
         "after": "(start)",
+        "actions": []
+      },
+      {
+        "after": "WEB_SUBMIT",
         "actions": [
           {
-            "stage": "case",
-            "id": "enroll",
-            "label": "Enroll Patient",
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
             "kind": "primary",
             "enabled": true
           }
         ]
       },
       {
-        "after": "HCP_ENROLL_SUBMIT",
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "coa-hcp-enroll-patient-consents": {
+    "flowType": "CoA_HCP_Enroll",
+    "entries": [
+      {
+        "after": "(start)",
         "actions": []
       }
     ]

@@ -47,7 +47,7 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 /** The flows with a CoAssist stage-jump ladder. */
-export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_HCP_Enroll" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP" | "CoA_APA_Specialty";
+export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_HCP_Enroll" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP" | "CoA_APA_Specialty" | "CoA_Web_PAP";
 
 /**
  * The web scenario's rungs. The client page's submit starts BI. Stage 4 is the Gateway opened (BI back, PA approved), the
@@ -99,7 +99,8 @@ export function coassistStageEvents(
   choices: Record<string, string> = {},
 ): LadderEvent[] {
   if (scenarioFacts(flowType).isHcpEnrollment) return hcpStageEvents(stage);
-  if (scenarioFacts(flowType).isWebSource) return webStageEvents(stage);
+  // A web scenario with its own rungs after the `bi` fork (Web PAP) reads them from the fork. Web Copay keeps the hand-built ones.
+  if (scenarioFacts(flowType).isWebSource && !biForkFor(flowType).stagesBefore) return webStageEvents(stage);
   if (isTransferScenario(flowType)) return transferStageEvents(stage);
   // A scenario with its own rungs after the `bi` fork reads them from the fork.
   const biFork = biForkFor(flowType);

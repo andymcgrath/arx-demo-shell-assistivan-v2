@@ -67,7 +67,9 @@ const BUTTONS: ButtonDef[] = [
   },
   { stage: "CO-14281", id: "cash_offer.verify", label: "Verify Payment", kind: "primary", event: "VERIFY_PAYMENT", shown: "always" },
   { stage: "TP-14277", id: "triage.dispatch", label: "Triage to Pharmacy", kind: "primary", event: "FILL_RX", shown: "when_enabled" },
-  { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled" },
+  { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled",
+    // A web-source case is enrolled by the client's web page (WEB_SUBMIT), so the agent has nothing to enroll.
+    appliesTo: (d) => !scenarioFacts(d.flowType).isWebSource },
   { stage: "PS-14278", id: "pharmacy.received", label: "Mark as Received at Pharmacy", kind: "primary", event: "READY_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.shipped", label: "Mark as Shipped", kind: "primary", event: "SHIP_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.delivered", label: "Mark as Delivered", kind: "success", event: "DELIVER_RX", shown: "when_enabled" },
