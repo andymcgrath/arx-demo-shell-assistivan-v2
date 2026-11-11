@@ -22,6 +22,7 @@ import ManufacturerLogo from "@/portals/patient/components/brand/ManufacturerLog
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import Hero from "./Hero";
 import { SHOW_PATIENT_EVENT, START_OVER_EVENT } from "./events";
+import { coverageOutcome, type CoverageOutcome } from "./outcome";
 import ProviderSearch, { isNpi, type Provider } from "./ProviderSearch";
 import PatientForm, { GENDERS } from "./PatientForm";
 import { usePatientStore } from "@/store/patientStore";
@@ -155,7 +156,7 @@ function ConsumerWebPortal() {
           </section>
         )}
 
-        {step === "results" && <Results ready={w.paStatus === "approved"} benefitsFound={w.biStatus === "complete"} />}
+        {step === "results" && <Results outcome={coverageOutcome(w)} benefitsFound={w.biStatus === "complete"} />}
       </main>
 
       {step === "intro" && <SafetySummary />}
@@ -170,8 +171,9 @@ function ConsumerWebPortal() {
  * summary is ready, the page says so and offers the way forward. It reads the machine, so coming back to this page
  * from the Patient Experience shows the right state, never a dead end.
  */
-function Results({ ready, benefitsFound }: { ready: boolean; benefitsFound: boolean }) {
+function Results({ outcome, benefitsFound }: { outcome: CoverageOutcome; benefitsFound: boolean }) {
   const heading = useRef<HTMLHeadingElement>(null);
+  const ready = outcome !== "checking";
   // Move focus to the new heading when the status changes, so a screen reader hears it.
   useEffect(() => {
     if (ready) heading.current?.focus();
@@ -191,13 +193,16 @@ function Results({ ready, benefitsFound }: { ready: boolean; benefitsFound: bool
           {ready ? "Your coverage check is done" : "Checking your coverage"}
         </h1>
         <p className="text-sm text-arx-neutral-800">
-          {ready
+          {outcome === "summary"
             ? `We checked your ${PROGRAM.name} benefits. Your summary is ready.`
-            : benefitsFound
-              ? "We found your benefits. We are finishing one last step."
-              : `We are checking your ${PROGRAM.name} benefits with your insurance. This usually takes about a minute. You can keep this page open.`}
+            : outcome === "referred"
+              ? `We did not find insurance coverage for ${PROGRAM.drugDisplayName}. We sent you a text message about getting your medication through ${PROGRAM.name}.`
+              : benefitsFound
+                ? "We found your benefits. We are finishing one last step."
+                : `We are checking your ${PROGRAM.name} benefits with your insurance. This usually takes about a minute. You can keep this page open.`}
         </p>
-        {ready && (
+        {/* A referral ends on this page. The next step is a text on the patient's phone, so the page offers no link to it. */}
+        {outcome === "summary" && (
           <button
             type="button"
             className={`${primary} mt-5 w-full justify-center`}
@@ -206,12 +211,17 @@ function Results({ ready, benefitsFound }: { ready: boolean; benefitsFound: bool
             View my coverage summary <ArrowRight className="h-4 w-4" />
           </button>
         )}
-        {ready && !confirming && (
+        {outcome === "referred" && (
+          <button type="button" className={`${primary} mt-5 w-full justify-center`} onClick={() => window.dispatchEvent(new Event(START_OVER_EVENT))}>
+            Start over
+          </button>
+        )}
+        {outcome === "summary" && !confirming && (
           <button type="button" className="mt-4 text-sm font-semibold text-arx-action underline" onClick={() => setConfirming(true)}>
             Start a new check
           </button>
         )}
-        {ready && confirming && (
+        {outcome === "summary" && confirming && (
           <div className="mt-4 rounded-lg bg-arx-neutral-100 p-4 text-left text-sm" role="alertdialog" aria-label="Start a new check">
             <p className="font-semibold">Start a new coverage check?</p>
             <p className="mt-1 text-xs text-arx-body-copy">Your current results will be replaced.</p>

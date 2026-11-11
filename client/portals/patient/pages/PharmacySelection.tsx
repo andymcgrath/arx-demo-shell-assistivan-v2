@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Store } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
+import { usePatientBack } from "@/hooks/usePatientBack";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import type { Pharmacy } from "@/engine/types";
 
@@ -54,6 +55,7 @@ const RETAIL_PHARMACIES: Pharmacy[] = [
 
 export default function PharmacySelection() {
   const navigate = useNavigate();
+  const goBack = usePatientBack();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
 
@@ -83,7 +85,7 @@ export default function PharmacySelection() {
           {/* Header band */}
           <div className="px-5 pt-5 pb-4 border-b border-arx-borders">
             <button
-              onClick={() => navigate("/benefit-pricing")}
+              onClick={goBack}
               className="flex items-center gap-1 text-xs font-semibold text-arx-body-copy hover:text-arx-primary transition-colors mb-2"
             >
               <ArrowLeft className="w-3.5 h-3.5" />

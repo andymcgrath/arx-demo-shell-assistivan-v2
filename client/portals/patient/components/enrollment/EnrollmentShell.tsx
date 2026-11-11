@@ -1,4 +1,4 @@
-import { useNavigate } from "@/lib/portalRouter";
+import { usePatientBack } from "@/hooks/usePatientBack";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -25,14 +25,14 @@ export default function EnrollmentShell({
   children,
   wide = false,
 }: EnrollmentShellProps) {
-  const navigate = useNavigate();
+  const goBack = usePatientBack();
 
   return (
     <div className={`mx-auto px-5 ${wide ? "max-w-3xl py-10" : "max-w-lg py-3"}`}>
       {/* Back button */}
       <div className="flex items-center mb-3">
         <button
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="w-9 h-9 rounded-full bg-arx-sky/40 flex items-center justify-center hover:bg-arx-primary hover:text-arx-on-primary transition-colors text-arx-link"
           aria-label="Go back"
         >

@@ -17,6 +17,7 @@
  * switching a panel from Patient to Analytics shows the same workflow step.
  */
 import { SHOW_PATIENT_EVENT, START_OVER_EVENT } from "@/portals/web/events";
+import { undoLastStep } from "@/hooks/usePatientBack";
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
@@ -222,7 +223,8 @@ function getPortals(flowType: string) {
       insights: "Analytics",
       field: "Field",
       rules: "Rules",
-      web: "Client web page",
+      // The client's own page, so the tab carries the manufacturer's name.
+      web: BRAND.manufacturer.name || "Client web page",
       gateway: "Gateway",
     };
     return { ...p, id: p.id as PortalId, label: baseLabels[p.id] };
@@ -769,11 +771,7 @@ export default function DemoShell() {
   navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
   }
 
-  const handleUndo = () => {
-    actor.send({ type: 'UNDO' });
-    // Tell the patient portal to re-sync its screen, even from a sticky one.
-    useDemoStore.getState().markUndo();
-  };
+  const handleUndo = () => undoLastStep(actor as any);
 
   const showSelector = layout !== "1up";
 

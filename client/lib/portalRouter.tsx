@@ -30,9 +30,28 @@ import {
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
+export interface NavOptions {
+  /** Swap the current entry instead of adding one. */
+  replace?: boolean;
+  /** Forget the history and start again at `to`. A Reset or an Undo uses it. */
+  reset?: boolean;
+}
+
 interface PortalNavCtx {
   path: string;
-  navigate: (to: string, opts?: { replace?: boolean }) => void;
+  /** A path goes there. A negative number goes back that many entries, like react-router's `navigate(-1)`. */
+  navigate: (to: string | number, opts?: NavOptions) => void;
+}
+
+const MAX_HISTORY = 50;
+
+/** The history after one navigation. Going back never leaves the first entry. Pure, so a test can read it. */
+export function nextHistory(stack: string[], to: string | number, opts: NavOptions = {}): string[] {
+  if (typeof to === "number") return to < 0 ? stack.slice(0, Math.max(1, stack.length + to)) : stack;
+  if (opts.reset) return [to];
+  if (opts.replace) return [...stack.slice(0, -1), to];
+  if (stack[stack.length - 1] === to) return stack;
+  return [...stack, to].slice(-MAX_HISTORY);
 }
 
 const Ctx = createContext<PortalNavCtx | null>(null);
@@ -52,9 +71,10 @@ export function PortalRouter({
   children: ReactNode;
   initialPath?: string;
 }) {
-  const [path, setPath] = useState(initialPath);
-  const navigate = useCallback((to: string) => {
-    setPath(to);
+  const [history, setHistory] = useState<string[]>([initialPath]);
+  const path = history[history.length - 1];
+  const navigate = useCallback((to: string | number, opts?: NavOptions) => {
+    setHistory((h) => nextHistory(h, to, opts));
     // Scroll to top on navigation within the portal
     requestAnimationFrame(() => {
       // Try scrolling the main element (patient portal pages)

@@ -84,6 +84,7 @@ import ApprovedContactPhysician from "./pages/ApprovedContactPhysician";
 import CashOfferSms from "./pages/CashOfferSms";
 import ProviderTransferSms from "./pages/ProviderTransferSms";
 import PapTransferSms from "./pages/PapTransferSms";
+import { PHONE_SCREENS } from "./phoneScreens";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
@@ -139,11 +140,13 @@ function StateDrivenNav() {
     const data = actor.getSnapshot().context.workflowData;
     if (!isReset && isStaying(data.flowType, pathnameRef.current)) return;
 
-    navigate(targetRoute, { replace: true });
+    // A Reset or an Undo starts the history again. Any other move adds an entry, so Back returns to the screen before.
+    navigate(targetRoute, isReset ? { reset: true } : undefined);
   }, [targetRoute, navigate, resetNonce, undoNonce, actor]);
 
   return null;
 }
+
 
 function PatientRoutes() {
   const ctx = useChatContext();
@@ -174,7 +177,7 @@ function PatientRoutes() {
   // list originally, which is why it rendered sandwiched between the white
   // Header/Footer instead of full-screen black like every other SMS-bubble
   // screen (AppointmentConfirmation.tsx).
-  const showHeaderFooter = pathname !== "/lock-screen" && pathname !== "/sms-message" && pathname !== "/pa-approved-sms" && pathname !== "/pap-update-sms" && pathname !== "/pes-pap-update-sms" && pathname !== "/appointment-confirmation" && pathname !== "/cash-offer-sms" && pathname !== "/provider-transfer-sms";
+  const showHeaderFooter = !PHONE_SCREENS.has(pathname);
 
   const rootRef = useRef<HTMLDivElement>(null);
   useScrollTopOnChange(rootRef, pathname);
