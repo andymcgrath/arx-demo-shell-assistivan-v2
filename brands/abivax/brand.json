@@ -4,10 +4,42 @@
   "title": "Abivax Demo",
   "demos": [
     {
+      "id": "coa-dtp",
+      "flow": "CoA_DTP",
+      "label": "1. CoAssist DTP",
+      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+    },
+    {
+      "id": "coa-copay",
+      "flow": "CoA_Copay",
+      "label": "2. CoAssist Copay",
+      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+    },
+    {
       "id": "erx-assistance",
       "flow": "CoA_APA_Assistance",
-      "label": "eRx, prior authorization, then financial assistance",
+      "label": "3. CoAssist APA",
       "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program."
+    },
+    {
+      "id": "web-pres",
+      "flow": "CoA_Web_Audience",
+      "label": "4. Web page, PrES (HCP enrolls)",
+      "description": "The HCP enrolls the patient on the client's web page. The patient gets the text, one-time code and consent. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
+      "choices": {
+        "audience": "hcp",
+        "bi": "no_coverage_pap"
+      }
+    },
+    {
+      "id": "web-pes",
+      "flow": "CoA_Web_Audience",
+      "label": "5. Web page, PES (patient enrolls)",
+      "description": "The patient enters the prescription on the client's web page, which collects consent. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
+      "choices": {
+        "audience": "patient",
+        "bi": "no_coverage_pap"
+      }
     }
   ],
   "showClientTab": false,
@@ -35,7 +67,9 @@
     "drugDisplayName": "Obefazimod (microRNA-124 Enhancer)",
     "description": "Once daily",
     "dosageForm": "Capsule",
-    "dosages": ["25 mg"],
+    "dosages": [
+      "25 mg"
+    ],
     "indication": {
       "name": "Ulcerative Colitis",
       "icd10": "K51.90",
@@ -61,12 +95,12 @@
       "embedUrl": ""
     },
     "transferPartner": {
-      "name": "",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zip": "",
-      "phone": ""
+      "name": "ARx Patient Solutions Pharmacy",
+      "address": "4500 W 107th St",
+      "city": "Overland Park",
+      "state": "KS",
+      "zip": "66207-4025",
+      "phone": "(866) 930-4146"
     },
     "specialtyPharmacy": {
       "name": "",
@@ -84,5 +118,102 @@
     }
   },
   "chatbotIcon": "/brands/abivax/chat-icon.svg",
-  "favicon": "/brands/abivax/favicon.svg"
+  "favicon": "/brands/abivax/favicon.svg",
+  "hcpSite": {
+    "programName": "Abivax Patient Support",
+    "headline": "The {drug} support program can help your patients get started",
+    "intro": "Prescription and patient support, from enrollment to the first fill.",
+    "support": {
+      "headline": "Support at every step, right from the start",
+      "intro": "Meet the team available to assist your patients and your practice.",
+      "roles": [
+        {
+          "title": "Patient Navigator",
+          "body": "Guides patients and practices through enrollment and the first fill."
+        },
+        {
+          "title": "Case Manager",
+          "body": "Coordinates insurance coverage, prior authorization and financial assistance."
+        }
+      ]
+    },
+    "services": [
+      {
+        "id": "patient_enrollment",
+        "title": "Abivax Patient Enrollment",
+        "description": "Enroll your patient in the prescription and patient support program, with the Rx and your certification.",
+        "enabled": true
+      },
+      {
+        "id": "copay",
+        "title": "Copay Enrollment",
+        "description": "Helps commercially insured, eligible patients with out-of-pocket cost.",
+        "enabled": false
+      },
+      {
+        "id": "pap",
+        "title": "Patient Assistance Program",
+        "description": "Free drug for eligible patients with no coverage.",
+        "enabled": false
+      },
+      {
+        "id": "upload_docs",
+        "title": "Upload Documentation",
+        "description": "Upload documentation for program enrollment or for the patient's Case Manager.",
+        "enabled": false
+      }
+    ],
+    "pharmacies": [
+      {
+        "name": "Specialty Pharmacy A",
+        "phone": "800-555-0101",
+        "fax": "800-555-0102"
+      },
+      {
+        "name": "Specialty Pharmacy B",
+        "phone": "800-555-0103",
+        "fax": "800-555-0104"
+      }
+    ],
+    "diagnoses": [
+      {
+        "code": "K51.90",
+        "label": "Ulcerative colitis, unspecified, without complications"
+      }
+    ],
+    "strengths": [
+      "25 mg"
+    ],
+    "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent."
+  },
+  "patientSite": {
+    "headline": "What would you like to do today?",
+    "intro": "Select a service to begin.",
+    "services": [
+      {
+        "id": "patient_authorization",
+        "title": "Patient Authorization",
+        "description": "Authorize the use of your health information, share your prescription and check your coverage.",
+        "enabled": true
+      },
+      {
+        "id": "copay",
+        "title": "Copay Enrollment",
+        "description": "Helps commercially insured, eligible patients with out-of-pocket cost.",
+        "enabled": false
+      },
+      {
+        "id": "pap",
+        "title": "Patient Assistance Program",
+        "description": "Free drug for eligible patients with no coverage.",
+        "enabled": false
+      },
+      {
+        "id": "upload_docs",
+        "title": "Upload Documentation",
+        "description": "Upload documentation for program enrollment.",
+        "enabled": false
+      }
+    ]
+  }
 }

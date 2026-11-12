@@ -10,7 +10,7 @@
  * Which screen shows is local, except the last one: it reads BI from the machine, so it waits for the gateway.
  * Nothing here calls a real service. All data is representative.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { BRAND } from "@/brand";
@@ -31,6 +31,8 @@ import SiteHeader from "./SiteHeader";
 import Footer from "@/portals/patient/components/Footer";
 import HcpSite from "./hcp/HcpSite";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import AudienceSite, { AUDIENCE_SUBMIT } from "./audience/AudienceSite";
+import PatientServices from "./audience/PatientServices";
 
 /** The Rx step's options come from the brand file (`program.dosages`). A brand with none keeps the original four strengths. */
 const DOSES = BRAND.program.dosages?.length ? BRAND.program.dosages : ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
@@ -43,10 +45,19 @@ const primary = "inline-flex items-center justify-center gap-2 rounded-full bg-a
 export default function WebPortal() {
   const resetNonce = useDemoStore((s) => s.resetNonce);
   const { workflowData } = usePersonaState("patient");
-  return scenarioFacts(workflowData.flowType).isHcpEnrollment ? <HcpSite key={resetNonce} /> : <ConsumerWebPortal key={resetNonce} />;
+  const facts = scenarioFacts(workflowData.flowType);
+  // The audience scenario opens on the audience choice. The patient's page then starts on a services list and sends its own event.
+  if (facts.hasAudienceFork) {
+    return <AudienceSite key={resetNonce} patientPage={<ConsumerWebPortal submitEvent={AUDIENCE_SUBMIT} intro={(next) => <PatientServices onContinue={next} />} />} />;
+  }
+  return facts.isHcpEnrollment ? <HcpSite key={resetNonce} /> : <ConsumerWebPortal key={resetNonce} />;
 }
 
-function ConsumerWebPortal() {
+/**
+ * `submitEvent` is the event the Rx step sends (WEB_SUBMIT unless the scenario has its own). `intro` replaces the hero on the
+ * first step, for a page that opens on a services list.
+ */
+function ConsumerWebPortal({ submitEvent = "WEB_SUBMIT", intro }: { submitEvent?: string; intro?: (start: () => void) => ReactNode }) {
   const dispatch = useWorkflowDispatch();
   const { workflowData: w } = usePersonaState("patient");
   const { data: patient } = usePatientCase();
@@ -75,7 +86,7 @@ function ConsumerWebPortal() {
   useScrollTopOnChange(rootRef, step);
 
   function submitRx() {
-    dispatch("WEB_SUBMIT", { portal: "patient", prescriberNpi: npi });
+    dispatch(submitEvent, { portal: "patient", prescriberNpi: npi });
     setStep("results");
   }
 
@@ -85,7 +96,7 @@ function ConsumerWebPortal() {
       <div className="flex min-h-full flex-col">
       <SiteHeader />
 
-      {step === "intro" && <Hero onStart={next} />}
+      {step === "intro" && (intro ? intro(next) : <Hero onStart={next} />)}
 
       <main className={step === "intro" ? "hidden" : "flex-1 px-5 py-6"}>
         {n > 0 && step !== "results" && <p className="mb-2 text-right text-xs font-semibold text-arx-neutral-800">{n} / 4</p>}

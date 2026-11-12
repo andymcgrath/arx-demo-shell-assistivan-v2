@@ -26,6 +26,7 @@ const FLOWS: { id: FlowType; label: string }[] = [
   { id: "CoA_Medical_Transfer", label: "CoAssist medical transfer" },
   { id: "CoA_PAP", label: "CoAssist free drug program" },
   { id: "CoA_Web_PAP", label: "CoAssist Web PAP (client web page)" },
+  { id: "CoA_Web_Audience", label: "CoAssist web page, HCP or patient starts" },
   { id: "CoA_APA_Specialty", label: "CoAssist APA, specialty pharmacy" },
   { id: "CoA_APA_Assistance", label: "CoAssist APA, financial assistance" },
   { id: "PrES_PAP", label: "PrES PAP (legacy)" },

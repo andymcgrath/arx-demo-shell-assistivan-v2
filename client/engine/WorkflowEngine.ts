@@ -427,6 +427,8 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
 
     switch (event.event_type) {
       case 'REFERRAL_RECEIVED':
+      // The web page's enrollment (the `audience` variant) is the referral for a case that starts there.
+      case 'AUDIENCE_SUBMIT':
         emails.push({
           ...base,
           subject: `New Patient Enrolled - ${patientName}`,

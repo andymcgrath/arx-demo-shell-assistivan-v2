@@ -17,7 +17,8 @@ import { primaryBtn } from "./fields";
 import { SiteFooter, SiteHeader, type HcpPage } from "./SiteChrome";
 import { ProductPage, ServicesPage, SupportPage } from "./SitePages";
 
-export default function HcpSite() {
+/** `submitEvent` is the event the form sends. The HCP enrollment scenario uses the default. The audience scenario passes its own. */
+export default function HcpSite({ submitEvent = "HCP_ENROLL_SUBMIT" }: { submitEvent?: string }) {
   const dispatch = useWorkflowDispatch();
   const navigate = useNavigate();
   const { workflowData: w } = usePersonaState("patient");
@@ -31,7 +32,7 @@ export default function HcpSite() {
   useScrollTopOnChange(rootRef, page);
 
   function submit(npi: string) {
-    dispatch("HCP_ENROLL_SUBMIT", { portal: "patient", prescriberNpi: npi });
+    dispatch(submitEvent, { portal: "patient", prescriberNpi: npi });
     setPage("submitted");
   }
 

@@ -1,6 +1,6 @@
 import type { FlowType, WorkflowData } from "@/engine/types";
 import type { ForkDefinition, ForkStage, StageEvent } from "@/engine/workflow/types";
-import { forkApplies } from "@/engine/workflow/forks";
+import { exitFor, forkApplies } from "@/engine/workflow/forks";
 import { biFork } from "../shared/bi";
 
 /**
@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_Web_PAP"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_Web_PAP", "CoA_Web_Audience"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -64,7 +64,7 @@ export const BI_FORK: ForkDefinition = biFork({
  * The stage-jump rungs after the `bi` fork, owned by the scenario and keyed by exit id. A scenario with no table
  * here has no rungs for the fork (DTP and Copay keep their hand-built ladder in shell/coassistLadders.ts).
  */
-const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<string, ForkStage[]> }>> = {
+const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; beforeBy?: Record<string, ForkStage[]>; exits: Record<string, ForkStage[]> }>> = {
   CoA_Coverage: {
     before: [
       { label: "Referral Received", events: [] },
@@ -159,6 +159,35 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       { label: "Patient Enrolled", events: [ev("WEB_SUBMIT", "patient")] },
       { label: "Benefits Investigation", events: [] },
     ],
+    exits: {
+      no_coverage_pap: [
+        { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
+        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
+        { label: "Application Code Confirmed", events: [ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
+        { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
+        ...fulfillment("Rx Processing"),
+      ],
+    },
+  },
+  // The web page with an audience pick, then the free drug program. The enrollment rungs follow the `audience` fork (`beforeBy`):
+  // an HCP's submit texts the patient, who verifies and consents. A patient's own submit already holds their consent. After BI the
+  // rungs are Web PAP's.
+  CoA_Web_Audience: {
+    before: [],
+    beforeBy: {
+      hcp: [
+        { label: "Web Page Opened", events: [] },
+        { label: "HCP Enrolled the Patient (patient texted)", events: [ev("AUDIENCE_SUBMIT", "patient")] },
+        { label: "Patient Verified and Consented", events: [ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient")] },
+        { label: "Benefits Investigation", events: [] },
+      ],
+      patient: [
+        { label: "Web Page Opened", events: [] },
+        { label: "Patient Entered the Prescription (consented on the page)", events: [ev("AUDIENCE_SUBMIT", "patient")] },
+        { label: "Benefits Investigation", events: [] },
+      ],
+    },
     exits: {
       no_coverage_pap: [
         { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
@@ -305,8 +334,26 @@ export const assistanceFork = (scenarios: FlowType[]): ForkDefinition => ({
 
 export const ASSISTANCE_FORK: ForkDefinition = assistanceFork(["CoA_APA_Assistance"]);
 
+/**
+ * Who starts the case on the client's web page: a healthcare provider (PrES) or a patient or caregiver (PES). The story picks it
+ * and a demo in the brand file pins it, so the presenter has no branch buttons. The `audience` enrollment variant reads the pick
+ * (enrollment.ts). It resolves when the page submits.
+ */
+export const AUDIENCE_FORK: ForkDefinition = {
+  id: "audience",
+  label: "Who starts the case",
+  chooser: "story",
+  scenarios: ["CoA_Web_Audience"],
+  resolved: (d) => d.enrollmentStatus !== "none",
+  exits: [
+    { id: "hcp", label: "Healthcare provider (PrES)", description: "The HCP enrolls the patient on the client's web page. The patient then gets the text, code and consent.", data: {} },
+    { id: "patient", label: "Patient or caregiver (PES)", description: "The patient enters the prescription on the client's web page, which collects their consent.", data: {} },
+  ],
+};
+
 export const COASSIST_FORKS: ForkDefinition[] = [
   BI_FORK,
+  AUDIENCE_FORK,
   PA_FORK,
   DTP_PRICING_FORK,
   COPAY_FORK,
@@ -326,13 +373,18 @@ export const pricingForkFor = (flowType: FlowType): ForkDefinition | undefined =
  * The BI fork for a scenario: the shared exits, with the rungs that scenario owns (BI_STAGES). A scenario with no
  * rungs gets the shared fork as is.
  */
-const BI_FORKS: Partial<Record<FlowType, ForkDefinition>> = {};
-export const biForkFor = (flowType: FlowType): ForkDefinition => {
+const BI_FORKS: Record<string, ForkDefinition> = {};
+/**
+ * `choices` matters for a scenario whose rungs before BI follow another fork (`beforeBy`, keyed by the `audience` exit id).
+ * Without it the fork's first exit applies, like `exitFor`.
+ */
+export const biForkFor = (flowType: FlowType, choices: Record<string, string> = {}): ForkDefinition => {
   const stages = BI_STAGES[flowType];
   if (!stages) return BI_FORK;
-  return (BI_FORKS[flowType] ??= {
+  const audience = stages.beforeBy && forkApplies(AUDIENCE_FORK, flowType) ? exitFor(AUDIENCE_FORK, { choices }).id : "";
+  return (BI_FORKS[`${flowType}:${audience}`] ??= {
     ...BI_FORK,
-    stagesBefore: stages.before,
+    stagesBefore: (audience && stages.beforeBy?.[audience]) || stages.before,
     // Only the exits this scenario has rungs for. The others cannot be picked by its recipe.
     exits: BI_FORK.exits.filter((e) => stages.exits[e.id]).map((e) => ({ ...e, stages: stages.exits[e.id] })),
   });

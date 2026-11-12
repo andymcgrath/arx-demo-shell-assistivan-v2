@@ -29,6 +29,8 @@ export interface ScenarioFacts {
   hasWebCrm: boolean;
   /** An HCP enrolls the patient on the client's web page (the `hcp` enrollment variant). The case ends at patient consent. */
   isHcpEnrollment: boolean;
+  /** The web page offers an audience pick (the `audience` fork): an HCP or a patient starts the case. The pick is in `choices`. */
+  hasAudienceFork: boolean;
   /** Medical-benefit coverage outcomes: a cash offer SMS and a provider transfer, with no PA or pricing. */
   isCoverageScenario: boolean;
   /** Fax intake. */
@@ -87,6 +89,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     isWebSource: recipe?.source === "web",
     hasWebCrm: recipe?.source === "web" && !!recipe.crm,
     isHcpEnrollment: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp"),
+    hasAudienceFork: hasFork("audience"),
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     paFormByPrescriber: paVariant({ recipe }) === "apa",

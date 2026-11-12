@@ -105,6 +105,14 @@ export interface BrandHcpSite {
   submitted: string;
 }
 
+/** The patient's page on the client's site (the audience scenario): a services list like the HCP's. Optional. */
+export interface BrandPatientSite {
+  headline: string;
+  intro: string;
+  /** The services the patient picks from. Only `enabled` ones continue. */
+  services: { id: string; title: string; description: string; enabled: boolean }[];
+}
+
 export interface BrandConfig {
   /** Folder name under `brands/`. Equals the `BRAND` env value. */
   slug: string;
@@ -166,6 +174,8 @@ export interface BrandConfig {
   };
   /** The HCP enrollment web page. Only a brand with an HCP enrollment demo needs it. */
   hcpSite?: BrandHcpSite;
+  /** The patient's page on the audience scenario. Only a brand with an audience demo needs it. */
+  patientSite?: BrandPatientSite;
   chatbotIcon: string;
   favicon?: string;
 }

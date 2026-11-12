@@ -192,6 +192,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "enrollment",
     lane: "patient",
     needs: ["referralReceived"],
+    // The `audience` variant is started by the web page and reads the `audience` fork: an HCP's enrollment, or the patient's own.
+    needsWhen: [{ props: { variant: "audience" }, needs: ["fork:audience"] }],
     sets: ["consentVerified"],
     trackerSteps: ["Enrolled"],
   },

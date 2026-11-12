@@ -54,6 +54,14 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ],
   },
   {
+    id: "audience",
+    aliases: ["audience", "who starts", "PrES", "PES", "HCP or patient"],
+    exits: [
+      { id: "hcp", aliases: ["PrES", "healthcare provider", "HCP enrolls", "prescriber enrolls"] },
+      { id: "patient", aliases: ["PES", "patient or caregiver", "patient enrolls", "self enroll"] },
+    ],
+  },
+  {
     id: "assistance",
     aliases: ["assistance", "financial assistance", "patient choice of assistance"],
     exits: [

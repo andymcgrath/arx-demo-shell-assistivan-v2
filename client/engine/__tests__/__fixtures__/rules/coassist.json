@@ -6,6 +6,9 @@
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
+    "AUDIENCE_SUBMIT": [
+      "audience_enroll.submit"
+    ],
     "CHECK_PRICING": [
       "web_handoff.check_pricing"
     ],
@@ -145,6 +148,9 @@
   },
   "applies": {
     "assistance.choose": [],
+    "audience_enroll.submit": [
+      "CoA_Web_Audience"
+    ],
     "cash_offer.deny_pa": [
       "CoA_DTP",
       "CoA_Copay",
@@ -169,7 +175,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "enrollment.referral_received": [
       "CoA_DTP",
@@ -179,7 +186,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "enrollment.verify_otp": [
       "CoA_DTP",
@@ -189,7 +197,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "enrollment.verify_sms": [
       "CoA_DTP",
@@ -199,7 +208,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "financial_assistance.select_self_pay.copay": [
       "CoA_Copay",
@@ -209,22 +219,28 @@
       "CoA_HCP_Enroll"
     ],
     "income_qualification.activate_pap": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "income_qualification.send_pap_sms": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "income_qualification.start_income_qualification": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "income_qualification.verify_income": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "income_qualification.verify_pap_otp": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "income_qualification.verify_pap_sms": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "pa_notification.verify_otp": [
       "CoA_DTP",
@@ -234,7 +250,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "pa_notification.verify_sms": [
       "CoA_DTP",
@@ -244,13 +261,16 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "pap_transfer.refer": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "pap_transfer.verify_sms": [
-      "CoA_PAP"
+      "CoA_PAP",
+      "CoA_Web_Audience"
     ],
     "payment.patient_pays": [
       "CoA_DTP",
@@ -280,7 +300,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "pharmacy_selection.select_pharmacy.coverage": [
       "CoA_Coverage"
@@ -321,7 +342,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "provider_transfer.notify": [
       "CoA_Coverage"
@@ -338,7 +360,8 @@
       "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "scheduling.patient_sets_address": [
       "CoA_DTP",
@@ -346,7 +369,8 @@
       "CoA_Web_Copay",
       "CoA_Coverage",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.approve_pa": [
       "CoA_DTP",
@@ -356,7 +380,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.complete_bi": [
       "CoA_DTP",
@@ -366,7 +391,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.leave_stage.bi": [
       "CoA_DTP",
@@ -376,7 +402,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.leave_stage.pa": [
       "CoA_DTP",
@@ -386,7 +413,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.run_bi": [
       "CoA_DTP",
@@ -396,7 +424,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.submit_pa": [
       "CoA_DTP",
@@ -405,7 +434,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.view_stage.bi": [
       "CoA_DTP",
@@ -415,7 +445,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "spine.view_stage.pa": [
       "CoA_DTP",
@@ -425,7 +456,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "tracking.deliver_rx": [
       "CoA_DTP",
@@ -435,7 +467,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "tracking.fill_rx": [
       "CoA_DTP",
@@ -445,7 +478,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "tracking.ready_rx": [
       "CoA_DTP",
@@ -455,7 +489,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "tracking.ship_rx": [
       "CoA_DTP",
@@ -465,7 +500,8 @@
       "CoA_Coverage",
       "CoA_Medical_Transfer",
       "CoA_PAP",
-      "CoA_APA_Specialty"
+      "CoA_APA_Specialty",
+      "CoA_Web_Audience"
     ],
     "web_handoff.check_pricing": [
       "CoA_Web_Copay"

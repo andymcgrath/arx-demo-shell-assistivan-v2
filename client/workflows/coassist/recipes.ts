@@ -212,6 +212,29 @@ export const COA_WEB_PAP_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * The client's web page offers two audiences, and the `audience` fork picks the path. A healthcare provider (PrES) completes the
+ * enrollment form and the patient then gets the text, code and consent. A patient or caregiver (PES) enters the prescription on a
+ * patient form that collects consent, so there is no text, code or consent step. The `audience` enrollment variant owns the
+ * difference. After enrollment the case is Web PAP's: BI finds no coverage, the patient support program takes over, an assigned
+ * pharmacy dispenses, and the patient schedules. The agent works the case in the CRM (`crm`), so there is no Gateway tab.
+ */
+export const COA_WEB_AUDIENCE_RECIPE: ScenarioRecipe = {
+  source: "web",
+  crm: true,
+  forks: ["audience", "bi"],
+  choices: { audience: "hcp", bi: "no_coverage_pap" },
+  panels: ["benefits"],
+  modules: [
+    { id: "enrollment", props: { variant: "audience" } },
+    { id: "pap_transfer" },
+    { id: "income_qualification" },
+    { id: "pharmacy_selection", props: { variant: "assigned" } },
+    { id: "scheduling" },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * The composition proof (step 2.6). Commercial coverage, PA approved, the patient's Retail pick, a pharmacy the
  * patient selects, and the Rx handed over: the order tracker shows it. No `scheduling` and no `payment`.
  *
@@ -242,4 +265,5 @@ export const COASSIST_RECIPES = {
   CoA_APA_Specialty: COA_APA_SPECIALTY_RECIPE,
   CoA_APA_Assistance: COA_APA_ASSISTANCE_RECIPE,
   CoA_Web_PAP: COA_WEB_PAP_RECIPE,
+  CoA_Web_Audience: COA_WEB_AUDIENCE_RECIPE,
 } as const;

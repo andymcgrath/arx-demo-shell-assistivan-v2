@@ -9,7 +9,7 @@ import { IASSIST_RECIPES } from "../iassist/recipes";
 import { scenarioFor } from "../scenarios";
 import { catalogBlock, catalogFork, paletteCards, type PaletteCard } from "./index";
 import { recipeHas } from "./storyboard";
-import { validateDemoRequest, REQUEST_VERSION, type DemoRequest, type RequestCard, type RequestDemo, type RequestGhostCard, type RequestWorkflow } from "./request";
+import { validateDemoRequest, REQUEST_VERSION, type DemoRequest, type RequestBrand, type RequestCard, type RequestDemo, type RequestGhostCard, type RequestWorkflow } from "./request";
 import { DEFAULT_VARIANT, type CatalogApp } from "./types";
 
 /**
@@ -58,8 +58,14 @@ const withApps = (d: DemoRequest): DemoRequest => ({ ...d, apps: deriveApps(d.ca
 
 const emptyBrand = { name: "", drug: "", documents: [] as string[] };
 
-/** A blank draft: BI is always first, with one empty demo. */
-export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
+/** The request's brand block, read from the active brand file: the manufacturer name, the drug, and the brand's color source when it is a URL. */
+export function requestBrand(b: { manufacturer: { name: string }; program: { drugDisplayName: string; colors?: { source?: string } } }): RequestBrand {
+  const source = b.program.colors?.source;
+  return { name: b.manufacturer.name, drug: b.program.drugDisplayName, ...(source && /^https?:\/\//.test(source) ? { sourceUrl: source } : {}), documents: [] };
+}
+
+/** A blank draft: BI is always first, with one empty demo. `brand` fills the brand block (see `requestBrand`). */
+export function blankDraft(workflow: EditorWorkflow, client = "", brand?: RequestBrand): DemoRequest {
   return {
     version: REQUEST_VERSION,
     client,
@@ -71,7 +77,7 @@ export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
     forks: ["bi"],
     cards: [],
     demos: [{ id: "demo-1", label: "", choices: {} }],
-    brand: { ...emptyBrand },
+    brand: brand ? { ...brand, documents: [...brand.documents] } : { ...emptyBrand },
     winTheme: "",
     openQuestions: [],
   };
@@ -81,7 +87,7 @@ export function blankDraft(workflow: EditorWorkflow, client = ""): DemoRequest {
 export const scenarioHasBi = (flow: FlowType): boolean => forksForScenario(ALL_FORKS, flow).some((f) => f.id === "bi");
 
 /** A ready-made draft from a scenario's recipe, and a demo's picks over it. Undefined for a scenario with no recipe. */
-export function draftFromScenario(flow: FlowType, opts: { title: string; client?: string; choices?: Record<string, string> }): DemoRequest | undefined {
+export function draftFromScenario(flow: FlowType, opts: { title: string; client?: string; brand?: RequestBrand; choices?: Record<string, string> }): DemoRequest | undefined {
   const scenario = scenarioFor(flow);
   const recipe = scenario?.recipe;
   if (!scenario || !recipe) return undefined;
@@ -89,7 +95,7 @@ export function draftFromScenario(flow: FlowType, opts: { title: string; client?
   const forks = [...new Set([...(scenarioHasBi(flow) ? ["bi"] : []), ...recipe.forks])];
   const choices = Object.fromEntries(Object.entries({ ...recipe.choices, ...scenario.choices, ...opts.choices }).filter(([k]) => forks.includes(k)));
   return withApps({
-    ...blankDraft(workflow, opts.client),
+    ...blankDraft(workflow, opts.client, opts.brand),
     title: opts.title,
     slug: slugOf(opts.title),
     intake: scenario.intake,

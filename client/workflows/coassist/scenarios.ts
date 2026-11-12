@@ -2,7 +2,7 @@ import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { BRAND } from "@/brand";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE, COA_APA_ASSISTANCE_RECIPE, COA_WEB_PAP_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE, COA_APA_ASSISTANCE_RECIPE, COA_WEB_PAP_RECIPE, COA_WEB_AUDIENCE_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -172,5 +172,18 @@ export const COA_WEB_PAP: ScenarioDefinition<CoassistContent> = {
   content: COA_PAP.content,
 };
 
+/**
+ * The client's web page offers two audiences (the `audience` fork) and the demo's pick decides the path. After enrollment the
+ * case follows the free drug program: BI finds no coverage, the patient support program takes over, and an assigned pharmacy
+ * dispenses. Intake is `erx`: the page holds what BI needs. The agent works the case in the CRM.
+ */
+export const COA_WEB_AUDIENCE: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_Web_Audience",
+  intake: "erx",
+  choices: { audience: "hcp", bi: "no_coverage_pap" },
+  recipe: COA_WEB_AUDIENCE_RECIPE,
+  content: COA_PAP.content,
+};
+
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_Web_PAP"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_Web_PAP", "CoA_Web_Audience"];

@@ -1885,6 +1885,326 @@
       }
     ]
   },
+  "coa-web-audience-pres": {
+    "flowType": "CoA_Web_Audience",
+    "labelSets": [
+      [
+        "Referral",
+        "Enrolled",
+        "BI",
+        "Transfer to PSP",
+        "Income verified",
+        "Delivery"
+      ]
+    ],
+    "steps": [
+      {
+        "after": "(start)",
+        "labelSet": 0,
+        "done": "......",
+        "workflowStep": 1,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "AUDIENCE_SUBMIT",
+        "labelSet": 0,
+        "done": "x.....",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_SMS",
+        "labelSet": 0,
+        "done": "x.....",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_OTP",
+        "labelSet": 0,
+        "done": "x.....",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "labelSet": 0,
+        "done": "xx....",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "COMPLETE_BI",
+        "labelSet": 0,
+        "done": "xxx...",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_PAP_TRANSFER_SMS",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_PAP_OTP",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "START_INCOME_QUALIFICATION",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "FILL_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "READY_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "SHIP_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 7,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "DELIVER_RX",
+        "labelSet": 0,
+        "done": "xxxxxx",
+        "workflowStep": 9,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      }
+    ]
+  },
+  "coa-web-audience-pes": {
+    "flowType": "CoA_Web_Audience",
+    "labelSets": [
+      [
+        "Referral",
+        "Enrolled",
+        "BI",
+        "Transfer to PSP",
+        "Income verified",
+        "Delivery"
+      ]
+    ],
+    "steps": [
+      {
+        "after": "(start)",
+        "labelSet": 0,
+        "done": "......",
+        "workflowStep": 1,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "AUDIENCE_SUBMIT",
+        "labelSet": 0,
+        "done": "xx....",
+        "workflowStep": 3,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "COMPLETE_BI",
+        "labelSet": 0,
+        "done": "xxx...",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_PAP_TRANSFER_SMS",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_PAP_OTP",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "START_INCOME_QUALIFICATION",
+        "labelSet": 0,
+        "done": "xxxx..",
+        "workflowStep": 4,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 5,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "FILL_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "READY_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 6,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "SHIP_RX",
+        "labelSet": 0,
+        "done": "xxxxx.",
+        "workflowStep": 7,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      },
+      {
+        "after": "DELIVER_RX",
+        "labelSet": 0,
+        "done": "xxxxxx",
+        "workflowStep": 9,
+        "paRingApplies": true,
+        "rxRingsOff": false,
+        "rxProcessingStepN": 6,
+        "rxShippedStepN": 6
+      }
+    ]
+  },
   "coa-hcp-enroll-patient-consents": {
     "flowType": "CoA_HCP_Enroll",
     "labelSets": [

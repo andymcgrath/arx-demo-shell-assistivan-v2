@@ -233,6 +233,41 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 
+  // ── CoAssist: Web audience (the web page offers an HCP and a patient path; the `audience` fork picks one) ──
+  // PrES: the HCP's submit texts the patient, who verifies and consents. PES: the patient's own submit holds their consent, so there is no
+  // text, code or consent step. BI then finds no coverage and the case follows the free drug program to delivery.
+  {
+    name: "coa-web-audience-pres",
+    endsAt: "delivered",
+    flowType: "CoA_Web_Audience",
+    choices: { audience: "hcp", bi: "no_coverage_pap" },
+    steps: [
+      { type: "AUDIENCE_SUBMIT", prescriberNpi: "1234567893" },
+      ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "VERIFY_PAP_TRANSFER_SMS" },
+      { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
+      ...fulfillment,
+    ],
+  },
+  {
+    name: "coa-web-audience-pes",
+    endsAt: "delivered",
+    flowType: "CoA_Web_Audience",
+    choices: { audience: "patient", bi: "no_coverage_pap" },
+    steps: [
+      { type: "AUDIENCE_SUBMIT", prescriberNpi: "1234567893" },
+      { type: "COMPLETE_BI" },
+      { type: "VERIFY_PAP_TRANSFER_SMS" },
+      { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
+      ...fulfillment,
+    ],
+  },
+
   // ── CoAssist: HCP enrollment (the HCP enrolls on the client's web page; the patient consents; the case ends) ──
   {
     name: "coa-hcp-enroll-patient-consents",

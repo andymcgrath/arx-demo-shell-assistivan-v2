@@ -40,6 +40,7 @@ import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
+import { webIsDesktopSite } from "@/portals/web/audience/audience";
 import { biForkFor } from "@/workflows/coassist/forks";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
@@ -125,6 +126,8 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   CoA_HCP_Enroll: "web",
   // CoA_Web_PAP: the client's web page starts the case (source `web`). No CRM.
   CoA_Web_PAP: "web",
+  // CoA_Web_Audience: the client's web page starts the case (source `web`), with the CRM.
+  CoA_Web_Audience: "web",
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
@@ -502,7 +505,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * uses the phone frame, matching every other flow's SMS screens.
        */}
       {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. The HCP site is a desktop page, so it does not. */}
-      {(portal === "web" && !scenarioFacts(flowType).isHcpEnrollment) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
+      {(portal === "web" && !webIsDesktopSite(flowType, workflowData.choices)) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
@@ -1028,9 +1031,9 @@ export default function DemoShell() {
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
                     : scenarioHasModule(flowType, "pap_transfer")
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
                     : isCoverageFlow
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic
