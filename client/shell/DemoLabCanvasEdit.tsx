@@ -10,7 +10,7 @@ import { APP_LABEL, Chip, INK, LANE_COLOR, LANE_LABEL, LINE, MUTED, TRIGGER_LABE
 const field = "w-full rounded border px-2 py-1 text-sm";
 const small = "rounded border px-2 py-0.5 text-xs font-semibold disabled:opacity-40";
 
-export function DemoBar({ draft, active, setActive, edit }: { draft: DemoRequest; active: number; setActive: (i: number) => void; edit: (fn: (d: DemoRequest) => DemoRequest) => void }) {
+export function DemoBar({ draft, active, setActive, edit, onDuplicate, copyNote }: { draft: DemoRequest; active: number; setActive: (i: number) => void; edit: (fn: (d: DemoRequest) => DemoRequest) => void; onDuplicate: () => void; copyNote?: boolean }) {
   const demo = draft.demos[active];
   return (
     <section className="mb-3 flex flex-wrap items-end gap-2" aria-label="Demos">
@@ -22,6 +22,9 @@ export function DemoBar({ draft, active, setActive, edit }: { draft: DemoRequest
         ))}
         <button type="button" className={small} style={{ borderColor: LINE }} onClick={() => { edit(addDemo); setActive(draft.demos.length); }}>
           Add demo
+        </button>
+        <button type="button" className={small} style={{ borderColor: LINE }} onClick={onDuplicate} title="Copy this demo into a new draft. It becomes a new entry in the dropdown.">
+          Duplicate
         </button>
       </div>
       {demo && (
@@ -43,6 +46,11 @@ export function DemoBar({ draft, active, setActive, edit }: { draft: DemoRequest
             Remove this demo
           </button>
         </>
+      )}
+      {copyNote && (
+        <p className="w-full text-xs" style={{ color: MUTED }} data-testid="copy-note">
+          This is a copy. A copy with the same blocks becomes a new dropdown entry. A copy with changed blocks needs the build prompt.
+        </p>
       )}
     </section>
   );

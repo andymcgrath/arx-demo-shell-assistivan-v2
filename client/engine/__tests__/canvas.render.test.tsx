@@ -312,3 +312,40 @@ describe("a narrow window", () => {
     expect(view.getAllByTestId("canvas-card").length).toBeGreaterThan(4);
   });
 });
+
+describe("duplicate", () => {
+  const btn = (view: ReturnType<typeof open>) => view.getByRole("button", { name: "Duplicate" });
+  it("opens a copy as a new draft, named for the dropdown, with the same cards", () => {
+    const view = open(/CoAssist Copay/i);
+    const n = view.getAllByTestId("canvas-card").length;
+    fireEvent.click(btn(view));
+    expect((view.getByLabelText("Name in the dropdown") as HTMLInputElement).value).toMatch(/^Copy of /);
+    expect(view.getAllByTestId("canvas-card")).toHaveLength(n);
+    expect(view.getByTestId("copy-note").textContent).toMatch(/new dropdown entry/);
+    expect(view.getByTestId("copy-note").textContent).toMatch(/build prompt/);
+  });
+
+  it("editing the copy leaves the original list entry alone", () => {
+    const view = open(/CoAssist Copay/i);
+    const n = view.getAllByTestId("canvas-card").length;
+    fireEvent.click(btn(view));
+    fireEvent.click(view.getAllByTestId("canvas-card")[1]);
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Remove"));
+    expect(view.getAllByTestId("canvas-card")).toHaveLength(n - 1);
+    const orig = within(view.container).getAllByRole("button").find((b) => /^CoAssist Copay$/i.test((b.textContent ?? "").trim()))!;
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    fireEvent.click(orig);
+    expect(view.getAllByTestId("canvas-card")).toHaveLength(n);
+  });
+
+  it("asks before it replaces an edited draft", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(view.getAllByTestId("canvas-card")[1]);
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Remove"));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    fireEvent.click(btn(view));
+    expect(confirm).toHaveBeenCalled();
+    expect((view.getByLabelText("Name in the dropdown") as HTMLInputElement).value).not.toMatch(/^Copy of /);
+    confirm.mockRestore();
+  });
+});

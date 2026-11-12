@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
-import { blankDraft, clearPick, draftFromScenario, EDITOR_WORKFLOWS, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
+import { blankDraft, clearPick, demoIdClashes, draftFromScenario, duplicateDemo, slugOf, EDITOR_WORKFLOWS, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
 import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, SOFT, APP_LABEL } from "./DemoLabCanvasParts";
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
@@ -90,6 +90,17 @@ export default function CanvasLab() {
     setWholeKey(null);
     load(it.key, next);
   };
+
+  const duplicate = () => {
+    if (dirty && !window.confirm("Duplicating opens a new draft and replaces this one. Your unsaved edits come with the copy. Continue?")) return;
+    const copy = duplicateDemo(draft, active, { demoIds: (BRAND.demos ?? []).map((x) => x.id), slugs: items.map((i) => slugOf(i.title)) });
+    setCardIndex(0);
+    setInsertAt(null);
+    setWholeKey(null);
+    load(`copy:${copy.demos[0].id}`, copy);
+  };
+  const isCopy = loadedKey?.startsWith("copy:") ?? false;
+  const clashes = demoIdClashes(draft, (BRAND.demos ?? []).map((x) => x.id), loadedKey?.startsWith("demo:") ? loadedKey.slice(5) : undefined);
 
   const canvas = useMemo(() => canvasFromDraft(draft, active), [draft, active]);
   const whole = wholeKey ? items.find((i) => i.key === wholeKey) : undefined;
@@ -179,7 +190,7 @@ export default function CanvasLab() {
                   {emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
                 </button>
                 {showRequest && <div id="request-details-panel"><RequestPanel draft={draft} edit={edit} /></div>}
-                <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
+                <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} onDuplicate={duplicate} copyNote={isCopy} />
               </div>
             </section>
             <section className="pb-3" aria-label="Recipe" data-testid="section-recipe">
@@ -244,6 +255,13 @@ export default function CanvasLab() {
 
             <section className="mt-6 border-t pt-4" style={{ borderColor: LINE }} aria-label="Export">
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Export</h4>
+              {canvas.exportProblems.length === 0 && clashes.length > 0 && (
+                <div role="alert" className="mb-3 rounded border p-3 text-xs" style={{ borderColor: INK }} data-testid="export-clash">
+                  <p className="mb-1 font-semibold">This demo id is already in the brand file:</p>
+                  <ul className="list-disc pl-4">{clashes.map((c) => <li key={c}>{c}</li>)}</ul>
+                  <p className="mt-1" style={{ color: MUTED }}>Applying would replace that entry. Rename the demo in "Name in the dropdown" to make a new one.</p>
+                </div>
+              )}
               {canvas.exportProblems.length > 0 ? (
                 <div role="alert" className="mb-3 rounded border p-3 text-xs" style={{ borderColor: INK }} data-testid="export-problems">
                   <p className="mb-1 font-semibold">Export is blocked until these are fixed:</p>
@@ -254,7 +272,7 @@ export default function CanvasLab() {
               ) : (
                 <p className="mb-3 text-xs" style={{ color: MUTED }}>Nothing blocks the export.</p>
               )}
-              <button type="button" disabled={canvas.exportProblems.length > 0 || busy} onClick={send} className="rounded px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: INK }}>
+              <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy} onClick={send} className="rounded px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: INK }}>
                 {busy ? "Exporting" : "Export request and prompt"}
               </button>
               {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}

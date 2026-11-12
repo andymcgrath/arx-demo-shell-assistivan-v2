@@ -26,7 +26,7 @@ const RECIPES: Record<EditorWorkflow, Record<string, ScenarioRecipe>> = { coassi
 
 const APP_ORDER: CatalogApp[] = ["crm", "patient", "provider", "field", "iassist", "rules", "web", "gateway"];
 
-const slugOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+export const slugOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 export const isEditorWorkflow = (w: string): w is EditorWorkflow => (EDITOR_WORKFLOWS as readonly string[]).includes(w);
 
@@ -307,6 +307,33 @@ export function addDemo(d: DemoRequest): DemoRequest {
   const n = d.demos.length + 1;
   return { ...d, demos: [...d.demos, { id: `demo-${n}`, label: "", choices: {} }] };
 }
+
+const unique = (base: string, taken: string[]): string => {
+  const used = new Set(taken);
+  if (!used.has(base)) return base;
+  let n = 2;
+  while (used.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+};
+
+/**
+ * A new draft that copies demo `index` and everything it runs on: the cards, forks, apps, intake, brand block, and the
+ * demo's picked outcomes. It becomes a new demo in the dropdown, not a new scenario in code. The copy is named "Copy of
+ * <name>", and its demo id and request name avoid the ids and names in `taken`. Nothing is shared with the original.
+ */
+export function duplicateDemo(d: DemoRequest, index: number, taken: { demoIds?: string[]; slugs?: string[] } = {}): DemoRequest {
+  const demo = d.demos[index] ?? d.demos[0];
+  const copy: DemoRequest = JSON.parse(JSON.stringify(d));
+  const name = demo?.label?.trim() || d.title.trim() || "demo";
+  const label = `Copy of ${name}`;
+  copy.title = `Copy of ${d.title.trim() || name}`;
+  copy.slug = unique(`${d.slug || slugOf(d.title) || "demo"}-copy`, [...(taken.slugs ?? []), d.slug]);
+  copy.demos = [{ ...JSON.parse(JSON.stringify(demo ?? { choices: {} })), id: unique(slugOf(label), [...(taken.demoIds ?? []), ...d.demos.map((x) => x.id)]), label }];
+  return copy;
+}
+
+/** The demo ids in a draft that already exist in the brand file and would be replaced on apply. `own` is the id the draft was loaded from, which it may update. */
+export const demoIdClashes = (d: DemoRequest, brandDemoIds: string[], own?: string): string[] => d.demos.map((x) => x.id).filter((id) => brandDemoIds.includes(id) && id !== own);
 
 export const removeDemo = (d: DemoRequest, index: number): DemoRequest => (d.demos.length < 2 ? d : { ...d, demos: d.demos.filter((_, i) => i !== index) });
 
