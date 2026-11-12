@@ -170,21 +170,19 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       ],
     },
   },
-  // The web page in two parts, then the free drug program. The HCP's submit texts the patient, who verifies and consents. The patient
-  // then completes the authorization and the prescription on the page, which starts BI. After BI the rungs are Web PAP's.
+  // The client's two web sites, then the free drug program. The HCP's submit on the PrES site starts BI. After no coverage the agent
+  // sends the application update, the patient taps it and works the PES site (consent, income, program terms, address, date), and
+  // the agent dispatches in the CRM.
   CoA_Web_HCP_Patient: {
     before: [
-      { label: "Web Page Opened", events: [] },
-      { label: "HCP Enrolled the Patient (patient texted)", events: [ev("HCP_REFERRAL_SUBMIT", "patient")] },
-      { label: "Patient Verified and Consented", events: [ev("VERIFY_SMS", "patient"), ev("VERIFY_OTP", "patient"), ev("CONFIRM_CONSENT", "patient")] },
-      { label: "Patient Authorized and Entered the Prescription", events: [ev("PATIENT_RX_SUBMIT", "patient")] },
+      { label: "PrES Site Opened", events: [] },
+      { label: "HCP Enrolled the Patient", events: [ev("HCP_REFERRAL_SUBMIT", "provider")] },
       { label: "Benefits Investigation", events: [] },
     ],
     exits: {
       no_coverage_pap: [
         { label: "No Coverage Confirmed (referred to patient support program)", events: [ev("COMPLETE_BI", "crm")] },
-        { label: "Transfer SMS Confirmed", events: [ev("VERIFY_PAP_TRANSFER_SMS", "patient")] },
-        { label: "Application Code Confirmed", events: [ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Application Update Sent and Opened", events: [ev("SEND_PAP_SMS", "crm"), ev("VERIFY_PAP_SMS", "patient")] },
         { label: "Income Verified", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
         { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
         ...fulfillment("Rx Processing"),

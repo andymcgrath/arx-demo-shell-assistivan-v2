@@ -234,19 +234,17 @@ export const SCENARIOS: Scenario[] = [
   },
 
   // ── CoAssist: Web, HCP enrolls then the patient authorizes (PrES then PES on the client's web page) ──
-  // The HCP's submit texts the patient, who verifies and consents. The patient then completes the authorization and the Rx on the page, which
-  // starts BI. BI finds no coverage and the case follows the free drug program to delivery.
+  // The HCP's submit on the PrES site enrolls the case and starts BI. The agent opens the BI stage and no coverage comes back. The
+  // agent sends the application update from the Fulfillment Center, the patient taps it, and the case follows the free drug program
+  // to delivery.
   {
     name: "coa-web-hcp-patient",
     endsAt: "delivered",
     flowType: "CoA_Web_HCP_Patient",
     steps: [
-      { type: "HCP_REFERRAL_SUBMIT" },
-      ...verifyIdentity,
-      { type: "PATIENT_RX_SUBMIT", prescriberNpi: "1234567893" },
+      { type: "HCP_REFERRAL_SUBMIT", prescriberNpi: "1234567893" },
       { type: "COMPLETE_BI" },
-      { type: "VERIFY_PAP_TRANSFER_SMS" },
-      { type: "VERIFY_PAP_OTP" },
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" },
       { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
       ...addressAndDate,
       ...fulfillment,

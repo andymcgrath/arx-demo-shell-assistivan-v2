@@ -5588,42 +5588,6 @@
           "TP-14277",
           "PS-14278"
         ],
-        "changed": []
-      },
-      {
-        "after": "VERIFY_SMS",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
-      },
-      {
-        "after": "VERIFY_OTP",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": []
-      },
-      {
-        "after": "CONFIRM_CONSENT",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
         "changed": [
           {
             "id": "EA-14272",
@@ -5635,20 +5599,7 @@
             "fields": [],
             "lastUpdated": "1/11/2026",
             "lastUpdatedAgo": "4 days ago"
-          }
-        ]
-      },
-      {
-        "after": "PATIENT_RX_SUBMIT",
-        "order": [
-          "EA-14272",
-          "BI-14273",
-          "PSP-14283",
-          "FA-14276",
-          "TP-14277",
-          "PS-14278"
-        ],
-        "changed": [
+          },
           {
             "id": "BI-14273",
             "name": "Benefits Investigation",
@@ -5703,7 +5654,7 @@
         ]
       },
       {
-        "after": "VERIFY_PAP_TRANSFER_SMS",
+        "after": "SEND_PAP_SMS",
         "order": [
           "EA-14272",
           "BI-14273",
@@ -5712,27 +5663,10 @@
           "TP-14277",
           "PS-14278"
         ],
-        "changed": [
-          {
-            "id": "PSP-14283",
-            "name": "Patient Support Program Referral",
-            "statusLabel": "Complete",
-            "statusDetail": "Patient confirmed the transfer to Assistivan",
-            "isComplete": true,
-            "isNotStarted": false,
-            "fields": [
-              {
-                "label": "Program",
-                "value": "Assistivan"
-              }
-            ],
-            "lastUpdated": "1/15/2026",
-            "lastUpdatedAgo": "today"
-          }
-        ]
+        "changed": []
       },
       {
-        "after": "VERIFY_PAP_OTP",
+        "after": "VERIFY_PAP_SMS",
         "order": [
           "EA-14272",
           "BI-14273",

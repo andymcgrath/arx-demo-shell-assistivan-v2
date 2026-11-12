@@ -1911,46 +1911,6 @@
       {
         "after": "HCP_REFERRAL_SUBMIT",
         "labelSet": 0,
-        "done": "x.....",
-        "workflowStep": 2,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
-        "after": "VERIFY_SMS",
-        "labelSet": 0,
-        "done": "x.....",
-        "workflowStep": 2,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
-        "after": "VERIFY_OTP",
-        "labelSet": 0,
-        "done": "x.....",
-        "workflowStep": 2,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
-        "after": "CONFIRM_CONSENT",
-        "labelSet": 0,
-        "done": "xx....",
-        "workflowStep": 3,
-        "paRingApplies": true,
-        "rxRingsOff": false,
-        "rxProcessingStepN": 6,
-        "rxShippedStepN": 6
-      },
-      {
-        "after": "PATIENT_RX_SUBMIT",
-        "labelSet": 0,
         "done": "xx....",
         "workflowStep": 3,
         "paRingApplies": true,
@@ -1969,9 +1929,9 @@
         "rxShippedStepN": 6
       },
       {
-        "after": "VERIFY_PAP_TRANSFER_SMS",
+        "after": "SEND_PAP_SMS",
         "labelSet": 0,
-        "done": "xxxx..",
+        "done": "xxx...",
         "workflowStep": 4,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -1979,9 +1939,9 @@
         "rxShippedStepN": 6
       },
       {
-        "after": "VERIFY_PAP_OTP",
+        "after": "VERIFY_PAP_SMS",
         "labelSet": 0,
-        "done": "xxxx..",
+        "done": "xxx...",
         "workflowStep": 4,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -1991,7 +1951,7 @@
       {
         "after": "START_INCOME_QUALIFICATION",
         "labelSet": 0,
-        "done": "xxxx..",
+        "done": "xxx...",
         "workflowStep": 4,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2001,7 +1961,7 @@
       {
         "after": "VERIFY_INCOME",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 5,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2011,7 +1971,7 @@
       {
         "after": "PATIENT_SETS_ADDRESS",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 5,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2021,7 +1981,7 @@
       {
         "after": "PATIENT_SELECTS_SHIP_DATE",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 5,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2031,7 +1991,7 @@
       {
         "after": "FILL_RX",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 6,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2041,7 +2001,7 @@
       {
         "after": "READY_RX",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 6,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2051,7 +2011,7 @@
       {
         "after": "SHIP_RX",
         "labelSet": 0,
-        "done": "xxxxx.",
+        "done": "xxx.x.",
         "workflowStep": 7,
         "paRingApplies": true,
         "rxRingsOff": false,
@@ -2061,7 +2021,7 @@
       {
         "after": "DELIVER_RX",
         "labelSet": 0,
-        "done": "xxxxxx",
+        "done": "xxx.xx",
         "workflowStep": 9,
         "paRingApplies": true,
         "rxRingsOff": false,

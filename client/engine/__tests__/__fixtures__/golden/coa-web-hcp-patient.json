@@ -3,81 +3,24 @@
   "steps": [
     {
       "event": "HCP_REFERRAL_SUBMIT",
-      "accepted": true,
-      "route": "/sms-message",
-      "changed": {
-        "enrollmentStatus": "enrolled",
-        "enrollmentInviteSent": true
-      },
-      "newEvents": [
-        {
-          "eventType": "HCP_REFERRAL_SUBMIT",
-          "portal": "patient",
-          "workflowStep": 1
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_SMS",
-      "accepted": true,
-      "route": "/otp-verification",
-      "changed": {
-        "smsVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_SMS",
-          "portal": "patient",
-          "workflowStep": 3
-        }
-      ]
-    },
-    {
-      "event": "VERIFY_OTP",
-      "accepted": true,
-      "route": "/confirm-details",
-      "changed": {
-        "otpVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_OTP",
-          "portal": "patient",
-          "workflowStep": 4
-        }
-      ]
-    },
-    {
-      "event": "CONFIRM_CONSENT",
-      "accepted": true,
-      "route": "/",
-      "changed": {
-        "consentStatus": "confirmed"
-      },
-      "newEvents": [
-        {
-          "eventType": "CONFIRM_CONSENT",
-          "portal": "patient",
-          "workflowStep": 5
-        }
-      ]
-    },
-    {
-      "event": "PATIENT_RX_SUBMIT",
       "payload": {
         "prescriberNpi": "1234567893"
       },
       "accepted": true,
       "route": "/",
       "changed": {
+        "enrollmentStatus": "enrolled",
+        "smsVerified": true,
+        "otpVerified": true,
+        "consentStatus": "confirmed",
         "biStatus": "running",
         "prescriberNpi": "1234567893"
       },
       "newEvents": [
         {
-          "eventType": "PATIENT_RX_SUBMIT",
-          "portal": "patient",
-          "workflowStep": 5
+          "eventType": "HCP_REFERRAL_SUBMIT",
+          "portal": "provider",
+          "workflowStep": 1
         },
         {
           "eventType": "RUN_BI",
@@ -89,7 +32,7 @@
     {
       "event": "COMPLETE_BI",
       "accepted": true,
-      "route": "/pap-transfer-sms",
+      "route": "/pap-enrollment-complete",
       "changed": {
         "biStatus": "complete",
         "biResult": "no_coverage",
@@ -104,8 +47,7 @@
         "pharmacyBenefitStatus": "not_covered",
         "pharmacyAssigned": true,
         "medicalBenefitStatus": "not_covered",
-        "papTransferStatus": "referred",
-        "papTransferSmsSent": true
+        "papTransferStatus": "referred"
       },
       "newEvents": [
         {
@@ -121,25 +63,28 @@
       ]
     },
     {
-      "event": "VERIFY_PAP_TRANSFER_SMS",
+      "event": "SEND_PAP_SMS",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/pap-update-sms",
       "changed": {
-        "papSmsSent": true,
-        "papSmsVerified": true,
-        "papTransferSmsVerified": true
+        "papSmsSent": true
       },
       "newEvents": [
-        {
-          "eventType": "VERIFY_PAP_TRANSFER_SMS",
-          "portal": "patient",
-          "workflowStep": 9
-        },
         {
           "eventType": "SEND_PAP_SMS",
           "portal": "crm",
           "workflowStep": 7
-        },
+        }
+      ]
+    },
+    {
+      "event": "VERIFY_PAP_SMS",
+      "accepted": true,
+      "route": "/pap-update-otp",
+      "changed": {
+        "papSmsVerified": true
+      },
+      "newEvents": [
         {
           "eventType": "VERIFY_PAP_SMS",
           "portal": "patient",
@@ -148,24 +93,9 @@
       ]
     },
     {
-      "event": "VERIFY_PAP_OTP",
-      "accepted": true,
-      "route": "/",
-      "changed": {
-        "papOtpVerified": true
-      },
-      "newEvents": [
-        {
-          "eventType": "VERIFY_PAP_OTP",
-          "portal": "patient",
-          "workflowStep": 7
-        }
-      ]
-    },
-    {
       "event": "START_INCOME_QUALIFICATION",
       "accepted": true,
-      "route": "/income-qualification",
+      "route": "/pap-update-otp",
       "changed": {
         "incomeStatus": "pending"
       },
@@ -180,7 +110,7 @@
     {
       "event": "VERIFY_INCOME",
       "accepted": true,
-      "route": "/delivery-address",
+      "route": "/pap-update-otp",
       "changed": {
         "dispatchStatus": "pending_selection",
         "papStatus": "active",
@@ -197,7 +127,7 @@
     {
       "event": "PATIENT_SETS_ADDRESS",
       "accepted": true,
-      "route": "/delivery-date",
+      "route": "/pap-update-otp",
       "changed": {
         "dispatchStatus": "selected"
       },
@@ -212,7 +142,7 @@
     {
       "event": "PATIENT_SELECTS_SHIP_DATE",
       "accepted": true,
-      "route": "/pap-enrollment-complete",
+      "route": "/pap-update-otp",
       "changed": {
         "patientShipDate": "2026-01-15T12:00:00.000Z"
       },
@@ -227,7 +157,7 @@
     {
       "event": "FILL_RX",
       "accepted": true,
-      "route": "/order-tracker",
+      "route": "/pap-update-otp",
       "changed": {
         "pharmacyStatus": "processing",
         "dispatchStatus": "dispatched"
@@ -243,7 +173,7 @@
     {
       "event": "READY_RX",
       "accepted": true,
-      "route": "/order-tracker",
+      "route": "/pap-update-otp",
       "changed": {
         "pharmacyStatus": "ready"
       },
@@ -258,7 +188,7 @@
     {
       "event": "SHIP_RX",
       "accepted": true,
-      "route": "/order-shipped",
+      "route": "/pap-update-otp",
       "changed": {
         "pharmacyStatus": "shipped"
       },
@@ -273,7 +203,7 @@
     {
       "event": "DELIVER_RX",
       "accepted": true,
-      "route": "/medication-delivered",
+      "route": "/pap-update-otp",
       "changed": {
         "pharmacyStatus": "delivered"
       },

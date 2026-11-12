@@ -2,14 +2,14 @@
  * Tracking: fulfillment events that move the order tracker.
  */
 import type { CoaRule } from "./shared";
-import { inFulfillmentTail, prescriberPharmacy } from "./shared";
+import { inFulfillmentTail, waitsForShipDate } from "./shared";
 
 export const TRACKING_RULES: CoaRule[] = [
   {
     id: "tracking.fill_rx",
     on: "FILL_RX",
-    // The prescriber's pharmacy ships what the patient scheduled, so it waits for the ship date.
-    when: (d, _e, s) => inFulfillmentTail(d) && (!prescriberPharmacy(s) || d.patientShipDate !== null),
+    // A pharmacy that ships what the patient scheduled waits for the ship date (see `waitsForShipDate`).
+    when: (d, _e, s) => inFulfillmentTail(d) && (!waitsForShipDate(s) || d.patientShipDate !== null),
     set: () => ({ pharmacyStatus: "processing", dispatchStatus: "dispatched" }),
     emit: { portal: "field", step: 10 },
   },

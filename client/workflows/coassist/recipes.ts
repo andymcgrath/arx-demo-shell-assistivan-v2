@@ -212,11 +212,12 @@ export const COA_WEB_PAP_RECIPE: ScenarioRecipe = {
 };
 
 /**
- * The client's web page, in two parts. An HCP completes the enrollment form (PrES) and the patient is texted. The patient verifies and
- * consents, then the web page turns to them (PES): authorization, details, and the prescription with the prescriber's NPI. The
- * `hcp_patient` enrollment variant owns this. After the patient's submit the case is Web PAP's: BI finds no coverage, the patient
- * support program takes over, an assigned pharmacy dispenses, and the patient schedules. The agent works the case in the CRM
- * (`crm`), so there is no Gateway tab. `hideTabs` drops the Analytics and Rules tabs, which this story does not use.
+ * The client's two web sites, as in the default PrES PAP. An HCP completes the enrollment form on the PrES site (Provider tab) and the
+ * submit starts BI. The agent opens the BI stage, BI finds no coverage, and the agent sends the application update from the
+ * Fulfillment Center (the `agent` variant of `pap_transfer` sends no text of its own). The patient taps the text and completes the
+ * income consent, the income, the program terms, the address and the ship date on the PES site (Patient tab). The agent then
+ * triages to the pharmacy and the order tracker follows. The agent works the case in the CRM (`crm`), so there is no Gateway tab.
+ * `hideTabs` drops the Analytics and Rules tabs, which this story does not use.
  */
 export const COA_WEB_HCP_PATIENT_RECIPE: ScenarioRecipe = {
   source: "web",
@@ -227,7 +228,7 @@ export const COA_WEB_HCP_PATIENT_RECIPE: ScenarioRecipe = {
   panels: ["benefits"],
   modules: [
     { id: "enrollment", props: { variant: "hcp_patient" } },
-    { id: "pap_transfer" },
+    { id: "pap_transfer", props: { variant: "agent" } },
     { id: "income_qualification" },
     { id: "pharmacy_selection", props: { variant: "assigned" } },
     { id: "scheduling" },

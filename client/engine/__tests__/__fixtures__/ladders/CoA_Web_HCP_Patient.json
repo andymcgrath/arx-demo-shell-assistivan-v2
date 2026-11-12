@@ -2,8 +2,8 @@
   {
     "stage": 2,
     "ignored": [],
-    "route": "/sms-message",
-    "biStatus": "none",
+    "route": "/",
+    "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
     "dispatchStatus": "none",
@@ -13,7 +13,7 @@
     "stage": 3,
     "ignored": [],
     "route": "/",
-    "biStatus": "none",
+    "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
     "dispatchStatus": "none",
@@ -22,27 +22,7 @@
   {
     "stage": 4,
     "ignored": [],
-    "route": "/",
-    "biStatus": "running",
-    "paStatus": "none",
-    "pricingOption": null,
-    "dispatchStatus": "none",
-    "pharmacyStatus": "none"
-  },
-  {
-    "stage": 5,
-    "ignored": [],
-    "route": "/",
-    "biStatus": "running",
-    "paStatus": "none",
-    "pricingOption": null,
-    "dispatchStatus": "none",
-    "pharmacyStatus": "none"
-  },
-  {
-    "stage": 6,
-    "ignored": [],
-    "route": "/pap-transfer-sms",
+    "route": "/pap-enrollment-complete",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -50,7 +30,7 @@
     "pharmacyStatus": "none"
   },
   {
-    "stage": 7,
+    "stage": 5,
     "ignored": [],
     "route": "/pap-update-otp",
     "biStatus": "complete",
@@ -60,19 +40,9 @@
     "pharmacyStatus": "none"
   },
   {
-    "stage": 8,
+    "stage": 6,
     "ignored": [],
-    "route": "/",
-    "biStatus": "complete",
-    "paStatus": "none",
-    "pricingOption": null,
-    "dispatchStatus": "none",
-    "pharmacyStatus": "none"
-  },
-  {
-    "stage": 9,
-    "ignored": [],
-    "route": "/delivery-address",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -80,9 +50,9 @@
     "pharmacyStatus": "none"
   },
   {
-    "stage": 10,
+    "stage": 7,
     "ignored": [],
-    "route": "/pap-enrollment-complete",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -90,9 +60,9 @@
     "pharmacyStatus": "none"
   },
   {
-    "stage": 11,
+    "stage": 8,
     "ignored": [],
-    "route": "/order-tracker",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -100,9 +70,9 @@
     "pharmacyStatus": "processing"
   },
   {
-    "stage": 12,
+    "stage": 9,
     "ignored": [],
-    "route": "/order-shipped",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -110,9 +80,39 @@
     "pharmacyStatus": "shipped"
   },
   {
+    "stage": 10,
+    "ignored": [],
+    "route": "/pap-update-otp",
+    "biStatus": "complete",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "delivered"
+  },
+  {
+    "stage": 11,
+    "ignored": [],
+    "route": "/pap-update-otp",
+    "biStatus": "complete",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "delivered"
+  },
+  {
+    "stage": 12,
+    "ignored": [],
+    "route": "/pap-update-otp",
+    "biStatus": "complete",
+    "paStatus": "none",
+    "pricingOption": null,
+    "dispatchStatus": "dispatched",
+    "pharmacyStatus": "delivered"
+  },
+  {
     "stage": 13,
     "ignored": [],
-    "route": "/medication-delivered",
+    "route": "/pap-update-otp",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,

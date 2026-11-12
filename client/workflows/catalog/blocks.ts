@@ -54,16 +54,12 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
       },
       {
         id: "hcp_patient",
-        label: "HCP enrolls on the client's web page, then the patient authorizes",
-        summary: "The HCP completes the enrollment form on the client's site and the patient is texted. The patient taps the link, enters a one-time code and consents, then completes the authorization and the prescription on the client's page. Benefits checking starts from the patient's submit.",
-        apps: ["web", "crm", "patient"],
+        label: "HCP enrolls on the client's PrES site, and benefits checking starts",
+        summary: "The HCP completes the enrollment form on the client's PrES site, on the Provider tab. The submit enrolls the case and starts benefits checking. The patient is not texted yet. The patient's steps come later, on the client's PES site.",
+        apps: ["web", "crm"],
         lane: "hcp",
         trigger: "click",
-        steps: [
-          step("HCP completes the enrollment form on the client's site", "hcp", "click"),
-          ...PATIENT_ONBOARDING,
-          step("Patient completes the authorization and the prescription on the client's page", "patient", "click"),
-        ],
+        steps: [step("HCP completes the enrollment form on the client's PrES site", "hcp", "click"), step("Benefits checking starts", "system", "automatic")],
       },
       {
         id: "no_rx",
@@ -242,11 +238,23 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
   pap_transfer: {
     id: "pap_transfer",
     name: "Referral to the patient support program",
-    summary: "No coverage was found, so the case goes to the manufacturer's patient support program and the patient gets a text.",
+    summary: "No coverage was found, so the case goes to the manufacturer's patient support program. Whether the patient gets a text on its own depends on the variant.",
     aliases: ["PSP referral", "PAP transfer", "hub transfer", "patient support program"],
     apps: ["crm", "patient"],
     lane: "system",
     trigger: "automatic",
+    variants: [
+      { id: "default", label: "Referral, and the patient is texted", summary: "No coverage was found, so the case goes to the patient support program and the patient gets a text on its own." },
+      {
+        id: "agent",
+        label: "Referral, and the agent sends the text",
+        summary: "No coverage was found, so the case goes to the patient support program. Nothing texts the patient yet. The agent sends the application update from the Fulfillment Center.",
+        apps: ["crm"],
+        lane: "agent",
+        trigger: "click",
+        steps: [step("Agent opens the BI stage and no coverage comes back", "agent", "view"), step("Agent sends the application update from the Fulfillment Center", "agent", "click")],
+      },
+    ],
   },
   income_qualification: {
     id: "income_qualification",

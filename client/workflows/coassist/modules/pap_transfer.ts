@@ -16,6 +16,15 @@ import type { CoaRule } from "./shared";
 /** The module is in the recipe, and the scenario's `bi` fork has the free drug program exit. */
 export const PAP_TRANSFER_SCOPE: RuleScope[] = [{ module: "pap_transfer" }, { fork: "bi", exit: "no_coverage_pap" }];
 
+type WithRecipe = { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } };
+
+/**
+ * The `agent` variant: nothing texts the patient when the case is referred. The agent sends the application update from the
+ * Fulfillment Center (`income_qualification`), and that text is the only one. The default variant sends the transfer text itself.
+ */
+export const transferTextByAgent = (s: WithRecipe): boolean =>
+  s.recipe?.modules.some((m) => m.id === "pap_transfer" && m.props?.variant === "agent") ?? false;
+
 /** BI is back and the story picked the free drug program exit. */
 export const papTransferChosen = (d: WorkflowData) => d.biStatus === "complete" && exitFor(biForkFor(d.flowType), d).id === "no_coverage_pap";
 
@@ -25,14 +34,14 @@ export const PAP_TRANSFER_RULES: CoaRule[] = [
     on: "REFER_TO_PSP", // trigger: system
     scope: PAP_TRANSFER_SCOPE,
     when: (d) => papTransferChosen(d) && d.papTransferStatus === "none",
-    set: () => ({ papTransferStatus: "referred", papTransferSmsSent: true }),
+    set: (_d, _e, s) => ({ papTransferStatus: "referred", ...(transferTextByAgent(s) ? {} : { papTransferSmsSent: true }) }),
     emit: { portal: "crm", step: 9 },
   },
   {
     id: "pap_transfer.verify_sms",
     on: "VERIFY_PAP_TRANSFER_SMS",
     scope: PAP_TRANSFER_SCOPE,
-    when: (d) => d.papTransferSmsSent && !d.papTransferSmsVerified,
+    when: (d) => d.papTransferSmsSent && !d.papTransferSmsVerified, // never true in the `agent` variant: no transfer text goes out
     set: () => ({ papTransferSmsVerified: true }),
     emit: { portal: "patient", step: 9 },
     // The transfer text is the only text. Its tap also opens the application, so the income module's update text goes

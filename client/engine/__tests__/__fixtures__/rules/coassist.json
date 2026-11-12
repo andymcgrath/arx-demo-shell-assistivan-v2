@@ -47,9 +47,6 @@
     "PATIENT_PAYS": [
       "payment.patient_pays"
     ],
-    "PATIENT_RX_SUBMIT": [
-      "hcp_patient.patient_submit"
-    ],
     "PATIENT_SELECTS_SHIP_DATE": [
       "scheduling.patient_selects_ship_date"
     ],
@@ -217,9 +214,6 @@
     ],
     "hcp_enroll.submit": [
       "CoA_HCP_Enroll"
-    ],
-    "hcp_patient.patient_submit": [
-      "CoA_Web_HCP_Patient"
     ],
     "hcp_patient.referral": [
       "CoA_Web_HCP_Patient"

@@ -1447,7 +1447,7 @@
         "actions": []
       },
       {
-        "after": "VERIFY_INCOME",
+        "after": "PATIENT_SELECTS_SHIP_DATE",
         "actions": [
           {
             "stage": "TP-14277",
@@ -1508,7 +1508,7 @@
         "actions": []
       },
       {
-        "after": "PATIENT_RX_SUBMIT",
+        "after": "HCP_REFERRAL_SUBMIT",
         "actions": [
           {
             "stage": "BI-14273",
@@ -1524,7 +1524,7 @@
         "actions": []
       },
       {
-        "after": "VERIFY_INCOME",
+        "after": "PATIENT_SELECTS_SHIP_DATE",
         "actions": [
           {
             "stage": "TP-14277",
@@ -2873,7 +2873,7 @@
         "actions": []
       },
       {
-        "after": "VERIFY_INCOME",
+        "after": "PATIENT_SELECTS_SHIP_DATE",
         "actions": [
           {
             "stage": "TP-14277",

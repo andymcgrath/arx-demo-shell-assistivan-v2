@@ -24,6 +24,13 @@ export const inFulfillmentTail = (d: WorkflowData) =>
 export const prescriberPharmacy = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): boolean =>
   !!s.recipe?.modules.some((m) => m.id === "pharmacy_selection" && m.props?.variant === "prescriber");
 
+/**
+ * The pharmacy ships what the patient scheduled, so the agent's dispatch (FILL_RX) waits for the ship date. True for the
+ * prescriber's pharmacy, and for a free drug program recipe that has the `scheduling` block.
+ */
+export const waitsForShipDate = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): boolean =>
+  prescriberPharmacy(s) || (!!s.recipe?.modules.some((m) => m.id === "scheduling") && !!s.recipe?.modules.some((m) => m.id === "income_qualification"));
+
 export const neitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";
 
