@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import CanvasLab from "@/shell/DemoLabCanvas";
 import { DraftProvider } from "@/shell/DemoLabDraft";
 
 /** The canvas draws a row of cards, a detail panel for the picked card, and the forks under their owner cards. */
 
+const setWidth = (w: number) => Object.defineProperty(window, "innerWidth", { value: w, configurable: true, writable: true });
+beforeEach(() => setWidth(1400));
 afterEach(cleanup);
 
 const open = (name: RegExp) => {
@@ -296,5 +298,15 @@ describe("the request details expander", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(within(view.container).getAllByRole("button").find((b) => /Blank CoAssist demo/.test(b.textContent ?? ""))!);
     expect(view.getByRole("button", { name: /^show request details/i }).textContent).toMatch(/\(\d+ to fill\)/);
+  });
+});
+
+describe("a narrow window", () => {
+  it("starts with both side panels collapsed so the cards have room", () => {
+    setWidth(800);
+    const view = render(<DraftProvider><CanvasLab /></DraftProvider>);
+    expect(view.queryByLabelText("Demo list")).toBeNull();
+    expect(view.queryByLabelText("Card detail")).toBeNull();
+    expect(view.getAllByTestId("canvas-card").length).toBeGreaterThan(4);
   });
 });

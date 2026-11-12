@@ -54,8 +54,10 @@ export default function CanvasLab() {
   const [insertAt, setInsertAt] = useState<number | null>(null);
   const [showRequest, setShowRequest] = useState(false);
   const [shownFork, setShownFork] = useState<string | null>(null);
-  const [listOpen, setListOpen] = useState(true);
-  const [detailOpen, setDetailOpen] = useState(true);
+  // On a narrow window the two side panels would leave the cards no room, so they start collapsed.
+  const roomy = typeof window === "undefined" || window.innerWidth >= 1100;
+  const [listOpen, setListOpen] = useState(roomy);
+  const [detailOpen, setDetailOpen] = useState(roomy);
   const groups = [...new Set(items.map((i) => i.group))];
 
   const fromItem = (it: Item) => draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
@@ -180,9 +182,12 @@ export default function CanvasLab() {
                 <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
               </div>
             </section>
-            <section className="rounded border bg-white pb-3" style={{ borderColor: LINE, borderTopColor: INK }} aria-label="Recipe" data-testid="section-recipe">
-              <Band kind="recipe" title="Recipe" note="The blocks that run, in order, and the forks they can branch on. Every demo above shares it." />
-              <div className="px-3">
+            <section className="pb-3" aria-label="Recipe" data-testid="section-recipe">
+              <div className="mb-3 max-w-xl" data-testid="band-recipe">
+                <h2 className="text-xs font-bold uppercase tracking-wide">Recipe</h2>
+                <p className="text-[11px]" style={{ color: MUTED }}>The blocks that run, in order, and the forks they can branch on. Every demo above shares it.</p>
+              </div>
+              <div>
                 <ForkToggles canvas={canvas} edit={edit} onShow={showFork} shown={shownFork} />
                 {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
                 <div className="flex items-start pb-4">
