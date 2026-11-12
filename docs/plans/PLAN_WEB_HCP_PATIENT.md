@@ -56,11 +56,11 @@ Each step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed, and 
 - A new `isPesSite` fact makes the layout wide, as `isPres` does for the legacy PrES.
 - A visual redesign of the pages (the "modernized" look) is a separate follow-up. It needs a design decision first.
 
-### 3. HCP site and CRM
+### 3. HCP site and CRM (done)
 
-- Check that the HCP thank-you page matches the story (the patient will get a link) and starts BI.
-- CRM stages: BI, PAP enrollment, triage and pharmacy status. The Fulfillment Center shows the Application Update item once BI is back with no coverage.
-- Step bar: Referral, BI, PAP enrolled, triage, processing, shipped, delivered.
+- The PrES site (the HCP form) is on the Provider tab. The scenario has no separate web tab. The page stays the desktop site after the submit, and its thank-you line says the patient will get a link (`hcpSite.submittedLink` in the brand file).
+- The Fulfillment Center: the BI result shows Send via Fulfillment Center once BI is back, and the Application Update item is ready (`agentSendsPapUpdate` fact). The text arrives on the phone on the Patient tab.
+- Checked in the browser, end to end: HCP form, BI, no coverage, Fulfillment Center send, the text, PES home, income consent, income, program terms, address, date, confirmation.
 
 ### 4. Demo and fixtures
 

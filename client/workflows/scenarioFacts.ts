@@ -33,6 +33,8 @@ export interface ScenarioFacts {
   isHcpThenPatient: boolean;
   /** The patient's pages are the PES site (wide web layout, with the update text on a phone). Same as `isHcpThenPatient`; the legacy PrES uses `isPres`. */
   isPesSite: boolean;
+  /** The agent sends the application update from the Fulfillment Center once BI finds no coverage (`pap_transfer` variant `agent`). The legacy no-PA intakes do the same, and report it through `isNoPaIntake`. */
+  agentSendsPapUpdate: boolean;
   /** Medical-benefit coverage outcomes: a cash offer SMS and a provider transfer, with no PA or pricing. */
   isCoverageScenario: boolean;
   /** Fax intake. */
@@ -93,6 +95,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     isHcpEnrollment: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp"),
     isHcpThenPatient: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     isPesSite: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
+    agentSendsPapUpdate: !!recipe?.modules.some((m) => m.id === "pap_transfer" && m.props?.variant === "agent"),
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     paFormByPrescriber: paVariant({ recipe }) === "apa",

@@ -158,6 +158,7 @@
       }
     ],
     "strengths": ["25 mg"],
-    "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent."
+    "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent.",
+    "submittedLink": "Thank you for submitting {patient}'s referral to the {drug} Patient Assistance Program. The patient will get a link to finish their income verification and complete enrollment from their own portal."
   }
 }

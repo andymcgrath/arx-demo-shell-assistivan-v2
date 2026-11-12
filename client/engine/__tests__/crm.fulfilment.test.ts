@@ -19,7 +19,9 @@ describe("Fulfilment Center readiness comes from the machine", () => {
       const can = (e: { type: string }) => actor.getSnapshot().can(e as any);
       const check = () => {
         const d = ctx(actor).workflowData;
-        const old = scenarioFacts(d.flowType).isNoPaIntake && d.biStatus === "complete" && d.biResult === "no_insurance" && !d.papSmsSent;
+        const facts = scenarioFacts(d.flowType);
+        // A recipe whose agent sends the application update (`pap_transfer` variant `agent`) has the item once BI is back.
+        const old = ((facts.isNoPaIntake && d.biStatus === "complete" && d.biResult === "no_insurance") || (facts.agentSendsPapUpdate && d.biStatus === "complete")) && !d.papSmsSent;
         const now = canAddItem(ITEM, "pending", d, can as any);
         expect(now, `${scenario.name} after ${d.biStatus}/${d.papSmsSent}`).toBe(old);
         if (now) ready++;

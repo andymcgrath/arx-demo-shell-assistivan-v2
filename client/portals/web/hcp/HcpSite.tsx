@@ -12,7 +12,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { START_OVER_EVENT } from "../events";
-import { hcpSite, withPatient } from "./content";
+import { hcpSite, withDrug, withPatient } from "./content";
 import EnrollmentForm from "./EnrollmentForm";
 import { primaryBtn } from "./fields";
 import { SiteFooter, SiteHeader, type HcpPage } from "./SiteChrome";
@@ -52,7 +52,7 @@ export default function HcpSite({ submitEvent = "HCP_ENROLL_SUBMIT", startOver =
           <div className="mx-auto max-w-xl px-6 py-16 text-center">
             <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-arx-success" />
             <h1 className="mb-3 text-3xl font-black text-arx-primary">Enrollment submitted</h1>
-            <p className="mb-8 text-base text-arx-body-copy">{withPatient(hcpSite().submitted, patient.patientName.split(" ")[0])}</p>
+            <p className="mb-8 text-base text-arx-body-copy">{withPatient(withDrug((startOver && hcpSite().submittedLink) || hcpSite().submitted), patient.patientName.split(" ")[0])}</p>
             {/* The Patient tab's URL slug. Not imported from DemoShell, which imports this file's parent. */}
             <button type="button" className={primaryBtn} onClick={() => (startOver ? window.dispatchEvent(new Event(START_OVER_EVENT)) : navigate("/patient"))}>
               {startOver ? "Start over" : "Open the patient's phone"}

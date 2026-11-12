@@ -103,6 +103,11 @@ export interface BrandHcpSite {
   strengths: string[];
   /** The line shown after the HCP submits. `{patient}` becomes the patient's first name. */
   submitted: string;
+  /**
+   * The line shown after the HCP submits when the patient is texted later, by the agent (the PrES + PES scenario). Falls back to
+   * `submitted`. `{patient}` and `{drug}` are filled in.
+   */
+  submittedLink?: string;
 }
 
 export interface BrandConfig {

@@ -8,5 +8,5 @@ import { scenarioFacts } from "@/workflows/scenarioFacts";
  */
 export function webIsDesktopSite(flowType: string, d: Pick<WorkflowData, "consentStatus">): boolean {
   const facts = scenarioFacts(flowType);
-  return facts.isHcpEnrollment || (facts.isHcpThenPatient && d.consentStatus !== "confirmed");
+  return facts.isHcpEnrollment || facts.isHcpThenPatient;
 }

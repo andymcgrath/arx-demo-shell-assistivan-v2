@@ -47,7 +47,7 @@ export function BiDetail({ workflowData, patientName, drugName, caseNumber, phon
                 WorkflowEngine.ts's PAP routing branch). Sent through the
                 Fulfillment Center now, same as every other patient SMS
                 in the demo, instead of a bespoke button here. */}
-            {facts.isNoPaIntake && biResult === "no_insurance" && (
+            {((facts.isNoPaIntake && biResult === "no_insurance") || (facts.agentSendsPapUpdate && biStatus === "complete")) && (
               papSmsSent ? (
                 <span className="text-[12px] font-semibold px-2.5 py-1 rounded" style={{ background: "var(--crm-primary-30, #e8f4ef)", color: "#2e844a" }}>
                   SMS Sent to Patient

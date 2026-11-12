@@ -90,7 +90,9 @@ export function canAddItem(selectedId: string, consentStatus: string, workflowDa
   if (selectedId === "pap-application-update") {
     // The machine says when the update can be staged (SEND_PAP_SMS). The scenario says whether this item is the one
     // the case needs: a fax or e-sign intake where BI found no insurance.
-    return scenarioFacts(workflowData.flowType).isNoPaIntake && workflowData.biResult === "no_insurance" && can({ type: "SEND_PAP_SMS", portal: "crm" });
+    const facts = scenarioFacts(workflowData.flowType);
+    const noCoverage = (facts.isNoPaIntake && workflowData.biResult === "no_insurance") || (facts.agentSendsPapUpdate && workflowData.biStatus === "complete");
+    return noCoverage && can({ type: "SEND_PAP_SMS", portal: "crm" });
   }
   if (selectedId === "electronic-consent") {
     return consentStatus === "pending";

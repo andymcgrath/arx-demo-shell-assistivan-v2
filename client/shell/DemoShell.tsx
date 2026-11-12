@@ -128,7 +128,7 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   // CoA_Web_PAP: the client's web page starts the case (source `web`). No CRM.
   CoA_Web_PAP: "web",
   // CoA_Web_HCP_Patient: the client's web page starts the case (source `web`), with the CRM.
-  CoA_Web_HCP_Patient: "web",
+  CoA_Web_HCP_Patient: "provider",
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
@@ -187,7 +187,7 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
 function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
-  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource, isHcpEnrollment, hasWebCrm } = scenarioFacts(flowType);
+  const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource, isHcpEnrollment, hasWebCrm, isPesSite } = scenarioFacts(flowType);
   const hiddenTabs = scenarioFor(flowType)?.recipe?.hideTabs ?? [];
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
@@ -200,8 +200,10 @@ function getPortals(flowType: string) {
     // The gateway view shows ABV and APA calls. An HCP enrollment makes neither, so it has no gateway tab.
     if (p.id === "gateway") return isWebSource && !isHcpEnrollment && !hasWebCrm;
     if (hiddenTabs.includes(p.id)) return false;
-    if (p.id === "web") return isWebSource;
-    if (isWebSource && p.id === "provider") return false;
+    // The PES site scenario has two web sites, as the default PrES PAP does: the PrES site on the Provider tab and the PES site on
+    // the Patient tab. It has no separate web tab.
+    if (p.id === "web") return isWebSource && !isPesSite;
+    if (isWebSource && !isPesSite && p.id === "provider") return false;
     if (isWebSource && !hasWebCrm && (p.id === "crm" || p.id === "client" || p.id === "rules")) return false;
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
@@ -248,7 +250,8 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "analytics": return <AnalyticsPortal />;
     case "insights":  return <InsightsPortal />;
     case "field":     return <FieldPortal />;
-    case "provider":  return <ProviderPortal key={flowType} />;
+    // The PrES site (the HCP's enrollment form) is the provider's page in the PES site scenario.
+    case "provider":  return scenarioFacts(flowType ?? "").isPesSite ? <WebPortal /> : <ProviderPortal key={flowType} />;
     case "iassist":   return <IAssistPortal branded={false} />;
     case "rules":     return <RulesPortal />;
     case "web":       return <WebPortal />;

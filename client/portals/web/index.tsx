@@ -45,12 +45,8 @@ export default function WebPortal() {
   const resetNonce = useDemoStore((s) => s.resetNonce);
   const { workflowData } = usePersonaState("patient");
   const facts = scenarioFacts(workflowData.flowType);
-  // The HCP enrolls on the HCP site. Once the patient consents, the page turns to them: authorization, details, and the Rx.
-  if (facts.isHcpThenPatient) {
-    return workflowData.consentStatus === "confirmed"
-      ? <ConsumerWebPortal key={`patient-${resetNonce}`} submitEvent="PATIENT_RX_SUBMIT" startStep="hipaa" submitted={(w) => w.biStatus !== "none"} />
-      : <HcpSite key={resetNonce} submitEvent="HCP_REFERRAL_SUBMIT" startOver />;
-  }
+  // The HCP enrolls on the PrES site, which is the Provider tab. The patient's pages are the PES site on the Patient tab.
+  if (facts.isHcpThenPatient) return <HcpSite key={resetNonce} submitEvent="HCP_REFERRAL_SUBMIT" startOver />;
   return facts.isHcpEnrollment ? <HcpSite key={resetNonce} /> : <ConsumerWebPortal key={resetNonce} />;
 }
 
