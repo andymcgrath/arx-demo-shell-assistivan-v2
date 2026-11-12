@@ -44,7 +44,7 @@ export default function DeliveryAddress() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
-  const { hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, hasCopayFork, isPres, pharmacyFromPrescriber } = scenarioFacts(workflowData.flowType);
+  const { hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, hasCopayFork, isWideFlow, pharmacyFromPrescriber } = scenarioFacts(workflowData.flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 and Scenario 3 — see workflows/coassist/) and needs the same
   // PATIENT_SETS_ADDRESS dispatch below as CoA_DTP/iAssist/PAP.
@@ -86,7 +86,7 @@ export default function DeliveryAddress() {
 
   return (
     <main className="flex-grow">
-        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2} wide={isPres}>
+        <EnrollmentShell icon={<MapPin className="w-7 h-7" />} title="Where do you want to receive your shipment?" stepsFilled={1} stepsTotal={2} wide={isWideFlow}>
           <div className="space-y-4">
             <FloatingInput label="Address" value={form.address} onChange={set("address")} required />
             <FloatingInput label="City" value={form.city} onChange={set("city")} required />

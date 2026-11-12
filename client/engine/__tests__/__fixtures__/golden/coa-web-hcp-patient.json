@@ -7,7 +7,7 @@
         "prescriberNpi": "1234567893"
       },
       "accepted": true,
-      "route": "/",
+      "route": "/pes-home",
       "changed": {
         "enrollmentStatus": "enrolled",
         "smsVerified": true,
@@ -32,7 +32,7 @@
     {
       "event": "COMPLETE_BI",
       "accepted": true,
-      "route": "/pap-enrollment-complete",
+      "route": "/pes-home",
       "changed": {
         "biStatus": "complete",
         "biResult": "no_coverage",
@@ -65,7 +65,7 @@
     {
       "event": "SEND_PAP_SMS",
       "accepted": true,
-      "route": "/pap-update-sms",
+      "route": "/pes-pap-update-sms",
       "changed": {
         "papSmsSent": true
       },
@@ -80,7 +80,7 @@
     {
       "event": "VERIFY_PAP_SMS",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/pes-home",
       "changed": {
         "papSmsVerified": true
       },
@@ -95,7 +95,7 @@
     {
       "event": "START_INCOME_QUALIFICATION",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/pes-income-submission",
       "changed": {
         "incomeStatus": "pending"
       },
@@ -110,7 +110,7 @@
     {
       "event": "VERIFY_INCOME",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/delivery-address",
       "changed": {
         "dispatchStatus": "pending_selection",
         "papStatus": "active",
@@ -127,7 +127,7 @@
     {
       "event": "PATIENT_SETS_ADDRESS",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/delivery-date",
       "changed": {
         "dispatchStatus": "selected"
       },
@@ -142,7 +142,7 @@
     {
       "event": "PATIENT_SELECTS_SHIP_DATE",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/pes-confirmation",
       "changed": {
         "patientShipDate": "2026-01-15T12:00:00.000Z"
       },
@@ -157,7 +157,7 @@
     {
       "event": "FILL_RX",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/order-tracker",
       "changed": {
         "pharmacyStatus": "processing",
         "dispatchStatus": "dispatched"
@@ -173,7 +173,7 @@
     {
       "event": "READY_RX",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/order-tracker",
       "changed": {
         "pharmacyStatus": "ready"
       },
@@ -188,7 +188,7 @@
     {
       "event": "SHIP_RX",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/order-shipped",
       "changed": {
         "pharmacyStatus": "shipped"
       },
@@ -203,7 +203,7 @@
     {
       "event": "DELIVER_RX",
       "accepted": true,
-      "route": "/pap-update-otp",
+      "route": "/medication-delivered",
       "changed": {
         "pharmacyStatus": "delivered"
       },

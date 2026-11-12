@@ -65,7 +65,8 @@ const isCopayWorkflow = (flowType: string) => flowType === "CoA_Copay" || flowTy
 const isPres = (flowType: string) => flowType === "PrES_PAP";
 
 // patient/index.tsx:160 and :246, patient/pages/MedicationDelivered.tsx:26
-const isWideFlow = (flowType: string) => flowType === "PrES_PAP";
+// The PES site (the HCP-then-patient scenario) uses the same wide layout as PrES_PAP: a deliberate change, not a drift.
+const isWideFlow = (flowType: string) => flowType === "PrES_PAP" || flowType === "CoA_Web_HCP_Patient";
 
 const PRICING_OPTIONS = [null, "dtp", "retail", "mail_order", "copay"] as const;
 

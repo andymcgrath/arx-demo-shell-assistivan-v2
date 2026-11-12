@@ -465,7 +465,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
   // into the phone frame by accident.
   const { workflowData } = usePersonaState('patient');
   const showPesPapUpdateSmsPhone =
-    scenarioFacts(flowType).isPres && workflowData.papSmsSent && !workflowData.papSmsVerified;
+    scenarioFacts(flowType).isWideFlow && workflowData.papSmsSent && !workflowData.papSmsVerified;
 
   return (
     <div className="flex flex-col flex-1 min-w-0 border-r border-slate-700/50 last:border-r-0">
@@ -508,7 +508,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * uses the phone frame, matching every other flow's SMS screens.
        */}
       {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. The HCP site is a desktop page, so it does not. */}
-      {(portal === "web" && !webIsDesktopSite(flowType, workflowData)) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
+      {(portal === "web" && !webIsDesktopSite(flowType, workflowData)) || (portal === "patient" && (!scenarioFacts(flowType).isWideFlow || showPesPapUpdateSmsPhone)) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{

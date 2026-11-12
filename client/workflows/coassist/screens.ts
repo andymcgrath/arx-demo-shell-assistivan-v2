@@ -3,6 +3,7 @@ import { COASSIST_FORKS } from "./forks";
 import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_HCP_PATIENT, COASSIST_FLOWS } from "./scenarios";
 import { CASH_OFFER_ROUTES, CASH_OFFER_SCREENS } from "./modules/screens/cash_offer";
 import { ENROLLMENT_ROUTES, ENROLLMENT_SCREENS } from "./modules/screens/enrollment";
+import { HCP_PATIENT_ROUTES, HCP_PATIENT_SCREENS } from "./modules/screens/hcp_patient";
 import { ASSISTANCE_ROUTES, ASSISTANCE_SCREENS } from "./modules/screens/assistance";
 import { INCOME_QUALIFICATION_ROUTES, INCOME_QUALIFICATION_SCREENS } from "./modules/screens/income_qualification";
 import { PAP_TRANSFER_ROUTES, PAP_TRANSFER_SCREENS } from "./modules/screens/pap_transfer";
@@ -40,6 +41,7 @@ export const COASSIST_SCREENS: ScreenMap = {
 
   screens: [
     ...ENROLLMENT_SCREENS,
+    ...HCP_PATIENT_SCREENS,
     ...PA_NOTIFICATION_SCREENS,
     ...CASH_OFFER_SCREENS,
     ...PROVIDER_TRANSFER_SCREENS,
@@ -53,6 +55,8 @@ export const COASSIST_SCREENS: ScreenMap = {
   ],
 
   rules: [
+    // The PES site's rules come first so they win over the phone-app enrollment and PAP screens in the same slot.
+    ...HCP_PATIENT_ROUTES,
     ...ENROLLMENT_ROUTES,
     ...PA_NOTIFICATION_ROUTES,
     ...PAYMENT_ROUTES,

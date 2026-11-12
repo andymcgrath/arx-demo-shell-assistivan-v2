@@ -2,7 +2,7 @@
   {
     "stage": 2,
     "ignored": [],
-    "route": "/",
+    "route": "/pes-home",
     "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
@@ -12,7 +12,7 @@
   {
     "stage": 3,
     "ignored": [],
-    "route": "/",
+    "route": "/pes-home",
     "biStatus": "running",
     "paStatus": "none",
     "pricingOption": null,
@@ -22,7 +22,7 @@
   {
     "stage": 4,
     "ignored": [],
-    "route": "/pap-enrollment-complete",
+    "route": "/pes-home",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -32,7 +32,7 @@
   {
     "stage": 5,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/pes-home",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -42,7 +42,7 @@
   {
     "stage": 6,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/delivery-address",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -52,7 +52,7 @@
   {
     "stage": 7,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/pes-confirmation",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -62,7 +62,7 @@
   {
     "stage": 8,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/order-tracker",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -72,7 +72,7 @@
   {
     "stage": 9,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/order-shipped",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -82,7 +82,7 @@
   {
     "stage": 10,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/medication-delivered",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -92,7 +92,7 @@
   {
     "stage": 11,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/medication-delivered",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -102,7 +102,7 @@
   {
     "stage": 12,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/medication-delivered",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,
@@ -112,7 +112,7 @@
   {
     "stage": 13,
     "ignored": [],
-    "route": "/pap-update-otp",
+    "route": "/medication-delivered",
     "biStatus": "complete",
     "paStatus": "none",
     "pricingOption": null,

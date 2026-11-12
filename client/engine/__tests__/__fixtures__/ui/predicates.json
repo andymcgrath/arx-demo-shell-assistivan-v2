@@ -283,7 +283,7 @@
       "isIAssistPapFlow_crmWithFreeDrug": false,
       "isCopayWorkflow": false,
       "isPres": false,
-      "isWideFlow": false,
+      "isWideFlow": true,
       "isCopayRetailFlow_byPricingOption": {
         "null": false,
         "dtp": false,

@@ -25,7 +25,7 @@
       "id": "web-pres-pes",
       "flow": "CoA_Web_HCP_Patient",
       "label": "4. PrES + PES",
-      "description": "The HCP completes the enrollment form on the client's web page and the patient is texted. The patient verifies and consents, then completes the authorization and the prescription on the web page. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
+      "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
       "choices": {
         "bi": "no_coverage_pap"
       }

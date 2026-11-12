@@ -34,7 +34,7 @@ export default function DeliveryDate() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
-  const { isStandardFaxPa, hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, isPres, pharmacyFromPrescriber } = scenarioFacts(flowType);
+  const { isStandardFaxPa, hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, isWideFlow, pharmacyFromPrescriber } = scenarioFacts(flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 — Retail/Mail, pharmacy covered; Scenario 3 — self-pay, neither
   // covered — see workflows/coassist/). Not folded into hasPricingFork above since
@@ -85,7 +85,7 @@ export default function DeliveryDate() {
     // state-driven correction to the real target route never fires and
     // "Got it" just bounces straight to /order-tracker instead.
     if (isNoPaIntake || isPapProgram) {
-      navigate(isPres ? "/pes-confirmation" : "/pap-enrollment-complete");
+      navigate(isWideFlow ? "/pes-confirmation" : "/pap-enrollment-complete");
       return;
     }
     // No price and no payment: the date ends the patient's part, and the route moves to the order confirmation.
@@ -103,7 +103,7 @@ export default function DeliveryDate() {
           title="Please select a delivery date from the available dates below"
           stepsFilled={2}
           stepsTotal={2}
-          wide={isPres}
+          wide={isWideFlow}
         >
           <div className="space-y-5">
             <p className="text-sm leading-relaxed text-arx-body-copy">

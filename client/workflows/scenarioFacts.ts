@@ -31,6 +31,8 @@ export interface ScenarioFacts {
   isHcpEnrollment: boolean;
   /** The web page runs in two parts (the `hcp_patient` enrollment variant): an HCP enrolls the patient, then the patient completes the authorization and the Rx. */
   isHcpThenPatient: boolean;
+  /** The patient's pages are the PES site (wide web layout, with the update text on a phone). Same as `isHcpThenPatient`; the legacy PrES uses `isPres`. */
+  isPesSite: boolean;
   /** Medical-benefit coverage outcomes: a cash offer SMS and a provider transfer, with no PA or pricing. */
   isCoverageScenario: boolean;
   /** Fax intake. */
@@ -90,6 +92,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     hasWebCrm: recipe?.source === "web" && !!recipe.crm,
     isHcpEnrollment: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp"),
     isHcpThenPatient: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
+    isPesSite: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     paFormByPrescriber: paVariant({ recipe }) === "apa",
@@ -98,7 +101,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     isFaxPap: noPa && intake === "fax",
     isNoPaIntake: noPa && (intake === "fax" || intake === "esign"),
     isPres,
-    isWideFlow: isPres,
+    isWideFlow: isPres || !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     isIassistStandardPa: isIassistSource && hasModule("payment"),
     isIassistAppeal,
     isFreeDrug,

@@ -49,11 +49,12 @@ Each step ends green (`pnpm test`, `pnpm typecheck:ratchet`), is committed, and 
 - Headless test: an event list from the HCP submit to delivered, with the agent steps in order. Each precondition rejects its event where it does not hold (rule 12).
 - Update the catalog (new variant, steps) and the stage-jump ladder.
 
-### 2. Patient web screens
+### 2. Patient web screens (done as the legacy PES pages, restyle later)
 
-- Build the five steps in `portals/web/` as an Abivax-branded patient flow: consent, income, terms and enrollment submitted, address, date, confirmation. Each reads the route from the workflow data, not a local step.
-- Tokens only. Add the screens to the token tests.
-- The text: the Patient tab shows the text message, and tapping it opens the web page.
+- The Patient tab shows the PES website for this scenario: the same pages as the default PrES PAP (home, update text on a phone, income consent, income, program terms, confirmation), then the PAP address, date and tracker pages in the wide layout. They read the brand's tokens, so they are Abivax-branded with no new screens.
+- Routes come from the workflow (`screens/hcp_patient.ts`), scoped to the `hcp_patient` variant. The phone-app income and transfer screens skip this scenario.
+- A new `isPesSite` fact makes the layout wide, as `isPres` does for the legacy PrES.
+- A visual redesign of the pages (the "modernized" look) is a separate follow-up. It needs a design decision first.
 
 ### 3. HCP site and CRM
 
