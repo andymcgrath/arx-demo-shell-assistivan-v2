@@ -104,3 +104,31 @@ export const catalogExit = (forkId: string, exitId: string): (CatalogExit & { la
     }
   );
 };
+
+/** True when a `leadsTo` entry (`module` or `module:variant`) names this block. A module with no variant prop is the `default` variant. */
+export const entryNamesBlock = (entry: string, moduleId: string, variantId?: string): boolean => {
+  const [id, variant] = entry.split(":");
+  return id === moduleId && (variant === undefined || variant === (variantId ?? DEFAULT_VARIANT));
+};
+
+/**
+ * Whether a fork outcome works with a block. True when the outcome sets no `leadsTo` (the fork does not change which
+ * blocks can follow), and when the block takes input from every outcome (`acceptsAny`).
+ */
+export function exitFeeds(forkId: string, exitId: string, block: { id: ModuleId; variantId?: string }): boolean {
+  if (CATALOG_BLOCKS[block.id]?.acceptsAny) return true;
+  const leadsTo = CATALOG_FORKS.find((f) => f.id === forkId)?.exits.find((e) => e.id === exitId)?.leadsTo;
+  return !leadsTo || leadsTo.some((entry) => entryNamesBlock(entry, block.id, block.variantId));
+}
+
+/**
+ * The index of the block a fork is drawn under in this recipe: the first block in the fork's `ownedBy` list that the
+ * recipe has. -1 when it has none.
+ */
+export function forkOwnerIndex(forkId: string, modules: { id: string }[]): number {
+  for (const owner of CATALOG_FORKS.find((f) => f.id === forkId)?.ownedBy ?? []) {
+    const i = modules.findIndex((m) => m.id === owner);
+    if (i >= 0) return i;
+  }
+  return -1;
+}

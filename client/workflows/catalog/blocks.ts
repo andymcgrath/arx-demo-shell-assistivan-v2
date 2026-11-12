@@ -337,6 +337,7 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
   tracking: {
     id: "tracking",
     name: "Order tracking",
+    acceptsAny: true,
     summary: "The pharmacy fills the order, the agent marks it received, shipped, and delivered, and the patient's tracker and the Field app follow each step.",
     aliases: ["tracker", "order tracking", "fulfillment", "shipping", "delivery tracking"],
     apps: ["crm", "field", "patient"],

@@ -1,60 +1,70 @@
-import type { CatalogFork } from "./types";
+import type { CatalogFork, CatalogLane, CatalogStep, CatalogTrigger } from "./types";
 
 /**
- * Fork and exit entries. `label` and `description` are left out where `forks.ts` already reads well to sales, and
+ * Fork and exit entries. `ownedBy` says which block a fork is drawn under. `leadsTo` lists the blocks an outcome works with (see `CatalogExit`). `then` is written for patient forks only. `label` and `description` are left out where `forks.ts` already reads well to sales, and
  * `catalogExit` falls back to it. Aliases are sales vocabulary for the palette search. Draft entries carry a question.
  */
+const step = (label: string, lane: CatalogLane, trigger: CatalogTrigger): CatalogStep => ({ label, lane, trigger });
+
+/** The question on a `then` list the user has not signed off on. */
+const THEN_QUESTION = "Is this what the audience sees after this choice? The steps are written from the screens and rules, not from a sales script.";
+
 export const CATALOG_FORKS: CatalogFork[] = [
   {
     id: "bi",
+    ownedBy: ["benefit_verification", "enrollment"],
     aliases: ["BI", "benefits investigation", "benefit verification", "coverage check"],
     exits: [
-      { id: "pharmacy_covered", aliases: ["pharmacy benefit", "commercial", "covered with PA", "retail coverage"] },
-      { id: "pharmacy_transfer", aliases: ["transfer to SP", "assigned pharmacy", "pharmacy transfer"] },
-      { id: "medical_covered", aliases: ["medical benefit", "covered, no PA", "transfer to provider"] },
+      { id: "pharmacy_covered", leadsTo: ["prior_authorization", "pa_notification", "cash_offer", "payment", "financial_assistance", "income_qualification", "provider_transfer", "pharmacy_selection", "appeal", "scheduling", "tracking"], aliases: ["pharmacy benefit", "commercial", "covered with PA", "retail coverage"] },
+      { id: "pharmacy_transfer", leadsTo: ["prior_authorization", "pa_notification", "provider_transfer", "pharmacy_selection:assigned", "scheduling", "tracking"], aliases: ["transfer to SP", "assigned pharmacy", "pharmacy transfer"] },
+      { id: "medical_covered", leadsTo: ["provider_transfer", "tracking"], aliases: ["medical benefit", "covered, no PA", "transfer to provider"] },
       {
-        id: "medical_pa_required",
+        id: "medical_pa_required", leadsTo: ["prior_authorization", "pa_notification", "pharmacy_selection:assigned", "tracking"],
         label: "Medical benefit covers, PA required",
         description: "The medical benefit covers it and a PA is required. We process the Rx and transfer it to an assigned dispenser. The patient picks nothing and sees its contact details.",
         aliases: ["medical transfer", "medical PA required", "transfer for dispensing"],
       },
       {
-        id: "medical_buy_and_bill",
+        id: "medical_buy_and_bill", leadsTo: ["benefit_verification", "copay", "enrollment", "prior_authorization", "pa_notification", "patient_record", "copay_claim"],
         label: "Medical benefit covers, HCP buys and bills",
         description: "The medical benefit covers it and a PA is required. The HCP buys and bills the drug, so nothing ships to the patient. The HCP runs eMedBV and enrolls the patient in copay.",
         aliases: ["buy and bill", "B&B", "HCP buys and bills", "HCP administered"],
       },
-      { id: "no_coverage", aliases: ["cash", "self-pay", "DTP", "uncovered", "no benefit"] },
-      { id: "no_coverage_pap", aliases: ["PAP", "free drug", "patient assistance", "PSP", "patient support program"] },
+      { id: "no_coverage", leadsTo: ["cash_offer", "payment", "financial_assistance", "enrollment", "patient_record", "pharmacy_selection", "scheduling", "tracking"], aliases: ["cash", "self-pay", "DTP", "uncovered", "no benefit"] },
+      { id: "no_coverage_pap", leadsTo: ["pap_transfer", "income_qualification", "pharmacy_selection:assigned", "scheduling", "tracking"], aliases: ["PAP", "free drug", "patient assistance", "PSP", "patient support program"] },
     ],
   },
   {
     id: "pa",
+    ownedBy: ["prior_authorization", "pa_notification"],
     aliases: ["APA", "PA", "prior auth", "prior authorization"],
     exits: [
-      { id: "approved", aliases: ["approve", "approved"] },
-      { id: "denied", aliases: ["deny", "denied", "appeal"] },
+      { id: "approved", leadsTo: ["pa_notification", "payment", "financial_assistance", "income_qualification", "provider_transfer", "cash_offer", "pharmacy_selection", "scheduling", "patient_record", "copay_claim", "tracking"], aliases: ["approve", "approved"] },
+      { id: "denied", leadsTo: ["appeal", "cash_offer", "payment", "pharmacy_selection", "scheduling", "tracking"], aliases: ["deny", "denied", "appeal"] },
     ],
   },
   {
     id: "pricing",
+    ownedBy: ["payment"],
     aliases: ["pricing", "price pick", "pricing options"],
     exits: [
-      { id: "retail", aliases: ["retail store", "pick up"] },
-      { id: "mail_order", aliases: ["mail", "home delivery"] },
-      { id: "self_pay", aliases: ["cash pay", "cash", "DTP"] },
+      { id: "retail", leadsTo: ["pharmacy_selection:store", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient picks a retail store", "patient", "click"), step("The pharmacy fills it at the counter. Nothing ships", "system", "view")], aliases: ["retail store", "pick up"] },
+      { id: "mail_order", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient confirms the delivery address", "patient", "click"), step("The filling pharmacy handles the date, and the order tracker follows", "system", "automatic")], aliases: ["mail", "home delivery"] },
+      { id: "self_pay", leadsTo: ["cash_offer", "financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient accepts the self-pay offer and pays by card. Nothing is charged", "patient", "click"), step("The CRM verifies the payment", "agent", "click"), step("The patient sets the delivery address and ship date", "patient", "click")], aliases: ["cash pay", "cash", "DTP"] },
     ],
   },
   {
     id: "copay",
+    ownedBy: ["financial_assistance"],
     aliases: ["copay", "copay program", "copay enrollment"],
     exits: [
-      { id: "enroll", aliases: ["enroll in copay", "reduced price"] },
-      { id: "decline", aliases: ["decline copay", "full price"] },
+      { id: "enroll", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient enrolls in the copay program", "patient", "click"), step("The reduced price applies", "system", "automatic")], aliases: ["enroll in copay", "reduced price"] },
+      { id: "decline", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient declines the copay program and keeps the full price", "patient", "click")], aliases: ["decline copay", "full price"] },
     ],
   },
   {
     id: "audience",
+    ownedBy: ["enrollment"],
     aliases: ["audience", "who starts", "PrES", "PES", "HCP or patient"],
     exits: [
       { id: "hcp", aliases: ["PrES", "healthcare provider", "HCP enrolls", "prescriber enrolls"] },
@@ -63,15 +73,17 @@ export const CATALOG_FORKS: CatalogFork[] = [
   },
   {
     id: "assistance",
+    ownedBy: ["financial_assistance"],
     aliases: ["assistance", "financial assistance", "patient choice of assistance"],
     exits: [
-      { id: "pap", aliases: ["free drug", "PAP", "patient assistance program"] },
-      { id: "copay", aliases: ["copay offer", "manufacturer copay"] },
-      { id: "self_pay", aliases: ["pay out of pocket", "pay cash after qualifying"] },
+      { id: "pap", leadsTo: ["income_qualification", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses the free drug program, and it activates", "patient", "click")], aliases: ["free drug", "PAP", "patient assistance program"] },
+      { id: "copay", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses the copay program", "patient", "click")], aliases: ["copay offer", "manufacturer copay"] },
+      { id: "self_pay", leadsTo: ["cash_offer", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses to pay out of pocket", "patient", "click")], aliases: ["pay out of pocket", "pay cash after qualifying"] },
     ],
   },
   {
     id: "consent",
+    ownedBy: ["enrollment"],
     aliases: ["consent", "patient consent"],
     exits: [
       { id: "patient_text", aliases: ["text consent", "patient consents"] },

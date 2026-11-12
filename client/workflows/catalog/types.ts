@@ -66,6 +66,8 @@ export interface CatalogBlock extends Draftable {
   apps: CatalogApp[];
   lane: CatalogLane;
   trigger: CatalogTrigger;
+  /** The block takes input from every outcome, so no outcome has to list it (tracking). */
+  acceptsAny?: true;
   /**
    * One entry per step when the actor or trigger changes inside the block. `lane` and `trigger` above are the default
    * for a block with one step.
@@ -87,10 +89,20 @@ export interface CatalogExit extends Draftable {
   label?: string;
   description?: string;
   aliases: string[];
+  /**
+   * The blocks this outcome works with, after it or alongside it: `module` for any variant, `module:variant` for one.
+   * The canvas offers these after the fork and greys out a card the picked outcome does not list. Every block the exit
+   * `requires` is in it. Leave it out when the fork does not change which blocks can follow (audience, consent).
+   */
+  leadsTo?: string[];
+  /** For a patient fork: what the audience sees after this outcome, in order. The branch logic is in rule conditions, so it is written here. */
+  then?: CatalogStep[];
 }
 
 export interface CatalogFork extends Draftable {
   id: string;
+  /** The block the fork is drawn under: the first one in this list that the recipe has. */
+  ownedBy: ModuleId[];
   /** Falls back to the fork's own label. */
   label?: string;
   aliases: string[];
