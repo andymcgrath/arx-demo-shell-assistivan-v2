@@ -2,11 +2,12 @@ import { useState } from "react";
 import { BRAND } from "@/brand";
 import type { DemoRequest } from "@/workflows/catalog/request";
 import {
-  addBlock, addDemo, addGhost, blankDraft, draftFromScenario, editorProblems, EDITOR_WORKFLOWS, exportable, moveCard, removeCard, requestBrand,
+  addBlock, addDemo, addGhost, blankDraft, draftFromScenario, EDITOR_WORKFLOWS, moveCard, removeCard, requestBrand,
   removeDemo, setPick, toggleFork, updateCard, updateDemo, type EditorWorkflow,
 } from "@/workflows/catalog/editor";
 import { useItems } from "./DemoLabItems";
 import { CardList, ForkCards, Palette } from "./DemoLabBuilderPanels";
+import { useDraft } from "./DemoLabDraft";
 
 /**
  * Demo Lab, Builder tab. Build a demo request from the block palette, mark what is new with ghost cards, pick each
@@ -20,45 +21,20 @@ const LINE = "#cbd5e1";
 const field = "w-full rounded border px-2 py-1 text-sm";
 const WORKFLOW_LABEL: Record<EditorWorkflow, string> = { iassist: "iAssist", coassist: "CoAssist" };
 
-type Exported = { ok: true; written: string[] } | { ok: false; problems: string[] };
-
 export default function Builder() {
   const items = useItems();
   const ready = items.filter((i) => i.group !== "Whole demos (no recipe yet)");
-  const [draft, setDraft] = useState<DemoRequest>(() => blankDraft("iassist", BRAND.slug, requestBrand(BRAND)));
-  const [active, setActive] = useState(0);
+  const { draft, active, setActive, edit, load, result, busy, problems, send, dirty } = useDraft();
   const [start, setStart] = useState("blank:iassist");
-  const [result, setResult] = useState<Exported>();
-  const [busy, setBusy] = useState(false);
-
-  const edit = (fn: (d: DemoRequest) => DemoRequest) => {
-    setResult(undefined);
-    setDraft(fn);
-  };
-  const problems = editorProblems(draft);
   const set = <K extends keyof DemoRequest>(key: K, value: DemoRequest[K]) => edit((d) => ({ ...d, [key]: value }));
 
   const begin = () => {
+    if (dirty && !window.confirm("Replace the draft? Your edits will be lost.")) return;
     const [kind, rest] = start.split(/:(.*)/s);
-    setActive(0);
-    setResult(undefined);
-    if (kind === "blank") return setDraft(blankDraft(rest as EditorWorkflow, BRAND.slug, requestBrand(BRAND)));
+    if (kind === "blank") return load(start, blankDraft(rest as EditorWorkflow, BRAND.slug, requestBrand(BRAND)));
     const item = items.find((i) => i.key === start);
     const next = item && draftFromScenario(item.flow, { title: item.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: item.choices });
-    if (next) setDraft(next);
-  };
-
-  const send = async () => {
-    setBusy(true);
-    try {
-      const res = await fetch("/__demo-lab/export", { method: "POST", body: JSON.stringify(exportable(draft)) });
-      const json = await res.json();
-      setResult(res.ok ? { ok: true, written: json.written } : { ok: false, problems: json.problems ?? ["The export failed."] });
-    } catch (e) {
-      setResult({ ok: false, problems: [(e as Error).message] });
-    } finally {
-      setBusy(false);
-    }
+    if (next) load(start, next);
   };
 
   const demo = draft.demos[active] ?? draft.demos[0];

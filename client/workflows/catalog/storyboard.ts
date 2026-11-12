@@ -96,7 +96,7 @@ export interface StoryboardInput {
 export const recipeHas = (recipe: ScenarioRecipe, req: string): boolean => recipeMeets(recipe, req);
 
 /** What a block waits for, from the module contract. Keys the source provides need no wait. */
-function waitsFor(recipe: ScenarioRecipe, index: number): string[] {
+export function waitsFor(recipe: ScenarioRecipe, index: number): string[] {
   const spec = recipe.modules[index];
   const contract = MODULE_CONTRACTS[spec.id];
   const earlier = recipe.modules.slice(0, index);

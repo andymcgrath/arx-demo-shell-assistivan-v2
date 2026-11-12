@@ -3,7 +3,7 @@ import { ALL_SCENARIOS } from "@/workflows/scenarios";
 import { CATALOG_BLOCKS, paletteCards } from "@/workflows/catalog";
 import type { DemoRequest } from "@/workflows/catalog/request";
 import {
-  addBlock, addDemo, addGhost, appendReasons, blankDraft, requestBrand, deriveApps, draftFromScenario, editorProblems, exitMissing,
+  addBlock, addDemo, addGhost, appendReasons, blankDraft, clearPick, insertBlock, insertGhost, insertReasons, requestBrand, setVariant, deriveApps, draftFromScenario, editorProblems, exitMissing,
   moveCard, removeCard, removeDemo, setPick, toggleFork, updateCard, workflowForks,
 } from "@/workflows/catalog/editor";
 
@@ -198,5 +198,54 @@ describe("what blocks an export", () => {
 
   it("does not build standard or PAP demos", () => {
     expect(editorProblems({ ...ready(), workflow: "pap" }).join()).toContain("the editor builds");
+  });
+});
+
+describe("inserting and changing cards in place", () => {
+  const base = () => draftFromScenario("CoA_DTP", { title: "x" })!;
+
+  it("puts a block or a ghost card at any position, and keeps the apps in step", () => {
+    const d = base();
+    const at = insertBlock(d, 1, card("pa_notification", "default"));
+    expect(at.cards[1]).toMatchObject({ kind: "block", moduleId: "pa_notification" });
+    expect(at.cards).toHaveLength(d.cards.length + 1);
+    expect(insertBlock(d, 0, card("enrollment", "default")).cards[0]).toMatchObject({ moduleId: "enrollment" });
+    expect(insertBlock(d, d.cards.length, card("tracking", "default")).cards[d.cards.length]).toMatchObject({ moduleId: "tracking" });
+    const g = insertGhost(d, 2);
+    expect(g.cards[2]).toMatchObject({ kind: "ghost" });
+    expect(g.apps).toContain("crm");
+  });
+
+  it("changes a variant, and clears it for default", () => {
+    const d = base();
+    const i = d.cards.findIndex((c) => c.kind === "block" && c.moduleId === "prior_authorization");
+    expect(setVariant(d, i, "apa").cards[i]).toMatchObject({ variantId: "apa" });
+    expect("variantId" in setVariant(setVariant(d, i, "apa"), i, "default").cards[i]).toBe(false);
+    const g = insertGhost(d, 0);
+    expect(setVariant(g, 0, "apa").cards[0]).toEqual(g.cards[0]);
+  });
+
+  it("clears a demo's pick, so the patient picks live again", () => {
+    const d = setPick(base(), 0, "pricing", "retail");
+    expect(d.demos[0].choices.pricing).toBe("retail");
+    expect(clearPick(d, 0, "pricing").demos[0].choices.pricing).toBeUndefined();
+    expect(clearPick(d, 0, "pricing").demos[0].choices.bi).toBe(d.demos[0].choices.bi);
+  });
+
+  it("says why a block cannot go at a position", () => {
+    const d = base();
+    // Order: enrollment first. A block that needs the PA fork cannot go before the cards that give it.
+    expect(insertReasons(d, d.cards.length, card("pa_notification", "default"))).toEqual(expect.arrayContaining([expect.stringMatching(/must be last|tracking/i)]));
+    expect(insertReasons({ ...d, workflow: "iassist" }, 1, card("prior_authorization", "apa"))[0]).toMatch(/built for CoAssist only/);
+  });
+
+  it("greys a block the picked outcome does not work with, and frees it when the outcome changes", () => {
+    const d = setPick(base(), 0, "bi", "medical_covered");
+    const reasons = insertReasons(d, 2, card("payment", "default"));
+    expect(reasons.some((r) => /does not work with/.test(r))).toBe(true);
+    const back = setPick(d, 0, "bi", "pharmacy_covered");
+    expect(insertReasons(back, 2, card("payment", "default")).some((r) => /does not work with/.test(r))).toBe(false);
+    // A block before the fork's owner is not held to the pick.
+    expect(insertReasons(d, 0, card("enrollment", "default")).some((r) => /does not work with/.test(r))).toBe(false);
   });
 });

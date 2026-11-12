@@ -1,46 +1,79 @@
-import { useMemo, useState } from "react";
-import { useItems } from "./DemoLabItems";
-import { buildCanvas } from "@/workflows/catalog/canvas";
-import { CardView, Chip, Detail, ForkView, Header, INK, LINE, MUTED } from "./DemoLabCanvasParts";
-import { CATALOG_APPS_LABEL } from "./DemoLabCanvasLabels";
+import { useEffect, useMemo, useState } from "react";
+import { BRAND } from "@/brand";
+import { useItems, type Item } from "./DemoLabItems";
+import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
+import { clearPick, draftFromScenario, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
+import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, APP_LABEL } from "./DemoLabCanvasParts";
+import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
+import { useDraft } from "./DemoLabDraft";
 
 /**
- * Demo Lab, Canvas tab. Read only. A horizontal row of cards in journey order. Click a card for its detail. Each fork sits
- * under the card that owns it. A story fork shows its outcomes with the picked one highlighted, and the cards that outcome
- * no longer feeds stay on the row, disabled. A patient fork shows each branch with the steps that follow it.
- * The first step of the canvas plan (docs/plans/PLAN_DEMO_LAB_CANVAS.md). Editing comes next.
+ * Demo Lab, Canvas tab. A horizontal row of cards in journey order. Click a card for its detail and its actions. Each fork
+ * sits under the card that owns it: pick a story fork's outcome per demo, or pin a patient fork's branch. A card the picked
+ * outcome no longer feeds stays on the row, disabled. Add a card on either side of any card with the + buttons.
+ * Edits go to the shared draft (DemoLabDraft), which the Builder tab also reads. Nothing is saved until export.
+ * The canvas plan: docs/plans/PLAN_DEMO_LAB_CANVAS.md.
  */
+
+const plus = "mx-1 mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm font-bold";
 
 export default function CanvasLab() {
   const items = useItems();
-  const [selected, setSelected] = useState(0);
+  const { draft, active, setActive, loadedKey, dirty, edit, load, result, busy, send } = useDraft();
+  const [wholeKey, setWholeKey] = useState<string | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
-  const item = items[selected];
-  const canvas = useMemo(() => (item ? buildCanvas({ flow: item.flow, title: item.title, description: item.description, choices: item.choices }) : undefined), [item]);
+  const [insertAt, setInsertAt] = useState<number | null>(null);
   const groups = [...new Set(items.map((i) => i.group))];
-  const pick = (i: number) => {
-    setSelected(i);
+
+  const fromItem = (it: Item) => draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
+
+  // The first time the lab opens, start from the first entry that has a recipe.
+  useEffect(() => {
+    if (loadedKey !== null) return;
+    const first = items.find((i) => fromItem(i));
+    if (first) load(first.key, fromItem(first)!);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const choose = (it: Item) => {
+    if (dirty && !window.confirm("Replace the draft? Your edits will be lost.")) return;
+    const next = fromItem(it);
     setCardIndex(0);
+    setInsertAt(null);
+    if (!next) return setWholeKey(it.key);
+    setWholeKey(null);
+    load(it.key, next);
   };
+
+  const canvas = useMemo(() => canvasFromDraft(draft, active), [draft, active]);
+  const whole = wholeKey ? items.find((i) => i.key === wholeKey) : undefined;
+  const wholeBoard = whole ? buildCanvas({ flow: whole.flow, title: whole.title, description: whole.description }) : undefined;
+  const picked = wholeKey ?? loadedKey;
+  const index = Math.min(cardIndex, Math.max(canvas.cards.length - 1, 0));
+  const card = canvas.cards[index];
+
+  const AddButton = ({ at }: { at: number }) => (
+    <button type="button" aria-label={`Add a card at position ${at + 1}`} data-testid="canvas-add" onClick={() => setInsertAt(at)} className={plus} style={{ borderColor: insertAt === at ? INK : LINE, background: insertAt === at ? INK : "#ffffff", color: insertAt === at ? "#ffffff" : INK }}>
+      +
+    </button>
+  );
 
   return (
     <div className="flex min-h-0 flex-1">
       <aside className="w-[260px] shrink-0 overflow-y-auto border-r bg-white p-4" style={{ borderColor: LINE }}>
         {groups.map((g) => (
           <div key={g} className="mb-4">
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>
-              {g}
-            </h2>
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>{g}</h2>
             <ol>
-              {items.map((it, i) =>
+              {items.map((it) =>
                 it.group !== g ? null : (
                   <li key={it.key}>
                     <button
                       type="button"
-                      onClick={() => pick(i)}
-                      aria-current={i === selected}
+                      onClick={() => choose(it)}
+                      aria-current={it.key === picked}
                       className="mb-1 w-full rounded border px-2 py-1.5 text-left text-sm"
-                      style={{ borderColor: i === selected ? INK : LINE, background: i === selected ? INK : "#ffffff", color: i === selected ? "#ffffff" : INK }}
+                      style={{ borderColor: it.key === picked ? INK : LINE, background: it.key === picked ? INK : "#ffffff", color: it.key === picked ? "#ffffff" : INK }}
                     >
                       {it.title}
                     </button>
@@ -51,48 +84,90 @@ export default function CanvasLab() {
           </div>
         ))}
         <p className="text-xs" style={{ color: MUTED }}>
-          Read only. The demos are the active brand's. Run with another <code>BRAND</code> to see its demos.
+          Picking an entry starts a draft from it. Edit it here, then export. Nothing is saved until you do. The demos are the active brand's.
         </p>
       </aside>
 
-      {!canvas ? (
-        <main className="flex-1 p-5 text-sm">Nothing to draw.</main>
-      ) : canvas.kind === "whole" ? (
+      {wholeBoard && wholeBoard.kind === "whole" ? (
         <main className="min-w-0 flex-1 overflow-y-auto p-5" data-testid="canvas-whole">
-          <h2 className="text-lg font-bold">{canvas.title}</h2>
+          <h2 className="text-lg font-bold">{wholeBoard.title}</h2>
           <div className="mt-3 max-w-3xl rounded border bg-white p-4" style={{ borderColor: LINE }}>
-            <p className="text-sm font-bold">{canvas.demo?.name}</p>
-            <p className="mt-1 text-sm">{canvas.demo?.summary}</p>
-            <p className="mt-2 flex flex-wrap gap-1">{canvas.demo?.apps.map((a) => <Chip key={a}>{CATALOG_APPS_LABEL[a]}</Chip>)}</p>
-            <p className="mt-2 text-xs" style={{ color: MUTED }}>
-              This workflow has no recipe, so it is one whole demo. It is not drawn as cards.
-            </p>
+            <p className="text-sm font-bold">{wholeBoard.demo?.name}</p>
+            <p className="mt-1 text-sm">{wholeBoard.demo?.summary}</p>
+            <p className="mt-2 flex flex-wrap gap-1">{wholeBoard.demo?.apps.map((a) => <Chip key={a}>{APP_LABEL[a]}</Chip>)}</p>
+            <p className="mt-2 text-xs" style={{ color: MUTED }}>This workflow has no recipe, so it is one whole demo. It is not drawn as cards and cannot be edited here.</p>
           </div>
         </main>
       ) : (
         <>
           <main className="min-w-0 flex-1 overflow-auto p-5" data-testid="canvas">
             <Header canvas={canvas} />
-            <div className="flex items-start gap-0 pb-4">
-              {canvas.cards.map((card, i) => (
+            <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
+            <ForkToggles canvas={canvas} edit={edit} />
+            {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
+            <div className="flex items-start pb-4">
+              <AddButton at={0} />
+              {canvas.cards.map((c, i) => (
                 <div key={i} className="flex items-start">
                   <div className="w-[240px] shrink-0 space-y-2">
-                    <CardView card={card} selected={i === cardIndex} onSelect={() => setCardIndex(i)} />
+                    <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); }} />
                     {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
-                      <ForkView key={f.id} fork={f} cards={canvas.cards} />
+                      <ForkView
+                        key={f.id}
+                        fork={f}
+                        cards={canvas.cards}
+                        onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
+                        onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
+                      />
                     ))}
                   </div>
-                  {i < canvas.cards.length - 1 && (
-                    <span aria-hidden className="mx-1 mt-6 shrink-0 text-lg font-bold" style={{ color: MUTED }}>
-                      →
-                    </span>
-                  )}
+                  <span aria-hidden className="mx-1 mt-6 shrink-0 text-lg font-bold" style={{ color: MUTED }}>{i < canvas.cards.length - 1 ? "→" : ""}</span>
+                  <AddButton at={i + 1} />
                 </div>
               ))}
             </div>
           </main>
-          <aside className="w-[340px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Card detail">
-            {canvas.cards[cardIndex] && <Detail card={canvas.cards[cardIndex]} forks={canvas.forks} />}
+          <aside className="w-[360px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Card detail">
+            {insertAt !== null ? (
+              <InsertPanel
+                draft={draft}
+                at={insertAt}
+                demoIndex={active}
+                onCancel={() => setInsertAt(null)}
+                onInsert={(c) => { edit((d) => insertBlock(d, insertAt, c)); setCardIndex(insertAt); setInsertAt(null); }}
+                onGhost={() => { edit((d) => insertGhost(d, insertAt)); setCardIndex(insertAt); setInsertAt(null); }}
+              />
+            ) : card ? (
+              <Detail
+                card={card}
+                forks={canvas.forks}
+                count={canvas.cards.length}
+                onAddBefore={() => setInsertAt(card.index)}
+                onAddAfter={() => setInsertAt(card.index + 1)}
+                onMove={(by) => { edit((d) => moveCard(d, card.index, by)); setCardIndex(card.index + by); }}
+                onRemove={() => edit((d) => removeCard(d, card.index))}
+                onVariant={(v) => edit((d) => setVariant(d, card.index, v))}
+                onGhost={(patch) => edit((d) => updateCard(d, card.index, patch))}
+              />
+            ) : null}
+
+            <section className="mt-6 border-t pt-4" style={{ borderColor: LINE }} aria-label="Export">
+              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Export</h4>
+              {canvas.exportProblems.length > 0 ? (
+                <div role="alert" className="mb-3 rounded border p-3 text-xs" style={{ borderColor: INK }} data-testid="export-problems">
+                  <p className="mb-1 font-semibold">Export is blocked until these are fixed:</p>
+                  <ul className="list-disc pl-4">{canvas.exportProblems.map((p) => <li key={p}>{p}</li>)}</ul>
+                  <p className="mt-1" style={{ color: MUTED }}>The request fields (title, client, brand, win theme) are on the Builder tab.</p>
+                </div>
+              ) : (
+                <p className="mb-3 text-xs" style={{ color: MUTED }}>Nothing blocks the export.</p>
+              )}
+              <button type="button" disabled={canvas.exportProblems.length > 0 || busy} onClick={send} className="rounded px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: INK }}>
+                {busy ? "Exporting" : "Export request and prompt"}
+              </button>
+              {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}
+              {result && !result.ok && <ul className="mt-3 list-disc pl-4 text-xs" data-testid="export-failed">{result.problems.map((p) => <li key={p}>{p}</li>)}</ul>}
+            </section>
           </aside>
         </>
       )}

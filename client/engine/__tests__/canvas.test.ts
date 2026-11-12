@@ -4,6 +4,9 @@ import { listBrandSlugs, resolveBrand } from "@/brand/resolve";
 import type { BrandDemo } from "@/brand/schema";
 import { ALL_SCENARIOS, scenarioFor } from "@/workflows/scenarios";
 import { buildCanvas, type CanvasBoard } from "@/workflows/catalog/canvas";
+import { forksForFlow } from "@/workflows/forks";
+import { forksForScenario } from "@/engine/workflow/forks";
+import { recipeMeets } from "@/engine/workflow/recipe";
 
 /** The canvas model draws every recipe and demo, keeps disabled cards on the canvas, and reads patient-fork steps from the recipe. */
 
@@ -27,6 +30,19 @@ describe("canvas for every recipe", () => {
       }
     });
   }
+});
+
+describe("canvas patient forks", () => {
+  it("offer the outcomes the scenario itself declares, apart from those whose blocks the recipe lacks", () => {
+    for (const s of ALL_SCENARIOS.filter((x) => x.recipe)) {
+      for (const f of canvas(s.flowType).forks.filter((x) => x.chooser === "patient")) {
+        const own = forksForScenario(forksForFlow(s.flowType), s.flowType).find((r) => r.id === f.id)!;
+        const expected = own.exits.filter((e) => (e.requires ?? []).every((r) => recipeMeets(s.recipe!, r))).map((e) => e.id).sort();
+        const shown = f.exits.filter((e) => !e.missing.length).map((e) => e.id).sort();
+        expect(shown, `${s.flowType} ${f.id}`).toEqual(expected);
+      }
+    }
+  });
 });
 
 describe("canvas outcomes", () => {

@@ -10,6 +10,7 @@
  */
 import DemosLab from "./DemoLabDemos";
 import Canvas from "./DemoLabCanvas";
+import { DraftProvider } from "./DemoLabDraft";
 import Builder from "./DemoLabBuilder";
 import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
@@ -462,6 +463,14 @@ type Tab = "canvas" | "builder" | "demos" | "colors";
 const TAB_LABELS: Record<Tab, string> = { canvas: "Canvas", builder: "Builder", demos: "Demos", colors: "Colors" };
 
 export default function DemoLab() {
+  return (
+    <DraftProvider>
+      <DemoLabTabs />
+    </DraftProvider>
+  );
+}
+
+function DemoLabTabs() {
   const [tab, setTab] = useState<Tab>("canvas");
   return (
     <div className="flex h-screen flex-col bg-[#f8fafc] text-[#0f172a]">
