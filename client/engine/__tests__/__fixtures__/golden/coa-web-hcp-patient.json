@@ -1,29 +1,19 @@
 {
-  "flowType": "CoA_Web_Audience",
+  "flowType": "CoA_Web_HCP_Patient",
   "steps": [
     {
-      "event": "AUDIENCE_SUBMIT",
-      "payload": {
-        "prescriberNpi": "1234567893"
-      },
+      "event": "HCP_REFERRAL_SUBMIT",
       "accepted": true,
       "route": "/sms-message",
       "changed": {
         "enrollmentStatus": "enrolled",
-        "enrollmentInviteSent": true,
-        "biStatus": "running",
-        "prescriberNpi": "1234567893"
+        "enrollmentInviteSent": true
       },
       "newEvents": [
         {
-          "eventType": "AUDIENCE_SUBMIT",
+          "eventType": "HCP_REFERRAL_SUBMIT",
           "portal": "patient",
           "workflowStep": 1
-        },
-        {
-          "eventType": "RUN_BI",
-          "portal": "analytics",
-          "workflowStep": 6
         }
       ]
     },
@@ -69,6 +59,30 @@
           "eventType": "CONFIRM_CONSENT",
           "portal": "patient",
           "workflowStep": 5
+        }
+      ]
+    },
+    {
+      "event": "PATIENT_RX_SUBMIT",
+      "payload": {
+        "prescriberNpi": "1234567893"
+      },
+      "accepted": true,
+      "route": "/",
+      "changed": {
+        "biStatus": "running",
+        "prescriberNpi": "1234567893"
+      },
+      "newEvents": [
+        {
+          "eventType": "PATIENT_RX_SUBMIT",
+          "portal": "patient",
+          "workflowStep": 5
+        },
+        {
+          "eventType": "RUN_BI",
+          "portal": "analytics",
+          "workflowStep": 6
         }
       ]
     },

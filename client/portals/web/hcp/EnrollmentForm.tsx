@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { usePatientCase } from "@/hooks/usePatientCase";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import ProviderSearch, { isNpi, type Provider } from "../ProviderSearch";
+import { PHARMACIES } from "@/lib/prescriberPharmacies";
 import { hcpSite } from "./content";
 import { Check, Field, Radio, Section, TextInput, ghostBtn, inputCls, primaryBtn } from "./fields";
 
@@ -16,25 +17,27 @@ const STEPS = ["Patient", "Insurance and Rx", "Prescriber"] as const;
 
 export default function EnrollmentForm({ onSubmit, onCancel }: { onSubmit: (npi: string) => void; onCancel: () => void }) {
   const site = hcpSite();
+  // A brand lists its own pharmacies, or the Rx step uses the prescriber's (the eRx list in the core data).
+  const pharmacies = site.pharmacies ?? PHARMACIES.map((p) => ({ name: p.name, phone: p.phone, fax: "" }));
   const { data: patient } = usePatientCase();
   const [step, setStep] = useState(0);
 
   // Step 1. The HCP completes it with the patient in the room.
-  const [authorized, setAuthorized] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const [name, setName] = useState(patient.patientName);
   const [dob, setDob] = useState(patient.patientDob);
   const [sex, setSex] = useState("Male");
   const [address, setAddress] = useState(patient.shippingAddress);
   const [phone, setPhone] = useState(patient.phone);
   const [email, setEmail] = useState(patient.email);
-  const [enrollConsent, setEnrollConsent] = useState(true);
-  const [textConsent, setTextConsent] = useState(true);
+  const [enrollConsent, setEnrollConsent] = useState(false);
+  const [textConsent, setTextConsent] = useState(false);
 
   // Step 2
   const [insurer, setInsurer] = useState(patient.payer);
   const [memberId, setMemberId] = useState("JAS-4471-0925");
   const [strength, setStrength] = useState(site.strengths[site.strengths.length - 1]);
-  const [pharmacy, setPharmacy] = useState(site.pharmacies[0].name);
+  const [pharmacy, setPharmacy] = useState(pharmacies[0].name);
   const [dx, setDx] = useState(site.diagnoses[0].code);
 
   // Step 3
@@ -114,9 +117,9 @@ export default function EnrollmentForm({ onSubmit, onCancel }: { onSubmit: (npi:
                 </div>
                 <p className="mb-2 text-xs font-semibold text-arx-neutral-800">Preferred specialty pharmacy<span className="text-arx-errors">*</span></p>
                 <div className="space-y-2">
-                  {site.pharmacies.map((p) => (
+                  {pharmacies.map((p) => (
                     <Radio key={p.name} name="pharmacy" checked={pharmacy === p.name} onChange={() => setPharmacy(p.name)}
-                      label={<><span className="font-semibold">{p.name}</span> <span className="text-xs text-arx-body-copy">Fax {p.fax} | Phone {p.phone}</span></>} />
+                      label={<><span className="font-semibold">{p.name}</span> <span className="text-xs text-arx-body-copy">{p.fax ? `Fax ${p.fax} | ` : ""}Phone {p.phone}</span></>} />
                   ))}
                 </div>
               </Section>

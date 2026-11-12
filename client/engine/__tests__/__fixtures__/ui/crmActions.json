@@ -1500,92 +1500,15 @@
       }
     ]
   },
-  "coa-web-audience-pres": {
-    "flowType": "CoA_Web_Audience",
+  "coa-web-hcp-patient": {
+    "flowType": "CoA_Web_HCP_Patient",
     "entries": [
       {
         "after": "(start)",
         "actions": []
       },
       {
-        "after": "AUDIENCE_SUBMIT",
-        "actions": [
-          {
-            "stage": "BI-14273",
-            "id": "bi.check_status",
-            "label": "Check Status",
-            "kind": "primary",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "after": "COMPLETE_BI",
-        "actions": []
-      },
-      {
-        "after": "VERIFY_INCOME",
-        "actions": [
-          {
-            "stage": "TP-14277",
-            "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
-            "kind": "primary",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "after": "FILL_RX",
-        "actions": [
-          {
-            "stage": "PS-14278",
-            "id": "pharmacy.received",
-            "label": "Mark as Received at Pharmacy",
-            "kind": "primary",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "after": "READY_RX",
-        "actions": [
-          {
-            "stage": "PS-14278",
-            "id": "pharmacy.shipped",
-            "label": "Mark as Shipped",
-            "kind": "primary",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "after": "SHIP_RX",
-        "actions": [
-          {
-            "stage": "PS-14278",
-            "id": "pharmacy.delivered",
-            "label": "Mark as Delivered",
-            "kind": "success",
-            "enabled": true
-          }
-        ]
-      },
-      {
-        "after": "DELIVER_RX",
-        "actions": []
-      }
-    ]
-  },
-  "coa-web-audience-pes": {
-    "flowType": "CoA_Web_Audience",
-    "entries": [
-      {
-        "after": "(start)",
-        "actions": []
-      },
-      {
-        "after": "AUDIENCE_SUBMIT",
+        "after": "PATIENT_RX_SUBMIT",
         "actions": [
           {
             "stage": "BI-14273",

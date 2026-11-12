@@ -49,7 +49,7 @@ describe("CoAssist recipes", () => {
         expect(r.forks).toEqual([]);
         continue;
       }
-      expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" || flowType === "CoA_Web_Audience" ? ["bi"] : ["bi", "pa"]));
+      expect(r.forks).toEqual(expect.arrayContaining(flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" || flowType === "CoA_Web_HCP_Patient" ? ["bi"] : ["bi", "pa"]));
     }
     expect(COASSIST_RECIPES.CoA_PAP.forks).not.toContain("pa");
     expect(COASSIST_RECIPES.CoA_Web_PAP.forks).not.toContain("pa");

@@ -6,7 +6,7 @@ import { recipeProblems } from "@/engine/workflow/recipe";
 import type { MachineContext } from "@/engine/types";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_WEB_AUDIENCE } from "@/workflows/coassist/scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_WEB_HCP_PATIENT } from "@/workflows/coassist/scenarios";
 import { getGeneratedEmails } from "@/engine/WorkflowEngine";
 import { STAGE_BUILDERS } from "@/portals/crm/stages/builders";
 import { PA_FORM_SKIP_MS, providerFormStep, type PaVariant } from "@/workflows/shared/apa";
@@ -27,7 +27,7 @@ const machineFor = (variant: PaVariant) =>
     defaultFlowType: "CoA_DTP",
     rules: COASSIST_RULES,
     forks: COASSIST_FORKS,
-    scenarios: { CoA_DTP: withVariant(variant), CoA_Copay: COA_COPAY, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP, CoA_Web_Copay: COA_WEB_COPAY, CoA_HCP_Enroll: COA_HCP_ENROLL, CoA_Web_Audience: COA_WEB_AUDIENCE, CoA_Medical_Transfer: COA_MEDICAL_TRANSFER, CoA_APA_Specialty: COA_APA_SPECIALTY },
+    scenarios: { CoA_DTP: withVariant(variant), CoA_Copay: COA_COPAY, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP, CoA_Web_Copay: COA_WEB_COPAY, CoA_HCP_Enroll: COA_HCP_ENROLL, CoA_Web_HCP_Patient: COA_WEB_HCP_PATIENT, CoA_Medical_Transfer: COA_MEDICAL_TRANSFER, CoA_APA_Specialty: COA_APA_SPECIALTY },
   });
 
 function start(variant: PaVariant) {

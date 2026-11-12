@@ -270,7 +270,7 @@
         "copay": false
       }
     },
-    "CoA_Web_Audience": {
+    "CoA_Web_HCP_Patient": {
       "isCoaFlow_dtpCopay": false,
       "isCoA_providerAnyCoassist": false,
       "isCoverageFlow": false,

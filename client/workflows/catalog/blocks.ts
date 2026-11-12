@@ -53,15 +53,16 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
         steps: [step("HCP submits the enrollment on the client's site", "hcp", "click"), ...PATIENT_ONBOARDING],
       },
       {
-        id: "audience",
-        label: "Client web page, HCP or patient starts",
-        summary: "The client's web page offers two audiences and the demo's pick decides who starts the case. An HCP completes the enrollment form and the patient then gets a text, a one-time code and consent. A patient enters the prescription on a form that collects their consent, so they get no text, code or consent step. Benefits checking starts from the submit.",
+        id: "hcp_patient",
+        label: "HCP enrolls on the client's web page, then the patient authorizes",
+        summary: "The HCP completes the enrollment form on the client's site and the patient is texted. The patient taps the link, enters a one-time code and consents, then completes the authorization and the prescription on the client's page. Benefits checking starts from the patient's submit.",
         apps: ["web", "crm", "patient"],
         lane: "hcp",
         trigger: "click",
         steps: [
-          step("HCP completes the enrollment form on the client's site, or the patient enters the prescription", "hcp", "click"),
-          step("When an HCP enrolls, the patient taps the text, enters the code, and consents", "patient", "text"),
+          step("HCP completes the enrollment form on the client's site", "hcp", "click"),
+          ...PATIENT_ONBOARDING,
+          step("Patient completes the authorization and the prescription on the client's page", "patient", "click"),
         ],
       },
       {

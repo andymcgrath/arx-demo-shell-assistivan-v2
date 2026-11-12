@@ -40,9 +40,10 @@ import { applyDemoChoices, startDemo } from "./demos";
 import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
-import { webIsDesktopSite } from "@/portals/web/audience/audience";
+import { webIsDesktopSite } from "@/portals/web/hcp/desktop";
 import { biForkFor } from "@/workflows/coassist/forks";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import { scenarioFor } from "@/workflows/scenarios";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
 import { scenarioHasModule } from "@/workflows/scenarios";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
@@ -126,8 +127,8 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   CoA_HCP_Enroll: "web",
   // CoA_Web_PAP: the client's web page starts the case (source `web`). No CRM.
   CoA_Web_PAP: "web",
-  // CoA_Web_Audience: the client's web page starts the case (source `web`), with the CRM.
-  CoA_Web_Audience: "web",
+  // CoA_Web_HCP_Patient: the client's web page starts the case (source `web`), with the CRM.
+  CoA_Web_HCP_Patient: "web",
   // CoA_Coverage (medical-benefit coverage, no PA/pricing/fulfillment) — same starting
   // portal as CoA_DTP/CoA_Copay, see workflows/coassist/.
   CoA_Coverage: "provider",
@@ -187,6 +188,7 @@ function getPortals(flowType: string) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
   const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource, isHcpEnrollment, hasWebCrm } = scenarioFacts(flowType);
+  const hiddenTabs = scenarioFor(flowType)?.recipe?.hideTabs ?? [];
   // Deliberately scoped to WF2 only (not PrES_PAP/WF5) — WF5 has its own
   // provider-facing PrES intake placeholder (see provider/index.tsx's
   // PresPapProviderExperience) and needs the tab visible, unlike WF2 which
@@ -197,6 +199,7 @@ function getPortals(flowType: string) {
     // CRM, so the HUB/CRM, Client, Provider, and Rules tabs are hidden. Every other scenario hides the web and gateway tabs.
     // The gateway view shows ABV and APA calls. An HCP enrollment makes neither, so it has no gateway tab.
     if (p.id === "gateway") return isWebSource && !isHcpEnrollment && !hasWebCrm;
+    if (hiddenTabs.includes(p.id)) return false;
     if (p.id === "web") return isWebSource;
     if (isWebSource && p.id === "provider") return false;
     if (isWebSource && !hasWebCrm && (p.id === "crm" || p.id === "client" || p.id === "rules")) return false;
@@ -505,7 +508,7 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
        * uses the phone frame, matching every other flow's SMS screens.
        */}
       {/* The client's web page is a mobile page, so it sits in the same phone frame as the patient experience. The HCP site is a desktop page, so it does not. */}
-      {(portal === "web" && !webIsDesktopSite(flowType, workflowData.choices)) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
+      {(portal === "web" && !webIsDesktopSite(flowType, workflowData)) || (portal === "patient" && (!scenarioFacts(flowType).isPres || showPesPapUpdateSmsPhone)) ? (
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden flex items-start justify-center py-8 bg-slate-200"
           style={{
@@ -1031,9 +1034,9 @@ export default function DemoShell() {
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
                     : scenarioHasModule(flowType, "pap_transfer")
-                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     : isCoverageFlow
-                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic

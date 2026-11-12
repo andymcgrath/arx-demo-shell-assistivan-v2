@@ -164,6 +164,8 @@ export interface ScenarioRecipe {
    * BI returns when the agent opens the BI stage, as in a CoAssist scenario. Absent means no CRM (Web Copay).
    */
   crm?: boolean;
+  /** Shell tabs this scenario does not use, by portal id (for example `insights` and `rules`). The shell leaves them out. */
+  hideTabs?: string[];
 }
 
 /** CRM panels a recipe can turn on. */
@@ -192,8 +194,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "enrollment",
     lane: "patient",
     needs: ["referralReceived"],
-    // The `audience` variant is started by the web page and reads the `audience` fork: an HCP's enrollment, or the patient's own.
-    needsWhen: [{ props: { variant: "audience" }, needs: ["fork:audience"] }],
+    // The `hcp_patient` variant is started by the HCP's web enrollment, then the patient's own submit starts BI.
+    needsWhen: [{ props: { variant: "hcp_patient" }, needs: ["fork:bi"] }],
     sets: ["consentVerified"],
     trackerSteps: ["Enrolled"],
   },

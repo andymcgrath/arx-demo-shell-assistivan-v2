@@ -6,7 +6,7 @@ import { recipeProblems } from "@/engine/workflow/recipe";
 import type { ModuleSpec, ScenarioRecipe } from "@/engine/workflow/components";
 import { ASSISTANCE_FORK, COASSIST_FORKS, assistanceFork } from "@/workflows/coassist/forks";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_WEB_AUDIENCE } from "@/workflows/coassist/scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_WEB_HCP_PATIENT } from "@/workflows/coassist/scenarios";
 import { withFrozenClock } from "./harness";
 
 /**
@@ -43,7 +43,7 @@ function build(modules: ModuleSpec[], extra: Partial<ScenarioRecipe> = {}, withF
     defaultFlowType: HOST,
     rules: COASSIST_RULES,
     forks: withFork ? FORKS_WITH_ASSISTANCE : COASSIST_FORKS,
-    scenarios: { CoA_DTP: scenario, CoA_Copay: COA_COPAY, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP, CoA_Web_Copay: COA_WEB_COPAY, CoA_HCP_Enroll: COA_HCP_ENROLL, CoA_Web_Audience: COA_WEB_AUDIENCE, CoA_APA_Specialty: COA_APA_SPECIALTY },
+    scenarios: { CoA_DTP: scenario, CoA_Copay: COA_COPAY, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP, CoA_Web_Copay: COA_WEB_COPAY, CoA_HCP_Enroll: COA_HCP_ENROLL, CoA_Web_HCP_Patient: COA_WEB_HCP_PATIENT, CoA_APA_Specialty: COA_APA_SPECIALTY },
   });
   const clock = new SimulatedClock();
   const actor = createActor(machine, { input: { flowType: HOST }, clock } as any);

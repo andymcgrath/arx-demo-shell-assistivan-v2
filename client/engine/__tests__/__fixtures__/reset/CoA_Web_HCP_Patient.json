@@ -1,6 +1,6 @@
 {
   "workflowDataEqualsFresh": true,
-  "flowTypeAfterReset": "CoA_Web_Audience",
+  "flowTypeAfterReset": "CoA_Web_HCP_Patient",
   "eventCount": 0,
   "snapshotCount": 0
 }

@@ -212,20 +212,21 @@ export const COA_WEB_PAP_RECIPE: ScenarioRecipe = {
 };
 
 /**
- * The client's web page offers two audiences, and the `audience` fork picks the path. A healthcare provider (PrES) completes the
- * enrollment form and the patient then gets the text, code and consent. A patient or caregiver (PES) enters the prescription on a
- * patient form that collects consent, so there is no text, code or consent step. The `audience` enrollment variant owns the
- * difference. After enrollment the case is Web PAP's: BI finds no coverage, the patient support program takes over, an assigned
- * pharmacy dispenses, and the patient schedules. The agent works the case in the CRM (`crm`), so there is no Gateway tab.
+ * The client's web page, in two parts. An HCP completes the enrollment form (PrES) and the patient is texted. The patient verifies and
+ * consents, then the web page turns to them (PES): authorization, details, and the prescription with the prescriber's NPI. The
+ * `hcp_patient` enrollment variant owns this. After the patient's submit the case is Web PAP's: BI finds no coverage, the patient
+ * support program takes over, an assigned pharmacy dispenses, and the patient schedules. The agent works the case in the CRM
+ * (`crm`), so there is no Gateway tab. `hideTabs` drops the Analytics and Rules tabs, which this story does not use.
  */
-export const COA_WEB_AUDIENCE_RECIPE: ScenarioRecipe = {
+export const COA_WEB_HCP_PATIENT_RECIPE: ScenarioRecipe = {
   source: "web",
   crm: true,
-  forks: ["audience", "bi"],
-  choices: { audience: "hcp", bi: "no_coverage_pap" },
+  hideTabs: ["insights", "rules"],
+  forks: ["bi"],
+  choices: { bi: "no_coverage_pap" },
   panels: ["benefits"],
   modules: [
-    { id: "enrollment", props: { variant: "audience" } },
+    { id: "enrollment", props: { variant: "hcp_patient" } },
     { id: "pap_transfer" },
     { id: "income_qualification" },
     { id: "pharmacy_selection", props: { variant: "assigned" } },
@@ -265,5 +266,5 @@ export const COASSIST_RECIPES = {
   CoA_APA_Specialty: COA_APA_SPECIALTY_RECIPE,
   CoA_APA_Assistance: COA_APA_ASSISTANCE_RECIPE,
   CoA_Web_PAP: COA_WEB_PAP_RECIPE,
-  CoA_Web_Audience: COA_WEB_AUDIENCE_RECIPE,
+  CoA_Web_HCP_Patient: COA_WEB_HCP_PATIENT_RECIPE,
 } as const;

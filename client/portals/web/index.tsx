@@ -10,7 +10,8 @@
  * Which screen shows is local, except the last one: it reads BI from the machine, so it waits for the gateway.
  * Nothing here calls a real service. All data is representative.
  */
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { WorkflowData } from "@/engine/types";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { BRAND } from "@/brand";
@@ -31,8 +32,6 @@ import SiteHeader from "./SiteHeader";
 import Footer from "@/portals/patient/components/Footer";
 import HcpSite from "./hcp/HcpSite";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
-import AudienceSite, { AUDIENCE_SUBMIT } from "./audience/AudienceSite";
-import PatientServices from "./audience/PatientServices";
 
 /** The Rx step's options come from the brand file (`program.dosages`). A brand with none keeps the original four strengths. */
 const DOSES = BRAND.program.dosages?.length ? BRAND.program.dosages : ["0.8 mg", "2.5 mg", "5.5 mg", "17.2 mg"];
@@ -46,24 +45,35 @@ export default function WebPortal() {
   const resetNonce = useDemoStore((s) => s.resetNonce);
   const { workflowData } = usePersonaState("patient");
   const facts = scenarioFacts(workflowData.flowType);
-  // The audience scenario opens on the audience choice. The patient's page then starts on a services list and sends its own event.
-  if (facts.hasAudienceFork) {
-    return <AudienceSite key={resetNonce} patientPage={<ConsumerWebPortal submitEvent={AUDIENCE_SUBMIT} intro={(next) => <PatientServices onContinue={next} />} />} />;
+  // The HCP enrolls on the HCP site. Once the patient consents, the page turns to them: authorization, details, and the Rx.
+  if (facts.isHcpThenPatient) {
+    return workflowData.consentStatus === "confirmed"
+      ? <ConsumerWebPortal key={`patient-${resetNonce}`} submitEvent="PATIENT_RX_SUBMIT" startStep="hipaa" submitted={(w) => w.biStatus !== "none"} />
+      : <HcpSite key={resetNonce} submitEvent="HCP_REFERRAL_SUBMIT" startOver />;
   }
   return facts.isHcpEnrollment ? <HcpSite key={resetNonce} /> : <ConsumerWebPortal key={resetNonce} />;
 }
 
 /**
- * `submitEvent` is the event the Rx step sends (WEB_SUBMIT unless the scenario has its own). `intro` replaces the hero on the
- * first step, for a page that opens on a services list.
+ * `submitEvent` is the event the Rx step sends (WEB_SUBMIT unless the scenario has its own). `startStep` skips the hero for a page the
+ * patient reaches from the HCP's enrollment. `submitted` says when the patient has already submitted (a reload or Reset All lands
+ * on the results).
  */
-function ConsumerWebPortal({ submitEvent = "WEB_SUBMIT", intro }: { submitEvent?: string; intro?: (start: () => void) => ReactNode }) {
+function ConsumerWebPortal({
+  submitEvent = "WEB_SUBMIT",
+  startStep = "intro",
+  submitted = (w) => w.enrollmentStatus !== "none",
+}: {
+  submitEvent?: string;
+  startStep?: Step;
+  submitted?: (w: WorkflowData) => boolean;
+}) {
   const dispatch = useWorkflowDispatch();
   const { workflowData: w } = usePersonaState("patient");
   const { data: patient } = usePatientCase();
   const caseGender = usePatientStore((s) => s.gender);
   // A reload or a Reset All must land on the right screen: before the submit it is the intro, after it the results.
-  const [step, setStep] = useState<Step>(w.enrollmentStatus === "none" ? "intro" : "results");
+  const [step, setStep] = useState<Step>(submitted(w) ? "results" : startStep);
   const [agreed, setAgreed] = useState(false);
   const [dose, setDose] = useState("");
   const [prescribed, setPrescribed] = useState("");
@@ -76,11 +86,11 @@ function ConsumerWebPortal({ submitEvent = "WEB_SUBMIT", intro }: { submitEvent?
   // Undo of the submit puts the patient back on the Rx screen with their answers kept. Reset All remounts the page
   // (see WebPortal), which starts at the intro.
   useEffect(() => {
-    if (w.enrollmentStatus === "none") setStep((s) => (s === "results" ? "rx" : s));
-  }, [w.enrollmentStatus]);
+    if (!submitted(w)) setStep((s) => (s === "results" ? "rx" : s));
+  }, [submitted(w)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = () => setStep(STEPS[STEPS.indexOf(step) + 1]);
-  const back = () => setStep(STEPS[STEPS.indexOf(step) - 1]);
+  const back = () => setStep(STEPS[Math.max(STEPS.indexOf(step) - 1, STEPS.indexOf(startStep))]);
   const n = STEPS.indexOf(step);
   const rootRef = useRef<HTMLDivElement>(null);
   useScrollTopOnChange(rootRef, step);
@@ -96,7 +106,7 @@ function ConsumerWebPortal({ submitEvent = "WEB_SUBMIT", intro }: { submitEvent?
       <div className="flex min-h-full flex-col">
       <SiteHeader />
 
-      {step === "intro" && (intro ? intro(next) : <Hero onStart={next} />)}
+      {step === "intro" && <Hero onStart={next} />}
 
       <main className={step === "intro" ? "hidden" : "flex-1 px-5 py-6"}>
         {n > 0 && step !== "results" && <p className="mb-2 text-right text-xs font-semibold text-arx-neutral-800">{n} / 4</p>}

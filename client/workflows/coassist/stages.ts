@@ -3,7 +3,7 @@ import type { StageMap } from "@/engine/workflow/stages";
 import type { Scope } from "@/engine/workflow/types";
 import { STAGE_DEFS as S } from "../shared/stageDefs";
 import { COASSIST_FORKS } from "./forks";
-import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_AUDIENCE, COASSIST_FLOWS } from "./scenarios";
+import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_MEDICAL_TRANSFER, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_HCP_PATIENT, COASSIST_FLOWS } from "./scenarios";
 
 /**
  * The CRM stages for the CoAssist scenarios. A catalog in CRM order, and rules that pick how each stage is drawn.
@@ -40,7 +40,7 @@ const coverageRetail = (d: WorkflowData) => pharmacyCovered(d) && !medicalCovere
 
 export const COASSIST_STAGES: StageMap = {
   flows: COASSIST_FLOWS,
-  scenarioDefs: [COA_DTP, COA_COPAY, COA_WEB_COPAY, COA_HCP_ENROLL, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_AUDIENCE],
+  scenarioDefs: [COA_DTP, COA_COPAY, COA_WEB_COPAY, COA_HCP_ENROLL, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_HCP_PATIENT],
   forks: COASSIST_FORKS,
 
   catalog: [S.EA, S.BI, S.PA, S.PT, S.CO, S.A, S.PSP, S.FA, S.TP, S.PS],

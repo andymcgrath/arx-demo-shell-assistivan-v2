@@ -22,22 +22,11 @@
       "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program."
     },
     {
-      "id": "web-pres",
-      "flow": "CoA_Web_Audience",
-      "label": "4. Web page, PrES (HCP enrolls)",
-      "description": "The HCP enrolls the patient on the client's web page. The patient gets the text, one-time code and consent. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
+      "id": "web-pres-pes",
+      "flow": "CoA_Web_HCP_Patient",
+      "label": "4. Web page, HCP enrolls then patient authorizes",
+      "description": "The HCP completes the enrollment form on the client's web page and the patient is texted. The patient verifies and consents, then completes the authorization and the prescription on the web page. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
       "choices": {
-        "audience": "hcp",
-        "bi": "no_coverage_pap"
-      }
-    },
-    {
-      "id": "web-pes",
-      "flow": "CoA_Web_Audience",
-      "label": "5. Web page, PES (patient enrolls)",
-      "description": "The patient enters the prescription on the client's web page, which collects consent. Benefits verification finds no coverage, so the case moves to the patient assistance program.",
-      "choices": {
-        "audience": "patient",
         "bi": "no_coverage_pap"
       }
     }
@@ -163,18 +152,6 @@
         "enabled": false
       }
     ],
-    "pharmacies": [
-      {
-        "name": "Specialty Pharmacy A",
-        "phone": "800-555-0101",
-        "fax": "800-555-0102"
-      },
-      {
-        "name": "Specialty Pharmacy B",
-        "phone": "800-555-0103",
-        "fax": "800-555-0104"
-      }
-    ],
     "diagnoses": [
       {
         "code": "K51.90",
@@ -185,35 +162,5 @@
       "25 mg"
     ],
     "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent."
-  },
-  "patientSite": {
-    "headline": "What would you like to do today?",
-    "intro": "Select a service to begin.",
-    "services": [
-      {
-        "id": "patient_authorization",
-        "title": "Patient Authorization",
-        "description": "Authorize the use of your health information, share your prescription and check your coverage.",
-        "enabled": true
-      },
-      {
-        "id": "copay",
-        "title": "Copay Enrollment",
-        "description": "Helps commercially insured, eligible patients with out-of-pocket cost.",
-        "enabled": false
-      },
-      {
-        "id": "pap",
-        "title": "Patient Assistance Program",
-        "description": "Free drug for eligible patients with no coverage.",
-        "enabled": false
-      },
-      {
-        "id": "upload_docs",
-        "title": "Upload Documentation",
-        "description": "Upload documentation for program enrollment.",
-        "enabled": false
-      }
-    ]
   }
 }

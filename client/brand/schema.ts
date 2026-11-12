@@ -95,22 +95,14 @@ export interface BrandHcpSite {
   support: { headline: string; intro: string; roles: { title: string; body: string }[] };
   /** The services the HCP picks from. Only `enabled` ones continue into the form. */
   services: { id: string; title: string; description: string; enabled: boolean }[];
-  /** The specialty pharmacies on the Rx step. */
-  pharmacies: { name: string; phone: string; fax: string }[];
+  /** The specialty pharmacies on the Rx step. Optional: without it the step lists the prescriber's pharmacies (the eRx list in the core data). */
+  pharmacies?: { name: string; phone: string; fax: string }[];
   /** The diagnosis choices on the clinical step. */
   diagnoses: { code: string; label: string }[];
   /** The drug strengths the HCP can prescribe. */
   strengths: string[];
   /** The line shown after the HCP submits. `{patient}` becomes the patient's first name. */
   submitted: string;
-}
-
-/** The patient's page on the client's site (the audience scenario): a services list like the HCP's. Optional. */
-export interface BrandPatientSite {
-  headline: string;
-  intro: string;
-  /** The services the patient picks from. Only `enabled` ones continue. */
-  services: { id: string; title: string; description: string; enabled: boolean }[];
 }
 
 export interface BrandConfig {
@@ -174,8 +166,6 @@ export interface BrandConfig {
   };
   /** The HCP enrollment web page. Only a brand with an HCP enrollment demo needs it. */
   hcpSite?: BrandHcpSite;
-  /** The patient's page on the audience scenario. Only a brand with an audience demo needs it. */
-  patientSite?: BrandPatientSite;
   chatbotIcon: string;
   favicon?: string;
 }

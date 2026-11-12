@@ -1,6 +1,6 @@
 [
   {
-    "eventType": "AUDIENCE_SUBMIT",
+    "eventType": "HCP_REFERRAL_SUBMIT",
     "to": "Test FRM",
     "sentAt": "Thursday, January 15, 2026 12:00 PM",
     "subject": "New Patient Enrolled - Test Patient",
@@ -10,6 +10,29 @@
     ],
     "linkedItemId": "LIVE-MISSING-INFORMATION",
     "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "CONFIRM_CONSENT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Consent Confirmed - Test Patient",
+    "bodyParagraphs": [
+      "Test Patient confirmed enrollment consent.",
+      "The Missing Information task for this patient is now closed."
+    ],
+    "linkedItemId": "LIVE-MISSING-INFORMATION",
+    "linkedItemLabel": "View Task: Missing Information"
+  },
+  {
+    "eventType": "PATIENT_RX_SUBMIT",
+    "to": "Test FRM",
+    "sentAt": "Thursday, January 15, 2026 12:00 PM",
+    "subject": "Status Update: Patient Rx Submit - Test Patient",
+    "bodyParagraphs": [
+      "Patient Rx Submit occurred for Test Patient."
+    ],
+    "linkedItemId": "LIVE-CASE-AS164543",
+    "linkedItemLabel": "View Case"
   },
   {
     "eventType": "RUN_BI",

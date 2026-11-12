@@ -63,15 +63,6 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ],
   },
   {
-    id: "audience",
-    ownedBy: ["enrollment"],
-    aliases: ["audience", "who starts", "PrES", "PES", "HCP or patient"],
-    exits: [
-      { id: "hcp", aliases: ["PrES", "healthcare provider", "HCP enrolls", "prescriber enrolls"] },
-      { id: "patient", aliases: ["PES", "patient or caregiver", "patient enrolls", "self enroll"] },
-    ],
-  },
-  {
     id: "assistance",
     ownedBy: ["financial_assistance"],
     aliases: ["assistance", "financial assistance", "patient choice of assistance"],
