@@ -142,3 +142,16 @@ export function forkOwnerIndex(forkId: string, modules: { id: string }[]): numbe
   }
   return -1;
 }
+
+/** A `requires` entry in sales words. `module:variant` names the variant, and `a|b` is any of them, so it reads "A or B". */
+export const requirementLabel = (req: string): string =>
+  req
+    .split("|")
+    .map((alt) => {
+      const [id, variant] = alt.split(":");
+      const block = CATALOG_BLOCKS[id as ModuleId];
+      if (!block) return alt;
+      const label = variant ? block.variants?.find((v) => v.id === variant)?.label : undefined;
+      return label ? `${block.name} (${label})` : block.name;
+    })
+    .join(" or ");

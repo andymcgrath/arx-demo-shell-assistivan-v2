@@ -9,7 +9,7 @@
  * App.tsx mounts it only when `import.meta.env.DEV` is true, so client builds do not include it.
  */
 import DemosLab from "./DemoLabDemos";
-import Storyboard from "./DemoLabStoryboard";
+import Canvas from "./DemoLabCanvas";
 import Builder from "./DemoLabBuilder";
 import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
@@ -458,11 +458,11 @@ function ColorsLab() {
   );
 }
 
-type Tab = "storyboard" | "builder" | "demos" | "colors";
-const TAB_LABELS: Record<Tab, string> = { storyboard: "Storyboard", builder: "Builder", demos: "Demos", colors: "Colors" };
+type Tab = "canvas" | "builder" | "demos" | "colors";
+const TAB_LABELS: Record<Tab, string> = { canvas: "Canvas", builder: "Builder", demos: "Demos", colors: "Colors" };
 
 export default function DemoLab() {
-  const [tab, setTab] = useState<Tab>("storyboard");
+  const [tab, setTab] = useState<Tab>("canvas");
   return (
     <div className="flex h-screen flex-col bg-[#f8fafc] text-[#0f172a]">
       <header className="flex shrink-0 items-center gap-4 border-b border-[#cbd5e1] bg-white px-5 py-2.5">
@@ -487,8 +487,8 @@ export default function DemoLab() {
           <code>brands/{BRAND.slug}/brand.json</code>. Dev only.
         </p>
       </header>
-      {tab === "storyboard" ? (
-        <Storyboard />
+      {tab === "canvas" ? (
+        <Canvas />
       ) : tab === "builder" ? (
         <Builder />
       ) : tab === "demos" ? (
