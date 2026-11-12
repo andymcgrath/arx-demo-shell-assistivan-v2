@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { PaQuestionsStep } from "@/portals/provider";
 import { letterOfNecessityDocument } from "@/brand/documents";
+import { usePaFormStore } from "@/store/paFormStore";
 
 vi.mock("@/engine/WorkflowProvider", async (orig) => ({ ...(await orig<object>()), useWorkflowDispatch: () => vi.fn() }));
 
@@ -10,7 +11,10 @@ vi.mock("@/engine/WorkflowProvider", async (orig) => ({ ...(await orig<object>()
  * The provider's PA form: the Letter of Necessity box. Nothing uploads. A click attaches the brand's sample PDF, and its name
  * opens the PDF in the viewer the iAssist documents use.
  */
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  usePaFormStore.getState().reset();
+});
 
 function open() {
   render(<PaQuestionsStep showLetterOfNecessity onBack={() => {}} onCancel={() => {}} onNext={() => {}} />);
@@ -48,5 +52,28 @@ describe("Letter of Necessity upload", () => {
     fireEvent.click(screen.getByText("Upload document"));
     fireEvent.click(screen.getByText("Submit document"));
     expect(screen.getByText("Submitted")).toBeTruthy();
+  });
+
+  it("keeps the form as filled when it remounts, as after an Undo of the submit", () => {
+    open();
+    fireEvent.click(screen.getAllByText("Yes")[0]);
+    expect(usePaFormStore.getState().answers[0]).toBeTruthy();
+    fireEvent.click(screen.getByText("Upload document"));
+    fireEvent.click(screen.getByText("Submit document"));
+    cleanup(); // Undo rewinds the workflow data and the form mounts again
+    render(<PaQuestionsStep showLetterOfNecessity onBack={() => {}} onCancel={() => {}} onNext={() => {}} />);
+    expect(usePaFormStore.getState().answers[0]).toBeTruthy();
+    expect(usePaFormStore.getState().lonRequired).toBe("yes");
+    expect(screen.getByText(letterOfNecessityDocument().fileName)).toBeTruthy();
+    expect(screen.getByText("Submitted")).toBeTruthy();
+  });
+
+  it("starts empty again after a reset", () => {
+    open();
+    fireEvent.click(screen.getByText("Upload document"));
+    cleanup();
+    usePaFormStore.getState().reset();
+    render(<PaQuestionsStep showLetterOfNecessity onBack={() => {}} onCancel={() => {}} onNext={() => {}} />);
+    expect(screen.queryByText(letterOfNecessityDocument().fileName)).toBeNull();
   });
 });

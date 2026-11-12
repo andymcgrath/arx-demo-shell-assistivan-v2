@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
 import { BRAND } from "@/brand";
 import { paQuestionsFor } from "@/brand/paQuestions";
+import { usePaFormStore } from "@/store/paFormStore";
 import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { letterOfNecessityDocument } from "@/brand/documents";
 import DocumentLinks from "@/portals/iassist/components/DocumentLinks";
@@ -819,11 +820,12 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 export function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false, submitEvent = 'SUBMIT_PA' }: { /** The event the submit sends. APA sends SUBMIT_PA_FORM, which then starts the PA. */ submitEvent?: string; onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   // The questions come from the brand (client/brand/paQuestions.ts), so the form fits the drug.
   const clinicalQuestions = paQuestionsFor(BRAND.program);
-  const [answers, setAnswers] = useState<Record<number, string | null>>({});
-  const [lonRequired, setLonRequired] = useState<string | null>(null);
+  // The entries live in a store, so Undo of the submit returns to the form as the provider left it.
+  const { answers, lonRequired, lonFile, lonSubmitted } = usePaFormStore();
+  const setAnswer = usePaFormStore((s) => s.setAnswer);
+  const setLonRequired = (v: string | null) => usePaFormStore.getState().set({ lonRequired: v });
+  const setLonSubmitted = (v: boolean) => usePaFormStore.getState().set({ lonSubmitted: v });
   // Nothing uploads. Clicking the box attaches the brand's sample Letter of Necessity, and its name opens the PDF.
-  const [lonFile, setLonFile] = useState<{ file: string; name: string } | null>(null);
-  const [lonSubmitted, setLonSubmitted] = useState(false);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
   const payer = usePatientStore((s) => s.payer);
@@ -835,8 +837,7 @@ export function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showL
 
   function attachLetter() {
     const doc = letterOfNecessityDocument();
-    setLonFile({ file: doc.file, name: doc.fileName });
-    setLonSubmitted(false);
+    usePaFormStore.getState().set({ lonFile: { file: doc.file, name: doc.fileName }, lonSubmitted: false });
   }
 
   const questions = (
@@ -846,7 +847,7 @@ export function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showL
           key={question}
           question={question}
           value={answers[i] ?? null}
-          onChange={(v) => setAnswers((prev) => ({ ...prev, [i]: v }))}
+          onChange={(v) => setAnswer(i, v)}
           accentColor={isCoA ? HEROIC_BLUE : undefined}
         />
       ))}

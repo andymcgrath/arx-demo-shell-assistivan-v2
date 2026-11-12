@@ -23,6 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDemoStore, type FlowType } from "@/store/demoStore";
 import { usePatientStore } from "@/store/patientStore";
 import { usePresPapStore } from "@/store/presPapStore";
+import { usePaFormStore } from "@/store/paFormStore";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
 import { usePersonaState, useWorkflowActor } from "@/engine/WorkflowProvider";
 import { getWorkflowActor, switchWorkflow, resetAllWorkflowSnapshots, getActiveFlowType } from "@/engine/actorSingleton";
@@ -618,6 +619,7 @@ export default function DemoShell() {
   // resetPatient() either, only clear its sessionStorage key — presPapStore
   // mirrors that same behavior there for consistency.
   const resetPresPap = usePresPapStore((s) => s.reset);
+  const resetPaForm = usePaFormStore((s) => s.reset);
   // Only ever called from WF5's own "Reset All" (see isIAssistPapFlow guard
   // below) — rulesPortalStore's profile/cases back a totally separate,
   // unrelated Enrollment demo (see that store's header comment), so this
@@ -677,6 +679,7 @@ export default function DemoShell() {
       resetDemo();
       resetPatient();
       resetPresPap();
+      resetPaForm();
     }
   }, []);
 
@@ -725,6 +728,7 @@ export default function DemoShell() {
     resetDemo();
     resetPatient();
     resetPresPap();
+    resetPaForm();
     // Wipe every OTHER flow's cached progress too, not just
     // the active one — resetDemo()/resetCurrentWorkflowActor
     // only clear the current flow's slot, so an older
@@ -808,6 +812,7 @@ export default function DemoShell() {
     // patient portal's StateDrivenNav) know this is a reset and force-navigate
     // to the correct screen, same as the "Reset All" button does.
     resetDemo();
+    resetPaForm();
 
     const actor = getWorkflowActor();
 
