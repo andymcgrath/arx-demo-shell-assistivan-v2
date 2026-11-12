@@ -1,10 +1,12 @@
-import type { CatalogFork, CatalogLane, CatalogStep, CatalogTrigger } from "./types";
+import type { CatalogBranch, CatalogFork, CatalogLane, CatalogStep, CatalogTrigger } from "./types";
 
 /**
  * Fork and exit entries. `ownedBy` says which block a fork is drawn under. `leadsTo` lists the blocks an outcome works with (see `CatalogExit`). `then` is written for patient forks only. `label` and `description` are left out where `forks.ts` already reads well to sales, and
  * `catalogExit` falls back to it. Aliases are sales vocabulary for the palette search. Draft entries carry a question.
  */
 const step = (label: string, lane: CatalogLane, trigger: CatalogTrigger): CatalogStep => ({ label, lane, trigger });
+
+const branch = (steps: CatalogStep[], when?: string): CatalogBranch => ({ ...(when ? { when } : {}), steps });
 
 /** The question on a `then` list the user has not signed off on. */
 const THEN_QUESTION = "Is this what the audience sees after this choice? The steps are written from the screens and rules, not from a sales script.";
@@ -48,9 +50,9 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ownedBy: ["payment"],
     aliases: ["pricing", "price pick", "pricing options"],
     exits: [
-      { id: "retail", leadsTo: ["pharmacy_selection:store", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient picks a retail store", "patient", "click"), step("The pharmacy fills it at the counter. Nothing ships", "system", "view")], aliases: ["retail store", "pick up"] },
-      { id: "mail_order", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient confirms the delivery address", "patient", "click"), step("The filling pharmacy handles the date, and the order tracker follows", "system", "automatic")], aliases: ["mail", "home delivery"] },
-      { id: "self_pay", leadsTo: ["cash_offer", "financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient accepts the self-pay offer and pays by card. Nothing is charged", "patient", "click"), step("The CRM verifies the payment", "agent", "click"), step("The patient sets the delivery address and ship date", "patient", "click")], aliases: ["cash pay", "cash", "DTP"] },
+      { id: "retail", leadsTo: ["pharmacy_selection:store", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient picks a retail store", "patient", "click"), step("The pharmacy fills it at the counter. No address, ship date, or payment", "system", "view")], "pharmacy_selection:store"), branch([step("The patient confirms the delivery address", "patient", "click"), step("The patient picks a ship date", "patient", "click"), step("The patient reviews the cost and confirms payment", "patient", "click")])], aliases: ["retail store", "pick up"] },
+      { id: "mail_order", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient confirms the delivery address", "patient", "click"), step("The filling pharmacy handles the date. No payment", "system", "automatic")], "pharmacy_selection:store"), branch([step("The patient confirms the delivery address", "patient", "click"), step("The patient picks a ship date", "patient", "click"), step("The patient reviews the cost and confirms payment", "patient", "click")])], aliases: ["mail", "home delivery"] },
+      { id: "self_pay", leadsTo: ["cash_offer", "financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: "For self-pay, does payment come before or after the address and ship date? The steps are written from the screens and rules, not from a sales script.", then: [branch([step("The patient accepts the self-pay offer", "patient", "click"), step("The patient confirms the delivery address", "patient", "click"), step("The patient picks a ship date", "patient", "click"), step("The patient pays by card. Nothing is charged", "patient", "click"), step("The CRM verifies the payment", "agent", "click")])], aliases: ["cash pay", "cash", "DTP"] },
     ],
   },
   {
@@ -58,8 +60,8 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ownedBy: ["financial_assistance"],
     aliases: ["copay", "copay program", "copay enrollment"],
     exits: [
-      { id: "enroll", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient enrolls in the copay program", "patient", "click"), step("The reduced price applies", "system", "automatic")], aliases: ["enroll in copay", "reduced price"] },
-      { id: "decline", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient declines the copay program and keeps the full price", "patient", "click")], aliases: ["decline copay", "full price"] },
+      { id: "enroll", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient enrolls in the copay program", "patient", "click"), step("The reduced price applies", "system", "automatic")])], aliases: ["enroll in copay", "reduced price"] },
+      { id: "decline", leadsTo: ["pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient declines the copay program and keeps the full price", "patient", "click")])], aliases: ["decline copay", "full price"] },
     ],
   },
   {
@@ -67,9 +69,9 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ownedBy: ["financial_assistance"],
     aliases: ["assistance", "financial assistance", "patient choice of assistance"],
     exits: [
-      { id: "pap", leadsTo: ["income_qualification", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses the free drug program, and it activates", "patient", "click")], aliases: ["free drug", "PAP", "patient assistance program"] },
-      { id: "copay", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses the copay program", "patient", "click")], aliases: ["copay offer", "manufacturer copay"] },
-      { id: "self_pay", leadsTo: ["cash_offer", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [step("The patient chooses to pay out of pocket", "patient", "click")], aliases: ["pay out of pocket", "pay cash after qualifying"] },
+      { id: "pap", leadsTo: ["income_qualification", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient chooses the free drug program, and it activates", "patient", "click"), step("The patient sets the delivery address and ship date", "patient", "click"), step("The pharmacy ships the free drug", "system", "automatic")])], aliases: ["free drug", "PAP", "patient assistance program"] },
+      { id: "copay", leadsTo: ["financial_assistance", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient chooses the copay program", "patient", "click"), step("The patient sets the delivery address and ship date", "patient", "click"), step("The pharmacy ships at the copay price", "system", "automatic")])], aliases: ["copay offer", "manufacturer copay"] },
+      { id: "self_pay", leadsTo: ["cash_offer", "pharmacy_selection", "scheduling", "tracking"], draft: true, question: THEN_QUESTION, then: [branch([step("The patient chooses to pay out of pocket", "patient", "click"), step("The patient sets the delivery address and ship date", "patient", "click"), step("The pharmacy ships it", "system", "automatic")])], aliases: ["pay out of pocket", "pay cash after qualifying"] },
     ],
   },
   {

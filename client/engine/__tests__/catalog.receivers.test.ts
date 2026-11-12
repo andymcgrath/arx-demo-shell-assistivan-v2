@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ALL_FORKS } from "@/workflows/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
-import { CATALOG_BLOCKS, CATALOG_FORKS, entryNamesBlock, exitFeeds, forkOwnerIndex } from "@/workflows/catalog";
+import { CATALOG_BLOCKS, CATALOG_FORKS, entryNamesBlock, exitFeeds, exitSteps, forkOwnerIndex } from "@/workflows/catalog";
 import type { ModuleId } from "@/engine/workflow/components";
 
 /**
@@ -52,8 +52,21 @@ describe("fork receiver lists", () => {
       for (const exit of fork.exits) {
         const then = entry!.exits.find((e) => e.id === exit.id)?.then;
         expect(then?.length, `patient fork ${fork.id}.${exit.id} has no steps`).toBeGreaterThan(0);
+        expect(then!.filter((b) => !b.when).length, `patient fork ${fork.id}.${exit.id} needs exactly one default entry`).toBe(1);
+        for (const b of then!) {
+          expect(b.steps.length, `patient fork ${fork.id}.${exit.id} has an empty entry`).toBeGreaterThan(0);
+          if (b.when) expect(CATALOG_BLOCKS[b.when.split(":")[0] as ModuleId], `${fork.id}.${exit.id} when "${b.when}"`).toBeDefined();
+        }
       }
     }
+  });
+
+  it("pick the steps that match the recipe", () => {
+    const store = [{ id: "payment" }, { id: "pharmacy_selection", props: { variant: "store" } }];
+    const internal = [{ id: "payment" }, { id: "scheduling" }];
+    expect(exitSteps("pricing", "retail", store).map((s) => s.label)).toContain("The patient picks a retail store");
+    expect(exitSteps("pricing", "retail", internal).map((s) => s.label)).toContain("The patient picks a ship date");
+    expect(exitSteps("bi", "pharmacy_covered", internal)).toEqual([]);
   });
 
   it("feed every block after a fork in every recipe, from the picked outcome or any outcome of a patient fork", () => {

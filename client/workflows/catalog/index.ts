@@ -122,6 +122,16 @@ export function exitFeeds(forkId: string, exitId: string, block: { id: ModuleId;
 }
 
 /**
+ * The steps that follow a patient fork's outcome in this recipe: the first `then` entry whose `when` block the recipe has,
+ * else the one with no `when`. Empty when the outcome has no steps.
+ */
+export function exitSteps(forkId: string, exitId: string, modules: { id: string; props?: Record<string, unknown> }[]): CatalogStep[] {
+  const then = CATALOG_FORKS.find((f) => f.id === forkId)?.exits.find((e) => e.id === exitId)?.then ?? [];
+  const has = (when: string) => modules.some((m) => entryNamesBlock(when, m.id, typeof m.props?.variant === "string" ? (m.props.variant as string) : undefined));
+  return (then.find((b) => b.when && has(b.when)) ?? then.find((b) => !b.when))?.steps ?? [];
+}
+
+/**
  * The index of the block a fork is drawn under in this recipe: the first block in the fork's `ownedBy` list that the
  * recipe has. -1 when it has none.
  */
