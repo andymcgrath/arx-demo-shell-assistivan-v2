@@ -10,19 +10,26 @@ import { recipeMeets } from "@/engine/workflow/recipe";
 
 /** The canvas model draws every recipe and demo, keeps disabled cards on the canvas, and reads patient-fork steps from the recipe. */
 
+/**
+ * A card the story's pick leaves off is fine only when another outcome of that fork feeds it: the recipe keeps a block for a
+ * branch the story did not take (the cash offer in a DTP recipe whose PA is approved). Returns the cards that fail that.
+ */
+const disabledForNoBranch = (c: CanvasBoard): string[] =>
+  c.cards.filter((card) => card.disabled.length > 0 && !c.forks.some((f) => f.chooser === "story" && f.exits.some((e) => !e.selected && e.feeds.includes(card.index)) && f.exits.some((e) => e.selected && e.leaves.includes(card.index)))).map((x) => x.label);
+
 const canvas = (flow: string, choices?: Record<string, string>) => buildCanvas({ flow: flow as never, title: flow, choices }) as CanvasBoard;
 
 describe("canvas for every recipe", () => {
   for (const s of ALL_SCENARIOS.filter((x) => x.recipe)) {
-    it(`${s.flowType} draws every card and puts every fork under a card, with nothing disabled`, () => {
+    it(`${s.flowType} draws every card and puts every fork under a card, and disables a card only for a branch the story did not take`, () => {
       const c = canvas(s.flowType);
       expect(c.kind).toBe("canvas");
       expect(c.problems).toEqual([]);
       expect(c.cards.map((x) => x.moduleId)).toEqual(s.recipe!.modules.map((m) => m.id));
       for (const card of c.cards) {
         expect(card.steps.length, card.label).toBeGreaterThan(0);
-        expect(card.disabled, `${card.label} is disabled by the recipe's own picks`).toEqual([]);
       }
+      expect(disabledForNoBranch(c), "a card is disabled with no other outcome that feeds it").toEqual([]);
       for (const f of c.forks) {
         expect(f.ownerIndex).toBeGreaterThanOrEqual(0);
         expect(f.ownerIndex).toBeLessThan(c.cards.length);
@@ -46,12 +53,31 @@ describe("canvas patient forks", () => {
 });
 
 describe("canvas outcomes", () => {
+  it("greys out the cash offer when the PA is approved, and the PA result text when it is denied", () => {
+    const by = (c: CanvasBoard, id: string) => c.cards.find((x) => x.moduleId === id)!;
+    const approved = canvas("CoA_DTP", { pa: "approved" });
+    expect(by(approved, "cash_offer").disabled.join()).toMatch(/Prior authorization decision: "Approved"/);
+    expect(by(approved, "pa_notification").disabled).toEqual([]);
+    const denied = canvas("CoA_DTP", { pa: "denied" });
+    expect(by(denied, "pa_notification").disabled.join()).toMatch(/Prior authorization decision: "Denied"/);
+    expect(by(denied, "cash_offer").disabled).toEqual([]);
+  });
+
+  it("decides a card by the fork that owns the cards just before it, not by an earlier, broader fork", () => {
+    // The BI outcome lists both the cash offer and the PA result text, yet the PA pick still greys one of them out.
+    const c = canvas("CoA_DTP", { bi: "pharmacy_covered", pa: "approved" });
+    const bi = c.forks.find((f) => f.id === "bi")!.exits.find((e) => e.selected)!;
+    const cash = c.cards.find((x) => x.moduleId === "cash_offer")!;
+    expect(bi.feeds).toContain(cash.index);
+    expect(cash.disabled.length).toBeGreaterThan(0);
+  });
+
   it("keeps a card a changed outcome no longer feeds, disabled, with the reason", () => {
     const c = canvas("CoA_DTP", { bi: "medical_covered" });
     const by = (id: string) => c.cards.find((x) => x.moduleId === id)!;
     expect(c.cards).toHaveLength(7);
     expect(by("payment").disabled[0]).toMatch(/does not work with this block/);
-    expect(by("cash_offer").disabled.length).toBe(1);
+    expect(by("cash_offer").disabled.length).toBeGreaterThan(0);
     // Cards before the fork's owner and cards that take input from every outcome stay live.
     expect(by("enrollment").disabled).toEqual([]);
     expect(by("tracking").disabled).toEqual([]);
@@ -85,7 +111,7 @@ describe("canvas for every brand's demos", () => {
         expect(c.problems, `${slug} demo ${d.id}`).toEqual([]);
         const own = { ...scenarioFor(d.flow)!.recipe!.choices, ...scenarioFor(d.flow)!.choices } as Record<string, string>;
         const changed = Object.entries(d.choices ?? {}).some(([fork, exit]) => own[fork] !== exit);
-        if (!changed) expect(c.cards.flatMap((x) => x.disabled), `${slug} demo ${d.id}`).toEqual([]);
+        if (!changed) expect(disabledForNoBranch(c), `${slug} demo ${d.id}`).toEqual([]);
       }
     });
   }

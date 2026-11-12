@@ -39,7 +39,7 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ownedBy: ["prior_authorization", "pa_notification"],
     aliases: ["APA", "PA", "prior auth", "prior authorization"],
     exits: [
-      { id: "approved", leadsTo: ["pa_notification", "payment", "financial_assistance", "income_qualification", "provider_transfer", "cash_offer", "pharmacy_selection", "scheduling", "patient_record", "copay_claim", "tracking"], aliases: ["approve", "approved"] },
+      { id: "approved", leadsTo: ["pa_notification", "payment", "financial_assistance", "income_qualification", "provider_transfer", "pharmacy_selection", "scheduling", "patient_record", "copay_claim", "tracking"], aliases: ["approve", "approved"] },
       { id: "denied", leadsTo: ["appeal", "cash_offer", "payment", "pharmacy_selection", "scheduling", "tracking"], aliases: ["deny", "denied", "appeal"] },
     ],
   },

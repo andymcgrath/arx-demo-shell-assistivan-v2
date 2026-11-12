@@ -106,9 +106,11 @@ describe("editing on the canvas", () => {
     const bi = view.getByTestId("canvas-fork-bi");
     const exit = (id: string) => within(bi).getAllByTestId("canvas-exit").find((e) => e.getAttribute("data-exit") === id)!;
     const total = cards(view).length;
+    const off = () => cards(view).filter((c) => c.getAttribute("data-disabled") === "true").length;
+    const before = off();
     fireEvent.click(within(exit("medical_covered")).getByRole("button"));
     // The medical outcome needs a transfer block the draft lacks, so the pick is refused and nothing changes.
-    expect(cards(view).filter((c) => c.getAttribute("data-disabled") === "true")).toHaveLength(0);
+    expect(off()).toBe(before);
     expect(cards(view)).toHaveLength(total);
   });
 
