@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { canRedo, canUndo, currentDraft, describeChange, jump, record, redo, reset, startHistory, undo, type History, type HistoryEntry } from "@/workflows/catalog/history";
 import { BRAND } from "@/brand";
 import type { DemoRequest } from "@/workflows/catalog/request";
 import { blankDraft, editorProblems, exportable, requestBrand } from "@/workflows/catalog/editor";
@@ -26,6 +27,13 @@ interface DraftContext {
   busy: boolean;
   problems: string[];
   send: () => Promise<void>;
+  /** The edit history: every change since the draft was loaded, and where the draft is in it. */
+  history: { entries: HistoryEntry[]; pos: number; canUndo: boolean; canRedo: boolean };
+  undo: () => void;
+  redo: () => void;
+  /** Back to the draft as loaded. One more history entry, so Undo returns to the edits. */
+  reset: () => void;
+  jumpTo: (pos: number) => void;
 }
 
 const Ctx = createContext<DraftContext | null>(null);
@@ -37,20 +45,27 @@ export const useDraft = (): DraftContext => {
 };
 
 export function DraftProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<DemoRequest>(() => blankDraft("iassist", BRAND.slug, requestBrand(BRAND)));
-  const [baseline, setBaseline] = useState(() => JSON.stringify(draft));
+  const [hist, setHist] = useState<History>(() => startHistory(blankDraft("iassist", BRAND.slug, requestBrand(BRAND))));
   const [active, setActive] = useState(0);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [result, setResult] = useState<Exported>();
   const [busy, setBusy] = useState(false);
+  const draft = currentDraft(hist);
 
   const edit = (fn: (d: DemoRequest) => DemoRequest) => {
     setResult(undefined);
-    setDraft(fn);
+    setHist((h) => {
+      const before = currentDraft(h);
+      const after = fn(before);
+      return record(h, after, describeChange(before, after));
+    });
+  };
+  const move = (fn: (h: History) => History) => {
+    setResult(undefined);
+    setHist(fn);
   };
   const load = (key: string, next: DemoRequest) => {
-    setDraft(next);
-    setBaseline(JSON.stringify(next));
+    setHist(startHistory(next));
     setActive(0);
     setLoadedKey(key);
     setResult(undefined);
@@ -69,8 +84,10 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   };
 
   const value: DraftContext = {
-    draft, active: Math.min(active, draft.demos.length - 1), setActive, loadedKey, dirty: JSON.stringify(draft) !== baseline,
+    draft, active: Math.min(active, draft.demos.length - 1), setActive, loadedKey, dirty: JSON.stringify(draft) !== JSON.stringify(hist.entries[0].draft),
     edit, load, result, busy, problems: editorProblems(draft), send,
+    history: { entries: hist.entries, pos: hist.pos, canUndo: canUndo(hist), canRedo: canRedo(hist) },
+    undo: () => move(undo), redo: () => move(redo), reset: () => move((h) => reset(h)), jumpTo: (pos) => move((h) => jump(h, pos)),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

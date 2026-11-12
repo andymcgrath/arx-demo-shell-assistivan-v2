@@ -108,9 +108,9 @@ function ExitView({ exit, cards, fork, onPick, onClear }: { exit: CanvasExit; ca
   );
 }
 
-export function ForkView({ fork, cards, onPick, onClear }: { fork: CanvasFork; cards: CanvasCard[]; onPick?: (exitId: string) => void; onClear?: (forkId: string) => void }) {
+export function ForkView({ fork, cards, onPick, onClear, highlight }: { fork: CanvasFork; cards: CanvasCard[]; onPick?: (exitId: string) => void; onClear?: (forkId: string) => void; highlight?: boolean }) {
   return (
-    <div className="rounded border bg-white p-2" style={{ borderColor: LINE }} data-testid={`canvas-fork-${fork.id}`} data-chooser={fork.chooser}>
+    <div className={`rounded bg-white p-2 ${highlight ? "border-2" : "border"}`} style={{ borderColor: highlight ? "#f59e0b" : LINE, boxShadow: highlight ? "0 0 0 3px #fef3c7" : undefined }} data-testid={`canvas-fork-${fork.id}`} data-chooser={fork.chooser} data-highlight={highlight ? "true" : undefined}>
       <p className="text-xs font-bold">{fork.label}</p>
       <p className="mb-1 text-[11px]" style={{ color: MUTED }}>
         {fork.chooser === "patient" ? "The patient picks live unless you pin a branch. Each branch is below." : "The story picks. Each outcome is a demo."}

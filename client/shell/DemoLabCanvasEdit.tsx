@@ -48,18 +48,32 @@ export function DemoBar({ draft, active, setActive, edit }: { draft: DemoRequest
   );
 }
 
-export function ForkToggles({ canvas, edit }: { canvas: CanvasBoard; edit: (fn: (d: DemoRequest) => DemoRequest) => void }) {
-  const on = canvas.forks.filter((f) => f.id !== "bi");
-  if (!on.length && !canvas.otherForks.length) return null;
+/**
+ * The recipe's forks. Clicking a fork's name only shows where it sits (the card and fork panel light up). Nothing changes.
+ * Removing takes the separate x button. A fork the recipe lacks has a + button that adds it.
+ */
+export function ForkToggles({ canvas, edit, onShow, shown }: { canvas: CanvasBoard; edit: (fn: (d: DemoRequest) => DemoRequest) => void; onShow: (forkId: string) => void; shown?: string | null }) {
+  if (!canvas.forks.length && !canvas.otherForks.length) return null;
+  const chip = (id: string) => ({ borderColor: shown === id ? "#f59e0b" : INK, background: shown === id ? "#fef3c7" : "#ffffff" });
   return (
     <section className="mb-3 flex flex-wrap items-center gap-2 text-xs" aria-label="Forks in this demo">
       <span className="font-bold uppercase tracking-wide" style={{ color: MUTED }}>Forks</span>
-      <Chip strong>Benefits investigation result (always)</Chip>
-      {on.map((f) => (
-        <button key={f.id} type="button" className={small} style={{ borderColor: INK }} onClick={() => edit((d) => toggleFork(d, f.id))} aria-label={`Remove the ${f.label} fork`}>
-          {f.label} ×
-        </button>
-      ))}
+      {canvas.forks.map((f) =>
+        f.id === "bi" ? (
+          <button key={f.id} type="button" className="rounded px-2 py-0.5 text-xs font-semibold text-white" style={{ background: INK, outline: shown === f.id ? "2px solid #f59e0b" : undefined }} onClick={() => onShow(f.id)} aria-label={`Show where the ${f.label} fork sits`} aria-pressed={shown === f.id}>
+            {f.label} (always)
+          </button>
+        ) : (
+          <span key={f.id} className="inline-flex overflow-hidden rounded border text-xs font-semibold" style={chip(f.id)}>
+            <button type="button" className="px-2 py-0.5" onClick={() => onShow(f.id)} aria-label={`Show where the ${f.label} fork sits`} aria-pressed={shown === f.id}>
+              {f.label}
+            </button>
+            <button type="button" className="border-l px-1.5 py-0.5" style={{ borderColor: INK }} onClick={() => edit((d) => toggleFork(d, f.id))} aria-label={`Remove the ${f.label} fork`} title={`Remove the ${f.label} fork`}>
+              ×
+            </button>
+          </span>
+        ),
+      )}
       {canvas.otherForks.map((f) => (
         <button key={f.id} type="button" className={small} style={{ borderColor: LINE }} onClick={() => edit((d) => toggleFork(d, f.id))} aria-label={`Add the ${f.label} fork`}>
           + {f.label}

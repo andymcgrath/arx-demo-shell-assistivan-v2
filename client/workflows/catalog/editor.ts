@@ -86,6 +86,24 @@ export function blankDraft(workflow: EditorWorkflow, client = "", brand?: Reques
 /** Whether the scenario has a BI fork. The HCP enrollment ends before BI, so its draft and demos carry no pick for it. */
 export const scenarioHasBi = (flow: FlowType): boolean => forksForScenario(ALL_FORKS, flow).some((f) => f.id === "bi");
 
+const INTAKE_WORDS: Record<string, string> = { erx: "One eRx", fax: "One fax", esign: "One e-signature" };
+
+/**
+ * A starting win theme from the draft's own cards, in sales words: what starts the case and what it carries through.
+ * Sales can rewrite it. It is stored in the request file only. The export prompt does not read it.
+ */
+export function suggestWinTheme(d: Pick<DemoRequest, "intake" | "cards">): string {
+  const names = d.cards
+    .map((c) => (c.kind === "ghost" ? c.name.trim() : catalogBlock(c.moduleId)?.name))
+    .filter((n): n is string => !!n)
+    .map((n) => n.toLowerCase());
+  const unique = [...new Set(names)].slice(0, 5);
+  const start = INTAKE_WORDS[d.intake] ?? "One referral";
+  if (!unique.length) return `${start} starts the case and the platform carries it through.`;
+  const list = unique.length === 1 ? unique[0] : `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
+  return `${start} starts everything: ${list}, with no re-keying between apps.`;
+}
+
 /** A ready-made draft from a scenario's recipe, and a demo's picks over it. Undefined for a scenario with no recipe. */
 export function draftFromScenario(flow: FlowType, opts: { title: string; client?: string; brand?: RequestBrand; choices?: Record<string, string> }): DemoRequest | undefined {
   const scenario = scenarioFor(flow);
@@ -94,13 +112,15 @@ export function draftFromScenario(flow: FlowType, opts: { title: string; client?
   const workflow: EditorWorkflow = recipe.source === "iassist" ? "iassist" : "coassist";
   const forks = [...new Set([...(scenarioHasBi(flow) ? ["bi"] : []), ...recipe.forks])];
   const choices = Object.fromEntries(Object.entries({ ...recipe.choices, ...scenario.choices, ...opts.choices }).filter(([k]) => forks.includes(k)));
+  const cards = recipe.modules.map((m): RequestCard => ({ kind: "block", moduleId: m.id, ...(typeof m.props?.variant === "string" ? { variantId: m.props.variant } : {}) }));
   return withApps({
     ...blankDraft(workflow, opts.client, opts.brand),
     title: opts.title,
     slug: slugOf(opts.title),
     intake: scenario.intake,
     forks,
-    cards: recipe.modules.map((m): RequestCard => ({ kind: "block", moduleId: m.id, ...(typeof m.props?.variant === "string" ? { variantId: m.props.variant } : {}) })),
+    cards,
+    winTheme: suggestWinTheme({ intake: scenario.intake, cards }),
     demos: [{ id: slugOf(opts.title) || "demo-1", label: opts.title, choices }],
   });
 }

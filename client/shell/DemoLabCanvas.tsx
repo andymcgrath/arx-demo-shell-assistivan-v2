@@ -7,6 +7,7 @@ import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, APP_LABEL } from ".
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
 import { emptyRequestFields, RequestPanel } from "./DemoLabCanvasRequest";
+import { EditTools } from "./DemoLabCanvasHistory";
 
 /**
  * Demo Lab, Canvas tab. A horizontal row of cards in journey order. Click a card for its detail and its actions. Each fork
@@ -17,6 +18,32 @@ import { emptyRequestFields, RequestPanel } from "./DemoLabCanvasRequest";
  * The canvas plan: docs/plans/PLAN_DEMO_LAB_CANVAS.md.
  */
 
+/** A collapsed side panel is a thin strip with one button, so the card row can use the width. */
+const Strip = ({ side, label, onOpen }: { side: "left" | "right"; label: string; onOpen: () => void }) => (
+  <div className={`w-8 shrink-0 bg-white ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: LINE }}>
+    <button type="button" onClick={onOpen} aria-label={`Show ${label}`} aria-expanded={false} title={`Show ${label}`} className="mt-2 w-full py-1 text-sm font-bold">
+      {side === "left" ? "»" : "«"}
+    </button>
+  </div>
+);
+
+const Collapse = ({ side, label, onClose }: { side: "left" | "right"; label: string; onClose: () => void }) => (
+  <button type="button" onClick={onClose} aria-label={`Hide ${label}`} aria-expanded title={`Hide ${label}`} className="mb-2 rounded border px-2 py-0.5 text-xs font-semibold" style={{ borderColor: LINE }}>
+    {side === "left" ? "« Hide" : "Hide »"}
+  </button>
+);
+
+/** A band that says which part of the demo a section defines, so the scenario and the recipe do not blur together. */
+const Band = ({ kind, title, note, children }: { kind: string; title: string; note: string; children?: React.ReactNode }) => (
+  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-t border-b-2 px-3 py-2" style={{ background: INK, color: "#ffffff", borderColor: INK }} data-testid={`band-${kind}`}>
+    <div>
+      <h2 className="text-xs font-bold uppercase tracking-wide">{title}</h2>
+      <p className="text-[11px] opacity-80">{note}</p>
+    </div>
+    {children}
+  </div>
+);
+
 const plus = "mx-1 mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm font-bold";
 
 export default function CanvasLab() {
@@ -26,6 +53,9 @@ export default function CanvasLab() {
   const [cardIndex, setCardIndex] = useState(0);
   const [insertAt, setInsertAt] = useState<number | null>(null);
   const [showRequest, setShowRequest] = useState(false);
+  const [shownFork, setShownFork] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(true);
+  const [detailOpen, setDetailOpen] = useState(true);
   const groups = [...new Set(items.map((i) => i.group))];
 
   const fromItem = (it: Item) => draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
@@ -37,6 +67,9 @@ export default function CanvasLab() {
     if (first) load(first.key, fromItem(first)!);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The insert panel lives in the detail panel, so adding a card opens it.
+  useEffect(() => { if (insertAt !== null) setDetailOpen(true); }, [insertAt]);
 
   const startBlank = (workflow: (typeof EDITOR_WORKFLOWS)[number]) => {
     if (dirty && !window.confirm("Replace the draft? Your edits will be lost.")) return;
@@ -63,6 +96,16 @@ export default function CanvasLab() {
   const index = Math.min(cardIndex, Math.max(canvas.cards.length - 1, 0));
   const card = canvas.cards[index];
 
+  // Clicking a fork's name only shows where it sits: select its owner card, light up the fork, scroll to it. No edit.
+  const showFork = (forkId: string) => {
+    const f = canvas.forks.find((x) => x.id === forkId);
+    if (!f) return;
+    setShownFork(forkId);
+    setCardIndex(f.ownerIndex);
+    setInsertAt(null);
+    window.setTimeout(() => document.getElementById(`canvas-fork-${forkId}`)?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "center" }), 0);
+  };
+
   const AddButton = ({ at }: { at: number }) => (
     <button type="button" aria-label={`Add a card at position ${at + 1}`} data-testid="canvas-add" onClick={() => setInsertAt(at)} className={plus} style={{ borderColor: insertAt === at ? INK : LINE, background: insertAt === at ? INK : "#ffffff", color: insertAt === at ? "#ffffff" : INK }}>
       +
@@ -71,7 +114,9 @@ export default function CanvasLab() {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <aside className="w-[260px] shrink-0 overflow-y-auto border-r bg-white p-4" style={{ borderColor: LINE }}>
+      {!listOpen && <Strip side="left" label="demo list" onOpen={() => setListOpen(true)} />}
+      {listOpen && <aside className="w-[260px] shrink-0 overflow-y-auto border-r bg-white p-4" style={{ borderColor: LINE }} aria-label="Demo list">
+        <Collapse side="left" label="demo list" onClose={() => setListOpen(false)} />
         {groups.map((g) => (
           <div key={g} className="mb-4">
             <h2 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>{g}</h2>
@@ -105,7 +150,7 @@ export default function CanvasLab() {
         <p className="text-xs" style={{ color: MUTED }}>
           Picking an entry starts a draft from it. Edit it here, then export. Nothing is saved until you do. The demos are the active brand's.
         </p>
-      </aside>
+      </aside>}
 
       {wholeBoard && wholeBoard.kind === "whole" ? (
         <main className="min-w-0 flex-1 overflow-y-auto p-5" data-testid="canvas-whole">
@@ -120,37 +165,53 @@ export default function CanvasLab() {
       ) : (
         <>
           <main className="min-w-0 flex-1 overflow-auto p-5" data-testid="canvas">
-            <Header canvas={canvas} />
-            <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} className="mb-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK }}>
-              Request details{emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
-            </button>
-            {showRequest && <RequestPanel draft={draft} edit={edit} />}
-            <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
-            <ForkToggles canvas={canvas} edit={edit} />
-            {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
-            <div className="flex items-start pb-4">
-              <AddButton at={0} />
-              {canvas.cards.map((c, i) => (
-                <div key={i} className="flex items-start">
-                  <div className="w-[240px] shrink-0 space-y-2">
-                    <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); }} />
-                    {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
-                      <ForkView
-                        key={f.id}
-                        fork={f}
-                        cards={canvas.cards}
-                        onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
-                        onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
-                      />
-                    ))}
-                  </div>
-                  <span aria-hidden className="mx-1 mt-6 shrink-0 text-lg font-bold" style={{ color: MUTED }}>{i < canvas.cards.length - 1 ? "→" : ""}</span>
-                  <AddButton at={i + 1} />
+            <section className="mb-5 rounded border bg-white pb-3" style={{ borderColor: INK }} aria-label="Scenario" data-testid="section-scenario">
+              <Band kind="scenario" title="Scenario" note="What this demo is called, how it starts, and which outcomes it plays. Each demo is one outcome.">
+                <div className="text-black"><EditTools /></div>
+              </Band>
+              <div className="px-3">
+                <Header canvas={canvas} />
+                <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} className="mb-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK }}>
+                  Request details{emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
+                </button>
+                {showRequest && <RequestPanel draft={draft} edit={edit} />}
+                <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
+              </div>
+            </section>
+            <section className="rounded border bg-white pb-3" style={{ borderColor: LINE, borderTopColor: INK }} aria-label="Recipe" data-testid="section-recipe">
+              <Band kind="recipe" title="Recipe" note="The blocks that run, in order, and the forks they can branch on. Every demo above shares it." />
+              <div className="px-3">
+                <ForkToggles canvas={canvas} edit={edit} onShow={showFork} shown={shownFork} />
+                {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
+                <div className="flex items-start pb-4">
+                  <AddButton at={0} />
+                  {canvas.cards.map((c, i) => (
+                    <div key={i} className="flex items-start">
+                      <div className="w-[240px] shrink-0 space-y-2">
+                        <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); setShownFork(null); }} />
+                        {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
+                          <div key={f.id} id={`canvas-fork-${f.id}`}>
+                            <ForkView
+                              fork={f}
+                              cards={canvas.cards}
+                              highlight={shownFork === f.id}
+                              onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
+                              onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <span aria-hidden className="mx-1 mt-6 shrink-0 text-lg font-bold" style={{ color: MUTED }}>{i < canvas.cards.length - 1 ? "→" : ""}</span>
+                      <AddButton at={i + 1} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            </section>
           </main>
-          <aside className="w-[360px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Card detail">
+          {!detailOpen && <Strip side="right" label="card detail" onOpen={() => setDetailOpen(true)} />}
+          {detailOpen && <aside className="w-[360px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Card detail">
+            <div className="flex justify-end"><Collapse side="right" label="card detail" onClose={() => setDetailOpen(false)} /></div>
             {insertAt !== null ? (
               <InsertPanel
                 draft={draft}
@@ -181,6 +242,7 @@ export default function CanvasLab() {
                   <p className="mb-1 font-semibold">Export is blocked until these are fixed:</p>
                   <ul className="list-disc pl-4">{canvas.exportProblems.map((p) => <li key={p}>{p}</li>)}</ul>
                   <p className="mt-1" style={{ color: MUTED }}>Fill the rest under "Request details".</p>
+                  <button type="button" className="mt-2 rounded border px-2 py-0.5 text-xs font-semibold" style={{ borderColor: INK }} onClick={() => { setShowRequest(true); window.setTimeout(() => document.querySelector("[data-testid=request-panel]")?.scrollIntoView?.({ block: "center" }), 0); }}>Open Request details</button>
                 </div>
               ) : (
                 <p className="mb-3 text-xs" style={{ color: MUTED }}>Nothing blocks the export.</p>
@@ -191,7 +253,7 @@ export default function CanvasLab() {
               {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}
               {result && !result.ok && <ul className="mt-3 list-disc pl-4 text-xs" data-testid="export-failed">{result.problems.map((p) => <li key={p}>{p}</li>)}</ul>}
             </section>
-          </aside>
+          </aside>}
         </>
       )}
     </div>

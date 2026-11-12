@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DemoRequest } from "@/workflows/catalog/request";
+import { suggestWinTheme } from "@/workflows/catalog/editor";
 import { LINE, MUTED } from "./DemoLabCanvasParts";
 
 /** The request fields the export needs: title, client, file name, intake, win theme, brand, documents, open questions. */
@@ -61,10 +62,16 @@ export function RequestPanel({ draft, edit }: { draft: DemoRequest; edit: (fn: (
           <option value="esign">E-sign</option>
         </select>
       </label>
-      <label className="col-span-2 text-xs font-semibold">
-        Win theme
-        <input className={field} style={{ borderColor: LINE }} value={draft.winTheme} onChange={(e) => set("winTheme", e.target.value)} />
-      </label>
+      <div className="col-span-2 text-xs font-semibold">
+        <label>
+          Win theme
+          <input className={field} style={{ borderColor: LINE }} value={draft.winTheme} onChange={(e) => set("winTheme", e.target.value)} />
+        </label>
+        <p className="mt-1 font-normal" style={{ color: MUTED }}>
+          The one thing the client should remember. It is saved in the request file. It starts from the cards and you can rewrite it.{" "}
+          <button type="button" className="font-semibold underline" onClick={() => set("winTheme", suggestWinTheme(draft))}>Suggest from the cards</button>
+        </p>
+      </div>
       {(["name", "drug"] as const).map((k) => (
         <label key={k} className="text-xs font-semibold">
           Brand {k}

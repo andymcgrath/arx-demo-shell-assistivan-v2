@@ -25,8 +25,9 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     variants: [
       {
         id: "default",
-        label: "Patient onboarding",
-        summary: "The HCP submits the referral. The patient gets a text, enters a one-time code, and consents.",
+        label: "EHR referral and patient onboarding",
+        summary: "The HCP submits the referral from the EHR. The patient gets a text, enters a one-time code, and consents.",
+        apps: ["provider", "crm", "patient", "iassist"],
         steps: [step("HCP submits the referral", "hcp", "click"), ...PATIENT_ONBOARDING],
       },
       {

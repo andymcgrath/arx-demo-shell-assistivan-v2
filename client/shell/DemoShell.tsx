@@ -252,7 +252,7 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "field":     return <FieldPortal />;
     // The PrES site (the HCP's enrollment form) is the provider's page in the PES site scenario.
     case "provider":  return scenarioFacts(flowType ?? "").isPesSite ? <WebPortal /> : <ProviderPortal key={flowType} />;
-    case "iassist":   return <IAssistPortal branded={false} />;
+    case "iassist":   return <IAssistPortal />;
     case "rules":     return <RulesPortal />;
     case "web":       return <WebPortal />;
     case "gateway":   return <GatewayPortal />;
