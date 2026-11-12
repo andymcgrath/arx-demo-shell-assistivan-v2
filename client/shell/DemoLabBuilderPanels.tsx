@@ -15,7 +15,18 @@ const APP_LABEL: Record<CatalogApp, string> = { crm: "CRM", patient: "Patient", 
 const LANES: CatalogLane[] = ["hcp", "patient", "agent", "system"];
 const LANE_LABEL: Record<CatalogLane, string> = { hcp: "HCP", patient: "Patient", agent: "Agent", system: "System" };
 
-const blockName = (req: string) => CATALOG_BLOCKS[req.split(":")[0] as ModuleId]?.name ?? req;
+/** A `requires` entry in sales words. `module:variant` names the variant, and `a|b` is any of them, so it reads "A or B". */
+const blockName = (req: string) =>
+  req
+    .split("|")
+    .map((alt) => {
+      const [id, variant] = alt.split(":");
+      const block = CATALOG_BLOCKS[id as ModuleId];
+      if (!block) return alt;
+      const label = variant ? block.variants?.find((v) => v.id === variant)?.label : undefined;
+      return label ? `${block.name} (${label})` : block.name;
+    })
+    .join(" or ");
 const field = "w-full rounded border px-2 py-1 text-sm";
 
 export function Palette({ draft, onAdd, onGhost }: { draft: DemoRequest; onAdd: (c: PaletteCard) => void; onGhost: () => void }) {

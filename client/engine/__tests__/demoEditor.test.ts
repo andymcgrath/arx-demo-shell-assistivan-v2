@@ -3,7 +3,7 @@ import { ALL_SCENARIOS } from "@/workflows/scenarios";
 import { CATALOG_BLOCKS, paletteCards } from "@/workflows/catalog";
 import type { DemoRequest } from "@/workflows/catalog/request";
 import {
-  addBlock, addDemo, addGhost, appendReasons, blankDraft, deriveApps, draftFromScenario, editorProblems, exitMissing,
+  addBlock, addDemo, addGhost, appendReasons, blankDraft, requestBrand, deriveApps, draftFromScenario, editorProblems, exitMissing,
   moveCard, removeCard, removeDemo, setPick, toggleFork, updateCard, workflowForks,
 } from "@/workflows/catalog/editor";
 
@@ -48,6 +48,21 @@ describe("a ready-made draft from every recipe", () => {
   it("is undefined for a scenario with no recipe", () => {
     const none = ALL_SCENARIOS.find((s) => !s.recipe)!.flowType;
     expect(draftFromScenario(none, { title: "x" })).toBeUndefined();
+  });
+});
+
+describe("the brand block", () => {
+  const brand = requestBrand({ manufacturer: { name: "Acme" }, program: { drugDisplayName: "Zed (zedumab)", colors: { source: "https://acme.example/" } } });
+  it("comes from the brand file when one is given, on a blank draft and a scenario draft", () => {
+    expect(brand).toEqual({ name: "Acme", drug: "Zed (zedumab)", sourceUrl: "https://acme.example/", documents: [] });
+    expect(blankDraft("iassist", "acme", brand).brand).toEqual(brand);
+    expect(draftFromScenario("iAssist_Buy_And_Bill", { title: "x", brand })!.brand).toEqual(brand);
+  });
+  it("leaves the source out when the brand's color source is not a URL", () => {
+    expect(requestBrand({ manufacturer: { name: "A" }, program: { drugDisplayName: "D", colors: { source: "the style guide" } } })).toEqual({ name: "A", drug: "D", documents: [] });
+  });
+  it("stays blank with no brand", () => {
+    expect(blankDraft("iassist").brand).toEqual({ name: "", drug: "", documents: [] });
   });
 });
 

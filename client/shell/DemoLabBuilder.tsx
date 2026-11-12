@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BRAND } from "@/brand";
 import type { DemoRequest } from "@/workflows/catalog/request";
 import {
-  addBlock, addDemo, addGhost, blankDraft, draftFromScenario, editorProblems, EDITOR_WORKFLOWS, exportable, moveCard, removeCard,
+  addBlock, addDemo, addGhost, blankDraft, draftFromScenario, editorProblems, EDITOR_WORKFLOWS, exportable, moveCard, removeCard, requestBrand,
   removeDemo, setPick, toggleFork, updateCard, updateDemo, type EditorWorkflow,
 } from "@/workflows/catalog/editor";
 import { useItems } from "./DemoLabItems";
@@ -25,7 +25,7 @@ type Exported = { ok: true; written: string[] } | { ok: false; problems: string[
 export default function Builder() {
   const items = useItems();
   const ready = items.filter((i) => i.group !== "Whole demos (no recipe yet)");
-  const [draft, setDraft] = useState<DemoRequest>(() => blankDraft("iassist", BRAND.slug));
+  const [draft, setDraft] = useState<DemoRequest>(() => blankDraft("iassist", BRAND.slug, requestBrand(BRAND)));
   const [active, setActive] = useState(0);
   const [start, setStart] = useState("blank:iassist");
   const [result, setResult] = useState<Exported>();
@@ -42,9 +42,9 @@ export default function Builder() {
     const [kind, rest] = start.split(/:(.*)/s);
     setActive(0);
     setResult(undefined);
-    if (kind === "blank") return setDraft(blankDraft(rest as EditorWorkflow, BRAND.slug));
+    if (kind === "blank") return setDraft(blankDraft(rest as EditorWorkflow, BRAND.slug, requestBrand(BRAND)));
     const item = items.find((i) => i.key === start);
-    const next = item && draftFromScenario(item.flow, { title: item.title, client: BRAND.slug, choices: item.choices });
+    const next = item && draftFromScenario(item.flow, { title: item.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: item.choices });
     if (next) setDraft(next);
   };
 
