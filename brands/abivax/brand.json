@@ -16,6 +16,15 @@
       "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
     },
     {
+      "id": "coa-pap",
+      "flow": "CoA_PAP",
+      "label": "8. CoAssist PAP",
+      "description": "BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses. No PA, cash offer, or payment",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
+    },
+    {
       "id": "erx-assistance",
       "flow": "CoA_APA_Assistance",
       "label": "3. CoAssist APA",

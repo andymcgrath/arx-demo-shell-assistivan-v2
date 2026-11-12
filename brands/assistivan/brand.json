@@ -28,39 +28,98 @@
       "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
     },
     {
+      "id": "coa-web-copay",
+      "flow": "CoA_Web_Copay",
+      "label": "5. CoAssist Web Copay",
+      "description": "The client's web page starts the case. Benefit verification and prior authorization run through the gateway, then the patient lands on the copay screen of the patient experience. No CRM"
+    },
+    {
       "id": "coa-coverage",
       "flow": "CoA_Coverage",
-      "label": "5. CoAssist Coverage",
+      "label": "6. CoAssist Coverage",
       "description": "Medical-benefit CGM sensor coverage, three Benefits Investigation outcomes (pharmacy covered, both covered / medical priority, or no coverage / cash pay)"
     },
     {
       "id": "coa-medical-transfer",
       "flow": "CoA_Medical_Transfer",
-      "label": "6. CoAssist Medical Transfer",
+      "label": "7. CoAssist Medical Transfer",
       "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned site of care and the order ends there"
+    },
+    {
+      "id": "coa-pap",
+      "flow": "CoA_PAP",
+      "label": "8. CoAssist PAP",
+      "description": "BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses. No PA, cash offer, or payment",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
+    },
+    {
+      "id": "erx-specialty",
+      "flow": "CoA_APA_Specialty",
+      "label": "9. CoAssist APA",
+      "description": "eRx initiation. The benefit check finds a PA is required, APA emails the prescriber a form, and after the approval the patient schedules delivery from the pharmacy the prescriber picked.",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "approved"
+      }
+    },
+    {
+      "id": "erx-assistance",
+      "flow": "CoA_APA_Assistance",
+      "label": "10. CoAssist APA + assistance",
+      "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program.",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "approved"
+      }
+    },
+    {
+      "id": "hcp-enroll",
+      "flow": "CoA_HCP_Enroll",
+      "label": "11. HCP Enrollment",
+      "description": "An HCP enrolls the patient from the web page. The patient gets a text, follows the link and consents in the patient experience. The case ends at enrollment."
+    },
+    {
+      "id": "coa-web-pap",
+      "flow": "CoA_Web_PAP",
+      "label": "12. PAP, Web enrollment",
+      "description": "The patient enrolls on the web page. Benefits verification finds no coverage, so the case moves to the patient assistance program. The patient confirms by text, completes the income form, and schedules a shipment.",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
+    },
+    {
+      "id": "web-pres-pes",
+      "flow": "CoA_Web_HCP_Patient",
+      "label": "13. PrES + PES",
+      "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
+      "choices": {
+        "bi": "no_coverage_pap"
+      }
     },
     {
       "id": "iassist-pa-approved",
       "flow": "iAssist_PA_Approved",
-      "label": "7. iAssist",
+      "label": "14. iAssist",
       "description": "Internal iAssist platform workflow with prior authorization approval"
     },
     {
       "id": "iassist-pap",
       "flow": "iAssist_PAP",
-      "label": "8. iAssist Appeal",
+      "label": "15. iAssist Appeal",
       "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
     },
     {
       "id": "iassist-medical-transfer",
       "flow": "iAssist_Medical_Transfer",
-      "label": "9. iAssist Medical Transfer",
+      "label": "16. iAssist Medical Transfer",
       "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned pharmacy and the order ends there"
     },
     {
       "id": "pres-pap",
       "flow": "PrES_PAP",
-      "label": "10. PrES PAP",
+      "label": "17. PrES PAP",
       "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
     }
   ],
