@@ -25,7 +25,8 @@ export const CASH_OFFER_RULES: CoaRule[] = [
     // Coverage: cash pay after the cash-offer SMS.
     id: "cash_offer.select_self_pay.coverage",
     on: "SELECT_SELF_PAY",
-    scope: { module: "cash_offer", props: { variant: "sms" } },
+    // A recipe on the assistance fork picks self-pay through CHOOSE_ASSISTANCE.
+    scope: [{ module: "cash_offer", props: { variant: "sms" } }, { not: { fork: "assistance" } }],
     when: (d) => d.cashOfferSmsVerified && d.pricingOption === null,
     set: (_d, _e, s) => ({ pricingOption: "self_pay", selectedPharmacy: s.content.selfPay }),
     emit: { portal: "patient", step: 9 },

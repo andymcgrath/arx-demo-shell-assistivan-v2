@@ -9,6 +9,9 @@
     "CHECK_PRICING": [
       "web_handoff.check_pricing"
     ],
+    "CHOOSE_ASSISTANCE": [
+      "assistance.choose"
+    ],
     "COMPLETE_BI": [
       "spine.complete_bi"
     ],
@@ -141,6 +144,7 @@
     ]
   },
   "applies": {
+    "assistance.choose": [],
     "cash_offer.deny_pa": [
       "CoA_DTP",
       "CoA_Copay",

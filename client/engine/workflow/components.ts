@@ -155,6 +155,11 @@ export interface ScenarioRecipe {
   /** CRM panels the scenario shows. `benefits` is the pharmacy and medical benefits panel. */
   panels?: PanelId[];
   /**
+   * The assistance fork (PAP, copay, self-pay) ends in one outcome. A recipe opts in to a patient who takes more than
+   * one (for example PAP and copay) with `allowMultiple`.
+   */
+  assistance?: { allowMultiple?: boolean };
+  /**
    * A web-source scenario that has the client's CRM. The agent works the case there, so no Gateway tab holds the BI call:
    * BI returns when the agent opens the BI stage, as in a CoAssist scenario. Absent means no CRM (Web Copay).
    */

@@ -4,7 +4,7 @@ import { createWorkflowMachine } from "@/engine/workflow/createWorkflowMachine";
 import { forksForScenario } from "@/engine/workflow/forks";
 import { recipeProblems } from "@/engine/workflow/recipe";
 import type { ModuleSpec, ScenarioRecipe } from "@/engine/workflow/components";
-import { COASSIST_FORKS } from "@/workflows/coassist/forks";
+import { ASSISTANCE_FORK, COASSIST_FORKS, assistanceFork } from "@/workflows/coassist/forks";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
 import { COA_COPAY, COA_COVERAGE, COA_DTP, COA_PAP, COA_WEB_COPAY, COA_HCP_ENROLL, COA_APA_SPECIALTY } from "@/workflows/coassist/scenarios";
 import { withFrozenClock } from "./harness";
@@ -18,12 +18,13 @@ import { withFrozenClock } from "./harness";
 const incomeModule = (props?: Record<string, unknown>): ModuleSpec => ({ id: "income_qualification", ...(props ? { props } : {}) });
 const COPAY_MODULE: ModuleSpec = { id: "financial_assistance", props: { variant: "copay" } };
 
-const recipe = (modules: ModuleSpec[]): ScenarioRecipe => ({
+const recipe = (modules: ModuleSpec[], extra: Partial<ScenarioRecipe> = {}): ScenarioRecipe => ({
   source: "coassist",
   forks: ["bi"],
   choices: { bi: "pharmacy_transfer" },
   panels: ["benefits"],
   modules,
+  ...extra,
 });
 
 const GOOD_ORDER = [{ id: "enrollment" }, incomeModule({ trigger: "system" }), COPAY_MODULE, { id: "pharmacy_selection", props: { variant: "assigned" } }, { id: "tracking" }] as ModuleSpec[];
@@ -31,22 +32,24 @@ const GOOD_ORDER = [{ id: "enrollment" }, incomeModule({ trigger: "system" }), C
 // The test recipe runs on DTP's id. It declares only the `bi` fork, and the real scenarios stay registered for the scope check.
 const HOST = "CoA_DTP" as const;
 const forks = forksForScenario(COASSIST_FORKS, HOST);
+/** The assistance fork applies to no scenario yet. These tests put it on the host so its rule runs. */
+const FORKS_WITH_ASSISTANCE = [...COASSIST_FORKS.filter((f) => f.id !== "assistance"), assistanceFork([HOST])];
 
-function build(modules: ModuleSpec[]) {
-  const r = recipe(modules);
+function build(modules: ModuleSpec[], extra: Partial<ScenarioRecipe> = {}, withFork = false) {
+  const r = recipe(modules, extra);
   const scenario = { ...COA_DTP, choices: r.choices, recipe: r };
   const machine = createWorkflowMachine({
     id: "coassist-assistance-blocks",
     defaultFlowType: HOST,
     rules: COASSIST_RULES,
-    forks: COASSIST_FORKS,
+    forks: withFork ? FORKS_WITH_ASSISTANCE : COASSIST_FORKS,
     scenarios: { CoA_DTP: scenario, CoA_Copay: COA_COPAY, CoA_Coverage: COA_COVERAGE, CoA_PAP: COA_PAP, CoA_Web_Copay: COA_WEB_COPAY, CoA_HCP_Enroll: COA_HCP_ENROLL, CoA_APA_Specialty: COA_APA_SPECIALTY },
   });
   const clock = new SimulatedClock();
   const actor = createActor(machine, { input: { flowType: HOST }, clock } as any);
   actor.start();
-  const send = (type: string) => actor.send({ type } as any);
-  const can = (type: string) => actor.getSnapshot().can({ type } as any);
+  const send = (type: string, extraFields: Record<string, unknown> = {}) => actor.send({ type, ...extraFields } as any);
+  const can = (type: string, extraFields: Record<string, unknown> = {}) => actor.getSnapshot().can({ type, ...extraFields } as any);
   const data = () => (actor.getSnapshot().context as any).workflowData;
   return { actor, clock, send, can, data };
 }
@@ -178,5 +181,118 @@ describe("assistance blocks: copay", () => {
       for (const e of ["REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT"]) t.send(e);
       expect(t.can("SELECT_SELF_PAY")).toBe(false);
     });
+  });
+});
+
+/**
+ * The assistance fork (rules 8, 12, 14). Every combination of the three blocks gets one headless test per exit: the exit is
+ * offered exactly when its block is in the recipe, choosing it sets its outcome, and nothing else can be chosen after it.
+ */
+type Exit = "pap" | "copay" | "self_pay";
+const ALL_EXITS: Exit[] = ["pap", "copay", "self_pay"];
+const subsets = (): Exit[][] => {
+  const out: Exit[][] = [];
+  for (let mask = 1; mask < 8; mask++) out.push(ALL_EXITS.filter((_, i) => mask & (1 << i)));
+  return out;
+};
+
+function assistanceRecipe(blocks: Exit[], allowMultiple = false) {
+  const selfPay = blocks.includes("self_pay");
+  const modules: ModuleSpec[] = [
+    { id: "enrollment" },
+    ...(blocks.includes("pap") ? [incomeModule({ trigger: "system", activate: "on_choose" })] : []),
+    ...(blocks.includes("copay") ? [COPAY_MODULE] : []),
+    ...(selfPay ? [{ id: "cash_offer", props: { variant: "sms" } } as ModuleSpec] : [{ id: "pharmacy_selection", props: { variant: "assigned" } } as ModuleSpec]),
+    { id: "tracking" },
+  ];
+  return { modules, extra: { forks: ["bi", "assistance"], choices: { bi: selfPay ? "no_coverage" : "pharmacy_transfer" }, ...(allowMultiple ? { assistance: { allowMultiple } } : {}) } as Partial<ScenarioRecipe> };
+}
+
+/** The patient is verified, BI is back, and each block's own start is done (cash offer text confirmed, income qualified). */
+function readyToChoose(blocks: Exit[], allowMultiple = false) {
+  const { modules, extra } = assistanceRecipe(blocks, allowMultiple);
+  const t = build(modules, extra, true);
+  for (const e of ["REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT", "COMPLETE_BI"]) t.send(e);
+  if (blocks.includes("self_pay")) t.send("VERIFY_CASH_OFFER_SMS");
+  if (blocks.includes("pap")) {
+    t.clock.increment(2000);
+    qualify(t);
+  }
+  return t;
+}
+
+const outcomeOf = (d: any): Record<Exit, boolean> => ({ pap: d.papStatus === "active", copay: !!d.copayEnrolled, self_pay: d.pricingOption === "self_pay" });
+
+describe("assistance fork: one headless test per allowed exit", () => {
+  for (const blocks of subsets()) {
+    describe(`recipe with ${blocks.join(" + ")}`, () => {
+      it("is a valid recipe, and its pins name only exits it has", () => {
+        const { modules, extra } = assistanceRecipe(blocks);
+        expect(recipeProblems(recipe(modules, extra), FORKS_WITH_ASSISTANCE.filter((f) => f.id !== "pricing" && f.id !== "copay" && f.id !== "pa"))).toEqual([]);
+        for (const exit of ALL_EXITS.filter((e) => !blocks.includes(e))) {
+          const problems = recipeProblems(recipe(modules, { ...extra, choices: { ...extra.choices, assistance: exit } }), FORKS_WITH_ASSISTANCE);
+          expect(problems.join("\n"), `a pin to ${exit}`).toMatch(new RegExp(`fork "assistance" exit "${exit}" requires`));
+        }
+      });
+
+      for (const exit of ALL_EXITS) {
+        if (blocks.includes(exit)) {
+          it(`${exit}: offered, sets its outcome, and nothing else can be chosen after it`, () => {
+            withFrozenClock(() => {
+              const t = readyToChoose(blocks);
+              expect(t.can("CHOOSE_ASSISTANCE", { option: exit })).toBe(true);
+              t.send("CHOOSE_ASSISTANCE", { option: exit });
+              expect(outcomeOf(t.data())).toEqual({ pap: exit === "pap", copay: exit === "copay", self_pay: exit === "self_pay" });
+              if (exit === "pap") expect(t.data().dispatchStatus).toBe("pending_selection");
+              for (const other of ALL_EXITS) expect(t.can("CHOOSE_ASSISTANCE", { option: other }), `${other} after ${exit}`).toBe(false);
+            });
+          });
+        } else {
+          it(`${exit}: not offered, because its block is not in the recipe`, () => {
+            withFrozenClock(() => {
+              const t = readyToChoose(blocks);
+              expect(t.can("CHOOSE_ASSISTANCE", { option: exit })).toBe(false);
+              t.send("CHOOSE_ASSISTANCE", { option: exit });
+              expect(outcomeOf(t.data())[exit]).toBe(false);
+            });
+          });
+        }
+      }
+    });
+  }
+
+  it("PAP is offered only after the patient qualifies, and qualifying still leaves copay open", () => {
+    withFrozenClock(() => {
+      const { modules, extra } = assistanceRecipe(["pap", "copay"]);
+      const t = build(modules, extra, true);
+      for (const e of ["REFERRAL_RECEIVED", "VERIFY_SMS", "VERIFY_OTP", "CONFIRM_CONSENT", "COMPLETE_BI"]) t.send(e);
+      expect(t.can("CHOOSE_ASSISTANCE", { option: "pap" })).toBe(false); // not qualified yet
+      expect(t.can("CHOOSE_ASSISTANCE", { option: "copay" })).toBe(true); // copay is open whenever its block is listed
+      t.clock.increment(2000);
+      qualify(t);
+      expect(t.can("CHOOSE_ASSISTANCE", { option: "pap" })).toBe(true);
+      expect(t.data().papStatus).toBe("none"); // qualified, not committed
+      t.send("CHOOSE_ASSISTANCE", { option: "copay" });
+      expect(t.data().copayEnrolled).toBe(true);
+      expect(t.data().papStatus).toBe("none");
+    });
+  });
+
+  it("a recipe may opt in to more than one outcome", () => {
+    withFrozenClock(() => {
+      const t = readyToChoose(["pap", "copay"], true);
+      t.send("CHOOSE_ASSISTANCE", { option: "copay" });
+      expect(t.can("CHOOSE_ASSISTANCE", { option: "pap" })).toBe(true);
+      t.send("CHOOSE_ASSISTANCE", { option: "pap" });
+      expect(outcomeOf(t.data())).toMatchObject({ pap: true, copay: true });
+    });
+  });
+
+  it("the fork lists its exits with the block each requires", () => {
+    expect(ASSISTANCE_FORK.exits.map((e) => [e.id, e.requires])).toEqual([
+      ["pap", ["income_qualification"]],
+      ["copay", ["financial_assistance:copay"]],
+      ["self_pay", ["cash_offer:sms"]],
+    ]);
   });
 });

@@ -54,6 +54,15 @@ export const CATALOG_FORKS: CatalogFork[] = [
     ],
   },
   {
+    id: "assistance",
+    aliases: ["assistance", "financial assistance", "patient choice of assistance"],
+    exits: [
+      { id: "pap", aliases: ["free drug", "PAP", "patient assistance program"] },
+      { id: "copay", aliases: ["copay offer", "manufacturer copay"] },
+      { id: "self_pay", aliases: ["pay out of pocket", "pay cash after qualifying"] },
+    ],
+  },
+  {
     id: "consent",
     aliases: ["consent", "patient consent"],
     exits: [

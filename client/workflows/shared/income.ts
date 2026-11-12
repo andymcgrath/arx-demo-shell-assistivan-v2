@@ -13,6 +13,7 @@
  * `trigger: "system"`, and fired by `pap_transfer` in CoA_PAP. The patient does the rest.
  * Rules carry no ids on purpose, so the recorded rule tables keep their current shape.
  */
+import type { WorkflowData } from "@/engine/types";
 import type { Rule } from "@/engine/workflow/types";
 import { clearDispatch } from "./dispatch";
 
@@ -26,6 +27,9 @@ export const incomeProps = (s: WithRecipe): { trigger?: string; activate?: strin
 export const activatesOnQualify = (s: WithRecipe): boolean => incomeProps(s).activate !== "on_choose";
 
 /** A recipe whose `income_qualification` starts on a timer once BI completes. */
+/** What choosing PAP sets: the program turns active and the case clears to dispatch. */
+export const activatePap = (d: Pick<WorkflowData, "dispatchStatus">) => ({ papStatus: "active" as const, ...clearDispatch(d) });
+
 export const incomeStartsOnTimer = (s: WithRecipe): boolean => incomeProps(s).trigger === "system";
 
 export const INCOME_QUALIFICATION_RULES: Rule<any, any>[] = [
@@ -65,7 +69,7 @@ export const INCOME_QUALIFICATION_RULES: Rule<any, any>[] = [
     when: (d) => d.papSmsVerified && d.incomeStatus !== "verified",
     set: (d, _e, s) => ({
       incomeStatus: "verified",
-      ...(activatesOnQualify(s) ? { papStatus: "active", ...clearDispatch(d) } : {}),
+      ...(activatesOnQualify(s) ? activatePap(d) : {}),
     }),
     emit: { portal: "patient", step: 8 },
   },
@@ -73,7 +77,7 @@ export const INCOME_QUALIFICATION_RULES: Rule<any, any>[] = [
     // Choose: the patient picks PAP after qualifying. Only a recipe with `activate: "on_choose"` needs it.
     on: "ACTIVATE_PAP", // trigger: patient
     when: (d, _e, s) => !activatesOnQualify(s) && d.incomeStatus === "verified" && d.papStatus !== "active",
-    set: (d) => ({ papStatus: "active", ...clearDispatch(d) }),
+    set: (d) => activatePap(d),
     emit: { portal: "patient", step: 8 },
   },
 ];

@@ -22,6 +22,7 @@ import { PA_NOTIFICATION_RULES } from "./modules/pa_notification";
 import { PAYMENT_RULES } from "./modules/payment";
 import { FINANCIAL_ASSISTANCE_RULES } from "./modules/financial_assistance";
 import { CASH_OFFER_RULES } from "./modules/cash_offer";
+import { ASSISTANCE_RULES } from "./modules/assistance";
 import { PROVIDER_TRANSFER_RULES } from "./modules/provider_transfer";
 import { PAP_TRANSFER_RULES } from "./modules/pap_transfer";
 import { INCOME_QUALIFICATION_COA_RULES } from "./modules/income_qualification";
@@ -40,6 +41,7 @@ export const COASSIST_RULES: CoaRule[] = [
   ...PAYMENT_RULES,
   ...FINANCIAL_ASSISTANCE_RULES,
   ...CASH_OFFER_RULES,
+  ...ASSISTANCE_RULES,
   ...PROVIDER_TRANSFER_RULES,
   ...PAP_TRANSFER_RULES,
   ...INCOME_QUALIFICATION_COA_RULES,

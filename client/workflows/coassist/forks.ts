@@ -1,4 +1,4 @@
-import type { FlowType } from "@/engine/types";
+import type { FlowType, WorkflowData } from "@/engine/types";
 import type { ForkDefinition, ForkStage, StageEvent } from "@/engine/workflow/types";
 import { forkApplies } from "@/engine/workflow/forks";
 import { biFork } from "../shared/bi";
@@ -249,12 +249,45 @@ export const COPAY_PRICING_FORK: ForkDefinition = {
   ],
 };
 
+/** The patient's outcome on the assistance fork: PAP is active, copay is enrolled, or the patient chose self-pay. */
+export const assistanceOutcomes = (d: WorkflowData): string[] =>
+  [d.papStatus === "active" ? "pap" : null, d.copayEnrolled ? "copay" : null, d.pricingOption === "self_pay" ? "self_pay" : null].filter((x): x is string => !!x);
+
+/**
+ * Financial assistance: the patient's choice of PAP (the free drug program), the copay program, or self-pay. One fork,
+ * and each exit `requires` its block, so the recipe decides which exits exist (the same way `denied` requires `cash_offer`).
+ * A recipe with only `income_qualification` offers PAP only. The blocks never know about each other. This fork holds the
+ * rule that the patient ends on one outcome (a recipe opts in to more with `assistance.allowMultiple`).
+ *
+ * PAP is offered after the patient qualifies (`income_qualification` with `activate: "on_choose"`). Qualifying does not commit
+ * them: they can still pick copay or self-pay. Copay and self-pay are offered whenever their blocks are in the recipe.
+ * The pick is `CHOOSE_ASSISTANCE` with an `option`. It is not written to `choices`: the data already records it.
+ *
+ * `scenarios` is passed in. No scenario uses the fork until the Abivax recipe lists it.
+ */
+export const assistanceFork = (scenarios: FlowType[]): ForkDefinition => ({
+  id: "assistance",
+  label: "Financial assistance",
+  chooser: "patient",
+  scenarios,
+  resolved: (d) => assistanceOutcomes(d).length > 0,
+  picked: (d) => assistanceOutcomes(d)[0] ?? null,
+  exits: [
+    { id: "pap", label: "Free drug program", description: "Qualified for the free drug program (PAP) and chose it.", data: { papStatus: "active" }, requires: ["income_qualification"] },
+    { id: "copay", label: "Copay program", description: "Enroll in the copay program for the reduced price.", data: { copayEnrolled: true }, requires: ["financial_assistance:copay"] },
+    { id: "self_pay", label: "Self-pay", description: "Pay out of pocket through the cash offer.", data: { pricingOption: "self_pay" }, requires: ["cash_offer:sms"] },
+  ],
+});
+
+export const ASSISTANCE_FORK: ForkDefinition = assistanceFork([]);
+
 export const COASSIST_FORKS: ForkDefinition[] = [
   BI_FORK,
   PA_FORK,
   DTP_PRICING_FORK,
   COPAY_FORK,
   COPAY_PRICING_FORK,
+  ASSISTANCE_FORK,
 ];
 
 /** True when a pin names a pricing exit the patient still has to confirm on its own screen (the self-pay offer). */
