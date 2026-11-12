@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
 import { BRAND } from "@/brand";
 import { paQuestionsFor } from "@/brand/paQuestions";
+import { useScrollTopOnChange } from "@/hooks/useScrollTopOnChange";
 import { letterOfNecessityDocument } from "@/brand/documents";
 import DocumentLinks from "@/portals/iassist/components/DocumentLinks";
 import { usePresPapStore } from "@/store/presPapStore";
@@ -1909,6 +1910,9 @@ function CoaProviderExperience({
   const byPrescriber = scenarioFacts(workflowData.flowType).paFormByPrescriber;
   const formStep = byPrescriber ? providerFormStep(workflowData) : undefined;
   const shownStep: Step = formStep === "form" ? "pa-questions" : (formStep ?? step);
+  // Every step change starts at the top (hooks/useScrollTopOnChange.ts). The anchor sits in each branch below.
+  const scrollAnchor = useRef<HTMLSpanElement>(null);
+  useScrollTopOnChange(scrollAnchor, shownStep);
   const [npiError, setNpiError] = useState<string>();
   const isIdle = step === "coa-dashboard";
   const canAddRx = isIdle && !keanuStatus;
@@ -1931,6 +1935,7 @@ function CoaProviderExperience({
   if (shownStep === "email" || shownStep === "login" || shownStep === "pa-questions" || shownStep === "pa-submitted") {
     return (
       <div className="provider-portal">
+        <span ref={scrollAnchor} hidden aria-hidden />
         {shownStep !== "email" && <BrandSidebar isBranded={false} />}
         {shownStep === "email" && (
           <EmailStep
@@ -1989,6 +1994,7 @@ function CoaProviderExperience({
 
   return (
     <EhrChartShell canAddRx={canAddRx} onAddRx={() => setStep("coa-rx")}>
+      <span ref={scrollAnchor} hidden aria-hidden />
       {content}
     </EhrChartShell>
   );

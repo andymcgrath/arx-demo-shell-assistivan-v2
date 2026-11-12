@@ -35,6 +35,10 @@ describe("Letter of Necessity upload", () => {
     fireEvent.click(screen.getByText(letterOfNecessityDocument().fileName));
     const reader = document.querySelector('object[type="application/pdf"]') as HTMLObjectElement;
     expect(reader.getAttribute("data")).toBe(letterOfNecessityDocument().file);
+    // A full takeover: it sits directly in the body, so no scrolled or transformed ancestor clips it, and it fills the window.
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toBe(document.body);
+    expect(dialog.className).toContain("fixed inset-0");
     fireEvent.click(screen.getByLabelText("Close"));
     expect(document.querySelector('object[type="application/pdf"]')).toBeNull();
   });

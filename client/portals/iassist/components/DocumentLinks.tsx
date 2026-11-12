@@ -3,6 +3,7 @@
  * representative samples in public/. Nothing uploads.
  */
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { SubmissionDocument } from "../data/submissionStatus";
 
@@ -38,9 +39,10 @@ export default function DocumentLinks({ docs, empty = "No upload", onClick }: { 
           {i < docs.length - 1 && ", "}
         </span>
       ))}
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={open.name} onClick={(e) => { e.stopPropagation(); setOpen(null); }}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col" style={{ height: "85vh" }} onClick={(e) => e.stopPropagation()}>
+      {/* A full takeover of the window. It renders in the body, so no scrolled or transformed ancestor can clip it. */}
+      {open && createPortal(
+        <div className="fixed inset-0 z-[1000] bg-white flex flex-col" role="dialog" aria-modal="true" aria-label={open.name} onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col w-full h-full overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E8E8] bg-[#F8F8F8]">
               <span className="text-sm font-semibold text-[#1D1D1D]">{open.name}</span>
               <div className="flex items-center gap-3">
@@ -52,7 +54,8 @@ export default function DocumentLinks({ docs, empty = "No upload", onClick }: { 
               <p className="p-6 text-sm text-[#6F7276]">The preview is not available. Use Download to open the file.</p>
             </object>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
