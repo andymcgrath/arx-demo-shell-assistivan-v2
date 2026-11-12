@@ -42,6 +42,7 @@ export function RequestPanel({ draft, edit }: { draft: DemoRequest; edit: (fn: (
   const set = <K extends keyof DemoRequest>(key: K, value: DemoRequest[K]) => edit((d) => ({ ...d, [key]: value }));
   return (
     <section className="mb-4 grid max-w-3xl grid-cols-2 gap-3 rounded border bg-white p-3" style={{ borderColor: LINE }} aria-label="Request details" data-testid="request-panel">
+      <h3 className="col-span-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Request details</h3>
       <label className="col-span-2 text-xs font-semibold">
         Title
         <input className={field} style={{ borderColor: LINE }} value={draft.title} onChange={(e) => set("title", e.target.value)} />

@@ -134,7 +134,7 @@ describe("editing on the canvas", () => {
 
   it("prefills the win theme from the cards, so a loaded recipe is not blocked by it", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     const theme = within(view.getByTestId("request-panel")).getByLabelText("Win theme") as HTMLInputElement;
     expect(theme.value).toMatch(/^One eRx starts everything/);
     expect(view.queryByTestId("export-problems")?.textContent ?? "").not.toMatch(/win theme/i);
@@ -142,11 +142,11 @@ describe("editing on the canvas", () => {
 
   it("blocks the export until the request has what it needs, and the alert opens the details", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     fireEvent.change(within(view.getByTestId("request-panel")).getByLabelText("Win theme"), { target: { value: "" } });
     expect(view.getByTestId("export-problems").textContent).toMatch(/win theme/i);
     expect((view.getByText("Export request and prompt") as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     expect(view.queryByTestId("request-panel")).toBeNull();
     fireEvent.click(view.getByRole("button", { name: "Open Request details" }));
     expect(view.getByTestId("request-panel")).toBeDefined();
@@ -156,7 +156,7 @@ describe("editing on the canvas", () => {
 describe("the request details and blank starts", () => {
   it("fills the request fields from the brand, edits them, and lets an empty field block the export", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     const panel = view.getByTestId("request-panel");
     const title = within(panel).getByLabelText("Title") as HTMLInputElement;
     expect(title.value).toMatch(/CoAssist Copay/);
@@ -173,7 +173,7 @@ describe("the request details and blank starts", () => {
 
   it("keeps a new line when Enter is pressed in a list field", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     const box = within(view.getByTestId("request-panel")).getByLabelText(/Open questions/) as HTMLTextAreaElement;
     fireEvent.change(box, { target: { value: "First\n" } });
     expect(box.value).toBe("First\n");
@@ -185,7 +185,7 @@ describe("the request details and blank starts", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(within(view.container).getAllByRole("button").find((b) => /Blank CoAssist demo/.test(b.textContent ?? ""))!);
     expect(view.queryAllByTestId("canvas-card")).toHaveLength(0);
-    fireEvent.click(view.getByRole("button", { name: /^Request details/ }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
     expect((within(view.getByTestId("request-panel")).getByLabelText("Brand name") as HTMLInputElement).value).not.toBe("");
   });
 
@@ -277,5 +277,24 @@ describe("undo, redo, reset, and history", () => {
     const items = within(view.getByTestId("canvas-history")).getAllByRole("button");
     fireEvent.click(items[items.length - 1]);
     expect(view.getAllByTestId("canvas-card")).toHaveLength(n);
+  });
+});
+
+describe("the request details expander", () => {
+  it("reads as an expander: label, aria-expanded, and the to-fill count", () => {
+    const view = open(/CoAssist Copay/i);
+    const btn = () => view.getByRole("button", { name: /^(show|hide) request details/i });
+    expect(btn().getAttribute("aria-expanded")).toBe("false");
+    expect(btn().textContent).toMatch(/Show request details/);
+    fireEvent.click(btn());
+    expect(btn().getAttribute("aria-expanded")).toBe("true");
+    expect(btn().textContent).toMatch(/Hide request details/);
+    expect(view.getByTestId("request-panel").textContent).toMatch(/Request details/);
+  });
+
+  it("keeps the count of fields to fill", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(within(view.container).getAllByRole("button").find((b) => /Blank CoAssist demo/.test(b.textContent ?? ""))!);
+    expect(view.getByRole("button", { name: /^show request details/i }).textContent).toMatch(/\(\d+ to fill\)/);
   });
 });

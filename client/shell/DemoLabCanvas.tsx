@@ -3,7 +3,7 @@ import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
 import { blankDraft, clearPick, draftFromScenario, EDITOR_WORKFLOWS, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
-import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, APP_LABEL } from "./DemoLabCanvasParts";
+import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, SOFT, APP_LABEL } from "./DemoLabCanvasParts";
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
 import { emptyRequestFields, RequestPanel } from "./DemoLabCanvasRequest";
@@ -171,10 +171,12 @@ export default function CanvasLab() {
               </Band>
               <div className="px-3">
                 <Header canvas={canvas} />
-                <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} className="mb-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK }}>
-                  Request details{emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
+                <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} aria-controls="request-details-panel" className="mb-2 inline-flex items-center gap-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK, background: showRequest ? SOFT : "#ffffff" }}>
+                  <span aria-hidden className="inline-block transition-transform" style={{ transform: showRequest ? "rotate(90deg)" : "none" }}>▸</span>
+                  {showRequest ? "Hide request details" : "Show request details"}
+                  {emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
                 </button>
-                {showRequest && <RequestPanel draft={draft} edit={edit} />}
+                {showRequest && <div id="request-details-panel"><RequestPanel draft={draft} edit={edit} /></div>}
                 <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
               </div>
             </section>
