@@ -219,13 +219,13 @@ A demo can pin only a `bi` exit its scenario can reach. `CoA_PAP` reaches `no_co
 
 The CRM has no branch buttons. The demo dropdown picks the branch. A fresh session starts on the selected demo's choices.
 
-The Demo Lab at `/demo-lab` has four tabs. Storyboard draws each recipe and the brand's demos as lanes and forks, read only. Builder makes a demo request from the block palette and exports it under `docs/demos/` (dev only). Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
+The Demo Lab at `/demo-lab` has three tabs. Canvas draws each recipe and the brand's demos as a row of cards with the forks under them, and edits them: add a card on either side of a card, move or remove it, change its variant, pick each demo's outcome, pin a patient fork's branch, and fill the request details. Export writes the request and prompt under `docs/demos/` (dev only). Picking an entry or "Start blank" starts a draft, and the lab asks before it replaces edits. Colors previews and scores a palette. Demos picks a workflow and a branch for each fork, shows the journey, and copies the `demos` JSON. Forks are read only there. A new fork needs rule code.
 
 `brands/_template/brand.json` lists every field. Required: `slug`, `name`, `title`, at least one demo, `manufacturer`, `program` with `drugDisplayName` and `colors.brand`, `manufacturer.legal.privacyUrl`, and `chatbotIcon`. Everything else is optional. The tests also need every local image path to point at a committed file.
 
 ## Apply a demo request
 
-`pnpm demo:apply <client>/<slug>` reads `docs/demos/<client>/<slug>.request.json` (from the Demo Lab Builder) and writes its demos into `brands/<client>/brand.json`, then runs the brand test. If the test fails, the file goes back as it was. Add `--dry` to see the plan only.
+`pnpm demo:apply <client>/<slug>` reads `docs/demos/<client>/<slug>.request.json` (from the Demo Lab canvas) and writes its demos into `brands/<client>/brand.json`, then runs the brand test. If the test fails, the file goes back as it was. Add `--dry` to see the plan only.
 
 It works only for a request with no ghost cards whose blocks match an existing recipe. It never writes a recipe. A request that matches none goes through the generated prompt instead. A new demo replaces one with the same id, and other demos stay. With no brand file, it makes a minimal one that extends the default brand and sets the brand and drug names. Add colors, logos, and copy by hand.
 

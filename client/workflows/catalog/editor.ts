@@ -7,7 +7,7 @@ import { ALL_FORKS } from "../forks";
 import { COASSIST_RECIPES } from "../coassist/recipes";
 import { IASSIST_RECIPES } from "../iassist/recipes";
 import { scenarioFor } from "../scenarios";
-import { catalogBlock, catalogFork, paletteCards, type PaletteCard } from "./index";
+import { catalogBlock, catalogExit, catalogFork, exitFeeds, forkOwnerIndex, paletteCards, type PaletteCard } from "./index";
 import { recipeHas } from "./storyboard";
 import { validateDemoRequest, REQUEST_VERSION, type DemoRequest, type RequestBrand, type RequestCard, type RequestDemo, type RequestGhostCard, type RequestWorkflow } from "./request";
 import { DEFAULT_VARIANT, type CatalogApp } from "./types";
@@ -126,6 +126,15 @@ const setterOf = (key: string): string => {
   return id ? `"${name(id)}"` : `something that sets ${key}`;
 };
 
+/** The module a `recipeProblems` line is about, so the canvas can mark its card. Undefined for a fork or demo line. */
+export function problemModule(p: string): string | undefined {
+  let m: RegExpMatchArray | null;
+  if ((m = p.match(/^(\w+) (?:needs|must come after) /))) return m[1];
+  if ((m = p.match(/^module "(\w+)" appears twice$/))) return m[1];
+  if (p === "tracking must be last") return "tracking";
+  return undefined;
+}
+
 /** A `recipeProblems` line in sales words. Lines it does not know pass through. */
 export function plainProblem(p: string): string {
   let m: RegExpMatchArray | null;
@@ -146,6 +155,34 @@ export function appendReasons(d: DemoRequest, card: PaletteCard): string[] {
   const next: RequestCard = { kind: "block", moduleId: card.moduleId, ...(card.variantId ? { variantId: card.variantId } : {}) };
   const after = recipeProblems(recipeFor({ ...d, cards: [...d.cards, next] }));
   return after.filter((p) => !before.has(p)).map(plainProblem);
+}
+
+/**
+ * Why a block cannot go at `at` (0 puts it first, the card count puts it last), in sales words. Empty when it can.
+ * Two kinds of reason: the ordering rules (the same ones `appendReasons` uses), and a story fork's picked outcome that
+ * the block does not work with, for a block that would sit after that fork's owner card. `demoIndex` says whose picks.
+ */
+export function insertReasons(d: DemoRequest, at: number, card: PaletteCard, demoIndex = 0): string[] {
+  if (card.workflows && !card.workflows.includes(d.workflow)) return [onlyFor(card.label, card.workflows)];
+  const next: RequestCard = { kind: "block", moduleId: card.moduleId, ...(card.variantId ? { variantId: card.variantId } : {}) };
+  const placed = (cards: RequestCard[]) => [...cards.slice(0, at), next, ...cards.slice(at)];
+  const before = new Set(recipeProblems(recipeFor(d)));
+  const out = recipeProblems(recipeFor({ ...d, cards: placed(d.cards) })).filter((p) => !before.has(p)).map(plainProblem);
+
+  const picks = d.demos[demoIndex]?.choices ?? {};
+  const modules = recipeFor(d).modules;
+  // Position among the blocks only: ghost cards are not modules.
+  const moduleAt = d.cards.slice(0, at).filter((c) => c.kind === "block").length;
+  for (const forkId of d.forks) {
+    const exitId = picks[forkId];
+    const fork = workflowForks(d.workflow as EditorWorkflow).find((f) => f.id === forkId);
+    if (!exitId || fork?.chooser !== "story") continue;
+    const owner = forkOwnerIndex(forkId, modules);
+    if (owner >= 0 && moduleAt > owner && !exitFeeds(forkId, exitId, { id: card.moduleId, variantId: card.variantId })) {
+      out.push(`"${card.label}" does not work with "${catalogExit(forkId, exitId)?.label ?? exitId}" (${forkName(forkId)}). Pick another outcome first.`);
+    }
+  }
+  return out;
 }
 
 /** The blocks an exit needs that the draft lacks. A non-empty list means the exit is not available. */
@@ -189,9 +226,29 @@ export const exportable = (d: DemoRequest): DemoRequest => withApps(d);
 export const addBlock = (d: DemoRequest, card: PaletteCard): DemoRequest =>
   withApps({ ...d, cards: [...d.cards, { kind: "block", moduleId: card.moduleId, ...(card.variantId ? { variantId: card.variantId } : {}) }] });
 
+/** Put a block at `at`: 0 first, the card count last. */
+export const insertBlock = (d: DemoRequest, at: number, card: PaletteCard): DemoRequest => {
+  const next: RequestCard = { kind: "block", moduleId: card.moduleId, ...(card.variantId ? { variantId: card.variantId } : {}) };
+  return withApps({ ...d, cards: [...d.cards.slice(0, at), next, ...d.cards.slice(at)] });
+};
+
+/** Change a block card's variant. `undefined` or `default` clears it. A ghost card has none. */
+export const setVariant = (d: DemoRequest, index: number, variantId?: string): DemoRequest =>
+  withApps({
+    ...d,
+    cards: d.cards.map((c, i) => {
+      if (i !== index || c.kind !== "block") return c;
+      const { variantId: _old, ...rest } = c;
+      return variantId && variantId !== DEFAULT_VARIANT ? { ...rest, variantId } : rest;
+    }),
+  });
+
 export const GHOST_BLANK: RequestGhostCard = { kind: "ghost", name: "", sees: "", app: "crm", lane: "agent" };
 
 export const addGhost = (d: DemoRequest): DemoRequest => withApps({ ...d, cards: [...d.cards, { ...GHOST_BLANK }] });
+
+/** Put a ghost card at `at`. */
+export const insertGhost = (d: DemoRequest, at: number): DemoRequest => withApps({ ...d, cards: [...d.cards.slice(0, at), { ...GHOST_BLANK }, ...d.cards.slice(at)] });
 
 export const updateCard = (d: DemoRequest, index: number, patch: Partial<RequestGhostCard>): DemoRequest =>
   withApps({ ...d, cards: d.cards.map((c, i) => (i === index && c.kind === "ghost" ? { ...c, ...patch } : c)) });
@@ -218,6 +275,12 @@ export function toggleFork(d: DemoRequest, forkId: string): DemoRequest {
 export const setPick = (d: DemoRequest, demoIndex: number, forkId: string, exitId: string): DemoRequest => ({
   ...d,
   demos: d.demos.map((x, i) => (i === demoIndex ? { ...x, choices: { ...x.choices, [forkId]: exitId } } : x)),
+});
+
+/** Clear a demo's pick for a fork. For a patient fork this means the patient picks live again. */
+export const clearPick = (d: DemoRequest, demoIndex: number, forkId: string): DemoRequest => ({
+  ...d,
+  demos: d.demos.map((x, i) => (i === demoIndex ? { ...x, choices: Object.fromEntries(Object.entries(x.choices).filter(([k]) => k !== forkId)) } : x)),
 });
 
 export function addDemo(d: DemoRequest): DemoRequest {

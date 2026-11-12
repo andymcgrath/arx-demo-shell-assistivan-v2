@@ -95,6 +95,8 @@ export interface CatalogExit extends Draftable {
    * `requires` is in it. Leave it out when the fork does not change which blocks can follow (audience, consent).
    */
   leadsTo?: string[];
+  /** The canvas does not offer this outcome when the recipe has this block (`module` or `module:variant`). For an outcome only some scenarios of a workflow declare. */
+  hiddenWith?: string;
   /**
    * For a patient fork: what the audience sees after this outcome, in order. The branch logic is in rule conditions, so
    * it is written here. The same outcome can play out differently in two scenarios, so this is a list. The first entry
