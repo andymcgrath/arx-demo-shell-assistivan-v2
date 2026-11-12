@@ -25,6 +25,16 @@ export function summaryOfBenefitsDocument(): BrandDocument {
   return BRAND.program.documents?.summaryOfBenefits ?? DEFAULT_SUMMARY_OF_BENEFITS;
 }
 
+const DEFAULT_LETTER_OF_NECESSITY: BrandDocument = {
+  file: "/docs/letter-of-medical-necessity.pdf",
+  fileName: "LetterOfNecessity.pdf",
+};
+
+/** The Letter of Necessity the provider "uploads" on the PA form. */
+export function letterOfNecessityDocument(): BrandDocument {
+  return BRAND.program.documents?.letterOfNecessity ?? DEFAULT_LETTER_OF_NECESSITY;
+}
+
 /** `undefined` when the brand has no PA form. */
 export function paFormDocument(): BrandDocument | undefined {
   return BRAND.program.documents?.paForm;

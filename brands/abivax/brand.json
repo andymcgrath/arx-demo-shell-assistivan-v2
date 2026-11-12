@@ -35,9 +35,7 @@
     "drugDisplayName": "Obefazimod (microRNA-124 Enhancer)",
     "description": "Once daily",
     "dosageForm": "Capsule",
-    "dosages": [
-      "25 mg"
-    ],
+    "dosages": ["25 mg"],
     "indication": {
       "name": "Ulcerative Colitis",
       "icd10": "K51.90",
@@ -77,6 +75,12 @@
       "state": "",
       "zip": "",
       "phone": ""
+    },
+    "documents": {
+      "letterOfNecessity": {
+        "file": "/brands/abivax/docs/letter-of-necessity.pdf",
+        "fileName": "LetterOfNecessity.pdf"
+      }
     }
   },
   "chatbotIcon": "/brands/abivax/chat-icon.svg",

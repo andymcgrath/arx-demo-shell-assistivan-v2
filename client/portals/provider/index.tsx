@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { usePatientStore, PATIENT_SEED } from "@/store/patientStore";
 import { BRAND } from "@/brand";
 import { paQuestionsFor } from "@/brand/paQuestions";
+import { letterOfNecessityDocument } from "@/brand/documents";
+import DocumentLinks from "@/portals/iassist/components/DocumentLinks";
 import { usePresPapStore } from "@/store/presPapStore";
 import { useDemoStore } from "@/store/demoStore";
 import PesHome from "@/components/enrollment/PesHome";
@@ -12,7 +14,7 @@ import {
   Search, Plus, Bell, ChevronDown, Settings, Users, Calendar,
   ClipboardList, Pill, FlaskConical, Image as ImageIcon, FolderOpen,
   Syringe, Share2, Mail, CheckSquare, MoreHorizontal, Menu, X,
-  Camera, Check,
+  Camera, Check, FileText,
 } from "lucide-react";
 import type { PatientStatus } from "@/store/samplePatients";
 import type { FlowType, WorkflowData } from "@/engine/types";
@@ -813,14 +815,14 @@ function PaReviewStep({ onNext }: { onNext: () => void }) {
 
 // ── Step 3: PA Questions (multi-question with nav) ────────────────────────────
 
-function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false, submitEvent = 'SUBMIT_PA' }: { /** The event the submit sends. APA sends SUBMIT_PA_FORM, which then starts the PA. */ submitEvent?: string; onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
+export function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOfNecessity = false, submitEvent = 'SUBMIT_PA' }: { /** The event the submit sends. APA sends SUBMIT_PA_FORM, which then starts the PA. */ submitEvent?: string; onBack: () => void; onCancel: () => void; onNext: () => void; isCoA?: boolean; /** CoAssist-only (CoA_DTP + CoA_Copay) — see CoaProviderExperience's call site. WF1/WF2 never pass this. */ showLetterOfNecessity?: boolean }) {
   // The questions come from the brand (client/brand/paQuestions.ts), so the form fits the drug.
   const clinicalQuestions = paQuestionsFor(BRAND.program);
   const [answers, setAnswers] = useState<Record<number, string | null>>({});
   const [lonRequired, setLonRequired] = useState<string | null>(null);
-  const [lonFile, setLonFile] = useState<{ url: string; name: string } | null>(null);
+  // Nothing uploads. Clicking the box attaches the brand's sample Letter of Necessity, and its name opens the PDF.
+  const [lonFile, setLonFile] = useState<{ file: string; name: string } | null>(null);
   const [lonSubmitted, setLonSubmitted] = useState(false);
-  const lonFileRef = useRef<HTMLInputElement>(null);
   const dispatch = useWorkflowDispatch();
   const drugName = usePatientStore((s) => s.drugName);
   const payer = usePatientStore((s) => s.payer);
@@ -830,10 +832,9 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
     onNext();
   }
 
-  function handleLonFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLonFile({ url: URL.createObjectURL(file), name: file.name });
+  function attachLetter() {
+    const doc = letterOfNecessityDocument();
+    setLonFile({ file: doc.file, name: doc.fileName });
     setLonSubmitted(false);
   }
 
@@ -864,40 +865,34 @@ function PaQuestionsStep({ onBack, onCancel, onNext, isCoA = false, showLetterOf
                   <p className="pa-upload__hint">Add an image or PDF to support this request.</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => lonFileRef.current?.click()}
-                className="pa-upload__trigger"
-              >
-                <div className="pa-upload__visual">
-                  {lonFile ? (
-                    <img src={lonFile.url} alt="preview" className="pa-upload__preview" />
-                  ) : (
-                    <span className="pa-upload__icon"><Camera size={18} /></span>
-                  )}
-                </div>
-                <span className="pa-upload__copy">
-                  <strong>{lonFile ? lonFile.name : "Upload document"}</strong>
-                  <small>{lonFile ? "Document attached" : "Choose a file from your device"}</small>
-                </span>
-                {lonFile ? (
+              {lonFile ? (
+                <div className="pa-upload__trigger" style={{ cursor: "default" }}>
+                  <div className="pa-upload__visual">
+                    <span className="pa-upload__icon"><FileText size={18} /></span>
+                  </div>
+                  <span className="pa-upload__copy">
+                    <strong><DocumentLinks docs={[{ name: lonFile.name, file: lonFile.file }]} /></strong>
+                    <small>Document attached</small>
+                  </span>
                   <span
                     className="pa-upload__status"
                     style={{ background: isCoA ? HEROIC_BLUE : "#007178" }}
                   >
                     <Check size={12} className="text-white" />
                   </span>
-                ) : (
+                </div>
+              ) : (
+                <button type="button" onClick={attachLetter} className="pa-upload__trigger">
+                  <div className="pa-upload__visual">
+                    <span className="pa-upload__icon"><Camera size={18} /></span>
+                  </div>
+                  <span className="pa-upload__copy">
+                    <strong>Upload document</strong>
+                    <small>Choose a file from your device</small>
+                  </span>
                   <span className="pa-upload__action">Browse</span>
-                )}
-              </button>
-              <input
-                ref={lonFileRef}
-                type="file"
-                accept="image/*,.pdf"
-                className="hidden"
-                onChange={handleLonFile}
-              />
+                </button>
+              )}
               <div className="pa-upload__footer">
                 <span className="pa-upload__file-note">Accepted formats: image or PDF</span>
                 <button

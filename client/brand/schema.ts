@@ -49,6 +49,8 @@ export interface BrandDocuments {
   enrollmentForm?: BrandDocument;
   summaryOfBenefits?: BrandDocument;
   paForm?: BrandDocument;
+  /** The Letter of Necessity the provider's PA form shows after a simulated upload. Leave out to use the shared sample. */
+  letterOfNecessity?: BrandDocument;
 }
 
 /**
