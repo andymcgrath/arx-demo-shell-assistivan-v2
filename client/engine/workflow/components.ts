@@ -54,8 +54,12 @@ export interface ModuleContract {
   orderedAfter?: ModuleId[];
   /** Modules that must appear somewhere in the recipe, in any order, when the props match. */
   requiresModulesWhen?: { props: Record<string, unknown>; modules: ModuleId[] }[];
+  /** Extra needs for a recipe entry whose props match. A variant can need less or more than the module's base needs. */
+  needsWhen?: { props: Record<string, unknown>; needs: string[] }[];
   /** Keys the module provides once it runs. */
   sets: string[];
+  /** Extra keys provided when the props match, for example the copay variant sets `copayEnrolled`. */
+  setsWhen?: { props: Record<string, unknown>; sets: string[] }[];
   /** Steps the module adds to the tracker. Tracking shows the steps of the modules that ran. */
   trackerSteps: string[];
 }
@@ -72,6 +76,19 @@ export type PaymentMethod = "retail" | "mail_order" | "self_pay";
 export interface FinancialAssistanceProps extends Record<string, unknown> {
   /** `pap` ends in Free. `copay` is a reduced price. */
   variant: FinancialAssistanceVariant;
+}
+
+/**
+ * Props for `income_qualification` (the free drug program, PAP). Both are optional, and leaving them out keeps the
+ * behavior CoA_PAP and the PAP workflow have today.
+ * - `trigger`: who sends the first step (the application update text). `system` fires on a timer once BI completes.
+ *   `agent` waits for an agent to send it. Absent: `pap_transfer` fires it when it is in the recipe, else an agent does.
+ * - `activate`: when the program turns active and the case clears to dispatch. `on_qualify` (default): the moment income
+ *   verifies. `on_choose`: only when the patient picks PAP (`ACTIVATE_PAP`), so they can qualify and still pay or use copay.
+ */
+export interface IncomeQualificationProps extends Record<string, unknown> {
+  trigger?: "system" | "agent";
+  activate?: "on_qualify" | "on_choose";
 }
 
 export interface PaymentProps extends Record<string, unknown> {
@@ -231,7 +248,10 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     lane: "patient",
     // Every entry to assistance comes from a BI result (no coverage, or commercial coverage for a copay).
     needs: ["fork:bi"],
+    // Copay is a price modifier. It needs only a verified patient and sets `copayEnrolled`. A recipe may omit `pricing`.
+    needsWhen: [{ props: { variant: "copay" }, needs: ["consentVerified"] }],
     sets: ["assistanceApplied"],
+    setsWhen: [{ props: { variant: "copay" }, sets: ["copayEnrolled"] }],
     trackerSteps: ["Assistance applied"],
   },
   provider_transfer: {
@@ -256,7 +276,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     lane: "patient",
     needs: ["consentVerified", "fork:bi"],
     orderedAfter: ["pap_transfer"],
-    sets: ["incomeVerified"],
+    // Qualifying sets `incomeVerified`. Activation (`papActive`, dispatch cleared) follows it, at once or on the patient's choice.
+    sets: ["incomeVerified", "papActive"],
     trackerSteps: ["Application update confirmed", "Income verified"],
   },
   pharmacy_selection: {

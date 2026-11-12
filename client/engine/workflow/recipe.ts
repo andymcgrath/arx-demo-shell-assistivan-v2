@@ -38,7 +38,9 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
     }
     if (seen.includes(spec.id)) problems.push(`module "${spec.id}" appears twice`);
 
-    for (const key of contract.needs) {
+    const matchesProps = (props: Record<string, unknown>) => Object.entries(props).every(([k, v]) => spec.props?.[k] === v);
+    const needs = [...contract.needs, ...(contract.needsWhen ?? []).filter((n) => matchesProps(n.props)).flatMap((n) => n.needs)];
+    for (const key of needs) {
       if (!provided.has(key)) problems.push(`${spec.id} needs "${key}", and nothing before it provides it`);
     }
     for (const m of contract.needsModules ?? []) {
@@ -58,6 +60,7 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
 
     seen.push(spec.id);
     for (const key of contract.sets) provided.add(key);
+    for (const w of contract.setsWhen ?? []) if (matchesProps(w.props)) for (const key of w.sets) provided.add(key);
   });
 
   if (recipe.triage) {

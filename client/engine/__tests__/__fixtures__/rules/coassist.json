@@ -1,5 +1,8 @@
 {
   "order": {
+    "ACTIVATE_PAP": [
+      "income_qualification.activate_pap"
+    ],
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
@@ -200,6 +203,9 @@
     ],
     "hcp_enroll.submit": [
       "CoA_HCP_Enroll"
+    ],
+    "income_qualification.activate_pap": [
+      "CoA_PAP"
     ],
     "income_qualification.send_pap_sms": [
       "CoA_PAP"

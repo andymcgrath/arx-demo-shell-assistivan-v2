@@ -1,6 +1,7 @@
 /** Scheduling: the delivery address, then the ship date. */
 import type { Screen } from "@/engine/workflow/screens";
 import { neitherCovered } from "../shared";
+import { dispatchCleared } from "../../../shared/dispatch";
 import { PAP_JOURNEY, TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 /** The module's own scope. Each route rule also names its branch, so a recipe without scheduling drops them. */
@@ -22,8 +23,8 @@ export const SCHEDULING_ROUTES: CoaRoute[] = [
     when: (d) => neitherCovered(d) && (d.dispatchStatus === "none" || d.dispatchStatus === "pending_selection"),
   },
   // The free drug program: income verified clears the case to dispatch, then the same address and date.
-  { id: "scheduling.pap_address", slot: "address", path: "/delivery-address", scope: [SCOPE, PAP_JOURNEY], when: (d) => d.incomeStatus === "verified" && (d.dispatchStatus === "none" || d.dispatchStatus === "pending_selection") },
-  { id: "scheduling.pap_date", slot: "date", path: "/delivery-date", scope: [SCOPE, PAP_JOURNEY], when: (d) => d.incomeStatus === "verified" && d.patientShipDate === null },
+  { id: "scheduling.pap_address", slot: "address", path: "/delivery-address", scope: [SCOPE, PAP_JOURNEY], when: (d) => d.dispatchStatus === "pending_selection" },
+  { id: "scheduling.pap_date", slot: "date", path: "/delivery-date", scope: [SCOPE, PAP_JOURNEY], when: (d) => dispatchCleared(d) && d.patientShipDate === null },
   { id: "scheduling.date", slot: "date", path: "/delivery-date", scope: [SCOPE, PRICING_JOURNEY], when: (d) => d.dispatchStatus === "selected" && d.patientShipDate === null },
   { id: "scheduling.coverage_date", slot: "date", path: "/delivery-date", scope: [SCOPE, TRANSFER_JOURNEY], when: (d) => neitherCovered(d) && d.patientShipDate === null },
 ];

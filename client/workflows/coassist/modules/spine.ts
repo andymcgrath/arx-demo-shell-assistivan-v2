@@ -13,6 +13,10 @@ import { exitFor } from "@/engine/workflow/forks";
 import { PA_FORK, biForkFor } from "../forks";
 import { WEB_PA_MS } from "./web_handoff";
 import { startsPaOnItsOwn } from "../../shared/apa";
+import { incomeStartsOnTimer } from "../../shared/income";
+
+/** How long after BI completes the application update text goes out when income starts on a timer. */
+const INCOME_START_MS = 2000;
 
 export const SPINE_RULES: CoaRule[] = [
   {
@@ -48,6 +52,8 @@ export const SPINE_RULES: CoaRule[] = [
       { trigger: "system", when: (_d, _e, s) => startsPaOnItsOwn(s), send: () => ({ type: "SUBMIT_PA" }) },
       { trigger: "system", send: () => ({ type: "SEND_PA_FORM" }) },
       { trigger: "system", send: () => ({ type: "REFER_TO_PSP" }) },
+      // `income_qualification` with `trigger: "system"` starts its application update text on a timer. Ignored otherwise.
+      { trigger: "system", id: "income-start", after: INCOME_START_MS, when: (_d, _e, s) => incomeStartsOnTimer(s), send: () => ({ type: "SEND_PAP_SMS" }) },
     ],
   },
   {

@@ -1,18 +1,27 @@
 /**
- * Financial assistance: Copay enrollment (the `enroll` exit of the `copay` fork). Enrolling only unlocks the reduced price.
+ * Financial assistance, `copay` variant: enrolling in the manufacturer's copay program. A price modifier. It sets
+ * `copayEnrolled`, and `pricing` and `payment` read it. It does not need the `pricing` module: with no price in the
+ * recipe, copay still enrolls and approves.
+ *
+ * Needs: a verified patient. In a recipe with a PA notice (`pa_notification`) the offer waits for the PA approval to be
+ * verified, as the Copay scenarios do today. Sets: `copayEnrolled`.
+ * Triggers: the patient's tap (`patient`). The scope is the block being in the recipe, not a fork id.
  */
 import type { CoaRule } from "./shared";
-import { COPAY_FORK } from "../forks";
+
+const COPAY: { module: "financial_assistance"; props: { variant: "copay" } } = { module: "financial_assistance", props: { variant: "copay" } };
+
+/** The recipe waits on a PA notice before it offers assistance. */
+const waitsForPaNotice = (s: { recipe?: { modules: { id: string }[] } }) => !!s.recipe?.modules.some((m) => m.id === "pa_notification");
 
 export const FINANCIAL_ASSISTANCE_RULES: CoaRule[] = [
   {
-    // Copay: this is the `enroll` exit of the `copay` fork. Enrolling only unlocks the reduced price.
-    // The patient still picks Retail or Mail Order next.
+    // The patient enrolls for the reduced price. `pricing`, when the recipe has it, still asks Retail or Mail Order next.
     id: "financial_assistance.select_self_pay.copay",
     on: "SELECT_SELF_PAY",
-    scope: { fork: "copay" },
-    when: (d) => d.paApprovedOtpVerified && d.pricingOption === null && !d.copayEnrolled,
-    set: () => COPAY_FORK.exits.find((e) => e.id === "enroll")!.data,
+    scope: COPAY,
+    when: (d, _e, s) => d.consentStatus === "confirmed" && (!waitsForPaNotice(s) || d.paApprovedOtpVerified) && d.pricingOption === null && !d.copayEnrolled,
+    set: () => ({ copayEnrolled: true }),
     emit: { portal: "patient", step: 9 },
   },
 ];
