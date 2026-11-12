@@ -2,7 +2,8 @@ import { MODULE_CONTRACTS, type ModuleId } from "@/engine/workflow/components";
 import { recipeMeets } from "@/engine/workflow/recipe";
 import { scenarioFor } from "../scenarios";
 import { CATALOG_FORKS, catalogBlock, catalogExit, catalogFork, exitFeeds, exitSteps, forkOwnerIndex, paletteCards } from "./index";
-import { draftFromScenario, editorProblems, recipeFor, workflowForks, isEditorWorkflow } from "./editor";
+import { draftFromScenario, editorProblems, plainProblem, problemModule, recipeFor, workflowForks, isEditorWorkflow } from "./editor";
+import { recipeProblems } from "@/engine/workflow/recipe";
 import type { DemoRequest } from "./request";
 import { buildStoryboard, waitsFor, type StoryboardInput, type WholeDemoBoard } from "./storyboard";
 import type { CatalogApp, CatalogLane, CatalogStep, CatalogTrigger } from "./types";
@@ -34,6 +35,8 @@ export interface CanvasCard {
   outputs: string[];
   /** Why the card is disabled. Empty when the picked outcomes feed it. */
   disabled: string[];
+  /** What blocks the export about this card (order, a repeat), in sales words. */
+  issues: string[];
 }
 
 export interface CanvasExit {
@@ -99,7 +102,7 @@ export function canvasFromDraft(d: DemoRequest, demoIndex = 0): CanvasBoard {
       const trigger = c.trigger ?? "click";
       return {
         index, kind: "ghost", label: c.name.trim() || "New block", blockName: "", summary: c.sees, apps: [c.app], lane: c.lane, trigger,
-        steps: [{ label: c.sees.trim() || c.name.trim() || "New block", lane: c.lane, trigger }], inputs: [], outputs: [], disabled: [],
+        steps: [{ label: c.sees.trim() || c.name.trim() || "New block", lane: c.lane, trigger }], inputs: [], outputs: [], disabled: [], issues: [],
       };
     }
     const block = catalogBlock(c.moduleId);
@@ -109,9 +112,16 @@ export function canvasFromDraft(d: DemoRequest, demoIndex = 0): CanvasBoard {
       index, kind: "block", moduleId: c.moduleId, ...(c.variantId ? { variantId: c.variantId } : {}),
       label: pc?.label ?? block.name, blockName: block.name, summary: pc?.summary ?? block.summary, apps: pc?.apps ?? block.apps,
       lane: pc?.lane ?? block.lane, trigger: pc?.trigger ?? block.trigger, steps: pc?.steps ?? [],
-      inputs: waitsFor(recipe, moduleOf[index]), outputs: MODULE_CONTRACTS[c.moduleId]?.sets ?? [], disabled: [],
+      inputs: waitsFor(recipe, moduleOf[index]), outputs: MODULE_CONTRACTS[c.moduleId]?.sets ?? [], disabled: [], issues: [],
     };
   });
+
+  // The ordering problems that belong to a card go on it, so sales sees where to fix them.
+  for (const raw of recipeProblems(recipe)) {
+    const id = problemModule(raw);
+    if (!id) continue;
+    for (const card of cards) if (card.moduleId === id) card.issues.push(plainProblem(raw));
+  }
 
   const workflowForkList = editable ? workflowForks(d.workflow as never) : [];
   const forks: CanvasFork[] = workflowForkList

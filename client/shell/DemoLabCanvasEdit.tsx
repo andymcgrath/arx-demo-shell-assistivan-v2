@@ -35,6 +35,10 @@ export function DemoBar({ draft, active, setActive, edit }: { draft: DemoRequest
               onChange={(e) => edit((d) => updateDemo(d, active, { label: e.target.value, id: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || demo.id }))}
             />
           </label>
+          <label className="text-xs font-semibold">
+            Description
+            <input className={field} style={{ borderColor: LINE, minWidth: 260 }} value={demo.description ?? ""} onChange={(e) => edit((d) => updateDemo(d, active, { description: e.target.value || undefined }))} />
+          </label>
           <button type="button" disabled={draft.demos.length < 2} className={small} style={{ borderColor: LINE }} onClick={() => { edit((d) => removeDemo(d, active)); setActive(0); }}>
             Remove this demo
           </button>
@@ -185,6 +189,12 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
           <Chip key={a}>{APP_LABEL[a]}</Chip>
         ))}
       </p>
+      {card.issues.length > 0 && (
+        <div role="alert" className="mt-3 rounded border p-2 text-xs" style={{ borderColor: INK }}>
+          <p className="font-bold">Fix before export</p>
+          <ul className="list-disc pl-4">{card.issues.map((d) => <li key={d}>{d}</li>)}</ul>
+        </div>
+      )}
       {card.disabled.length > 0 && (
         <div role="alert" className="mt-3 rounded border p-2 text-xs" style={{ borderColor: INK }}>
           <p className="font-bold">Disabled for this outcome</p>

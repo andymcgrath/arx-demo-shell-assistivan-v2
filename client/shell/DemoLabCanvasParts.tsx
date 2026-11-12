@@ -59,6 +59,7 @@ export function CardView({ card, selected, onSelect }: { card: CanvasCard; selec
         ))}
       </span>
       {off && <span className="mt-1 block text-[11px] font-semibold">Disabled for this outcome</span>}
+      {card.issues.length > 0 && <span className="mt-1 block rounded px-1.5 py-0.5 text-[11px] font-bold text-white" style={{ background: INK }} data-testid="card-issue">Fix before export: {card.issues[0]}</span>}
     </button>
   );
 }

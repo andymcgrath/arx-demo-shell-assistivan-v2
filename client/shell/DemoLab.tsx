@@ -11,7 +11,6 @@
 import DemosLab from "./DemoLabDemos";
 import Canvas from "./DemoLabCanvas";
 import { DraftProvider } from "./DemoLabDraft";
-import Builder from "./DemoLabBuilder";
 import FidelityPanel from "./DemoLabFidelity";
 import { useMemo, useState, type CSSProperties } from "react";
 import { BRAND } from "@/brand";
@@ -459,8 +458,8 @@ function ColorsLab() {
   );
 }
 
-type Tab = "canvas" | "builder" | "demos" | "colors";
-const TAB_LABELS: Record<Tab, string> = { canvas: "Canvas", builder: "Builder", demos: "Demos", colors: "Colors" };
+type Tab = "canvas" | "demos" | "colors";
+const TAB_LABELS: Record<Tab, string> = { canvas: "Canvas", demos: "Demos", colors: "Colors" };
 
 export default function DemoLab() {
   return (
@@ -498,8 +497,6 @@ function DemoLabTabs() {
       </header>
       {tab === "canvas" ? (
         <Canvas />
-      ) : tab === "builder" ? (
-        <Builder />
       ) : tab === "demos" ? (
         <DemosLab />
       ) : (

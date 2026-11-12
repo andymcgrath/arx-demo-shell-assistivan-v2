@@ -126,6 +126,15 @@ const setterOf = (key: string): string => {
   return id ? `"${name(id)}"` : `something that sets ${key}`;
 };
 
+/** The module a `recipeProblems` line is about, so the canvas can mark its card. Undefined for a fork or demo line. */
+export function problemModule(p: string): string | undefined {
+  let m: RegExpMatchArray | null;
+  if ((m = p.match(/^(\w+) (?:needs|must come after) /))) return m[1];
+  if ((m = p.match(/^module "(\w+)" appears twice$/))) return m[1];
+  if (p === "tracking must be last") return "tracking";
+  return undefined;
+}
+
 /** A `recipeProblems` line in sales words. Lines it does not know pass through. */
 export function plainProblem(p: string): string {
   let m: RegExpMatchArray | null;

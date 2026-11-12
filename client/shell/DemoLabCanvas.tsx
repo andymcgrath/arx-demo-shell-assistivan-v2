@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
-import { clearPick, draftFromScenario, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
+import { blankDraft, clearPick, draftFromScenario, EDITOR_WORKFLOWS, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
 import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, APP_LABEL } from "./DemoLabCanvasParts";
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
+import { emptyRequestFields, RequestPanel } from "./DemoLabCanvasRequest";
 
 /**
  * Demo Lab, Canvas tab. A horizontal row of cards in journey order. Click a card for its detail and its actions. Each fork
  * sits under the card that owns it: pick a story fork's outcome per demo, or pin a patient fork's branch. A card the picked
  * outcome no longer feeds stays on the row, disabled. Add a card on either side of any card with the + buttons.
- * Edits go to the shared draft (DemoLabDraft), which the Builder tab also reads. Nothing is saved until export.
+ * Edits go to the shared draft (DemoLabDraft). The request fields (title, client, brand, win theme) open from "Request details".
+ * Nothing is saved until export.
  * The canvas plan: docs/plans/PLAN_DEMO_LAB_CANVAS.md.
  */
 
@@ -23,6 +25,7 @@ export default function CanvasLab() {
   const [wholeKey, setWholeKey] = useState<string | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [insertAt, setInsertAt] = useState<number | null>(null);
+  const [showRequest, setShowRequest] = useState(false);
   const groups = [...new Set(items.map((i) => i.group))];
 
   const fromItem = (it: Item) => draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
@@ -34,6 +37,14 @@ export default function CanvasLab() {
     if (first) load(first.key, fromItem(first)!);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const startBlank = (workflow: (typeof EDITOR_WORKFLOWS)[number]) => {
+    if (dirty && !window.confirm("Replace the draft? Your edits will be lost.")) return;
+    setCardIndex(0);
+    setInsertAt(null);
+    setWholeKey(null);
+    load(`blank:${workflow}`, blankDraft(workflow, BRAND.slug, requestBrand(BRAND)));
+  };
 
   const choose = (it: Item) => {
     if (dirty && !window.confirm("Replace the draft? Your edits will be lost.")) return;
@@ -83,6 +94,14 @@ export default function CanvasLab() {
             </ol>
           </div>
         ))}
+        <div className="mb-4">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Start blank</h2>
+          {EDITOR_WORKFLOWS.map((w) => (
+            <button key={w} type="button" onClick={() => startBlank(w)} aria-current={picked === `blank:${w}`} className="mb-1 w-full rounded border px-2 py-1.5 text-left text-sm" style={{ borderColor: picked === `blank:${w}` ? INK : LINE, background: picked === `blank:${w}` ? INK : "#ffffff", color: picked === `blank:${w}` ? "#ffffff" : INK }}>
+              Blank {w === "coassist" ? "CoAssist" : "iAssist"} demo
+            </button>
+          ))}
+        </div>
         <p className="text-xs" style={{ color: MUTED }}>
           Picking an entry starts a draft from it. Edit it here, then export. Nothing is saved until you do. The demos are the active brand's.
         </p>
@@ -102,6 +121,10 @@ export default function CanvasLab() {
         <>
           <main className="min-w-0 flex-1 overflow-auto p-5" data-testid="canvas">
             <Header canvas={canvas} />
+            <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} className="mb-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK }}>
+              Request details{emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
+            </button>
+            {showRequest && <RequestPanel draft={draft} edit={edit} />}
             <DemoBar draft={draft} active={active} setActive={setActive} edit={edit} />
             <ForkToggles canvas={canvas} edit={edit} />
             {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
@@ -157,7 +180,7 @@ export default function CanvasLab() {
                 <div role="alert" className="mb-3 rounded border p-3 text-xs" style={{ borderColor: INK }} data-testid="export-problems">
                   <p className="mb-1 font-semibold">Export is blocked until these are fixed:</p>
                   <ul className="list-disc pl-4">{canvas.exportProblems.map((p) => <li key={p}>{p}</li>)}</ul>
-                  <p className="mt-1" style={{ color: MUTED }}>The request fields (title, client, brand, win theme) are on the Builder tab.</p>
+                  <p className="mt-1" style={{ color: MUTED }}>Fill the rest under "Request details".</p>
                 </div>
               ) : (
                 <p className="mb-3 text-xs" style={{ color: MUTED }}>Nothing blocks the export.</p>

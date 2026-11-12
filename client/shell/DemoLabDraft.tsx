@@ -4,7 +4,7 @@ import type { DemoRequest } from "@/workflows/catalog/request";
 import { blankDraft, editorProblems, exportable, requestBrand } from "@/workflows/catalog/editor";
 
 /**
- * The Demo Lab's one draft. The Canvas and the Builder tabs both edit it, so a change on one shows on the other. Nothing is
+ * The Demo Lab's one draft. The Canvas edits it. Nothing is
  * saved until export. The only write is the dev endpoint (POST /__demo-lab/export), which puts two files under docs/demos/.
  */
 
