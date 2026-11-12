@@ -92,6 +92,11 @@ workflowRegistry.registerWorkflow("CoA_APA_Specialty", coassistMachine, {
   description: "CoAssist scenario where the prescriber completes the PA form online (APA) and the pharmacy benefit covers it. The Rx goes to an assigned specialty pharmacy that accepts it on its own intake screen, the case is handed to the client's CRM, and the pharmacy ships. No pricing, scheduling, or payment.",
 });
 
+workflowRegistry.registerWorkflow("CoA_APA_Assistance", coassistMachine, {
+  label: "CoAssist APA, Financial Assistance",
+  description: "CoAssist scenario where the prescriber completes the PA form online (APA) and the pharmacy benefit covers it. After the PA approval the patient applies for the free drug program (PAP), qualifies, then chooses PAP or the copay program. The prescriber's pharmacy ships. No pricing or payment.",
+});
+
 workflowRegistry.registerWorkflow("CoA_Web_PAP", coassistMachine, {
   label: "CoAssist Web PAP (client web page)",
   description: "A client-managed web page collects consent, details, and the prescriber's NPI, then calls benefit verification through the gateway. BI finds no coverage, so the case transfers to the patient support program. The case lands in the client's CRM, where the agent opens the BI stage. The patient applies by text and the income form, and an assigned pharmacy dispenses. No Gateway tab.",

@@ -851,6 +851,42 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         });
         break;
 
+      case 'PAP_CHOSEN':
+        emails.push({
+          ...base,
+          subject: `Free Drug Program Chosen - ${patientName}`,
+          bodyParagraphs: [
+            `${patientName} qualified for the free drug program and chose it. The case is cleared to dispatch.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
+      case 'COPAY_CHOSEN':
+        emails.push({
+          ...base,
+          subject: `Copay Program Enrolled - ${patientName}`,
+          bodyParagraphs: [
+            `${patientName} enrolled in the copay program.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
+      case 'SELF_PAY_CHOSEN':
+        emails.push({
+          ...base,
+          subject: `Self-pay Chosen - ${patientName}`,
+          bodyParagraphs: [
+            `${patientName} chose to pay out of pocket.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
       default:
         emails.push({
           ...base,

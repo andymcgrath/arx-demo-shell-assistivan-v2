@@ -1,0 +1,84 @@
+{
+  "slug": "abivax",
+  "name": "Abivax",
+  "title": "Abivax Demo",
+  "demos": [
+    {
+      "id": "erx-assistance",
+      "flow": "CoA_APA_Assistance",
+      "label": "eRx, prior authorization, then financial assistance",
+      "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program."
+    }
+  ],
+  "showClientTab": false,
+  "manufacturer": {
+    "name": "Abivax",
+    "tagline": "Harness the Power. Open the Possibilities.",
+    "logo": {
+      "colors": "/brands/abivax/abivax-logo-color.svg",
+      "white": "/brands/abivax/abivax-logo-white.svg"
+    },
+    "support": {
+      "label": "",
+      "phone": ""
+    },
+    "legal": {
+      "privacyUrl": "#",
+      "termsUrl": "#",
+      "safetyUrl": "#",
+      "prescribingUrl": "#"
+    },
+    "copyright": "©{{YEAR}} Abivax. All Rights Reserved."
+  },
+  "program": {
+    "name": "Obefazimod",
+    "drugDisplayName": "Obefazimod (microRNA-124 Enhancer)",
+    "description": "Once daily",
+    "dosageForm": "Capsule",
+    "dosages": [
+      "25 mg"
+    ],
+    "indication": {
+      "name": "Ulcerative Colitis",
+      "icd10": "K51.90",
+      "icd10Label": "Ulcerative colitis, unspecified, without complications"
+    },
+    "assets": {
+      "logoColor": "/brands/abivax/obefazimod-logo-color.png",
+      "logoWhite": "/brands/abivax/obefazimod-logo-white.png"
+    },
+    "colors": {
+      "brand": "#614dd2",
+      "fidelity": "exact",
+      "accent": "#d4dce5",
+      "surfaces": {
+        "footer": "brand"
+      },
+      "source": "https://www.abivax.com/"
+    },
+    "educationVideo": {
+      "title": "",
+      "description": "",
+      "thumbnail": "",
+      "embedUrl": ""
+    },
+    "transferPartner": {
+      "name": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "phone": ""
+    },
+    "specialtyPharmacy": {
+      "name": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "phone": ""
+    }
+  },
+  "chatbotIcon": "/brands/abivax/chat-icon.svg",
+  "favicon": "/brands/abivax/favicon.svg"
+}

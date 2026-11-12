@@ -55,6 +55,7 @@ import PapUpdateSms from "./pages/PapUpdateSms";
 import PapUpdateOtp from "./pages/PapUpdateOtp";
 import BenefitPricing from "./pages/BenefitPricing";
 import CopayEnroll from "./pages/CopayEnroll";
+import AssistanceChoice from "./pages/AssistanceChoice";
 import PharmacySelection from "./pages/PharmacySelection";
 import DeliveryAddress from "./pages/DeliveryAddress";
 import DeliveryDate from "./pages/DeliveryDate";
@@ -209,6 +210,7 @@ function PatientRoutes() {
           <Route path="/pap-update-otp"        element={<PapUpdateOtp />} />
           <Route path="/benefit-pricing"       element={<BenefitPricing />} />
           <Route path="/copay-enroll"          element={<CopayEnroll />} />
+          <Route path="/assistance-choice"     element={<AssistanceChoice />} />
           <Route path="/pharmacy-selection"     element={<PharmacySelection />} />
           <Route path="/delivery-address"      element={<DeliveryAddress />} />
           <Route path="/delivery-date"         element={<DeliveryDate />} />

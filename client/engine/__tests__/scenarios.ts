@@ -424,6 +424,46 @@ export const SCENARIOS: Scenario[] = [
   },
 
   {
+    // APA, then financial assistance. The PA is approved and verified, then the patient applies for the free drug program,
+    // qualifies, and chooses PAP (the program turns active and the case clears to dispatch). The prescriber's pharmacy ships.
+    name: "coa-apa-assistance-pap",
+    endsAt: "delivered",
+    flowType: "CoA_APA_Assistance",
+    choices: { bi: "pharmacy_covered", pa: "approved" },
+    steps: [
+      { type: "REFERRAL_RECEIVED", pharmacy: { name: "Specialty Pharmacy", address: "1 Main St", city: "Orlando", state: "FL", zip: "32801", phone: "(800) 555-0100" } }, ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "OPEN_PA_FORM_LINK" }, { type: "VERIFY_PRESCRIBER", npi: "1234567890", pin: "4321" }, { type: "SUBMIT_PA_FORM" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      { type: "CHOOSE_ASSISTANCE", option: "pap" },
+      { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
+      ...fulfillment,
+    ],
+  },
+
+  {
+    // The same case, but the patient qualifies for the free drug program and chooses the copay program instead. Qualifying
+    // committed nothing, so PAP stays inactive.
+    name: "coa-apa-assistance-copay",
+    endsAt: "delivered",
+    flowType: "CoA_APA_Assistance",
+    choices: { bi: "pharmacy_covered", pa: "approved" },
+    steps: [
+      { type: "REFERRAL_RECEIVED", pharmacy: { name: "Specialty Pharmacy", address: "1 Main St", city: "Orlando", state: "FL", zip: "32801", phone: "(800) 555-0100" } }, ...verifyIdentity,
+      { type: "COMPLETE_BI" },
+      { type: "OPEN_PA_FORM_LINK" }, { type: "VERIFY_PRESCRIBER", npi: "1234567890", pin: "4321" }, { type: "SUBMIT_PA_FORM" },
+      { type: "APPROVE_PA" }, ...paApprovedReverify,
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" }, { type: "VERIFY_PAP_OTP" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      { type: "CHOOSE_ASSISTANCE", option: "copay" },
+      { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
+      ...fulfillment,
+    ],
+  },
+
+  {
     // No coverage. BI finds none, so the case transfers to the patient support program (the referral fires on its own).
     // The patient taps the transfer text, then the application update and its code, enrolls, and verifies income. The
     // assigned pharmacy dispenses. No PA, cash offer, or payment.

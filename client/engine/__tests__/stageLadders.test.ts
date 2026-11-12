@@ -96,6 +96,7 @@ const KNOWN_GAPS: Record<string, string[]> = {
   CoA_PAP: [],
   CoA_Web_PAP: [],
   CoA_APA_Specialty: [],
+  CoA_APA_Assistance: [],
 };
 
 /** Scenarios whose case ends before BI. They have no `bi` fork, so there are no exits to need rungs. */
@@ -115,7 +116,7 @@ describe("stage ladder coverage of the bi fork", () => {
       const fork = biForkFor(flowType as FlowType);
       const pickable = fork.exits.filter((e) => recipeProblems({ ...recipe, choices: { ...recipe.choices, bi: e.id } }, forks).length === 0);
       const hasRungs = (id: string) =>
-        flowType === "CoA_Coverage" || flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" || flowType === "CoA_APA_Specialty"
+        flowType === "CoA_Coverage" || flowType === "CoA_PAP" || flowType === "CoA_Web_PAP" || flowType === "CoA_APA_Specialty" || flowType === "CoA_APA_Assistance"
           ? !!fork.exits.find((e) => e.id === id)?.stages?.length
           : isTransferScenario(flowType)
           ? TRANSFER_LADDER_EXITS.includes(id)

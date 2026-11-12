@@ -47,7 +47,7 @@ export const HAND_BUILT_LADDER_EXITS = ["pharmacy_covered"];
  * Without `choices`, it takes the scenario's default branch.
  */
 /** The flows with a CoAssist stage-jump ladder. */
-export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_HCP_Enroll" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP" | "CoA_APA_Specialty" | "CoA_Web_PAP";
+export type CoassistLadderFlow = "CoA_DTP" | "CoA_Copay" | "CoA_Web_Copay" | "CoA_HCP_Enroll" | "CoA_Coverage" | "CoA_Medical_Transfer" | "CoA_PAP" | "CoA_APA_Specialty" | "CoA_APA_Assistance" | "CoA_Web_PAP";
 
 /**
  * The web scenario's rungs. The client page's submit starts BI. Stage 4 is the Gateway opened (BI back, PA approved), the

@@ -56,7 +56,7 @@ const fulfillment = (firstLabel: string) => [
  * fork belong to the scenario (see BI_STAGES), because the journey after the same exit differs between scenarios.
  */
 export const BI_FORK: ForkDefinition = biFork({
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty", "CoA_Web_PAP"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_Web_PAP"],
   exits: [{ id: "pharmacy_covered" }, { id: "pharmacy_transfer" }, { id: "medical_covered" }, { id: "medical_pa_required" }, { id: "no_coverage" }, { id: "no_coverage_pap" }],
 });
 
@@ -128,6 +128,30 @@ const BI_STAGES: Partial<Record<FlowType, { before: ForkStage[]; exits: Record<s
       ],
     },
   },
+  // APA with the prescriber's pharmacy, then financial assistance. After the PA approval the patient applies for the free drug
+  // program, qualifies, and chooses PAP or the copay program. The pharmacy is the prescriber's, so there is no pricing or payment.
+  CoA_APA_Assistance: {
+    before: [
+      { label: "Referral Received", events: [] },
+      { label: "Patient Enrolled", events: ENROLL_AND_VERIFY },
+      { label: "Benefits Investigation", events: [] },
+    ],
+    exits: {
+      pharmacy_covered: [
+        { label: "Pharmacy Coverage Confirmed (PA form emailed to the prescriber)", events: [completeBi("covered", "not_covered")] },
+        {
+          label: "Prescriber Submitted the PA Form",
+          events: [ev("OPEN_PA_FORM_LINK", "provider"), ev("VERIFY_PRESCRIBER", "provider", { npi: "1234567890", pin: "4321" }), ev("SUBMIT_PA_FORM", "provider")],
+        },
+        { label: "PA Approved, Patient Verified", events: [ev("APPROVE_PA", "crm"), ev("VERIFY_PA_APPROVED_SMS", "patient"), ev("VERIFY_PA_APPROVED_OTP", "patient")] },
+        { label: "Application Update Confirmed", events: [ev("SEND_PAP_SMS", "crm"), ev("VERIFY_PAP_SMS", "patient"), ev("VERIFY_PAP_OTP", "patient")] },
+        { label: "Income Verified (qualified)", events: [ev("START_INCOME_QUALIFICATION", "patient"), ev("VERIFY_INCOME", "patient")] },
+        { label: "Assistance Chosen", events: [ev("CHOOSE_ASSISTANCE", "patient", { option: "pap" })] },
+        { label: "Delivery Address & Date Set", events: [ev("PATIENT_SETS_ADDRESS", "patient"), ev("PATIENT_SELECTS_SHIP_DATE", "patient")] },
+        ...fulfillment("Rx Processing"),
+      ],
+    },
+  },
   // The web page's free drug program. The page submits, the Gateway releases BI, and the rest is PAP's: the transfer text, the
   // application update text and code, the income form, then the address and date. No enrollment text, code, or consent.
   CoA_Web_PAP: {
@@ -178,7 +202,7 @@ export const PA_FORK: ForkDefinition = {
   label: "Prior authorization decision",
   chooser: "story",
   // CoAssist only. Another workflow declares its own `pa` fork, with exits that require its own modules.
-  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_APA_Specialty"],
+  scenarios: ["CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_APA_Specialty", "CoA_APA_Assistance"],
   resolved: (d) => d.paStatus === "approved" || d.paStatus === "denied",
   exits: [
     { id: "approved", label: "Approved", description: "The PA is approved.", data: { paStatus: "approved" } },
@@ -263,7 +287,7 @@ export const assistanceOutcomes = (d: WorkflowData): string[] =>
  * them: they can still pick copay or self-pay. Copay and self-pay are offered whenever their blocks are in the recipe.
  * The pick is `CHOOSE_ASSISTANCE` with an `option`. It is not written to `choices`: the data already records it.
  *
- * `scenarios` is passed in. No scenario uses the fork until the Abivax recipe lists it.
+ * `scenarios` is passed in. Only `CoA_APA_Assistance` uses the fork so far.
  */
 export const assistanceFork = (scenarios: FlowType[]): ForkDefinition => ({
   id: "assistance",
@@ -279,7 +303,7 @@ export const assistanceFork = (scenarios: FlowType[]): ForkDefinition => ({
   ],
 });
 
-export const ASSISTANCE_FORK: ForkDefinition = assistanceFork([]);
+export const ASSISTANCE_FORK: ForkDefinition = assistanceFork(["CoA_APA_Assistance"]);
 
 export const COASSIST_FORKS: ForkDefinition[] = [
   BI_FORK,

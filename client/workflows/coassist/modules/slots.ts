@@ -21,6 +21,8 @@ export const COASSIST_SLOTS = [
   "income",
   /** PA approved: SMS and OTP again. */
   "pa_notice",
+  /** After the PA notice: the free drug application, then the patient's choice of PAP or copay. */
+  "assistance",
   /** The patient picks Retail, Mail Order, or the self-pay offer. */
   "pricing",
   /** A network pharmacy takes the Rx. */
@@ -52,6 +54,7 @@ export const COASSIST_GROUPS = [
   "Provider transfer",
   "Patient support program",
   "Income verification",
+  "Financial assistance",
   "{program} order",
 ] as const;
 

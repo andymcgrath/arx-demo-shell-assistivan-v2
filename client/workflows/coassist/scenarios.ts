@@ -2,7 +2,7 @@ import type { FlowType, Pharmacy } from "@/engine/types";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import { BRAND } from "@/brand";
 import { TRANSFER_PHARMACY } from "../shared/assignment";
-import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE, COA_WEB_PAP_RECIPE } from "./recipes";
+import { COA_COPAY_RECIPE, COA_COVERAGE_RECIPE, COA_DTP_RECIPE, COA_MEDICAL_TRANSFER_RECIPE, COA_PAP_RECIPE, COA_WEB_COPAY_RECIPE, COA_HCP_ENROLL_RECIPE, COA_APA_SPECIALTY_RECIPE, COA_APA_ASSISTANCE_RECIPE, COA_WEB_PAP_RECIPE } from "./recipes";
 
 /**
  * CoAssist scenarios. Each is data: the content its rules read.
@@ -148,6 +148,18 @@ export const COA_APA_SPECIALTY: ScenarioDefinition<CoassistContent> = {
 };
 
 /**
+ * The APA scenario plus financial assistance: after the PA approval the patient qualifies for the free drug program, then
+ * chooses it or the copay program. Same pharmacy and content as the specialty APA scenario.
+ */
+export const COA_APA_ASSISTANCE: ScenarioDefinition<CoassistContent> = {
+  flowType: "CoA_APA_Assistance",
+  intake: "erx",
+  choices: { bi: "pharmacy_covered", pa: "approved" },
+  recipe: COA_APA_ASSISTANCE_RECIPE,
+  content: COA_APA_SPECIALTY.content,
+};
+
+/**
  * The client's web page starts the case and BI finds no coverage. The case transfers to the patient support program, and the
  * `transferPharmacy` dispenses (the brand file's `program.transferPartner`). Intake is `erx`: the web page holds what BI needs.
  * The agent works the case in the CRM, so BI returns when the agent opens the BI stage.
@@ -161,4 +173,4 @@ export const COA_WEB_PAP: ScenarioDefinition<CoassistContent> = {
 };
 
 /** The scenarios of the CoAssist workflow. */
-export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_Web_PAP"];
+export const COASSIST_FLOWS: FlowType[] = ["CoA_APA_Specialty", "CoA_APA_Assistance", "CoA_DTP", "CoA_Copay", "CoA_Web_Copay", "CoA_HCP_Enroll", "CoA_Coverage", "CoA_Medical_Transfer", "CoA_PAP", "CoA_Web_PAP"];

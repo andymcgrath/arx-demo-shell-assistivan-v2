@@ -146,6 +146,28 @@ export const COA_APA_SPECIALTY_RECIPE: ScenarioRecipe = {
 };
 
 /**
+ * APA, then financial assistance. The pharmacy benefit covers it, the prescriber completes the PA form and picks the pharmacy.
+ * After the PA approval the patient applies for the free drug program (`income_qualification`, started by the system, and
+ * activated only when the patient chooses it), then chooses PAP or the copay program on the `assistance` fork. Qualifying
+ * does not commit them. No pricing, no payment, no cash offer: the recipe lists none, so self-pay is not an exit.
+ */
+export const COA_APA_ASSISTANCE_RECIPE: ScenarioRecipe = {
+  source: "coassist",
+  forks: ["bi", "pa", "assistance"],
+  choices: { bi: "pharmacy_covered", pa: "approved" },
+  modules: [
+    { id: "enrollment" },
+    { id: "prior_authorization", props: { variant: "apa" } },
+    { id: "pa_notification" },
+    { id: "income_qualification", props: { trigger: "system", activate: "on_choose" } },
+    { id: "financial_assistance", props: { variant: "copay" } },
+    { id: "pharmacy_selection", props: { variant: "prescriber" } },
+    { id: "scheduling" },
+    { id: "tracking" },
+  ],
+};
+
+/**
  * BI finds no coverage, and the case transfers to the manufacturer's patient support program. The patient applies for the
  * free drug program (Fax PAP income form), and an assigned pharmacy dispenses. No PA, no cash offer, no payment: the
  * `bi` exit `no_coverage_pap` runs none of them, and the recipe lists none. Income is approved only (docs/plans/PLAN_COA_PAP.md).
@@ -218,5 +240,6 @@ export const COASSIST_RECIPES = {
   CoA_Medical_Transfer: COA_MEDICAL_TRANSFER_RECIPE,
   CoA_PAP: COA_PAP_RECIPE,
   CoA_APA_Specialty: COA_APA_SPECIALTY_RECIPE,
+  CoA_APA_Assistance: COA_APA_ASSISTANCE_RECIPE,
   CoA_Web_PAP: COA_WEB_PAP_RECIPE,
 } as const;

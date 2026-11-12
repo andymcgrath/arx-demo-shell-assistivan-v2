@@ -46,6 +46,11 @@ export const ASSISTANCE_RULES: CoaRule[] = [
       if (e.option === "copay") return { copayEnrolled: true };
       return { pricingOption: "self_pay" as const, selectedPharmacy: s.content.selfPay };
     },
-    emit: { portal: "patient", step: 9 },
+    // One Field event per outcome, so each gets its own email.
+    emit: [
+      { type: "PAP_CHOSEN", portal: "patient", step: 9, when: (_d, e) => e.option === "pap" },
+      { type: "COPAY_CHOSEN", portal: "patient", step: 9, when: (_d, e) => e.option === "copay" },
+      { type: "SELF_PAY_CHOSEN", portal: "patient", step: 9, when: (_d, e) => e.option === "self_pay" },
+    ],
   },
 ];
