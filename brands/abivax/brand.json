@@ -38,6 +38,58 @@
       "choices": {
         "bi": "no_coverage_pap"
       }
+    },
+    {
+      "id": "2-coassist-copay",
+      "flow": "CoA_Copay",
+      "label": "2. CoAssist Copay",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "approved"
+      },
+      "recipe": {
+        "modules": [
+          {
+            "id": "enrollment"
+          },
+          {
+            "id": "prior_authorization",
+            "props": {
+              "variant": "auto"
+            }
+          },
+          {
+            "id": "pa_notification"
+          },
+          {
+            "id": "payment"
+          },
+          {
+            "id": "financial_assistance",
+            "props": {
+              "variant": "copay"
+            }
+          },
+          {
+            "id": "pharmacy_selection",
+            "props": {
+              "variant": "store"
+            }
+          },
+          {
+            "id": "scheduling"
+          },
+          {
+            "id": "tracking"
+          }
+        ],
+        "forks": [
+          "bi",
+          "pa",
+          "copay",
+          "pricing"
+        ]
+      }
     }
   ],
   "showClientTab": false,

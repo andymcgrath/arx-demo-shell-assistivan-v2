@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "client": "abivax",
+  "slug": "2-coassist-copay",
+  "title": "2. CoAssist Copay",
+  "workflow": "coassist",
+  "intake": "erx",
+  "apps": [
+    "crm",
+    "patient",
+    "provider",
+    "field",
+    "iassist"
+  ],
+  "forks": [
+    "bi",
+    "pa",
+    "copay",
+    "pricing"
+  ],
+  "cards": [
+    {
+      "kind": "block",
+      "moduleId": "enrollment"
+    },
+    {
+      "kind": "block",
+      "moduleId": "prior_authorization",
+      "variantId": "auto"
+    },
+    {
+      "kind": "block",
+      "moduleId": "pa_notification"
+    },
+    {
+      "kind": "block",
+      "moduleId": "payment"
+    },
+    {
+      "kind": "block",
+      "moduleId": "financial_assistance",
+      "variantId": "copay"
+    },
+    {
+      "kind": "block",
+      "moduleId": "pharmacy_selection",
+      "variantId": "store"
+    },
+    {
+      "kind": "block",
+      "moduleId": "scheduling"
+    },
+    {
+      "kind": "block",
+      "moduleId": "tracking"
+    }
+  ],
+  "demos": [
+    {
+      "id": "2-coassist-copay",
+      "label": "2. CoAssist Copay",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "approved"
+      }
+    }
+  ],
+  "brand": {
+    "name": "Abivax",
+    "drug": "Obefazimod (microRNA-124 Enhancer)",
+    "sourceUrl": "https://www.abivax.com/",
+    "documents": []
+  },
+  "winTheme": "One eRx starts everything: patient onboarding, prior authorization, prior authorization result text, cash offer and pricing options, with no re-keying between apps.",
+  "openQuestions": []
+}
