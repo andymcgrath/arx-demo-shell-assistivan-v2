@@ -1,5 +1,6 @@
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import type { ModuleId } from "@/engine/workflow/components";
+import { withRecipeOverride } from "@/engine/workflow/recipeOverride";
 import { COA_DTP, COA_COPAY, COA_WEB_COPAY, COA_HCP_ENROLL, COA_COVERAGE, COA_MEDICAL_TRANSFER, COA_PAP, COA_APA_SPECIALTY, COA_APA_ASSISTANCE, COA_WEB_PAP, COA_WEB_HCP_PATIENT } from "./coassist/scenarios";
 import { IA_BUY_AND_BILL_PAP, IA_BUY_AND_BILL, IA_MEDICAL_TRANSFER, IA_PA_APPROVED, IA_PA_DENIED_APPEAL } from "./iassist/scenarios";
 import { STANDARD_PA_APPROVED } from "./standard/scenarios";
@@ -29,7 +30,10 @@ export const ALL_SCENARIOS: ScenarioDefinition<any>[] = [
 ];
 
 /** The scenario for a flow, or undefined for an unknown flow. UI reads the definition through this, never `flowType ===`. */
-export const scenarioFor = (flowType: string): ScenarioDefinition<any> | undefined => ALL_SCENARIOS.find((s) => s.flowType === flowType);
+export const scenarioFor = (flowType: string): ScenarioDefinition<any> | undefined => {
+  const found = ALL_SCENARIOS.find((s) => s.flowType === flowType);
+  return found && withRecipeOverride(found);
+};
 
 /** True when the scenario's recipe lists the module. UI reads the definition through this, never `flowType ===`. */
 export const scenarioHasModule = (flowType: string, id: ModuleId): boolean =>

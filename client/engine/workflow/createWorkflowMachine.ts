@@ -16,6 +16,7 @@ import { createInitialWorkflowData } from "./baseData";
 import { choiceProblems } from "./forks";
 import { ruleAppliesTo, scopeProblems } from "./scope";
 import type { Portal, Rule, ScenarioDefinition, WorkflowDefinition } from "./types";
+import { withRecipeOverride } from "./recipeOverride";
 
 function createEvent(context: MachineContext, eventType: string, portal: Portal, step: number): DemoEvent {
   return {
@@ -43,7 +44,7 @@ export function createWorkflowMachine<C>(def: WorkflowDefinition<C>) {
   const scenarioFor = (flowType: FlowType | undefined): ScenarioDefinition<C> => {
     const scenario = (flowType && def.scenarios[flowType]) || def.scenarios[def.defaultFlowType];
     if (!scenario) throw new Error(`Workflow "${def.id}" has no scenario for ${flowType ?? def.defaultFlowType}`);
-    return scenario;
+    return withRecipeOverride(scenario);
   };
 
   const forks = def.forks ?? [];

@@ -1,4 +1,5 @@
 import type { FlowType } from "@/engine/types";
+import type { DemoRecipe } from "@/engine/workflow/recipeOverride";
 
 export type { BrandColors } from "./theme";
 import type { BrandColors } from "./theme";
@@ -67,6 +68,12 @@ export interface BrandDemo {
   description?: string;
   /** Fork id to exit id, for example `{ "bi": "no_coverage" }`. Omitted forks take the scenario's default. */
   choices?: Record<string, string>;
+  /**
+   * The blocks this demo runs, when they differ from the scenario's own recipe. The scenario (`flow`) still supplies content
+   * and forks. `pnpm demo:apply` writes it when a request's blocks match no existing recipe. The brand test checks it
+   * with the same ordering rules as a recipe.
+   */
+  recipe?: DemoRecipe;
 }
 
 /** The diagnosis a brand's drug treats, with the clinical wording the iAssist forms prefill. */

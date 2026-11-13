@@ -5,6 +5,7 @@
 import { getWorkflowActor, switchWorkflow } from "@/engine/actorSingleton";
 import { useDemoStore } from "@/store/demoStore";
 import type { BrandDemo } from "@/brand/schema";
+import { recipeOverrideFor, setRecipeOverride } from "@/engine/workflow/recipeOverride";
 
 /** True when the running machine already has every choice the demo asks for. */
 function hasChoices(demo: BrandDemo): boolean {
@@ -17,15 +18,18 @@ function hasChoices(demo: BrandDemo): boolean {
  * If not, it restarts from the top with them. Reset keeps the current choices, so a demo with no `choices`
  * never needs a restart.
  */
-export function applyDemoChoices(demo: BrandDemo): void {
-  if (!demo.choices || hasChoices(demo)) return;
+export function applyDemoChoices(demo: BrandDemo, opts: { force?: boolean } = {}): void {
+  if (!opts.force && (!demo.choices || hasChoices(demo))) return;
   useDemoStore.getState().resetDemo();
-  getWorkflowActor().send({ type: "RESET", choices: demo.choices } as any);
+  getWorkflowActor().send({ type: "RESET", choices: demo.choices ?? {} } as any);
 }
 
 /** Selects a demo: remembers it, switches to its flow, and applies its choices. */
 export function startDemo(demo: BrandDemo): void {
+  // A demo with its own blocks runs a different path on the same flow, so a change of blocks restarts the run.
+  const blocksChanged = JSON.stringify(recipeOverrideFor(demo.flow) ?? null) !== JSON.stringify(demo.recipe ?? null);
+  setRecipeOverride(demo.flow, demo.recipe);
   useDemoStore.getState().selectDemo(demo);
   switchWorkflow(demo.flow);
-  applyDemoChoices(demo);
+  applyDemoChoices(demo, { force: blocksChanged });
 }

@@ -1,5 +1,6 @@
 import type { FlowType } from "@/engine/types";
 import { forkApplies } from "./forks";
+import { withRecipeOverride } from "./recipeOverride";
 import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from "./types";
 
 /**
@@ -39,8 +40,8 @@ export function appliesToFlow(
 ): boolean {
   if (item.scenarios && !item.scenarios.includes(flowType)) return false;
   if (!item.scope) return true;
-  const scenario = scenarioDefs?.find((s) => s.flowType === flowType);
-  return !!scenario && inScope(item.scope, scenario, forks ?? []);
+  const found = scenarioDefs?.find((s) => s.flowType === flowType);
+  return !!found && inScope(item.scope, withRecipeOverride(found), forks ?? []);
 }
 
 /** True when the rule applies to the scenario. A rule with no `scenarios` and no `scope` applies to all of them. */

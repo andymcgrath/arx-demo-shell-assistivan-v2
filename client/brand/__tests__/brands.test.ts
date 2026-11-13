@@ -17,6 +17,7 @@ import { choiceProblems } from "@/engine/workflow/forks";
 import { forksForFlow } from "@/workflows/forks";
 import { ALL_SCENARIOS } from "@/workflows/scenarios";
 import { recipeProblems } from "@/engine/workflow/recipe";
+import { composeRecipe } from "@/engine/workflow/recipeOverride";
 import { forksForScenario } from "@/engine/workflow/forks";
 
 /**
@@ -147,12 +148,14 @@ for (const slug of slugs) {
         const recipe = ALL_SCENARIOS.find((s) => s.flowType === demo.flow)?.recipe;
         if (!recipe) continue;
         const forks = forksForScenario(forksForFlow(demo.flow), demo.flow);
-        expect(recipeProblems({ ...recipe, choices: { ...recipe.choices, ...demo.choices } }, forks)).toEqual([]);
+        // A demo with its own blocks runs them over the scenario's recipe, under the same ordering rules.
+        const run = demo.recipe ? composeRecipe(recipe, demo.recipe) : recipe;
+        expect(recipeProblems({ ...run, choices: { ...recipe.choices, ...demo.choices } }, forks)).toEqual([]);
       }
     });
 
     it("does not repeat the same flow and choices under two demos", () => {
-      const keys = brand.demos.map((d: any) => JSON.stringify([d.flow, Object.entries(d.choices ?? {}).sort()]));
+      const keys = brand.demos.map((d: any) => JSON.stringify([d.flow, Object.entries(d.choices ?? {}).sort(), d.recipe ?? null]));
       expect(new Set(keys).size).toBe(keys.length);
     });
 

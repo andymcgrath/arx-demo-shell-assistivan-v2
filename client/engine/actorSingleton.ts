@@ -28,6 +28,7 @@ import { createActor } from "xstate";
 import { create } from "zustand";
 import { workflowRegistry } from "./WorkflowRegistry";
 import type { FlowType } from "./types";
+import { setRecipeOverride } from "@/engine/workflow/recipeOverride";
 import { BRAND, DEFAULT_FLOW, findDemo, isFlowEnabled } from "@/brand";
 import { snapshotHasChoices } from "./snapshotChoices";
 let actorInstance: ReturnType<typeof createActor> | null = null;
@@ -139,6 +140,8 @@ function machineIdForFlow(flowType: FlowType): string {
 }
 
 export function switchWorkflow(flowType: FlowType): void {
+  // A demo with its own blocks must be in place before the machine reads the scenario, including on a reload.
+  setRecipeOverride(flowType, startingDemo(flowType)?.recipe);
   const machineId = machineIdForFlow(flowType);
   const machine = workflowRegistry.getWorkflow(machineId);
   if (!machine) {
@@ -195,7 +198,7 @@ export function resetAllWorkflowSnapshots(): void {
  * Without this, a new session shows the scenario's default branch instead of the demo the client picked.
  * Reads the stored demo id directly for the same circular-import reason as readPersistedFlowType.
  */
-function startingChoices(flowType: FlowType): Record<string, string> | undefined {
+function startingDemo(flowType: FlowType) {
   let stored: string | undefined;
   try {
     stored = JSON.parse(sessionStorage.getItem("arx-demo-shell") ?? "null")?.state?.demoId;
@@ -203,8 +206,11 @@ function startingChoices(flowType: FlowType): Record<string, string> | undefined
     stored = undefined;
   }
   const picked = findDemo(stored);
-  const demo = picked && picked.flow === flowType ? picked : BRAND.demos.find((d) => d.flow === flowType);
-  return demo?.choices;
+  return picked && picked.flow === flowType ? picked : BRAND.demos.find((d) => d.flow === flowType);
+}
+
+function startingChoices(flowType: FlowType): Record<string, string> | undefined {
+  return startingDemo(flowType)?.choices;
 }
 
 function createActorForFlow(
