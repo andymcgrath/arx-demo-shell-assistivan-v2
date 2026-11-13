@@ -1,5 +1,8 @@
 import type { FlowType } from "@/engine/types";
 import { forksForScenario, choiceProblems } from "@/engine/workflow/forks";
+import { composeRecipe, type DemoRecipe } from "@/engine/workflow/recipeOverride";
+import { recipeProblems } from "@/engine/workflow/recipe";
+import type { ModuleSpec } from "@/engine/workflow/components";
 import type { BrandDemo } from "@/brand/schema";
 import { forksForFlow } from "../forks";
 import { ALL_SCENARIOS } from "../scenarios";
@@ -9,9 +12,10 @@ import { ghostCards, type DemoRequest } from "./request";
 /**
  * Plan for `pnpm demo:apply`: a request with no ghost cards becomes `demos` entries in the client's brand file. No model.
  *
- * What it does not do: write a recipe. The machine reads a recipe's module set and variants, and the recipe belongs to
- * one flow and one scenario's content. So the request's blocks must match an existing recipe. When none does, the
- * request goes through the generated prompt instead, and this says how far off the closest recipe is.
+ * When the request's blocks match an existing recipe, the demo points at that flow. When none does, the demo runs on the
+ * closest scenario that has the same intake and every fork the request names, and carries its own block list
+ * (`BrandDemo.recipe`). The scenario still supplies the content. The composed list must pass the same ordering checks as
+ * a recipe, so a bad order is rejected here. What apply cannot build is a ghost card: that needs the generated prompt.
  *
  * Pure. The script reads and writes the files.
  */
@@ -28,6 +32,8 @@ export interface ApplyPlan {
   created: boolean;
   demos: BrandDemo[];
   notes: string[];
+  /** True when the blocks matched no recipe and the demos carry their own. */
+  composed: boolean;
 }
 
 export type ApplyResult = ApplyPlan | { ok: false; problems: string[] };
@@ -60,6 +66,27 @@ function candidates(r: DemoRequest) {
   });
 }
 
+/** The request's blocks as module specs, in the order the canvas shows them. */
+const requestModules = (r: DemoRequest): ModuleSpec[] =>
+  r.cards.flatMap((c): ModuleSpec[] => (c.kind === "block" ? [{ id: c.moduleId, ...(c.variantId && c.variantId !== "default" ? { props: { variant: c.variantId } } : {}) }] : []));
+
+/**
+ * The scenario a composed demo runs on: same intake, and it declares every fork the request names (a pick on a fork the
+ * scenario lacks would be ignored). Of those, the one whose blocks are closest to the request's, so its content fits.
+ */
+function baseFor(r: DemoRequest, all: ReturnType<typeof candidates>): { flow: FlowType; order: string[] } | { problem: string } {
+  const named = [...new Set(r.forks)];
+  const sameIntake = all.filter((c) => c.intake === r.intake);
+  if (!sameIntake.length) return { problem: `there is no ${r.workflow} scenario with ${r.intake} intake to run these blocks on. Use the generated prompt.` };
+  const fits = sameIntake.filter((c) => {
+    const declared = new Set(forksForScenario(forksForFlow(c.flow), c.flow).map((f) => f.id));
+    return named.every((f) => declared.has(f));
+  });
+  if (!fits.length) return { problem: `no ${r.workflow} scenario with ${r.intake} intake declares all of the forks ${named.join(", ")}. Use the generated prompt.` };
+  const [closest] = [...fits].sort((a, b) => a.missing.length + a.extra.length - (b.missing.length + b.extra.length));
+  return { flow: closest.flow, order: closest.order };
+}
+
 /** `parent` is the brand a new brand file extends. The script names it, so no brand name lives in source. */
 export function planApply(request: DemoRequest, existing: Json | undefined, parent: string): ApplyResult {
   const problems = editorProblems(request);
@@ -72,16 +99,22 @@ export function planApply(request: DemoRequest, existing: Json | undefined, pare
   const all = candidates(request);
   const have = requestKeys(request);
   const match = all.filter((c) => !c.missing.length && !c.extra.length && c.intake === request.intake && c.forksMatch);
-  if (match.length !== 1) {
-    const closest = [...all].sort((a, b) => a.missing.length + a.extra.length - (b.missing.length + b.extra.length))[0];
-    const why = match.length > 1
-      ? `${match.length} recipes match (${match.map((m) => m.flow).join(", ")}), so it cannot choose one.`
-      : closest
-        ? `no recipe has these blocks. Closest is ${closest.flow}${closest.missing.length ? `, which also has ${closest.missing.join(", ")}` : ""}${closest.extra.length ? `, and lacks ${closest.extra.join(", ")}` : ""}${closest.intake !== request.intake ? `, and its intake is ${closest.intake}` : ""}${!closest.forksMatch ? ", and its forks differ" : ""}.`
-        : `there is no ${request.workflow} recipe.`;
-    return { ok: false, problems: [`${why} Apply writes demos for an existing recipe only. Use the generated prompt for a new one.`] };
+  if (match.length > 1) {
+    return { ok: false, problems: [`${match.length} recipes match (${match.map((m) => m.flow).join(", ")}), so it cannot choose one.`] };
   }
-  const { flow, order } = match[0];
+
+  let flow: FlowType;
+  let order: string[];
+  let composed: DemoRecipe | undefined;
+  if (match.length === 1) {
+    ({ flow, order } = match[0]);
+  } else {
+    const base = baseFor(request, all);
+    if ("problem" in base) return { ok: false, problems: [base.problem] };
+    flow = base.flow;
+    order = base.order;
+    composed = { modules: requestModules(request), forks: [...new Set(request.forks)] };
+  }
 
   const forks = forksForFlow(flow);
   const bad = request.demos.flatMap((d) => choiceProblems(forks, flow, d.choices).map((p) => `demo "${d.id}": ${p}`));
@@ -92,7 +125,16 @@ export function planApply(request: DemoRequest, existing: Json | undefined, pare
   if (stray.length) return { ok: false, problems: stray };
 
   const notes: string[] = [];
-  if (have.join() !== order.join()) notes.push(`The request lists its blocks in a different order from ${flow}. The machine follows the recipe's own order.`);
+  if (composed) {
+    // The composed list gets the checks a recipe gets, once per demo, with that demo's picks over the scenario's.
+    const scenario = ALL_SCENARIOS.find((s) => s.flowType === flow)!;
+    const applying = forksForScenario(forks, flow);
+    const orderProblems = request.demos.flatMap((d) =>
+      recipeProblems({ ...composeRecipe(scenario.recipe!, composed!), choices: { ...scenario.recipe!.choices, ...scenario.choices, ...d.choices } }, applying).map((p) => `demo "${d.id}": ${p}`),
+    );
+    if (orderProblems.length) return { ok: false, problems: ["the blocks cannot run in this order:", ...orderProblems] };
+    notes.push(`No existing recipe has these blocks, so the demo runs on ${flow} (content and forks) with its own block list.`);
+  } else if (have.join() !== order.join()) notes.push(`The request lists its blocks in a different order from ${flow}. The machine follows the recipe's own order.`);
 
   const demos: BrandDemo[] = request.demos.map((d) => ({
     id: d.id,
@@ -100,6 +142,7 @@ export function planApply(request: DemoRequest, existing: Json | undefined, pare
     label: d.label,
     ...(d.description ? { description: d.description } : {}),
     ...(Object.keys(d.choices).length ? { choices: d.choices } : {}),
+    ...(composed ? { recipe: composed } : {}),
   }));
 
   const created = !existing;
@@ -117,7 +160,7 @@ export function planApply(request: DemoRequest, existing: Json | undefined, pare
   if (created) notes.push(`Created a minimal brand file that extends "${parent}". It has the brand name and drug name only. Add colors, logos, and copy by hand (docs/BRANDS.md).`);
   else if (!Array.isArray(existing!.demos)) notes.push("The brand file has no demos of its own, so it now lists only these. The parent's demos no longer show.");
 
-  return { ok: true, flow, brand, created, demos, notes };
+  return { ok: true, flow, brand, created, demos, notes, composed: !!composed };
 }
 
 /** New demos replace an entry with the same id and are appended otherwise. The brand's other demos stay. */

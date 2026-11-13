@@ -225,9 +225,9 @@ The Demo Lab at `/demo-lab` has three tabs. Canvas draws each recipe and the bra
 
 ## Apply a demo request
 
-`pnpm demo:apply <client>/<slug>` reads `docs/demos/<client>/<slug>.request.json` (from the Demo Lab canvas) and writes its demos into `brands/<client>/brand.json`, then runs the brand test. If the test fails, the file goes back as it was. Add `--dry` to see the plan only.
+`pnpm demo:apply <client>/<slug>` reads `docs/demos/<client>/<slug>.request.json` (from the Demo Lab canvas) and writes its demos into `brands/<client>/brand.json`, then runs the brand test. If the test fails, the file goes back as it was. Add `--dry` to see the plan only. When the blocks match no existing recipe, apply picks the closest scenario with the same intake and forks, runs the request's blocks on it, and writes them into the demo as `recipe`. The scenario still supplies content. The same ordering checks as a recipe apply, and the brand test re-runs them. A ghost card still needs the generated prompt.
 
-It works only for a request with no ghost cards whose blocks match an existing recipe. It never writes a recipe. A request that matches none goes through the generated prompt instead. A new demo replaces one with the same id, and other demos stay. With no brand file, it makes a minimal one that extends the default brand and sets the brand and drug names. Add colors, logos, and copy by hand.
+It works only for a request with no ghost cards. Blocks that match an existing recipe write no recipe. Blocks that match none are written into the demo as `recipe`, as described above. A request with a ghost card goes through the generated prompt instead. A new demo replaces one with the same id, and other demos stay. With no brand file, it makes a minimal one that extends the default brand and sets the brand and drug names. Add colors, logos, and copy by hand.
 
 ## The provider's PA form
 

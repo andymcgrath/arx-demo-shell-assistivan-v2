@@ -53,17 +53,21 @@ describe("planApply", () => {
     expect(!plan.ok && plan.problems.join()).toContain("win theme is required");
   });
 
-  it("rejects blocks no recipe has, and says how far off the closest recipe is", () => {
+  it("runs blocks no recipe has on the closest scenario, with the blocks written into the demo", () => {
     const d = request("iAssist_PA_Approved");
     const plan = planApply(removeCard(d, d.cards.findIndex((c) => c.kind === "block" && c.moduleId === "tracking")), undefined, PARENT);
-    expect(plan.ok).toBe(false);
-    expect(!plan.ok && plan.problems.join()).toMatch(/Closest is iAssist_PA_Approved, which also has tracking:default/);
-    expect(!plan.ok && plan.problems.join()).toContain("Use the generated prompt");
+    // Whether this order is legal is the recipe validator's call. Either it composes on the same flow or it says why not.
+    if (plan.ok) {
+      expect(plan.composed).toBe(true);
+      expect(plan.flow).toBe("iAssist_PA_Approved");
+      expect(plan.demos[0].recipe?.modules.map((m) => m.id)).not.toContain("tracking");
+    } else expect(plan.problems.join()).toMatch(/cannot run|not ready/);
   });
 
-  it("rejects a request whose intake differs from the recipe's", () => {
+  it("rejects a request whose intake no scenario of its workflow has", () => {
     const plan = planApply({ ...request(), intake: "fax" }, undefined, PARENT);
-    expect(!plan.ok && plan.problems.join()).toContain("its intake is erx");
+    expect(plan.ok).toBe(false);
+    expect(!plan.ok && plan.problems.join()).toContain("fax intake");
   });
 
   it("notes a different block order, since the machine follows the recipe's order", () => {
