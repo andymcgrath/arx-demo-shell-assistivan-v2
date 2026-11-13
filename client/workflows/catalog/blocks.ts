@@ -324,8 +324,8 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
   },
   payment: {
     id: "payment",
-    name: "Pricing and payment",
-    summary: "The patient picks Retail, Mail Order, or self-pay. Self-pay takes a card payment, then the CRM verifies it. Nothing is charged.",
+    name: "Pricing options",
+    summary: "The patient sees the price and picks Retail, Mail Order, or self-pay. Only self-pay, filled by our own pharmacy, takes a card payment, then the CRM verifies it. Nothing is charged.",
     aliases: ["pricing", "pricing options", "self-pay", "cash payment", "checkout", "payment"],
     apps: ["patient", "crm"],
     lane: "patient",

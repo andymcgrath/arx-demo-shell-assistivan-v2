@@ -60,6 +60,22 @@ export const paletteCards = (block: CatalogBlock): PaletteCard[] => {
   );
 };
 
+/**
+ * The cards a person picks from. A variant that reads the same as an earlier one (CoAssist's `default` and iAssist's
+ * `delivery` for the scheduling block) is an alias, so only the first shows. Recipes and matching still use both ids.
+ */
+export const pickerCards = (block: CatalogBlock): PaletteCard[] => {
+  const seen = new Set<string>();
+  return paletteCards(block).filter((c) => !seen.has(c.label) && !!seen.add(c.label));
+};
+
+/** The picker card a recipe's variant shows as. An alias resolves to the first card with the same label. */
+export const pickerVariantId = (block: CatalogBlock, variantId: string | undefined): string | undefined => {
+  const all = paletteCards(block);
+  const label = all.find((c) => c.variantId === variantId)?.label;
+  return all.find((c) => c.label === label)?.variantId;
+};
+
 export const catalogBlock = (id: ModuleId): CatalogBlock => CATALOG_BLOCKS[id];
 
 const forkFor = (forkId: string): ForkDefinition | undefined => ALL_FORKS.find((f) => f.id === forkId);

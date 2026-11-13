@@ -64,7 +64,7 @@ describe("fork receiver lists", () => {
   it("pick the steps that match the recipe", () => {
     const store = [{ id: "payment" }, { id: "pharmacy_selection", props: { variant: "store" } }];
     const internal = [{ id: "payment" }, { id: "scheduling" }];
-    expect(exitSteps("pricing", "retail", store).map((s) => s.label)).toContain("The patient picks a retail store");
+    expect(exitSteps("pricing", "retail", store).map((s) => s.label)).toContain("The patient sees the price and picks a retail store");
     expect(exitSteps("pricing", "retail", internal).map((s) => s.label)).toContain("The patient picks a ship date");
     expect(exitSteps("bi", "pharmacy_covered", internal)).toEqual([]);
   });

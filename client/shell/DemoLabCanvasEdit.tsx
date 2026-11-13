@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CATALOG_BLOCKS, paletteCards, type CatalogApp, type CatalogLane } from "@/workflows/catalog";
+import { CATALOG_BLOCKS, paletteCards, pickerCards, pickerVariantId, type CatalogApp, type CatalogLane } from "@/workflows/catalog";
 import type { CanvasBoard, CanvasCard, CanvasFork } from "@/workflows/catalog/canvas";
 import type { DemoRequest, RequestGhostCard } from "@/workflows/catalog/request";
 import { addDemo, insertReasons, removeDemo, toggleFork, updateDemo } from "@/workflows/catalog/editor";
@@ -111,7 +111,7 @@ export function InsertPanel({ draft, at, demoIndex, onInsert, onGhost, onCancel 
   draft: DemoRequest; at: number; demoIndex: number; onInsert: (c: ReturnType<typeof paletteCards>[number]) => void; onGhost: () => void; onCancel: () => void;
 }) {
   const [q, setQ] = useState("");
-  const all = useMemo(() => Object.values(CATALOG_BLOCKS).flatMap((b) => paletteCards(b).map((c) => ({ c, b }))), []);
+  const all = useMemo(() => Object.values(CATALOG_BLOCKS).flatMap((b) => pickerCards(b).map((c) => ({ c, b }))), []);
   const needle = q.trim().toLowerCase();
   const shown = all.filter(({ c, b }) => !needle || [c.label, b.name, ...b.aliases].some((t) => t.toLowerCase().includes(needle)));
   // Blocks that fit come first. A block that does not fit shows its first reason only.
@@ -158,7 +158,7 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
 }) {
   const owned = forks.filter((f) => f.ownerIndex === card.index);
   const block = card.moduleId ? CATALOG_BLOCKS[card.moduleId] : undefined;
-  const variants = block?.variants ? paletteCards(block) : [];
+  const variants = block?.variants ? pickerCards(block) : [];
   const ghost = card.kind === "ghost";
   return (
     <div data-testid="canvas-detail">
@@ -179,7 +179,7 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
       {variants.length > 1 && (
         <label className="mt-3 block text-xs font-semibold">
           Variant
-          <select className={field} style={{ borderColor: LINE }} value={card.variantId ?? ""} onChange={(e) => onVariant(e.target.value || undefined)}>
+          <select className={field} style={{ borderColor: LINE }} value={(block ? pickerVariantId(block, card.variantId) : card.variantId) ?? ""} onChange={(e) => onVariant(e.target.value || undefined)}>
             {variants.map((v) => (
               <option key={v.variantId ?? "default"} value={v.variantId ?? ""}>{v.label}</option>
             ))}
