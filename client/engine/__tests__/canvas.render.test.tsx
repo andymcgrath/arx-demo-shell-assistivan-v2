@@ -349,3 +349,17 @@ describe("duplicate", () => {
     confirm.mockRestore();
   });
 });
+
+describe("reset and history when edits cancel out", () => {
+  it("explains a disabled Reset and says the edits have no net change", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(view.getAllByTestId("canvas-card")[1]);
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move right"));
+    expect((view.getByRole("button", { name: "Reset" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move left"));
+    const reset = view.getByRole("button", { name: "Reset" }) as HTMLButtonElement;
+    expect(reset.disabled).toBe(true);
+    expect(reset.title).toMatch(/matches the loaded one/);
+    expect(view.getByRole("button", { name: /^History/ }).textContent).toMatch(/2, no net change/);
+  });
+});

@@ -9,14 +9,15 @@ const btn = "rounded border bg-white px-2 py-0.5 text-xs font-semibold text-blac
 export function EditTools() {
   const { history, undo, redo, reset, jumpTo, dirty } = useDraft();
   const [open, setOpen] = useState(false);
+  const edits = history.entries.length - 1;
   const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
   return (
     <div className="relative flex flex-wrap items-center gap-1" role="toolbar" aria-label="Edit tools">
       <button type="button" className={btn} style={{ borderColor: LINE }} disabled={!history.canUndo} onClick={undo}>Undo</button>
       <button type="button" className={btn} style={{ borderColor: LINE }} disabled={!history.canRedo} onClick={redo}>Redo</button>
-      <button type="button" className={btn} style={{ borderColor: LINE }} disabled={!dirty} onClick={reset} title="Go back to the draft as loaded. You can undo it.">Reset</button>
+      <button type="button" className={btn} style={{ borderColor: LINE }} disabled={!dirty} onClick={reset} title={dirty ? "Go back to the draft as loaded. You can undo it." : "The draft matches the loaded one, so there is nothing to reset."}>Reset</button>
       <button type="button" className={btn} style={{ borderColor: open ? INK : LINE }} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        History ({history.entries.length - 1})
+        History ({edits}{!dirty && edits > 0 ? ", no net change" : ""})
       </button>
       {open && (
         <div className="absolute left-0 top-full z-10 mt-1 max-h-72 w-72 overflow-y-auto rounded border bg-white p-2 shadow" style={{ borderColor: INK }} data-testid="canvas-history" aria-label="Change history">
