@@ -99,7 +99,7 @@ function ExitView({ exit, cards, fork, onPick, onClear }: { exit: CanvasExit; ca
           {body}
           {!story && (onPick || onClear) && (
             <button type="button" onClick={exit.selected ? onClear : onPick} disabled={blocked && !exit.selected} className="mt-1 block rounded border px-1.5 py-0.5 text-[11px] font-semibold disabled:opacity-40" style={{ borderColor: exit.selected ? "#ffffff" : INK }}>
-              {exit.selected ? "Unpin: the patient picks" : "Pin for this demo"}
+              {exit.selected ? "Let the patient choose again" : "Always play this branch"}
             </button>
           )}
         </div>
@@ -113,7 +113,7 @@ export function ForkView({ fork, cards, onPick, onClear, highlight }: { fork: Ca
     <div className={`rounded bg-white p-2 ${highlight ? "border-2" : "border"}`} style={{ borderColor: highlight ? "#f59e0b" : LINE, boxShadow: highlight ? "0 0 0 3px #fef3c7" : undefined }} data-testid={`canvas-fork-${fork.id}`} data-chooser={fork.chooser} data-highlight={highlight ? "true" : undefined}>
       <p className="text-xs font-bold">{fork.label}</p>
       <p className="mb-1 text-[11px]" style={{ color: MUTED }}>
-        {fork.chooser === "patient" ? "The patient picks live unless you pin a branch. Each branch is below." : "The story picks. Each outcome is a demo."}
+        {fork.chooser === "patient" ? "The patient chooses on screen. Each branch is below. To skip the choice, set one branch to always play in this demo." : "The story picks. Each outcome is a demo."}
       </p>
       <ul className="space-y-1">
         {fork.exits.map((e) => (

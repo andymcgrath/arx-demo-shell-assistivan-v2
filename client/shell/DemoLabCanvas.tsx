@@ -6,11 +6,11 @@ import { blankDraft, clearPick, demoIdClashes, draftFromScenario, duplicateDemo,
 import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, SOFT, APP_LABEL } from "./DemoLabCanvasParts";
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
-import { emptyRequestFields, RequestPanel } from "./DemoLabCanvasRequest";
+import { emptyRequestFields, ExportInstructions, RequestPanel } from "./DemoLabCanvasRequest";
 import { EditTools } from "./DemoLabCanvasHistory";
 
 /**
- * Demo Lab, Canvas tab. A horizontal row of cards in journey order. Click a card for its detail and its actions. Each fork
+ * Demo Lab, Canvas tab. A vertical timeline of cards in journey order, step 1 at the top. The selected card shows its detail beside it. The right panel is an outline of the steps: click one to jump to its card. Each fork
  * sits under the card that owns it: pick a story fork's outcome per demo, or pin a patient fork's branch. A card the picked
  * outcome no longer feeds stays on the row, disabled. Add a card on either side of any card with the + buttons.
  * Edits go to the shared draft (DemoLabDraft). The request fields (title, client, brand, win theme) open from "Request details".
@@ -70,7 +70,7 @@ export default function CanvasLab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The insert panel lives in the detail panel, so adding a card opens it.
+  // The insert panel lives in the outline panel, so adding a card opens it.
   useEffect(() => { if (insertAt !== null) setDetailOpen(true); }, [insertAt]);
 
   const startBlank = (workflow: (typeof EDITOR_WORKFLOWS)[number]) => {
@@ -116,7 +116,15 @@ export default function CanvasLab() {
     setShownFork(forkId);
     setCardIndex(f.ownerIndex);
     setInsertAt(null);
-    window.setTimeout(() => document.getElementById(`canvas-fork-${forkId}`)?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "center" }), 0);
+    window.setTimeout(() => document.getElementById(`canvas-fork-${forkId}`)?.scrollIntoView?.({ behavior: "smooth", block: "center" }), 0);
+  };
+
+  // The outline: select the card and bring it into view.
+  const goToCard = (i: number) => {
+    setCardIndex(i);
+    setInsertAt(null);
+    setShownFork(null);
+    window.setTimeout(() => document.getElementById(`canvas-card-${i}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
   };
 
   const AddButton = ({ at }: { at: number }) => (
@@ -201,36 +209,55 @@ export default function CanvasLab() {
               <div>
                 <ForkToggles canvas={canvas} edit={edit} onShow={showFork} shown={shownFork} />
                 {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
-                <div className="flex items-start pb-4">
+                <div className="flex flex-col items-start pb-4" data-testid="canvas-timeline">
                   <AddButton at={0} />
                   {canvas.cards.map((c, i) => (
-                    <div key={i} className="flex items-start">
-                      <div className="w-[240px] shrink-0 space-y-2">
-                        <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); setShownFork(null); }} />
-                        {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
-                          <div key={f.id} id={`canvas-fork-${f.id}`}>
-                            <ForkView
-                              fork={f}
-                              cards={canvas.cards}
-                              highlight={shownFork === f.id}
-                              onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
-                              onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
+                    <div key={i} className="flex w-full flex-col items-start">
+                      <div className="flex w-full flex-col items-start gap-4 lg:flex-row">
+                        <div className="w-full max-w-xl space-y-2" id={`canvas-card-${i}`}>
+                          <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); setShownFork(null); }} />
+                          {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
+                            <div key={f.id} id={`canvas-fork-${f.id}`}>
+                              <ForkView
+                                fork={f}
+                                cards={canvas.cards}
+                                highlight={shownFork === f.id}
+                                onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
+                                onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {i === index && (
+                          <section aria-label="Card detail" data-testid="card-detail" className="w-full shrink-0 rounded border bg-white p-3 lg:sticky lg:top-2 lg:w-[380px]" style={{ borderColor: INK }}>
+                            <Detail
+                              card={c}
+                              forks={canvas.forks}
+                              count={canvas.cards.length}
+                              onAddBefore={() => setInsertAt(c.index)}
+                              onAddAfter={() => setInsertAt(c.index + 1)}
+                              onMove={(by) => { edit((d) => moveCard(d, c.index, by)); setCardIndex(c.index + by); }}
+                              onRemove={() => edit((d) => removeCard(d, c.index))}
+                              onVariant={(v) => edit((d) => setVariant(d, c.index, v))}
+                              onGhost={(patch) => edit((d) => updateCard(d, c.index, patch))}
                             />
-                          </div>
-                        ))}
+                          </section>
+                        )}
                       </div>
-                      <span aria-hidden className="mx-1 mt-6 shrink-0 text-lg font-bold" style={{ color: MUTED }}>{i < canvas.cards.length - 1 ? "→" : ""}</span>
-                      <AddButton at={i + 1} />
+                      <div className="my-1 flex items-center gap-2">
+                        <AddButton at={i + 1} />
+                        <span aria-hidden className="text-lg font-bold" style={{ color: MUTED }}>{i < canvas.cards.length - 1 ? "↓" : ""}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </section>
           </main>
-          {!detailOpen && <Strip side="right" label="card detail" onOpen={() => setDetailOpen(true)} />}
-          {detailOpen && <aside className="w-[360px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Card detail">
-            <div className="flex justify-end"><Collapse side="right" label="card detail" onClose={() => setDetailOpen(false)} /></div>
-            {insertAt !== null ? (
+          {!detailOpen && <Strip side="right" label="outline" onOpen={() => setDetailOpen(true)} />}
+          {detailOpen && <aside className="w-[360px] shrink-0 overflow-y-auto border-l bg-white p-4" style={{ borderColor: LINE }} aria-label="Outline">
+            <div className="flex justify-end"><Collapse side="right" label="outline" onClose={() => setDetailOpen(false)} /></div>
+            {insertAt !== null && (
               <InsertPanel
                 draft={draft}
                 at={insertAt}
@@ -239,19 +266,26 @@ export default function CanvasLab() {
                 onInsert={(c) => { edit((d) => insertBlock(d, insertAt, c)); setCardIndex(insertAt); setInsertAt(null); }}
                 onGhost={() => { edit((d) => insertGhost(d, insertAt)); setCardIndex(insertAt); setInsertAt(null); }}
               />
-            ) : card ? (
-              <Detail
-                card={card}
-                forks={canvas.forks}
-                count={canvas.cards.length}
-                onAddBefore={() => setInsertAt(card.index)}
-                onAddAfter={() => setInsertAt(card.index + 1)}
-                onMove={(by) => { edit((d) => moveCard(d, card.index, by)); setCardIndex(card.index + by); }}
-                onRemove={() => edit((d) => removeCard(d, card.index))}
-                onVariant={(v) => edit((d) => setVariant(d, card.index, v))}
-                onGhost={(patch) => edit((d) => updateCard(d, card.index, patch))}
-              />
-            ) : null}
+            )}
+            <nav aria-label="Steps outline" data-testid="outline">
+              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Outline</h4>
+              {canvas.cards.length === 0 && <p className="text-xs" style={{ color: MUTED }}>No cards yet.</p>}
+              <ol className="space-y-0.5">
+                {canvas.cards.map((c, i) => (
+                  <li key={i}>
+                    <button type="button" data-testid="outline-card" aria-current={i === index ? "step" : undefined} onClick={() => goToCard(i)} className="flex w-full items-baseline gap-2 rounded px-2 py-1 text-left text-sm" style={{ background: i === index ? INK : "transparent", color: i === index ? "#ffffff" : INK, opacity: c.disabled.length > 0 ? 0.5 : 1 }}>
+                      <span className="w-5 shrink-0 text-xs font-bold">{i + 1}.</span>
+                      <span className="min-w-0 flex-1">{c.label}{c.disabled.length > 0 && <span className="text-[11px]"> (disabled)</span>}</span>
+                    </button>
+                    {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
+                      <button key={f.id} type="button" data-testid="outline-fork" onClick={() => showFork(f.id)} className="ml-7 block w-[calc(100%-1.75rem)] rounded px-2 py-0.5 text-left text-xs" style={{ color: MUTED }}>
+                        ⑂ {f.label}
+                      </button>
+                    ))}
+                  </li>
+                ))}
+              </ol>
+            </nav>
 
             <section className="mt-6 border-t pt-4" style={{ borderColor: LINE }} aria-label="Export">
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Export</h4>
@@ -276,6 +310,7 @@ export default function CanvasLab() {
                 {busy ? "Exporting" : "Export request and prompt"}
               </button>
               {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}
+              <ExportInstructions draft={draft} newCards={canvas.cards.filter((c) => c.kind === "ghost").length} />
               {result && !result.ok && <ul className="mt-3 list-disc pl-4 text-xs" data-testid="export-failed">{result.problems.map((p) => <li key={p}>{p}</li>)}</ul>}
             </section>
           </aside>}

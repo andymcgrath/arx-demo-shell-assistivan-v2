@@ -171,3 +171,21 @@ export const requirementLabel = (req: string): string =>
       return label ? `${block.name} (${label})` : block.name;
     })
     .join(" or ");
+
+/** Where the plain name differs from the key spelled out. Every other key is spelled out: `paymentVerified` reads "Payment verified". */
+const FACT_LABELS: Record<string, string> = {
+  papActive: "Patient assistance program active",
+  papTransferred: "Transferred to the patient assistance program",
+  selectedPharmacy: "Pharmacy selected",
+  paSubmitted: "Prior authorization submitted",
+  paNotified: "Prior authorization result sent",
+  cashOffered: "Cash offer made",
+  copayClaimSubmitted: "Copay claim submitted",
+};
+
+/** A key a block sets, in sales words. Used on the canvas card for "Passes on". */
+export const factLabel = (key: string): string => {
+  if (FACT_LABELS[key]) return FACT_LABELS[key];
+  const spaced = key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+};

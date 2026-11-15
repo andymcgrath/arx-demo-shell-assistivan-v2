@@ -89,3 +89,42 @@ export function RequestPanel({ draft, edit }: { draft: DemoRequest; edit: (fn: (
     </section>
   );
 }
+
+/** What to do with the two exported files. Collapsed by default. The names and the path (script or Claude Code) follow the draft. */
+export function ExportInstructions({ draft, newCards }: { draft: DemoRequest; newCards: number }) {
+  const client = draft.client.trim() || "<client>";
+  const slug = draft.slug.trim() || "<request name>";
+  const dir = `docs/demos/${client}`;
+  return (
+    <details className="mt-4 rounded border text-xs" style={{ borderColor: LINE }} data-testid="export-instructions">
+      <summary className="cursor-pointer px-3 py-2 font-semibold">Instructions: what to do with the two files</summary>
+      <div className="space-y-2 border-t px-3 py-2" style={{ borderColor: LINE }}>
+        <p>Export writes two files into this project, under <code>{dir}/</code>. Nothing is downloaded, and it only works on the dev server.</p>
+        <ul className="list-disc pl-4">
+          <li><code>{slug}.request.json</code> is the spec: the recipe, the forks and the demos. It is the source of truth. Commit it with the demo.</li>
+          <li><code>{slug}.prompt.md</code> is the instruction for Claude Code. It points at the spec.</li>
+        </ul>
+        {newCards === 0 ? (
+          <>
+            <p className="font-semibold">This request has no new cards, so no model is needed:</p>
+            <ol className="list-decimal pl-4">
+              <li>Preview it: <code>pnpm demo:apply {client}/{slug} --dry</code></li>
+              <li>Apply it: <code>pnpm demo:apply {client}/{slug}</code>. It writes the demos into <code>brands/{client}/brand.json</code> and runs the brand test.</li>
+              <li>Review the diff, then commit it on a short-lived branch.</li>
+            </ol>
+          </>
+        ) : (
+          <>
+            <p className="font-semibold">This request has {newCards} new card{newCards === 1 ? "" : "s"}, so Claude Code builds them:</p>
+            <ol className="list-decimal pl-4">
+              <li>Open Claude Code in this project, on a short-lived branch.</li>
+              <li>Paste in the contents of <code>{slug}.prompt.md</code>.</li>
+              <li>It builds each new block, adds the tests, and stops to ask on any open question. Answer it. Do not let it guess.</li>
+              <li>Check that <code>pnpm test</code> passes, review the diff, then commit.</li>
+            </ol>
+          </>
+        )}
+      </div>
+    </details>
+  );
+}

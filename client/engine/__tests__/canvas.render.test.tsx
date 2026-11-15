@@ -37,20 +37,20 @@ describe("the canvas tab", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(view.getByRole("button", { name: "Hide demo list" }));
     expect(view.queryByLabelText("Demo list")).toBeNull();
-    fireEvent.click(view.getByRole("button", { name: "Hide card detail" }));
-    expect(view.queryByLabelText("Card detail")).toBeNull();
+    fireEvent.click(view.getByRole("button", { name: "Hide outline" }));
+    expect(view.queryByLabelText("Outline")).toBeNull();
     expect(view.getAllByTestId("canvas-card").length).toBeGreaterThan(4);
-    fireEvent.click(view.getByRole("button", { name: "Show card detail" }));
-    expect(view.getByLabelText("Card detail")).toBeDefined();
+    fireEvent.click(view.getByRole("button", { name: "Show outline" }));
+    expect(view.getByLabelText("Outline")).toBeDefined();
     fireEvent.click(view.getByRole("button", { name: "Show demo list" }));
     expect(view.getByLabelText("Demo list")).toBeDefined();
   });
 
   it("opens the detail panel when a card is added while it is collapsed", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: "Hide card detail" }));
+    fireEvent.click(view.getByRole("button", { name: "Hide outline" }));
     fireEvent.click(view.getAllByTestId("canvas-add")[1]);
-    expect(view.getByLabelText("Card detail")).toBeDefined();
+    expect(view.getByLabelText("Outline")).toBeDefined();
   });
 
   it("opens a card's detail when it is clicked", () => {
@@ -59,6 +59,51 @@ describe("the canvas tab", () => {
     fireEvent.click(second);
     expect(within(view.getByTestId("canvas-detail")).getByText(/Card 2/)).toBeDefined();
     expect(second.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("shows the detail beside the selected card, not in the side panel", () => {
+    const view = open(/CoAssist Copay/i);
+    expect(within(view.getByLabelText("Outline")).queryByTestId("canvas-detail")).toBeNull();
+    expect(within(view.getByTestId("card-detail")).getByText(/Card 1/)).toBeDefined();
+    fireEvent.click(view.getAllByTestId("canvas-card")[2]);
+    expect(within(view.getByTestId("card-detail")).getByText(/Card 3/)).toBeDefined();
+    expect(view.getAllByTestId("card-detail")).toHaveLength(1);
+  });
+
+  it("lists every card in an outline, and a click selects that card", () => {
+    const view = open(/CoAssist Copay/i);
+    const cards = view.getAllByTestId("canvas-card");
+    const rows = view.getAllByTestId("outline-card");
+    expect(rows).toHaveLength(cards.length);
+    fireEvent.click(rows[3]);
+    expect(cards[3].getAttribute("aria-pressed")).toBe("true");
+    expect(rows[3].getAttribute("aria-current")).toBe("step");
+    expect(within(view.getByTestId("card-detail")).getByText(/Card 4/)).toBeDefined();
+  });
+
+  it("explains the two exported files in a collapsed instructions section", () => {
+    const view = open(/CoAssist Copay/i);
+    const box = view.getByTestId("export-instructions") as HTMLDetailsElement;
+    expect(box.open).toBe(false);
+    expect(box.textContent).toMatch(/request\.json/);
+    expect(box.textContent).toMatch(/prompt\.md/);
+    expect(box.textContent).toMatch(/pnpm demo:apply/);
+  });
+
+  it("labels the card detail in plain words, with no raw keys", () => {
+    const view = open(/CoAssist Copay/i);
+    const detail = view.getByTestId("canvas-detail");
+    for (const h of ["What happens", "Needs first", "Passes on"]) expect(within(detail).getByText(h)).toBeDefined();
+    expect(detail.textContent).not.toMatch(/consentVerified/);
+    expect(detail.textContent).toMatch(/Consent verified/);
+    fireEvent.click(view.getAllByTestId("canvas-card")[4]);
+    expect(within(view.getByTestId("canvas-detail")).getByText("Branches from this card")).toBeDefined();
+  });
+
+  it("an outline fork entry highlights the fork without editing", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(view.getAllByTestId("outline-fork")[0]);
+    expect(view.container.querySelector("[data-highlight=true]")).not.toBeNull();
   });
 
   it("draws a patient fork's branches with their steps, and a story fork with its picked outcome", () => {
@@ -95,7 +140,7 @@ describe("editing on the canvas", () => {
     const view = open(/CoAssist Copay/i);
     const first = modules(view);
     fireEvent.click(cards(view)[1]);
-    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move right"));
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move down"));
     expect(modules(view)[2]).toBe(first[1]);
     fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Remove"));
     expect(cards(view)).toHaveLength(first.length - 1);
@@ -114,13 +159,13 @@ describe("editing on the canvas", () => {
     expect(cards(view)).toHaveLength(total);
   });
 
-  it("pins a patient fork's branch for the demo, and unpins it", () => {
+  it("sets a patient fork's branch to always play in the demo, and lets the patient choose again", () => {
     const view = open(/CoAssist Copay/i);
     const pricing = view.getByTestId("canvas-fork-pricing");
     const retail = () => within(pricing).getAllByTestId("canvas-exit").find((e) => e.getAttribute("data-exit") === "retail")!;
-    fireEvent.click(within(retail()).getByText("Pin for this demo"));
+    fireEvent.click(within(retail()).getByText("Always play this branch"));
     expect(retail().getAttribute("data-selected")).toBe("true");
-    fireEvent.click(within(retail()).getByText(/Unpin/));
+    fireEvent.click(within(retail()).getByText(/Let the patient choose again/));
     expect(retail().getAttribute("data-selected")).toBe("false");
   });
 
@@ -198,7 +243,7 @@ describe("the request details and blank starts", () => {
     // Drag tracking off the end: move it left so it is no longer last.
     const cards = () => view.getAllByTestId("canvas-card");
     fireEvent.click(cards()[cards().length - 1]);
-    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move left"));
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move up"));
     const flagged = view.getAllByTestId("card-issue");
     expect(flagged.length).toBeGreaterThan(0);
     expect(flagged[0].textContent).toMatch(/must be last/);
@@ -308,7 +353,7 @@ describe("a narrow window", () => {
     setWidth(800);
     const view = render(<DraftProvider><CanvasLab /></DraftProvider>);
     expect(view.queryByLabelText("Demo list")).toBeNull();
-    expect(view.queryByLabelText("Card detail")).toBeNull();
+    expect(view.queryByLabelText("Outline")).toBeNull();
     expect(view.getAllByTestId("canvas-card").length).toBeGreaterThan(4);
   });
 });
@@ -354,9 +399,9 @@ describe("reset and history when edits cancel out", () => {
   it("explains a disabled Reset and says the edits have no net change", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(view.getAllByTestId("canvas-card")[1]);
-    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move right"));
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move down"));
     expect((view.getByRole("button", { name: "Reset" }) as HTMLButtonElement).disabled).toBe(false);
-    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move left"));
+    fireEvent.click(within(view.getByTestId("canvas-detail")).getByText("Move up"));
     const reset = view.getByRole("button", { name: "Reset" }) as HTMLButtonElement;
     expect(reset.disabled).toBe(true);
     expect(reset.title).toMatch(/matches the loaded one/);
