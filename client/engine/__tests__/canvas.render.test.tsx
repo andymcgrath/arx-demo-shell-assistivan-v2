@@ -100,6 +100,46 @@ describe("the canvas tab", () => {
     expect(within(view.getByTestId("canvas-detail")).getByText("Branches from this card")).toBeDefined();
   });
 
+  it("marks each card's type with a lane icon, and a new card with a sparkle", () => {
+    const view = open(/CoAssist Copay/i);
+    for (const card of view.getAllByTestId("canvas-card")) expect(card.querySelector("[data-lane-icon]")).not.toBeNull();
+    const lanes = new Set(view.getAllByTestId("canvas-card").map((c) => c.querySelector("[data-lane-icon]")!.getAttribute("data-lane-icon")));
+    expect(lanes.size).toBeGreaterThan(1);
+    fireEvent.click(view.getAllByTestId("canvas-add")[1]);
+    fireEvent.click(view.getByRole("button", { name: /new card|something new|ghost/i }));
+    expect(view.container.querySelector("[data-lane-icon=new]")).not.toBeNull();
+  });
+
+  it("draws a fork as a decision, apart from the card types, and names the agent lane Case manager", () => {
+    const view = open(/CoAssist Copay/i);
+    const bi = view.getByTestId("canvas-fork-bi");
+    expect(bi.querySelector("[data-fork-icon]")).not.toBeNull();
+    expect(bi.textContent).toMatch(/Decision/);
+    expect(view.container.textContent).not.toMatch(/\bAgent\b/);
+    expect(view.container.textContent).toMatch(/Case manager/);
+  });
+
+  it("hangs each decision off the card that owns it", () => {
+    const view = open(/CoAssist Copay/i);
+    const bi = view.getByTestId("canvas-fork-bi");
+    const rail = bi.closest("[data-testid^=fork-rail-]")!;
+    expect(rail).not.toBeNull();
+    expect(rail.previousElementSibling?.getAttribute("data-testid")).toBe("canvas-card");
+    expect(rail.previousElementSibling?.textContent).toMatch(/EHR referral/);
+  });
+
+  it("raises variants: a pill on cards that have them, and a boxed picker in the detail", () => {
+    const view = open(/CoAssist Copay/i);
+    const cards = view.getAllByTestId("canvas-card");
+    const withPill = cards.filter((c) => c.querySelector("[data-testid=card-variants]"));
+    expect(withPill.length).toBeGreaterThan(0);
+    expect(withPill.length).toBeLessThan(cards.length + 1);
+    fireEvent.click(withPill[0]);
+    const picker = within(view.getByTestId("card-detail")).getByTestId("variant-picker");
+    expect(within(picker).getByRole("combobox", { name: "Variant" })).toBeDefined();
+    expect(picker.textContent).toMatch(/ways to play this step/);
+  });
+
   it("an outline fork entry highlights the fork without editing", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(view.getAllByTestId("outline-fork")[0]);

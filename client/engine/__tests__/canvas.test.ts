@@ -116,3 +116,17 @@ describe("canvas for every brand's demos", () => {
     });
   }
 });
+
+describe("card names and lanes", () => {
+  it("shows no AI-sounding Agent in a card's words, and APA is led by the prescriber", async () => {
+    const { CATALOG_BLOCKS } = await import("@/workflows/catalog");
+    const words: string[] = [];
+    for (const b of Object.values(CATALOG_BLOCKS)) {
+      words.push(b.name, b.summary);
+      for (const v of b.variants ?? []) words.push(v.label, v.summary, ...(v.steps ?? []).map((s) => s.label));
+      for (const st of b.steps ?? []) words.push(st.label);
+    }
+    expect(words.filter((w) => /\bagents?\b/i.test(w))).toEqual([]);
+    expect(CATALOG_BLOCKS.prior_authorization.variants?.find((v) => v.id === "apa")?.lane).toBe("hcp");
+  });
+});

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GitFork, Layers, Plus, Trash2 } from "lucide-react";
 import { CATALOG_BLOCKS, factLabel, paletteCards, pickerCards, pickerVariantId, type CatalogApp, type CatalogLane } from "@/workflows/catalog";
 import type { CanvasBoard, CanvasCard, CanvasFork } from "@/workflows/catalog/canvas";
 import type { DemoRequest, RequestGhostCard } from "@/workflows/catalog/request";
 import { addDemo, insertReasons, removeDemo, toggleFork, updateDemo } from "@/workflows/catalog/editor";
-import { APP_LABEL, Chip, INK, LANE_COLOR, LANE_LABEL, LINE, MUTED, TRIGGER_LABEL } from "./DemoLabCanvasParts";
+import { APP_LABEL, Chip, INK, LANE_COLOR, LANE_ICON, FORK_COLOR, LANE_LABEL, LaneBadge, VARIANT_COLOR, LINE, MUTED, TRIGGER_LABEL } from "./DemoLabCanvasParts";
 
 /** The canvas's editing pieces: the demo bar, the fork toggles, the insert panel, and the card detail with its actions. */
 
@@ -67,7 +67,7 @@ export function ForkToggles({ canvas, edit, onShow, shown }: { canvas: CanvasBoa
   const chip = (id: string) => ({ borderColor: shown === id ? "#f59e0b" : INK, background: shown === id ? "#fef3c7" : "#ffffff" });
   return (
     <section className="mb-3 flex flex-wrap items-center gap-2 text-xs" aria-label="Forks in this demo">
-      <span className="font-bold uppercase tracking-wide" style={{ color: MUTED }}>Branch points</span>
+      <span className="font-bold uppercase tracking-wide" style={{ color: MUTED }}><GitFork size={13} aria-hidden className="mr-1 inline" style={{ color: FORK_COLOR }} />Branch points</span>
       {canvas.forks.map((f) =>
         f.id === "bi" ? (
           <button key={f.id} type="button" className="rounded px-2 py-0.5 text-xs font-semibold text-white" style={{ background: INK, outline: shown === f.id ? "2px solid #f59e0b" : undefined }} onClick={() => onShow(f.id)} aria-label={`Show where the ${f.label} fork sits`} aria-pressed={shown === f.id}>
@@ -164,13 +164,32 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
   const ghost = card.kind === "ghost";
   return (
     <div data-testid="canvas-detail">
-      <p className="text-[11px] font-bold uppercase" style={{ color: LANE_COLOR[card.lane] }}>
-        Card {card.index + 1} · {LANE_LABEL[card.lane]} · {TRIGGER_LABEL[card.trigger]}
-      </p>
-      <h3 className="text-base font-bold leading-tight">{card.label}</h3>
+      <div className="flex items-center gap-2">
+        <LaneBadge lane={card.lane} ghost={ghost} />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase" style={{ color: LANE_COLOR[card.lane] }}>
+            Card {card.index + 1} · {LANE_LABEL[card.lane]} · {TRIGGER_LABEL[card.trigger]}
+          </p>
+          <h3 className="text-base font-bold leading-tight">{card.label}</h3>
+        </div>
+      </div>
       {card.blockName && card.label !== card.blockName && <p className="text-xs" style={{ color: MUTED }}>{card.blockName}</p>}
 
-      <div className="mt-2 flex flex-wrap gap-1" aria-label="Card actions">
+      {variants.length > 1 && (
+        <div className="mt-3 border-t pt-3" style={{ borderColor: LINE }} data-testid="variant-picker">
+          <label className="block text-xs font-bold uppercase tracking-wide" style={{ color: VARIANT_COLOR }}>
+            <span className="mb-1 flex items-center gap-1.5"><Layers size={14} aria-hidden />Variant · {variants.length} ways to play this step</span>
+            <select className="w-full rounded border-2 bg-white px-2 py-1.5 text-sm font-semibold normal-case tracking-normal text-black" style={{ borderColor: VARIANT_COLOR }} value={(block ? pickerVariantId(block, card.variantId) : card.variantId) ?? ""} onChange={(e) => onVariant(e.target.value || undefined)} aria-label="Variant">
+              {variants.map((v) => (
+                <option key={v.variantId ?? "default"} value={v.variantId ?? ""}>{v.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
+      <div className="mt-3 border-t pt-3" style={{ borderColor: LINE }} data-testid="detail-actions">
+      <div className="flex flex-wrap gap-1" aria-label="Card actions">
         <button type="button" className={act} style={{ borderColor: LINE }} onClick={onAddBefore} title="Insert a new card above this one"><Plus size={13} aria-hidden />Add above</button>
         <button type="button" className={act} style={{ borderColor: LINE }} onClick={onAddAfter} title="Insert a new card below this one"><Plus size={13} aria-hidden />Add below</button>
         <button type="button" className={act} style={{ borderColor: LINE }} disabled={card.index === 0} onClick={() => onMove(-1)} title="Move this card up, earlier in the demo"><ArrowUp size={13} aria-hidden />Move up</button>
@@ -178,16 +197,6 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
         <button type="button" className={act} style={{ borderColor: INK }} onClick={onRemove} title="Remove this card from the recipe"><Trash2 size={13} aria-hidden />Remove</button>
       </div>
 
-      {variants.length > 1 && (
-        <label className="mt-3 block text-xs font-semibold">
-          Variant
-          <select className={field} style={{ borderColor: LINE }} value={(block ? pickerVariantId(block, card.variantId) : card.variantId) ?? ""} onChange={(e) => onVariant(e.target.value || undefined)}>
-            {variants.map((v) => (
-              <option key={v.variantId ?? "default"} value={v.variantId ?? ""}>{v.label}</option>
-            ))}
-          </select>
-        </label>
-      )}
 
       {ghost && (
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -225,18 +234,23 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
           <ul className="list-disc pl-4">{card.disabled.map((d) => <li key={d}>{d}</li>)}</ul>
         </div>
       )}
-      <h4 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>What happens</h4>
+      </div>
+
+      <div className="mt-3 border-t pt-3" style={{ borderColor: LINE }} data-testid="detail-steps">
+      <h4 className="mb-1 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>What happens</h4>
       <ol className="space-y-1">
         {card.steps.map((s, i) => (
           <li key={i} className="text-xs">
-            <span className="mr-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-bold text-white" style={{ background: LANE_COLOR[s.lane] }}>{LANE_LABEL[s.lane]}</span>
+            <span className="mr-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold text-white" style={{ background: LANE_COLOR[s.lane] }}>{(() => { const I = LANE_ICON[s.lane]; return <I size={11} aria-hidden />; })()}{LANE_LABEL[s.lane]}</span>
             <Chip strong>{TRIGGER_LABEL[s.trigger]}</Chip> {s.label}
           </li>
         ))}
       </ol>
+      </div>
+      {(!ghost || owned.length > 0) && <div className="mt-3 border-t pt-3" style={{ borderColor: LINE }} data-testid="detail-links">
       {!ghost && (
         <>
-          <h4 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Needs first</h4>
+          <h4 className="mb-1 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Needs first</h4>
           <p className="text-xs">{card.inputs.length ? card.inputs.join(", ") : "Nothing. This card can run first."}</p>
           <h4 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Passes on</h4>
           <p className="text-xs">{card.outputs.length ? card.outputs.map(factLabel).join(", ") : "Nothing later cards depend on."}</p>
@@ -244,10 +258,11 @@ export function Detail({ card, forks, count, onMove, onRemove, onVariant, onGhos
       )}
       {owned.length > 0 && (
         <>
-          <h4 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Branches from this card</h4>
+          <h4 className="mb-1 mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}><GitFork size={12} aria-hidden className="mr-1 inline" style={{ color: FORK_COLOR }} />Branches from this card</h4>
           <p className="text-xs">{owned.map((f) => f.label).join(", ")}</p>
         </>
       )}
+      </div>}
     </div>
   );
 }

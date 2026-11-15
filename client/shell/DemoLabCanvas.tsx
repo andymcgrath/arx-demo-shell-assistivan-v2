@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { GitFork, Sparkles } from "lucide-react";
 import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
 import { blankDraft, clearPick, demoIdClashes, draftFromScenario, duplicateDemo, slugOf, EDITOR_WORKFLOWS, insertBlock, insertGhost, moveCard, removeCard, requestBrand, setPick, setVariant, updateCard } from "@/workflows/catalog/editor";
-import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, SOFT, APP_LABEL } from "./DemoLabCanvasParts";
+import { CardView, Chip, ForkView, Header, INK, LINE, MUTED, SOFT, APP_LABEL, FORK_COLOR, LANE_COLOR, LANE_ICON } from "./DemoLabCanvasParts";
 import { DemoBar, Detail, ForkToggles, InsertPanel } from "./DemoLabCanvasEdit";
 import { useDraft } from "./DemoLabDraft";
 import { emptyRequestFields, ExportInstructions, RequestPanel } from "./DemoLabCanvasRequest";
@@ -214,19 +215,25 @@ export default function CanvasLab() {
                   {canvas.cards.map((c, i) => (
                     <div key={i} className="flex w-full flex-col items-start">
                       <div className="flex w-full flex-col items-start gap-4 lg:flex-row">
-                        <div className="w-full max-w-xl space-y-2" id={`canvas-card-${i}`}>
+                        <div className="w-full max-w-xl" id={`canvas-card-${i}`}>
                           <CardView card={c} selected={i === index} onSelect={() => { setCardIndex(i); setInsertAt(null); setShownFork(null); }} />
-                          {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
-                            <div key={f.id} id={`canvas-fork-${f.id}`}>
-                              <ForkView
-                                fork={f}
-                                cards={canvas.cards}
-                                highlight={shownFork === f.id}
-                                onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
-                                onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
-                              />
+                          {canvas.forks.some((f) => f.ownerIndex === i) && (
+                            // The decision hangs off the card above it: a rail down from the card, a tick into each fork.
+                            <div className="ml-6 space-y-2 border-l-2 pb-1 pl-5 pt-2" style={{ borderColor: FORK_COLOR }} data-testid={`fork-rail-${i}`}>
+                              {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
+                                <div key={f.id} id={`canvas-fork-${f.id}`} className="relative">
+                                  <span aria-hidden className="absolute -left-5 top-6 w-5 border-t-2" style={{ borderColor: FORK_COLOR }} />
+                                  <ForkView
+                                    fork={f}
+                                    cards={canvas.cards}
+                                    highlight={shownFork === f.id}
+                                    onPick={(exitId) => edit((d) => setPick(d, active, f.id, exitId))}
+                                    onClear={(forkId) => edit((d) => clearPick(d, active, forkId))}
+                                  />
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
                         {i === index && (
                           <section aria-label="Card detail" data-testid="card-detail" className="w-full shrink-0 rounded border bg-white p-3 lg:sticky lg:top-2 lg:w-[380px]" style={{ borderColor: INK }}>
@@ -275,11 +282,12 @@ export default function CanvasLab() {
                   <li key={i}>
                     <button type="button" data-testid="outline-card" aria-current={i === index ? "step" : undefined} onClick={() => goToCard(i)} className="flex w-full items-baseline gap-2 rounded px-2 py-1 text-left text-sm" style={{ background: i === index ? INK : "transparent", color: i === index ? "#ffffff" : INK, opacity: c.disabled.length > 0 ? 0.5 : 1 }}>
                       <span className="w-5 shrink-0 text-xs font-bold">{i + 1}.</span>
+                      {(() => { const I = c.kind === "ghost" ? Sparkles : LANE_ICON[c.lane]; return <I size={14} aria-hidden className="shrink-0 self-center" style={{ color: i === index ? "#ffffff" : LANE_COLOR[c.lane] }} />; })()}
                       <span className="min-w-0 flex-1">{c.label}{c.disabled.length > 0 && <span className="text-[11px]"> (disabled)</span>}</span>
                     </button>
                     {canvas.forks.filter((f) => f.ownerIndex === i).map((f) => (
                       <button key={f.id} type="button" data-testid="outline-fork" onClick={() => showFork(f.id)} className="ml-7 block w-[calc(100%-1.75rem)] rounded px-2 py-0.5 text-left text-xs" style={{ color: MUTED }}>
-                        ⑂ {f.label}
+                        <GitFork size={12} aria-hidden className="mr-1 inline" style={{ color: FORK_COLOR }} />{f.label}
                       </button>
                     ))}
                   </li>
