@@ -14,10 +14,14 @@ import { EditTools } from "./DemoLabCanvasHistory";
  * Demo Lab, Canvas tab. A vertical timeline of cards in journey order, step 1 at the top. The selected card shows its detail beside it. The right panel is an outline of the steps: click one to jump to its card. Each fork
  * sits under the card that owns it: pick a story fork's outcome per demo, or pin a patient fork's branch. A card the picked
  * outcome no longer feeds stays on the row, disabled. Add a card on either side of any card with the + buttons.
- * Edits go to the shared draft (DemoLabDraft). The request fields (title, client, brand, win theme) open from "Request details".
+ * Edits go to the shared draft (DemoLabDraft). The request fields (title, client, brand, win theme) open from "Build request".
  * Nothing is saved until export.
  * The canvas plan: docs/plans/PLAN_DEMO_LAB_CANVAS.md.
  */
+
+/** One line under a demo list heading. Demos come from the brand file. Recipes are the built-in scenarios. */
+const GROUP_NOTE = (group: string): string | undefined =>
+  group === "Recipes" ? "Starting points. Pick one to start a draft from it." : group.startsWith("Demos in ") ? "The demos the client picks from. Pick one to edit it." : undefined;
 
 /** A collapsed side panel is a thin strip with one button, so the card row can use the width. */
 const Strip = ({ side, label, onOpen }: { side: "left" | "right"; label: string; onOpen: () => void }) => (
@@ -61,7 +65,13 @@ export default function CanvasLab() {
   const [detailOpen, setDetailOpen] = useState(roomy);
   const groups = [...new Set(items.map((i) => i.group))];
 
-  const fromItem = (it: Item) => draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
+  // The list number ("1. CoAssist DTP") orders the dropdown. It is not part of the demo's name or its file name.
+  // The demo entry keeps its original label and id, so applying still replaces the brand file's entry.
+  const fromItem = (it: Item) => {
+    const d = draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
+    const name = it.title.replace(/^\d+\.\s*/, "");
+    return d && name && name !== it.title ? { ...d, title: name, slug: slugOf(name) } : d;
+  };
 
   // The first time the lab opens, start from the first entry that has a recipe.
   useEffect(() => {
@@ -141,7 +151,9 @@ export default function CanvasLab() {
         <Collapse side="left" label="demo list" onClose={() => setListOpen(false)} />
         {groups.map((g) => (
           <div key={g} className="mb-4">
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>{g}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>{g}</h2>
+            {GROUP_NOTE(g) && <p className="mb-2 text-[11px]" style={{ color: MUTED }} data-testid="group-note">{GROUP_NOTE(g)}</p>}
+            {!GROUP_NOTE(g) && <div className="mb-2" />}
             <ol>
               {items.map((it) =>
                 it.group !== g ? null : (
@@ -195,7 +207,7 @@ export default function CanvasLab() {
                 <Header canvas={canvas} />
                 <button type="button" onClick={() => setShowRequest((v) => !v)} aria-expanded={showRequest} aria-controls="request-details-panel" className="mb-2 inline-flex items-center gap-2 rounded border px-2 py-1 text-xs font-semibold" style={{ borderColor: INK, background: showRequest ? SOFT : "#ffffff" }}>
                   <span aria-hidden className="inline-block transition-transform" style={{ transform: showRequest ? "rotate(90deg)" : "none" }}>▸</span>
-                  {showRequest ? "Hide request details" : "Show request details"}
+                  {showRequest ? "Hide build request" : "Show build request"}
                   {emptyRequestFields(draft).length > 0 ? ` (${emptyRequestFields(draft).length} to fill)` : ""}
                 </button>
                 {showRequest && <div id="request-details-panel"><RequestPanel draft={draft} edit={edit} /></div>}
@@ -308,14 +320,14 @@ export default function CanvasLab() {
                 <div role="alert" className="mb-3 rounded border p-3 text-xs" style={{ borderColor: INK }} data-testid="export-problems">
                   <p className="mb-1 font-semibold">Export is blocked until these are fixed:</p>
                   <ul className="list-disc pl-4">{canvas.exportProblems.map((p) => <li key={p}>{p}</li>)}</ul>
-                  <p className="mt-1" style={{ color: MUTED }}>Fill the rest under "Request details".</p>
-                  <button type="button" className="mt-2 rounded border px-2 py-0.5 text-xs font-semibold" style={{ borderColor: INK }} onClick={() => { setShowRequest(true); window.setTimeout(() => document.querySelector("[data-testid=request-panel]")?.scrollIntoView?.({ block: "center" }), 0); }}>Open Request details</button>
+                  <p className="mt-1" style={{ color: MUTED }}>Fill the rest under "Build request".</p>
+                  <button type="button" className="mt-2 rounded border px-2 py-0.5 text-xs font-semibold" style={{ borderColor: INK }} onClick={() => { setShowRequest(true); window.setTimeout(() => document.querySelector("[data-testid=request-panel]")?.scrollIntoView?.({ block: "center" }), 0); }}>Open build request</button>
                 </div>
               ) : (
                 <p className="mb-3 text-xs" style={{ color: MUTED }}>Nothing blocks the export.</p>
               )}
               <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy} onClick={send} className="rounded px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: INK }}>
-                {busy ? "Exporting" : "Export request and prompt"}
+                {busy ? "Exporting" : "Export the build files"}
               </button>
               {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}
               <ExportInstructions draft={draft} newCards={canvas.cards.filter((c) => c.kind === "ghost").length} />

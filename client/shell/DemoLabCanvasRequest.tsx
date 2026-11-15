@@ -3,19 +3,19 @@ import type { DemoRequest } from "@/workflows/catalog/request";
 import { suggestWinTheme } from "@/workflows/catalog/editor";
 import { LINE, MUTED } from "./DemoLabCanvasParts";
 
-/** The request fields the export needs: title, client, file name, intake, win theme, brand, documents, open questions. */
+/** The build request fields: demo name, client, file name, how the referral arrives, win theme, brand, documents, what is still to confirm. */
 
 const field = "w-full rounded border px-2 py-1 text-sm";
 
 /** The required fields that are still empty, in sales words. */
 export function emptyRequestFields(d: DemoRequest): string[] {
   const out: string[] = [];
-  if (!d.title.trim()) out.push("title");
+  if (!d.title.trim()) out.push("demo name");
   if (!d.client.trim()) out.push("client");
-  if (!d.slug.trim()) out.push("request name");
+  if (!d.slug.trim()) out.push("file name");
   if (!d.winTheme.trim()) out.push("win theme");
-  if (!d.brand.name.trim()) out.push("brand name");
-  if (!d.brand.drug.trim()) out.push("brand drug");
+  if (!d.brand.name.trim()) out.push("client brand name");
+  if (!d.brand.drug.trim()) out.push("drug name");
   return out;
 }
 
@@ -23,7 +23,7 @@ export function emptyRequestFields(d: DemoRequest): string[] {
  * A list typed one item per line. The text stays as typed, so Enter makes a new line. The draft gets the non-empty lines.
  * When the draft changes from outside (another entry loaded), the text follows.
  */
-function LinesField({ label, rows, value, onChange }: { label: string; rows: number; value: string[]; onChange: (lines: string[]) => void }) {
+function LinesField({ label, hint, rows, value, onChange }: { label: string; hint?: string; rows: number; value: string[]; onChange: (lines: string[]) => void }) {
   const [text, setText] = useState(value.join("\n"));
   const parse = (t: string) => t.split("\n").filter((l) => l.trim());
   useEffect(() => {
@@ -31,60 +31,75 @@ function LinesField({ label, rows, value, onChange }: { label: string; rows: num
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value.join("\n")]);
   return (
-    <label className="col-span-2 text-xs font-semibold">
-      {label}
-      <textarea className={field} style={{ borderColor: LINE }} rows={rows} value={text} onChange={(e) => { setText(e.target.value); onChange(parse(e.target.value)); }} />
-    </label>
+    <div className="col-span-2 text-xs">
+      <label className="block font-semibold">
+        {label}
+        <textarea className={field} style={{ borderColor: LINE }} rows={rows} value={text} onChange={(e) => { setText(e.target.value); onChange(parse(e.target.value)); }} />
+      </label>
+      {hint && <p className="mt-1" style={{ color: MUTED }}>{hint}</p>}
+    </div>
+  );
+}
+
+/** A labelled field with an optional hint under it. The hint is tied to the control for screen readers. */
+function Field({ label, hint, wide, children }: { label: string; hint?: string; wide?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`${wide ? "col-span-2 " : ""}text-xs`}>
+      <label className="block font-semibold">
+        {label}
+        {children}
+      </label>
+      {hint && <p className="mt-1" style={{ color: MUTED }}>{hint}</p>}
+    </div>
   );
 }
 
 export function RequestPanel({ draft, edit }: { draft: DemoRequest; edit: (fn: (d: DemoRequest) => DemoRequest) => void }) {
   const set = <K extends keyof DemoRequest>(key: K, value: DemoRequest[K]) => edit((d) => ({ ...d, [key]: value }));
+  const setBrand = (patch: Partial<DemoRequest["brand"]>) => edit((d) => ({ ...d, brand: { ...d.brand, ...patch } }));
   return (
-    <section className="mb-4 grid max-w-3xl grid-cols-2 gap-3 rounded border bg-white p-3" style={{ borderColor: LINE }} aria-label="Request details" data-testid="request-panel">
-      <h3 className="col-span-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Request details</h3>
-      <label className="col-span-2 text-xs font-semibold">
-        Title
+    <section className="mb-4 grid max-w-3xl grid-cols-2 gap-3 rounded border bg-white p-3" style={{ borderColor: LINE }} aria-label="Build request" data-testid="request-panel">
+      <div className="col-span-2">
+        <h3 className="text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Build request</h3>
+        <p className="text-[11px]" style={{ color: MUTED }}>Everything the build needs besides the cards. Export turns it into files for engineering.</p>
+      </div>
+      <Field wide label="Demo name" hint="What sales and the client call this demo.">
         <input className={field} style={{ borderColor: LINE }} value={draft.title} onChange={(e) => set("title", e.target.value)} />
-      </label>
-      <label className="text-xs font-semibold">
-        Client (folder name)
+      </Field>
+      <Field label="Client" hint="Short and lowercase. Files save under docs/demos/<client>/.">
         <input className={field} style={{ borderColor: LINE }} value={draft.client} onChange={(e) => set("client", e.target.value)} />
-      </label>
-      <label className="text-xs font-semibold">
-        Request name (file name)
+      </Field>
+      <Field label="File name" hint="Lowercase words joined by hyphens.">
         <input className={field} style={{ borderColor: LINE }} value={draft.slug} onChange={(e) => set("slug", e.target.value)} />
-      </label>
-      <label className="text-xs font-semibold">
-        Intake channel
+      </Field>
+      <Field label="How the referral arrives">
         <select className={field} style={{ borderColor: LINE }} value={draft.intake} onChange={(e) => set("intake", e.target.value as DemoRequest["intake"])}>
-          <option value="erx">eRx</option>
+          <option value="erx">eRx (electronic prescription)</option>
           <option value="fax">Fax</option>
           <option value="esign">E-sign</option>
         </select>
-      </label>
+      </Field>
       <div className="col-span-2 text-xs font-semibold">
         <label>
           Win theme
-          <input className={field} style={{ borderColor: LINE }} value={draft.winTheme} onChange={(e) => set("winTheme", e.target.value)} />
+          <textarea className={field} style={{ borderColor: LINE }} rows={2} value={draft.winTheme} onChange={(e) => set("winTheme", e.target.value)} />
         </label>
         <p className="mt-1 font-normal" style={{ color: MUTED }}>
-          The one thing the client should remember. It is saved in the request file. It starts from the cards and you can rewrite it.{" "}
+          The one idea the client should remember. It is saved in the build request. It starts from the cards and you can rewrite it.{" "}
           <button type="button" className="font-semibold underline" onClick={() => set("winTheme", suggestWinTheme(draft))}>Suggest from the cards</button>
         </p>
       </div>
-      {(["name", "drug"] as const).map((k) => (
-        <label key={k} className="text-xs font-semibold">
-          Brand {k}
-          <input className={field} style={{ borderColor: LINE }} value={draft.brand[k]} onChange={(e) => edit((d) => ({ ...d, brand: { ...d.brand, [k]: e.target.value } }))} />
-        </label>
-      ))}
-      <label className="col-span-2 text-xs font-semibold">
-        Source URL
-        <input className={field} style={{ borderColor: LINE }} value={draft.brand.sourceUrl ?? ""} onChange={(e) => edit((d) => ({ ...d, brand: { ...d.brand, sourceUrl: e.target.value || undefined } }))} />
-      </label>
-      <LinesField label="Documents (one per line)" rows={2} value={draft.brand.documents} onChange={(documents) => edit((d) => ({ ...d, brand: { ...d.brand, documents } }))} />
-      <LinesField label="Open questions (one per line)" rows={3} value={draft.openQuestions} onChange={(v) => set("openQuestions", v)} />
+      <Field label="Client brand name">
+        <input className={field} style={{ borderColor: LINE }} value={draft.brand.name} onChange={(e) => setBrand({ name: e.target.value })} />
+      </Field>
+      <Field label="Drug name">
+        <input className={field} style={{ borderColor: LINE }} value={draft.brand.drug} onChange={(e) => setBrand({ drug: e.target.value })} />
+      </Field>
+      <Field wide label="Client website" hint="Where the look and feel come from.">
+        <input className={field} style={{ borderColor: LINE }} value={draft.brand.sourceUrl ?? ""} onChange={(e) => setBrand({ sourceUrl: e.target.value || undefined })} />
+      </Field>
+      <LinesField label="Reference documents" hint="Decks, PDFs, call notes: links or file names, one per line." rows={2} value={draft.brand.documents} onChange={(documents) => setBrand({ documents })} />
+      <LinesField label="Still to confirm" hint="Anything unknown, one per line. The build stops and asks about each one." rows={3} value={draft.openQuestions} onChange={(v) => set("openQuestions", v)} />
       <p className="col-span-2 text-[11px]" style={{ color: MUTED }}>Nothing is saved until you export.</p>
     </section>
   );
@@ -93,7 +108,7 @@ export function RequestPanel({ draft, edit }: { draft: DemoRequest; edit: (fn: (
 /** What to do with the two exported files. Collapsed by default. The names and the path (script or Claude Code) follow the draft. */
 export function ExportInstructions({ draft, newCards }: { draft: DemoRequest; newCards: number }) {
   const client = draft.client.trim() || "<client>";
-  const slug = draft.slug.trim() || "<request name>";
+  const slug = draft.slug.trim() || "<file name>";
   const dir = `docs/demos/${client}`;
   return (
     <details className="mt-4 rounded border text-xs" style={{ borderColor: LINE }} data-testid="export-instructions">

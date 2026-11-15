@@ -140,6 +140,28 @@ describe("the canvas tab", () => {
     expect(picker.textContent).toMatch(/ways to play this step/);
   });
 
+  it("explains the Recipes list under its heading", () => {
+    const view = open(/CoAssist Copay/i);
+    expect(view.getAllByTestId("group-note").map((n) => n.textContent).join(" ")).toMatch(/Starting points\. Pick one to start a draft from it\./);
+  });
+
+  it("words the build request form in plain language", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
+    const panel = within(view.getByTestId("request-panel"));
+    for (const l of ["Demo name", "Client", "File name", "How the referral arrives", "Win theme", "Client brand name", "Drug name", "Client website", "Reference documents", "Still to confirm"]) expect(panel.getByLabelText(l)).toBeDefined();
+    expect(panel.getByText(/Everything the build needs besides the cards/)).toBeDefined();
+    expect(view.container.textContent).not.toMatch(/Request name|Intake channel|Brand drug|Source URL/);
+  });
+
+  it("drops the list number from the demo name and file name of a draft", () => {
+    const view = open(/^4\. CoAssist Copay/);
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
+    const panel = within(view.getByTestId("request-panel"));
+    expect((panel.getByLabelText("Demo name") as HTMLInputElement).value).not.toMatch(/^\d/);
+    expect((panel.getByLabelText("File name") as HTMLInputElement).value).not.toMatch(/^\d/);
+  });
+
   it("an outline fork entry highlights the fork without editing", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(view.getAllByTestId("outline-fork")[0]);
@@ -223,21 +245,21 @@ describe("editing on the canvas", () => {
 
   it("prefills the win theme from the cards, so a loaded recipe is not blocked by it", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
-    const theme = within(view.getByTestId("request-panel")).getByLabelText("Win theme") as HTMLInputElement;
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
+    const theme = within(view.getByTestId("request-panel")).getByLabelText("Win theme") as HTMLTextAreaElement;
     expect(theme.value).toMatch(/^One eRx starts everything/);
     expect(view.queryByTestId("export-problems")?.textContent ?? "").not.toMatch(/win theme/i);
   });
 
   it("blocks the export until the request has what it needs, and the alert opens the details", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
     fireEvent.change(within(view.getByTestId("request-panel")).getByLabelText("Win theme"), { target: { value: "" } });
     expect(view.getByTestId("export-problems").textContent).toMatch(/win theme/i);
-    expect((view.getByText("Export request and prompt") as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
+    expect((view.getByText("Export the build files") as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
     expect(view.queryByTestId("request-panel")).toBeNull();
-    fireEvent.click(view.getByRole("button", { name: "Open Request details" }));
+    fireEvent.click(view.getByRole("button", { name: "Open build request" }));
     expect(view.getByTestId("request-panel")).toBeDefined();
   });
 });
@@ -245,9 +267,9 @@ describe("editing on the canvas", () => {
 describe("the request details and blank starts", () => {
   it("fills the request fields from the brand, edits them, and lets an empty field block the export", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
     const panel = view.getByTestId("request-panel");
-    const title = within(panel).getByLabelText("Title") as HTMLInputElement;
+    const title = within(panel).getByLabelText("Demo name") as HTMLInputElement;
     expect(title.value).toMatch(/CoAssist Copay/);
     fireEvent.change(within(panel).getByLabelText("Win theme"), { target: { value: "" } });
     expect(view.getByTestId("export-problems").textContent).toMatch(/win theme/i);
@@ -255,15 +277,15 @@ describe("the request details and blank starts", () => {
     expect(view.queryByTestId("export-problems")).toBeNull();
     fireEvent.change(within(panel).getByLabelText("Win theme"), { target: { value: "" } });
     fireEvent.change(within(panel).getByLabelText("Win theme"), { target: { value: "One handoff" } });
-    expect((within(panel).getByLabelText("Win theme") as HTMLInputElement).value).toBe("One handoff");
+    expect((within(panel).getByLabelText("Win theme") as HTMLTextAreaElement).value).toBe("One handoff");
     expect(view.queryByTestId("export-problems")).toBeNull();
-    expect((view.getByText("Export request and prompt") as HTMLButtonElement).disabled).toBe(false);
+    expect((view.getByText("Export the build files") as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("keeps a new line when Enter is pressed in a list field", () => {
     const view = open(/CoAssist Copay/i);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
-    const box = within(view.getByTestId("request-panel")).getByLabelText(/Open questions/) as HTMLTextAreaElement;
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
+    const box = within(view.getByTestId("request-panel")).getByLabelText(/Still to confirm/) as HTMLTextAreaElement;
     fireEvent.change(box, { target: { value: "First\n" } });
     expect(box.value).toBe("First\n");
     fireEvent.change(box, { target: { value: "First\nSecond" } });
@@ -274,8 +296,8 @@ describe("the request details and blank starts", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(within(view.container).getAllByRole("button").find((b) => /Blank CoAssist demo/.test(b.textContent ?? ""))!);
     expect(view.queryAllByTestId("canvas-card")).toHaveLength(0);
-    fireEvent.click(view.getByRole("button", { name: /^(show|hide) request details/i }));
-    expect((within(view.getByTestId("request-panel")).getByLabelText("Brand name") as HTMLInputElement).value).not.toBe("");
+    fireEvent.click(view.getByRole("button", { name: /^(show|hide) build request/i }));
+    expect((within(view.getByTestId("request-panel")).getByLabelText("Client brand name") as HTMLInputElement).value).not.toBe("");
   });
 
   it("marks the card an ordering problem belongs to", () => {
@@ -372,19 +394,19 @@ describe("undo, redo, reset, and history", () => {
 describe("the request details expander", () => {
   it("reads as an expander: label, aria-expanded, and the to-fill count", () => {
     const view = open(/CoAssist Copay/i);
-    const btn = () => view.getByRole("button", { name: /^(show|hide) request details/i });
+    const btn = () => view.getByRole("button", { name: /^(show|hide) build request/i });
     expect(btn().getAttribute("aria-expanded")).toBe("false");
-    expect(btn().textContent).toMatch(/Show request details/);
+    expect(btn().textContent).toMatch(/Show build request/);
     fireEvent.click(btn());
     expect(btn().getAttribute("aria-expanded")).toBe("true");
-    expect(btn().textContent).toMatch(/Hide request details/);
-    expect(view.getByTestId("request-panel").textContent).toMatch(/Request details/);
+    expect(btn().textContent).toMatch(/Hide build request/);
+    expect(view.getByTestId("request-panel").textContent).toMatch(/Build request/);
   });
 
   it("keeps the count of fields to fill", () => {
     const view = open(/CoAssist Copay/i);
     fireEvent.click(within(view.container).getAllByRole("button").find((b) => /Blank CoAssist demo/.test(b.textContent ?? ""))!);
-    expect(view.getByRole("button", { name: /^show request details/i }).textContent).toMatch(/\(\d+ to fill\)/);
+    expect(view.getByRole("button", { name: /^show build request/i }).textContent).toMatch(/\(\d+ to fill\)/);
   });
 });
 
