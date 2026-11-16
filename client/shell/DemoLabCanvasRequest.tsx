@@ -123,8 +123,8 @@ export function ExportInstructions({ draft, newCards }: { draft: DemoRequest; ne
           <>
             <p className="font-semibold">This request has no new cards, so no model is needed:</p>
             <ol className="list-decimal pl-4">
-              <li>Preview it: <code>pnpm demo:apply {client}/{slug} --dry</code></li>
-              <li>Apply it: <code>pnpm demo:apply {client}/{slug}</code>. It writes the demos into <code>brands/{client}/brand.json</code> and runs the brand test.</li>
+              <li>Click <strong>Build it now</strong>. It exports the files and applies them for you, on the dev server, from a short-lived branch.</li>
+              <li>Or by hand. Preview: <code>pnpm demo:apply {client}/{slug} --dry</code>. Apply: <code>pnpm demo:apply {client}/{slug}</code>. Either way it writes the demos into <code>brands/{client}/brand.json</code> and runs the brand test.</li>
               <li>Review the diff, then commit it on a short-lived branch.</li>
             </ol>
           </>

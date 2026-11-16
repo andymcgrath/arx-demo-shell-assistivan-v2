@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { GitFork, Sparkles } from "lucide-react";
+import { GitFork, Hammer, Sparkles } from "lucide-react";
 import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
@@ -53,7 +53,7 @@ const plus = "mx-1 mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounde
 
 export default function CanvasLab() {
   const items = useItems();
-  const { draft, active, setActive, loadedKey, dirty, edit, load, result, busy, send } = useDraft();
+  const { draft, active, setActive, loadedKey, dirty, edit, load, result, busy, send, build, built, building } = useDraft();
   const [wholeKey, setWholeKey] = useState<string | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [insertAt, setInsertAt] = useState<number | null>(null);
@@ -117,6 +117,7 @@ export default function CanvasLab() {
   const whole = wholeKey ? items.find((i) => i.key === wholeKey) : undefined;
   const wholeBoard = whole ? buildCanvas({ flow: whole.flow, title: whole.title, description: whole.description }) : undefined;
   const picked = wholeKey ?? loadedKey;
+  const newCardCount = canvas.cards.filter((c) => c.kind === "ghost").length;
   const index = Math.min(cardIndex, Math.max(canvas.cards.length - 1, 0));
   const card = canvas.cards[index];
 
@@ -329,8 +330,30 @@ export default function CanvasLab() {
               <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy} onClick={send} className="rounded px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40" style={{ background: INK }}>
                 {busy ? "Exporting" : "Export the build files"}
               </button>
+              {newCardCount === 0 ? (
+                <div className="mt-3" data-testid="build-now">
+                  <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy || building} onClick={build} className="inline-flex items-center gap-1.5 rounded border-2 px-3 py-1.5 text-sm font-semibold disabled:opacity-40" style={{ borderColor: INK }}>
+                    <Hammer size={14} aria-hidden />
+                    {building ? "Building" : "Build it now"}
+                  </button>
+                  <p className="mt-1 text-[11px]" style={{ color: MUTED }}>
+                    Exports the files, then applies the request to <code>brands/{draft.client.trim() || "<client>"}/brand.json</code> and runs the brand test. Needs a short-lived branch and no uncommitted changes to that file. It never commits.
+                  </p>
+                  {built && (
+                    <div role={built.ok ? "status" : "alert"} className="mt-2 rounded border p-2 text-xs" style={{ borderColor: built.ok ? INK : "#b91c1c" }} data-testid="build-result" data-ok={built.ok}>
+                      <p className="mb-1 font-bold">{built.ok ? "Built." : "Not built."}</p>
+                      <ul className="list-disc space-y-0.5 pl-4">{built.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                      {built.ok && <p className="mt-1" style={{ color: MUTED }}>Review the diff and commit it. Reload the page if the demo is not in the list yet.</p>}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-3 text-[11px]" style={{ color: MUTED }} data-testid="build-needs-claude">
+                  This request has {newCardCount} new card{newCardCount === 1 ? "" : "s"}. A script cannot build those. Export, then give the prompt file to Claude Code.
+                </p>
+              )}
               {result?.ok && <p className="mt-3 text-xs" data-testid="export-written">Wrote <code>{result.written.join("</code> and <code>")}</code></p>}
-              <ExportInstructions draft={draft} newCards={canvas.cards.filter((c) => c.kind === "ghost").length} />
+              <ExportInstructions draft={draft} newCards={newCardCount} />
               {result && !result.ok && <ul className="mt-3 list-disc pl-4 text-xs" data-testid="export-failed">{result.problems.map((p) => <li key={p}>{p}</li>)}</ul>}
             </section>
           </aside>}

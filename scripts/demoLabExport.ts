@@ -3,6 +3,7 @@ import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import type { DemoRequest, RequestResult } from "../client/workflows/catalog/request";
+import { APPLY_ROUTE, handleBuild, realGit, realRun } from "./demoLabApply";
 
 /**
  * The Demo Lab's export endpoint. Dev only: the plugin applies to `vite serve`, so a build has no route and no code for
@@ -95,6 +96,30 @@ export function demoLabExportPlugin(root: string): Plugin {
     name: "demo-lab-export",
     apply: "serve",
     configureServer(server) {
+      // "Build it now": export, then apply, for a request with no new cards. See scripts/demoLabApply.ts.
+      server.middlewares.use(APPLY_ROUTE, async (req: IncomingMessage, res: ServerResponse) => {
+        const send = (status: number, json: unknown) => {
+          res.statusCode = status;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify(json));
+        };
+        try {
+          const body = req.method === "POST" ? await readBody(req) : "";
+          const [{ validateDemoRequest, ghostCards }, { buildPrompt }] = await Promise.all([
+            server.ssrLoadModule("/client/workflows/catalog/request.ts"),
+            server.ssrLoadModule("/client/workflows/catalog/prompt.ts"),
+          ]);
+          const reply = await handleBuild(
+            root,
+            { method: req.method, remoteAddress: req.socket.remoteAddress, body },
+            { validate: validateDemoRequest, buildPrompt, ghostCount: (r: DemoRequest) => ghostCards(r).length },
+            { git: realGit(root), run: realRun(root) },
+          );
+          send(reply.status, reply.json);
+        } catch (e) {
+          send(500, { ok: false, problems: [(e as Error).message] });
+        }
+      });
       server.middlewares.use(EXPORT_ROUTE, async (req: IncomingMessage, res: ServerResponse) => {
         const send = (r: ExportReply) => {
           res.statusCode = r.status;

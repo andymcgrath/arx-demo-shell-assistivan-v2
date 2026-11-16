@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import CanvasLab from "@/shell/DemoLabCanvas";
 import { DraftProvider } from "@/shell/DemoLabDraft";
 
@@ -160,6 +160,46 @@ describe("the canvas tab", () => {
     const panel = within(view.getByTestId("request-panel"));
     expect((panel.getByLabelText("Demo name") as HTMLInputElement).value).not.toMatch(/^\d/);
     expect((panel.getByLabelText("File name") as HTMLInputElement).value).not.toMatch(/^\d/);
+  });
+
+  it("offers Build it now when there are no new cards, and shows what the build said", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(url);
+      return { ok: true, json: async () => ({ ok: true, written: ["a", "b"], lines: ["Wrote brands/x/brand.json. The brand test passes."] }) };
+    });
+    try {
+      const view = open(/CoAssist Copay/i);
+      const box = view.getByTestId("build-now");
+      fireEvent.click(within(box).getByRole("button", { name: /build it now/i }));
+      await waitFor(() => expect(view.getByTestId("build-result")).toBeDefined());
+      expect(calls).toEqual(["/__demo-lab/apply"]);
+      expect(view.getByTestId("build-result").getAttribute("data-ok")).toBe("true");
+      expect(view.getByTestId("build-result").textContent).toMatch(/brand test passes/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("shows why a build was refused", async () => {
+    vi.stubGlobal("fetch", async () => ({ ok: false, json: async () => ({ ok: false, problems: ["You are on main. Switch to a short-lived branch first."] }) }));
+    try {
+      const view = open(/CoAssist Copay/i);
+      fireEvent.click(within(view.getByTestId("build-now")).getByRole("button", { name: /build it now/i }));
+      await waitFor(() => expect(view.getByTestId("build-result")).toBeDefined());
+      expect(view.getByTestId("build-result").getAttribute("data-ok")).toBe("false");
+      expect(view.getByTestId("build-result").textContent).toMatch(/You are on main/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("replaces Build it now with a note when the request has a new card", () => {
+    const view = open(/CoAssist Copay/i);
+    fireEvent.click(view.getAllByTestId("canvas-add")[1]);
+    fireEvent.click(within(view.getByLabelText("Outline")).getByRole("button", { name: /add something new/i }));
+    expect(view.queryByTestId("build-now")).toBeNull();
+    expect(view.getByTestId("build-needs-claude").textContent).toMatch(/1 new card/);
   });
 
   it("an outline fork entry highlights the fork without editing", () => {

@@ -6,10 +6,12 @@ import { blankDraft, editorProblems, exportable, requestBrand } from "@/workflow
 
 /**
  * The Demo Lab's one draft. The Canvas edits it. Nothing is
- * saved until export. The only write is the dev endpoint (POST /__demo-lab/export), which puts two files under docs/demos/.
+ * saved until export. The writes are the dev endpoints: POST /__demo-lab/export puts two files under docs/demos/, and POST /__demo-lab/apply also applies the request to the brand file.
  */
 
 export type Exported = { ok: true; written: string[] } | { ok: false; problems: string[] };
+/** The outcome of "Build it now": the files written and the apply script's output, or why it was refused. */
+export type Built = { ok: boolean; lines: string[]; written?: string[] };
 
 interface DraftContext {
   draft: DemoRequest;
@@ -27,6 +29,10 @@ interface DraftContext {
   busy: boolean;
   problems: string[];
   send: () => Promise<void>;
+  /** Export, then apply to the brand file. For a request with no new cards. Dev server only. */
+  build: () => Promise<void>;
+  built?: Built;
+  building: boolean;
   /** The edit history: every change since the draft was loaded, and where the draft is in it. */
   history: { entries: HistoryEntry[]; pos: number; canUndo: boolean; canRedo: boolean };
   undo: () => void;
@@ -50,10 +56,13 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [result, setResult] = useState<Exported>();
   const [busy, setBusy] = useState(false);
+  const [built, setBuilt] = useState<Built>();
+  const [building, setBuilding] = useState(false);
   const draft = currentDraft(hist);
 
   const edit = (fn: (d: DemoRequest) => DemoRequest) => {
     setResult(undefined);
+    setBuilt(undefined);
     setHist((h) => {
       const before = currentDraft(h);
       const after = fn(before);
@@ -69,6 +78,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     setActive(0);
     setLoadedKey(key);
     setResult(undefined);
+    setBuilt(undefined);
   };
   const send = async () => {
     setBusy(true);
@@ -83,9 +93,23 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const build = async () => {
+    setBuilding(true);
+    setBuilt(undefined);
+    try {
+      const res = await fetch("/__demo-lab/apply", { method: "POST", body: JSON.stringify(exportable(draft)) });
+      const json = await res.json();
+      setBuilt({ ok: !!json.ok, lines: json.lines ?? json.problems ?? ["The build failed."], written: json.written });
+    } catch (e) {
+      setBuilt({ ok: false, lines: [(e as Error).message] });
+    } finally {
+      setBuilding(false);
+    }
+  };
+
   const value: DraftContext = {
     draft, active: Math.min(active, draft.demos.length - 1), setActive, loadedKey, dirty: JSON.stringify(draft) !== JSON.stringify(hist.entries[0].draft),
-    edit, load, result, busy, problems: editorProblems(draft), send,
+    edit, load, result, busy, problems: editorProblems(draft), send, build, built, building,
     history: { entries: hist.entries, pos: hist.pos, canUndo: canUndo(hist), canRedo: canRedo(hist) },
     undo: () => move(undo), redo: () => move(redo), reset: () => move((h) => reset(h)), jumpTo: (pos) => move((h) => jump(h, pos)),
   };
