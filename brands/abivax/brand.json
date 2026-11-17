@@ -18,7 +18,7 @@
     {
       "id": "coa-pap",
       "flow": "CoA_PAP",
-      "label": "8. CoAssist PAP",
+      "label": "3. CoAssist PAP",
       "description": "BI finds no coverage. The case transfers to the patient support program, the patient applies for the free drug program, and an assigned pharmacy dispenses. No PA, cash offer, or payment",
       "choices": {
         "bi": "no_coverage_pap"
@@ -27,68 +27,16 @@
     {
       "id": "erx-assistance",
       "flow": "CoA_APA_Assistance",
-      "label": "3. CoAssist APA",
+      "label": "4. CoAssist APA",
       "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program."
     },
     {
       "id": "web-pres-pes",
       "flow": "CoA_Web_HCP_Patient",
-      "label": "4. PrES + PES",
+      "label": "5. PrES + PES",
       "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
       "choices": {
         "bi": "no_coverage_pap"
-      }
-    },
-    {
-      "id": "2-coassist-copay",
-      "flow": "CoA_Copay",
-      "label": "2. CoAssist Copay",
-      "choices": {
-        "bi": "pharmacy_covered",
-        "pa": "approved"
-      },
-      "recipe": {
-        "modules": [
-          {
-            "id": "enrollment"
-          },
-          {
-            "id": "prior_authorization",
-            "props": {
-              "variant": "auto"
-            }
-          },
-          {
-            "id": "pa_notification"
-          },
-          {
-            "id": "payment"
-          },
-          {
-            "id": "financial_assistance",
-            "props": {
-              "variant": "copay"
-            }
-          },
-          {
-            "id": "pharmacy_selection",
-            "props": {
-              "variant": "store"
-            }
-          },
-          {
-            "id": "scheduling"
-          },
-          {
-            "id": "tracking"
-          }
-        ],
-        "forks": [
-          "bi",
-          "pa",
-          "copay",
-          "pricing"
-        ]
       }
     }
   ],
