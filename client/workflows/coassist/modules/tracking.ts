@@ -4,9 +4,36 @@
 import type { CoaRule } from "./shared";
 import { inFulfillmentTail, waitsForShipDate } from "./shared";
 import { hasBridge } from "./financial_assistance";
+import type { Automation } from "@/engine/workflow/types";
 
 /** The recipe runs two dispenses (the Bridge, then the commercial pharmacy after the appeal). */
 const TWO_LEGS = { module: "tracking", props: { variant: "two_legs" } } as const;
+
+/** How long after the appeal is approved (or the first shipment is delivered) the second shipment starts on its own. */
+export const SECOND_LEG_MS = 1500;
+
+/**
+ * Who starts the second shipment. The block's `trigger` prop wins. Without it the intake channel decides (rule 11): an `erx`
+ * case needs nothing from a person, so the approved appeal starts it (`system`). A `fax` case waits for the case manager's
+ * "Transfer to Commercial Pharmacy" click (`agent`). The precondition is the same either way: the appeal is approved and the
+ * first shipment is delivered.
+ */
+export const secondLegTrigger = (s: { intake: "erx" | "fax" | "esign"; recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): "system" | "agent" => {
+  const set = s.recipe?.modules.find((m) => m.id === "tracking" && m.props?.variant === "two_legs")?.props?.trigger;
+  return set === "system" || set === "agent" ? set : s.intake === "erx" ? "system" : "agent";
+};
+
+/**
+ * Starts the second shipment. Two things can come last: the appeal's approval and the first shipment's delivery. Each rule
+ * sends this, and START_SECOND_LEG ignores it until both have happened, so the trigger repeats no condition.
+ */
+export const secondLegStart: Automation = {
+  trigger: "system",
+  id: "second-leg-start",
+  after: SECOND_LEG_MS,
+  when: (_d, _e, s) => secondLegTrigger(s) === "system",
+  send: () => ({ type: "START_SECOND_LEG" }),
+};
 
 export const TRACKING_RULES: CoaRule[] = [
   {
@@ -55,5 +82,7 @@ export const TRACKING_RULES: CoaRule[] = [
     when: (d) => d.pharmacyStatus === "shipped",
     set: () => ({ pharmacyStatus: "delivered" }),
     emit: { portal: "field", step: 12 },
+    // The appeal may have been approved while the first shipment was in transit. Delivery then starts the second.
+    then: secondLegStart,
   },
 ];

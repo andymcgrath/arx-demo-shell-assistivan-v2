@@ -10,6 +10,7 @@ import { exitFor } from "@/engine/workflow/forks";
 import type { Automation } from "@/engine/workflow/types";
 import { APPEAL_FORK } from "../forks";
 import type { CoaRule } from "./shared";
+import { secondLegStart } from "./tracking";
 
 /** How long the CRM shows the appeal as working before the decision lands. */
 export const APPEAL_DECISION_MS = 2500;
@@ -49,6 +50,8 @@ export const APPEAL_RULES: CoaRule[] = [
     when: (d) => d.appealStatus === "initiated",
     set: () => ({ appealStatus: "approved" }),
     emit: { portal: "crm", step: 9 },
+    // An approved appeal starts the second shipment when the recipe has one and the first is already delivered (modules/tracking.ts).
+    then: secondLegStart,
   },
   {
     id: "appeal.deny",

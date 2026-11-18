@@ -5,6 +5,7 @@ import { recipeProblems } from "@/engine/workflow/recipe";
 import type { ModuleSpec, ScenarioRecipe } from "@/engine/workflow/components";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COASSIST_RULES } from "@/workflows/coassist/rules";
+import { SECOND_LEG_MS, secondLegTrigger } from "@/workflows/coassist/modules/tracking";
 import { BRIDGE_TEXT_MS, bridgeTrigger } from "@/workflows/coassist/modules/cash_offer";
 import * as SCENARIOS from "@/workflows/coassist/scenarios";
 import { COA_DTP } from "@/workflows/coassist/scenarios";
@@ -14,6 +15,7 @@ import { CASH_OFFER_SCREENS } from "@/workflows/coassist/modules/screens/cash_of
 import { stageVariantsFor } from "@/engine/workflow/stages";
 import { stageMapFor } from "@/workflows/stageMaps";
 import { STAGE_BUILDERS } from "@/portals/crm/stages/builders";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 import { afterEach } from "vitest";
 
@@ -271,10 +273,10 @@ describe("cash_offer bridge: two dispense legs", () => {
   const COMMERCIAL = { name: "Commercial Test Pharmacy", address: "1 Main St", city: "Indianapolis", state: "IN", zip: "46240", phone: "(317) 555-0100" };
   const MODULES: ModuleSpec[] = [
     { id: "enrollment" }, { id: "pharmacy_selection", props: { variant: "prescriber" } }, { id: "prior_authorization", props: { variant: "auto" } }, { id: "pa_notification" },
-    bridgeModule(), { id: "appeal" }, { id: "financial_assistance", props: { variant: "copay" } }, { id: "scheduling" }, { id: "tracking", props: { variant: "two_legs" } },
+    bridgeModule(), { id: "appeal" }, { id: "financial_assistance", props: { variant: "copay" } }, { id: "scheduling" }, { id: "tracking", props: { variant: "two_legs", trigger: "agent" } },
   ];
-  function start(appeal: "approved" | "denied" = "approved") {
-    setRecipeOverride("CoA_Copay", { modules: MODULES, forks: ["bi", "pa", "appeal"] });
+  function start(appeal: "approved" | "denied" = "approved", modules: ModuleSpec[] = MODULES) {
+    setRecipeOverride("CoA_Copay", { modules, forks: ["bi", "pa", "appeal"] });
     const clock = new SimulatedClock();
     const actor = startFlow("CoA_Copay", { clock, choices: { bi: "pharmacy_covered", pa: "denied", appeal } });
     return { actor, clock, can: (type: string) => actor.getSnapshot().can({ type } as any), data: () => ctx(actor).workflowData };
@@ -361,6 +363,72 @@ describe("cash_offer bridge: two dispense legs", () => {
       runSteps(t.actor, [{ type: "PATIENT_SELECTS_SHIP_DATE" }]);
       expect(t.can("READY_RX")).toBe(false); // the pharmacy receives only after the transfer
       expect(t.can("FILL_RX")).toBe(true);
+    });
+  });
+
+  describe("the system trigger (an eRx case starts the second shipment on its own)", () => {
+    const SYSTEM = MODULES.map((m) => (m.id === "tracking" ? { id: "tracking", props: { variant: "two_legs" } } : m)) as ModuleSpec[];
+
+    it("defaults from the intake channel, and a prop overrides it", () => {
+      const s = (intake: "erx" | "fax", trigger?: "system" | "agent") => ({ intake, recipe: { source: "coassist", forks: [], choices: {}, modules: [{ id: "tracking", props: { variant: "two_legs", ...(trigger ? { trigger } : {}) } }] } as ScenarioRecipe });
+      expect(secondLegTrigger(s("erx"))).toBe("system");
+      expect(secondLegTrigger(s("fax"))).toBe("agent");
+      expect(secondLegTrigger(s("erx", "agent"))).toBe("agent");
+      expect(secondLegTrigger(s("fax", "system"))).toBe("system");
+    });
+
+    it("an approved appeal starts it once the first shipment is delivered, and the patient is told", () => {
+      withFrozenClock(() => {
+        const t = start("approved", SYSTEM);
+        runSteps(t.actor, THROUGH_DENIAL);
+        t.clock.increment(BRIDGE_TEXT_MS);
+        runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG]);
+        expect(t.data().dispenseLeg).toBeUndefined();
+        approveAppeal(t);
+        expect(t.data().appealStatus).toBe("approved");
+        t.clock.increment(SECOND_LEG_MS); // the machine starts the second shipment by itself
+        expect(t.data().dispenseLeg).toBe(2);
+        expect(t.data().selectedPharmacy).toEqual(COMMERCIAL);
+        expect(derivePatientRoute(ctx(t.actor))).toBe("/appeal-approved-sms");
+      });
+    });
+
+    it("an appeal approved while the first shipment is in transit starts the second at delivery", () => {
+      withFrozenClock(() => {
+        const t = start("approved", SYSTEM);
+        runSteps(t.actor, THROUGH_DENIAL);
+        t.clock.increment(BRIDGE_TEXT_MS);
+        runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG.slice(0, 5)]);
+        approveAppeal(t);
+        t.clock.increment(SECOND_LEG_MS * 4);
+        expect(t.data().dispenseLeg, "approved but still in transit").toBeUndefined();
+        runSteps(t.actor, [{ type: "DELIVER_RX" }]);
+        t.clock.increment(SECOND_LEG_MS);
+        expect(t.data().dispenseLeg).toBe(2);
+      });
+    });
+
+    it("never starts when the appeal is denied", () => {
+      withFrozenClock(() => {
+        const t = start("denied", SYSTEM);
+        runSteps(t.actor, THROUGH_DENIAL);
+        t.clock.increment(BRIDGE_TEXT_MS);
+        runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG]);
+        approveAppeal(t);
+        t.clock.increment(SECOND_LEG_MS * 4);
+        expect(t.data().appealStatus).toBe("denied");
+        expect(t.data().dispenseLeg).toBeUndefined();
+      });
+    });
+
+    it("with the agent trigger, nothing starts until the case manager clicks", () => {
+      withFrozenClock(() => {
+        const t = afterLegOne(); // MODULES carry trigger: agent
+        approveAppeal(t);
+        t.clock.increment(SECOND_LEG_MS * 4);
+        expect(t.data().dispenseLeg).toBeUndefined();
+        expect(t.can("START_SECOND_LEG")).toBe(true);
+      });
     });
   });
 

@@ -130,6 +130,16 @@ export interface CashOfferProps extends Record<string, unknown> {
   trigger?: "system" | "agent";
 }
 
+/**
+ * Props for `tracking`. `variant: "two_legs"` runs a second shipment after the first is delivered and an appeal is approved.
+ * `trigger` (two_legs only) says who starts it: `system` on its own, or `agent` on the case manager's click. Absent: it defaults
+ * from the scenario's intake channel (`erx` is `system`, `fax` is `agent`).
+ */
+export interface TrackingProps extends Record<string, unknown> {
+  variant?: "two_legs";
+  trigger?: "system" | "agent";
+}
+
 export interface PaymentProps extends Record<string, unknown> {
   price?: number;
   /** Leave it out when the patient picks live. `mail_order` requires `scheduling` somewhere in the recipe. */

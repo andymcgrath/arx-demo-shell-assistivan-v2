@@ -7,6 +7,7 @@ import { forksForScenario } from "@/engine/workflow/forks";
 import { COASSIST_FORKS } from "@/workflows/coassist/forks";
 import { COA_COPAY } from "@/workflows/coassist/scenarios";
 import { APPEAL_DECISION_MS, APPEAL_START_MS } from "@/workflows/coassist/modules/appeal";
+import { SECOND_LEG_MS } from "@/workflows/coassist/modules/tracking";
 import { BRIDGE_TEXT_MS } from "@/workflows/coassist/modules/cash_offer";
 import { REVEAL_MS } from "@/workflows/coassist/modules/shared";
 import { stepBarModel } from "@/shell/stepBar";
@@ -14,6 +15,7 @@ import { crmActions } from "@/portals/crm/stages/actions";
 import fs from "node:fs";
 import path from "node:path";
 import { validateDemoRequest } from "@/workflows/catalog/request";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
@@ -102,15 +104,16 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(data().selectedPharmacy).toEqual(BRIDGE_PHARMACY);
       expect(actor.getSnapshot().can({ type: "START_SECOND_LEG" })).toBe(false); // the appeal is still open
 
-      // 7. The appeal is approved. The case manager transfers to the commercial pharmacy.
+      // 7. The appeal is approved and the patient is told. The case manager then transfers to the commercial pharmacy (Triage to Pharmacy).
       runSteps(actor, [{ type: "VIEW_STAGE", stage: "APPEAL" }]);
       clock.increment(APPEAL_DECISION_MS);
       expect(data().appealStatus).toBe("approved");
-      expect(buttons()).toContain("triage.second_leg");
-      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(9); // the first shipment is delivered
-      expect(route("START_SECOND_LEG")).toBe("/appeal-approved-sms"); // the patient gets a text, then confirms again
-      // The second shipment restarts at Triage to Pharmacy. It never drops back to Prior Authorization (step 4).
-      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5);
+      // An eRx case needs no click: the approved appeal starts the second shipment on its own, and the patient gets a text.
+      expect(data().dispenseLeg).toBeUndefined();
+      clock.increment(SECOND_LEG_MS);
+      expect(data().dispenseLeg).toBe(2);
+      expect(derivePatientRoute(ctx(actor))).toBe("/appeal-approved-sms");
+      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5); // the second shipment restarts at Triage, never at Prior Authorization
       expect(buttons()).not.toContain("triage.second_leg");
       expect(route("PATIENT_SETS_ADDRESS")).toBe("/delivery-date");
       expect(data().patientShipDate).toBeNull(); // the date is a fresh pick

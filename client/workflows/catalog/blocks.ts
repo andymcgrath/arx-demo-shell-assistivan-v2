@@ -371,7 +371,7 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
       {
         id: "two_legs",
         label: "Two shipments, after an appeal",
-        summary: "A first pharmacy ships and delivers. When the appeal is approved, the case manager transfers to a second pharmacy. The patient confirms the address and picks a date again, and the tracker runs a second time.",
+        summary: "A first pharmacy ships and delivers. When the appeal is approved, the case moves to a second pharmacy and the patient gets a text. The patient confirms the address and picks a date again, and the tracker runs a second time. An eRx case starts the second shipment on its own, and a fax case waits for the case manager's transfer click.",
       },
     ],
   },
