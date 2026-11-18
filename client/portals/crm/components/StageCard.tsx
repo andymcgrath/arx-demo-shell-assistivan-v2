@@ -83,7 +83,7 @@ export function StageCard({ stage, onHeaderClick }: { stage: Stage; onHeaderClic
           <div className="text-[12px] mb-1">
             <span className="font-medium text-[#3e3e3c]">What is the Status: </span>
             <span style={{ color: statusColor }}>
-              {stage.statusLabel} - {stage.statusDetail}
+              {stage.statusLabel}{stage.statusDetail ? <> - {stage.statusDetail}</> : null}
             </span>
           </div>
           <div className="text-[11px] text-[#706e6b] mt-1">

@@ -72,7 +72,7 @@ export function StageDetail({ stage, action, onAction }: StageDetailProps) {
           </div>
           <div className="grid grid-cols-2 gap-x-6 px-4 pt-1 pb-2">
             <div>
-              <FieldRow label="Status" value={`${stage.statusLabel} – ${stage.statusDetail}`} />
+              <FieldRow label="Status" value={stage.statusDetail ? `${stage.statusLabel} – ${stage.statusDetail}` : stage.statusLabel} />
               {stage.fields.map((f) => (
                 <FieldRow key={f.label} label={f.label} value={f.value ?? "No Data Available"} />
               ))}

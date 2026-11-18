@@ -204,7 +204,7 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
 
           {/* Metadata in footer */}
           <div className="grid grid-cols-2 gap-x-6 px-4 pt-2 pb-2 border-t border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-            <FieldRow label="Status" value={`${stage.statusLabel} – ${stage.statusDetail}`} />
+            <FieldRow label="Status" value={stage.statusDetail ? `${stage.statusLabel} – ${stage.statusDetail}` : stage.statusLabel} />
             <FieldRow
               label="Last Updated"
               value={

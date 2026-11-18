@@ -128,13 +128,13 @@ const bridge = (d: WorkflowData): Stage => {
     statusDetail:
       d.bridgeStatus === "active"
         ? d.copayEnrolled
-          ? "Free supply active — enrolled in $0 copay"
+          ? "Free supply active — enrolled"
           : "Free supply active — awaiting enrollment"
         : d.bridgeStatus === "sent"
         ? "Bridge text sent — awaiting the patient"
         : d.paStatus === "denied"
         ? "PA denied — Bridge supply ready to send while the appeal runs"
-        : "Awaiting PA denial",
+        : "", // not started: the card shows the label alone
     isComplete: d.bridgeStatus === "active" && d.copayEnrolled,
     isNotStarted: !shown && d.paStatus !== "denied",
     fields: [
