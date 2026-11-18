@@ -222,6 +222,9 @@ function createActorForFlow(
   if (!machine) {
     throw new Error(`[actorSingleton] No machine registered for "${machineId}"`);
   }
+  // The recipe override lives in memory, so a reload loses it while the stored demo id stays. The first machine of a
+  // session starts here, not in switchWorkflow, so a demo with its own blocks (the Bridge) must be set again now.
+  setRecipeOverride(flowType, startingDemo(flowType)?.recipe);
 
   // Restore priority: explicit snapshot arg (in-memory, same-session flow
   // switch) > sessionStorage (survives a reload) > fresh machine defaults.
