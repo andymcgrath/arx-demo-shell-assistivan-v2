@@ -1,3 +1,4 @@
+import { agentSendsBridge, agentStartsSecondShipment } from "./coassist/triggers";
 import { paVariant } from "./shared/apa";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import type { ModuleId } from "@/engine/workflow/components";
@@ -35,6 +36,10 @@ export interface ScenarioFacts {
   isPesSite: boolean;
   /** The agent sends the application update from the Fulfillment Center once BI finds no coverage (`pap_transfer` variant `agent`). The legacy no-PA intakes do the same, and report it through `isNoPaIntake`. */
   agentSendsPapUpdate: boolean;
+  /** A person sends the Bridge text, from the PA result screen ("Notify Patient"). A fax case does; an eRx case sends it on its own. */
+  agentSendsBridge: boolean;
+  /** A person starts the second shipment, from the Appeal result screen ("Notify Patient"). A fax case does; an eRx case starts it on its own. */
+  agentStartsSecondShipment: boolean;
   /** Medical-benefit coverage outcomes: a cash offer SMS and a provider transfer, with no PA or pricing. */
   isCoverageScenario: boolean;
   /** Fax intake. */
@@ -96,6 +101,8 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     isHcpThenPatient: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     isPesSite: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     agentSendsPapUpdate: !!recipe?.modules.some((m) => m.id === "pap_transfer" && m.props?.variant === "agent"),
+    agentSendsBridge: !!scenario && agentSendsBridge(scenario),
+    agentStartsSecondShipment: !!scenario && agentStartsSecondShipment(scenario),
     isCoverageScenario: !!recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "sms") && hasModule("provider_transfer"),
     isFax: intake === "fax",
     paFormByPrescriber: paVariant({ recipe }) === "apa",

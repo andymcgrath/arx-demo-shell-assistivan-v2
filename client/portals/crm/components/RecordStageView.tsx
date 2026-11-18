@@ -1,5 +1,7 @@
 import { FieldRow, Section, SF_SECTION_BG } from "./SfPrimitives";
 import type { RecordContent, RecordNote } from "../stages/records";
+import type { CrmAction } from "../stages/actions";
+import { FC_BLUE } from "./SfControls";
 
 /** One shell for a resolved stage's record view. What it says comes from `stages/records.ts`. */
 
@@ -22,7 +24,8 @@ const NOTE: Record<RecordNote["tone"], { border: string; background: string; tex
   info: { border: "var(--crm-primary, #0176d3)", background: "var(--crm-primary-30, #eef4ff)", text: "var(--crm-primary-dark, #014486)" },
 };
 
-export function RecordStageView({ content }: { content: RecordContent }) {
+/** `actions` are the stage's buttons and badges (stages/actions.ts). They sit beside the status, on the result of the event. */
+export function RecordStageView({ content, actions = [], onAction }: { content: RecordContent; actions?: CrmAction[]; onAction?: (action: CrmAction) => void }) {
   const tone = TONE[content.tone];
   const note = content.note && NOTE[content.note.tone];
   return (
@@ -40,6 +43,23 @@ export function RecordStageView({ content }: { content: RecordContent }) {
             <h1 className="text-[20px] font-bold text-[#3e3e3c]">{content.id}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {actions.map((a) =>
+              a.kind === "badge" ? (
+                <span key={a.id} className="text-[12px] font-semibold px-3 py-1 rounded" style={{ background: "#f3f2f2", color: "#3e3e3c" }}>
+                  {a.label}
+                </span>
+              ) : (
+                <button
+                  key={a.id}
+                  onClick={() => onAction?.(a)}
+                  disabled={!a.enabled}
+                  className="px-4 py-1.5 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: a.enabled ? FC_BLUE : "#ccc" }}
+                >
+                  {a.label}
+                </button>
+              ),
+            )}
             <span className="text-[12px] font-semibold px-3 py-1 rounded" style={tone.pill}>
               {content.pill}
             </span>

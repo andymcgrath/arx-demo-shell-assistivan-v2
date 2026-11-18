@@ -1,5 +1,5 @@
 import type { Stage } from "../stages/types";
-import type { CrmAction } from "../stages/actions";
+import { scenarioFacts } from "@/workflows/scenarioFacts";
 import type { WorkflowData } from "@/engine/types";
 import { SF_SECTION_BG, FieldRow } from "./SfPrimitives";
 import { FC_BLUE } from "./SfControls";
@@ -7,19 +7,17 @@ import { FC_BLUE } from "./SfControls";
 interface BridgeSupplyDetailProps {
   workflowData: WorkflowData;
   stage: Stage;
-  /** The stage's buttons and badges: the machine's answer for each (stages/actions.ts). */
-  action: (id: string) => CrmAction | undefined;
-  onAction: (action: CrmAction) => void;
 }
 
 /**
  * The Bridge Supply stage (CO-14281) of a recipe with the Bridge: a free supply while the PA appeal runs. It replaces the
- * Cash Offer view, so it shows no offer, price, or payment. An `erx` case sends the text on its own. A `fax` case waits for
- * the case manager's "Send Bridge Supply" click, which shows only while the machine accepts it.
+ * Cash Offer view, so it shows no offer, price, or payment. An `erx` case sends the text on its own. A `fax` case waits for the
+ * case manager's "Notify Patient" click on the PA result screen, the result of the event that causes the text. This stage only
+ * shows where things stand.
  */
-export function BridgeSupplyDetail({ workflowData, stage, action, onAction }: BridgeSupplyDetailProps) {
+export function BridgeSupplyDetail({ workflowData, stage }: BridgeSupplyDetailProps) {
   const { bridgeStatus, copayEnrolled, patientShipDate, paStatus } = workflowData;
-  const send = action("cash_offer.send_bridge");
+  const agentSends = scenarioFacts(workflowData.flowType).agentSendsBridge;
   return (
     <div className="p-4 max-w-5xl">
       <div className="border border-[#dddbda] rounded">
@@ -41,20 +39,15 @@ export function BridgeSupplyDetail({ workflowData, stage, action, onAction }: Br
           </div>
 
           <div className="flex gap-2 items-center">
-            {send ? (
-              <button
-                onClick={() => onAction(send)}
-                disabled={!send.enabled}
-                className="px-4 py-2 rounded text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: send.enabled ? FC_BLUE : "#ccc" }}
-              >
-                Send Bridge Supply
-              </button>
-            ) : (
-              <span className="text-[12px] font-semibold px-2.5 py-1.5 rounded" style={{ background: "#f3f2f2", color: "#3e3e3c" }}>
-                {bridgeStatus ? "Bridge text sent to the patient" : paStatus === "denied" ? "Bridge text sends on its own" : "Awaiting PA denial"}
-              </span>
-            )}
+            <span className="text-[12px] font-semibold px-2.5 py-1.5 rounded" style={{ background: "#f3f2f2", color: "#3e3e3c" }}>
+              {bridgeStatus
+                ? "Bridge text sent to the patient"
+                : paStatus !== "denied"
+                ? "Awaiting PA denial"
+                : agentSends
+                ? "Open the PA result and click Notify Patient to send the Bridge text"
+                : "Bridge text sends on its own"}
+            </span>
           </div>
         </div>
       </div>

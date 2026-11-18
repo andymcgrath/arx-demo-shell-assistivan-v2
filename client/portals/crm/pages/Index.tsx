@@ -395,13 +395,13 @@ export default function Index() {
         activeStage.id === "CO-14281" ? (
           bridge ? (
             /* ── Bridge Supply Detail View (denied PA, free supply) ───────── */
-            <BridgeSupplyDetail workflowData={workflowData} stage={activeStage} action={action} onAction={send} />
+            <BridgeSupplyDetail workflowData={workflowData} stage={activeStage} />
           ) : (
             /* ── Cash Offer Detail View (COA flow) ────────────────────────── */
             <CashOfferDetail workflowData={workflowData} stage={activeStage} action={action} onAction={send} />
           )
         ) : record ? (
-          <RecordStageView content={record} />
+          <RecordStageView content={record} actions={stageActions} onAction={send} />
         ) : activeStage.id === "BI-14273" && biStatus === "complete" ? (
           /* ── BIR Detail View (post-BI completion) ──────────────────────── */
           <BiDetail workflowData={workflowData} patientName={patientName} drugName={drugName} caseNumber={caseNumber} phone={phone} payer={payer} onOpenProductDetail={() => setProductDetailModalOpen(true)} />

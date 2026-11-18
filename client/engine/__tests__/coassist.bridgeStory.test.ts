@@ -101,7 +101,7 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
 
       // 6. The case manager transfers to ARx, which receives, ships, and delivers.
       expect(buttons()).toContain("triage.dispatch");
-      expect(buttons()).not.toContain("triage.second_leg");
+      expect(crmActions(data(), "PA-14274", can as any).map((a) => a.id)).not.toContain("pa.notify_patient"); // eRx: no click needed
       expect(route("FILL_RX")).toBe("/order-tracker");
       expect(route("READY_RX")).toBe("/order-tracker");
       expect(route("SHIP_RX")).toBe("/order-shipped");
@@ -120,7 +120,7 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(data().dispenseLeg).toBe(2);
       expect(derivePatientRoute(ctx(actor))).toBe("/appeal-approved-sms");
       expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5); // the second shipment restarts at Triage, never at Prior Authorization
-      expect(buttons()).not.toContain("triage.second_leg");
+      expect(crmActions(data(), "A-14275", can as any).map((a) => a.id)).not.toContain("appeal.notify_patient"); // eRx: no click needed
       expect(route("PATIENT_SETS_ADDRESS")).toBe("/delivery-date");
       expect(data().patientShipDate).toBeNull(); // the date is a fresh pick
       expect(route("PATIENT_SELECTS_SHIP_DATE")).toBe("/enrollment-complete");
@@ -213,9 +213,11 @@ describe("the denied-PA Bridge story, started by a fax", () => {
       // 4. The Bridge text waits for the case manager's click. Nothing goes out by itself.
       clock.increment(BRIDGE_TEXT_MS * 5);
       expect(data().bridgeStatus).toBeUndefined();
-      expect(buttons("CO-14281").map((b) => b.id)).toContain("cash_offer.send_bridge");
+      // The case manager notifies the patient from the PA result screen, the result of the event that causes the text.
+      expect(buttons("PA-14274").find((b) => b.id === "pa.notify_patient")?.label).toBe("Notify Patient");
       route("SEND_BRIDGE");
       expect(data().bridgeStatus).toBe("sent");
+      expect(buttons("PA-14274").map((b) => b.id)).toContain("pa.patient_notified");
 
       // 5 and 6. The patient enrolls at $0 and schedules, and the case manager transfers to the first pharmacy.
       expect(route("VERIFY_BRIDGE_SMS")).toBe("/bridge-supply");
@@ -232,8 +234,10 @@ describe("the denied-PA Bridge story, started by a fax", () => {
       expect(data().appealStatus).toBe("approved");
       clock.increment(SECOND_LEG_MS * 5);
       expect(data().dispenseLeg).toBeUndefined();
-      expect(buttons(TP).find((b) => b.id === "triage.second_leg")?.label).toBe("Transfer to Commercial Pharmacy");
+      // The case manager notifies the patient from the Appeal result screen. The transfer to the commercial pharmacy is the Triage click.
+      expect(crmActions(data(), "A-14275", can as any).find((a) => a.id === "appeal.notify_patient")).toMatchObject({ label: "Notify Patient", enabled: true });
       expect(route("START_SECOND_LEG")).toBe("/appeal-approved-sms");
+      expect(buttons("A-14275").map((b) => b.id)).toContain("appeal.patient_notified");
       route("PATIENT_SETS_ADDRESS");
       route("PATIENT_SELECTS_SHIP_DATE");
       runSteps(actor, [{ type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }]);

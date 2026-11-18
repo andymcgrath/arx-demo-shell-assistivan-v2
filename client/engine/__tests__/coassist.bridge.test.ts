@@ -199,18 +199,54 @@ describe("cash_offer bridge: the patient's screens (end to end)", () => {
     });
   });
 
-  it("the CRM shows Send Bridge Supply on the cash offer stage only while the machine accepts it (fax)", () => {
-    withFrozenClock(() => {
-      setRecipeOverride("CoA_Copay", { modules: [{ id: "enrollment" }, { id: "prior_authorization", props: { variant: "auto" } }, { id: "pa_notification" }, bridgeModule({ trigger: "agent" }), { id: "tracking" }] });
-      const actor = startFlow("CoA_Copay", { clock: new SimulatedClock(), choices: { bi: "pharmacy_covered", pa: "denied" } });
+  describe("Notify Patient on the result screens (a person sends the text)", () => {
+    const run = (trigger: "agent" | undefined) => {
+      setRecipeOverride("CoA_Copay", {
+        modules: [{ id: "enrollment" }, { id: "prior_authorization", props: { variant: "auto" } }, { id: "pa_notification" }, bridgeModule(trigger ? { trigger } : {}), { id: "appeal" }, { id: "financial_assistance", props: { variant: "copay" } }, { id: "scheduling" }, { id: "tracking", props: { variant: "two_legs", ...(trigger ? { trigger } : {}) } }],
+        forks: ["bi", "pa", "appeal"],
+      });
+      const actor = startFlow("CoA_Copay", { clock: new SimulatedClock(), choices: { bi: "pharmacy_covered", pa: "denied", appeal: "approved" } });
       const can = (e: { type: string }) => actor.getSnapshot().can(e as any);
-      const labels = () => crmActions(ctx(actor).workflowData, "CO-14281", can as any).map((a) => a.label);
-      runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }, { type: "COMPLETE_BI" }]);
-      expect(labels()).not.toContain("Send Bridge Supply");
-      runSteps(actor, [{ type: "DENY_PA" }]);
-      expect(labels()).toContain("Send Bridge Supply");
-      runSteps(actor, [{ type: "SEND_BRIDGE" }]);
-      expect(labels()).not.toContain("Send Bridge Supply");
+      const on = (stage: string) => crmActions(ctx(actor).workflowData, stage, can as any);
+      runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CAPTURE_SIGNATURE" }, { type: "UPLOAD_INSURANCE" }, { type: "CONFIRM_CONSENT" }, { type: "COMPLETE_BI" }]);
+      return { actor, on };
+    };
+
+    it("the PA result offers Notify Patient only after the denial and only until it is sent, then shows Patient notified", () => {
+      withFrozenClock(() => {
+        const { actor, on } = run("agent");
+        expect(on("PA-14274").map((a) => a.id)).not.toContain("pa.notify_patient"); // PA submitted, nothing to notify
+        runSteps(actor, [{ type: "DENY_PA" }]);
+        const notify = on("PA-14274").find((a) => a.id === "pa.notify_patient");
+        expect(notify).toMatchObject({ label: "Notify Patient", enabled: true });
+        runSteps(actor, [{ type: "SEND_BRIDGE" }]);
+        expect(on("PA-14274").map((a) => a.id)).not.toContain("pa.notify_patient");
+        expect(on("PA-14274").find((a) => a.id === "pa.patient_notified")?.label).toBe("Patient notified");
+      });
+    });
+
+    it("the Appeal result shows Notify Patient, disabled until the first shipment is delivered, then Patient notified", () => {
+      withFrozenClock(() => {
+        const { actor, on } = run("agent");
+        expect(on("A-14275").map((a) => a.id)).not.toContain("appeal.notify_patient"); // appeal not approved yet
+        runSteps(actor, [{ type: "DENY_PA" }, { type: "SEND_BRIDGE" }, { type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" }, { type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "INITIATE_APPEAL" }, { type: "APPROVE_APPEAL" }]);
+        expect(on("A-14275").find((a) => a.id === "appeal.notify_patient")).toMatchObject({ label: "Notify Patient", enabled: false }); // still in transit
+        runSteps(actor, [{ type: "DELIVER_RX" }]);
+        expect(on("A-14275").find((a) => a.id === "appeal.notify_patient")?.enabled).toBe(true);
+        runSteps(actor, [{ type: "START_SECOND_LEG" }]);
+        expect(on("A-14275").map((a) => a.id)).not.toContain("appeal.notify_patient");
+        expect(on("A-14275").find((a) => a.id === "appeal.patient_notified")?.label).toBe("Patient notified");
+      });
+    });
+
+    it("an eRx case never shows them: the texts go out on their own", () => {
+      withFrozenClock(() => {
+        const { actor, on } = run(undefined);
+        runSteps(actor, [{ type: "DENY_PA" }]);
+        expect(on("PA-14274").map((a) => a.id).filter((id) => id.startsWith("pa."))).toEqual([]);
+        expect(on("A-14275").map((a) => a.id)).toEqual([]);
+        expect(on("TP-14277").map((a) => a.id)).not.toContain("triage.second_leg");
+      });
     });
   });
 });

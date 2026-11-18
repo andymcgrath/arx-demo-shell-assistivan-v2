@@ -67,15 +67,16 @@ const BUTTONS: ButtonDef[] = [
     // The coverage scenario shows the price to the patient in the app. It has no cash offer to send.
     appliesTo: (d) => !scenarioFacts(d.flowType).isCoverageScenario,
   },
-  // The bridge replaces the cash offer. It shows only where the recipe has it and the PA is denied (the `fax` trigger).
-  { stage: "CO-14281", id: "cash_offer.send_bridge", label: "Send Bridge Supply", kind: "primary", event: "SEND_BRIDGE", shown: "when_enabled" },
+  // The denied-PA Bridge, started by a person (a fax case). The button sits on the result of the event that causes the text, and
+  // it sends the same events the eRx case sends on its own.
+  { stage: "PA-14274", id: "pa.notify_patient", label: "Notify Patient", kind: "primary", event: "SEND_BRIDGE", shown: "when_enabled", appliesTo: (d) => scenarioFacts(d.flowType).agentSendsBridge },
+  // Always shown on an approved appeal, and disabled until the first shipment is delivered, so the presenter sees it is coming.
+  { stage: "A-14275", id: "appeal.notify_patient", label: "Notify Patient", kind: "primary", event: "START_SECOND_LEG", shown: "always", appliesTo: (d) => scenarioFacts(d.flowType).agentStartsSecondShipment && d.appealStatus === "approved" && d.dispenseLeg === undefined },
   { stage: "CO-14281", id: "cash_offer.verify", label: "Verify Payment", kind: "primary", event: "VERIFY_PAYMENT", shown: "always" },
   { stage: "TP-14277", id: "triage.dispatch", label: (d) => triageLabel(d.flowType), kind: "primary", event: "FILL_RX", shown: "when_enabled" },
   { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled",
     // A web-source case is enrolled by the client's web page (WEB_SUBMIT), so the agent has nothing to enroll.
     appliesTo: (d) => !scenarioFacts(d.flowType).isWebSource },
-  // The second dispense of the denied-PA Bridge: the appeal is approved and the first shipment is delivered.
-  { stage: "TP-14277", id: "triage.second_leg", label: "Transfer to Commercial Pharmacy", kind: "primary", event: "START_SECOND_LEG", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.received", label: "Mark as Received at Pharmacy", kind: "primary", event: "READY_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.shipped", label: "Mark as Shipped", kind: "primary", event: "SHIP_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.delivered", label: "Mark as Delivered", kind: "success", event: "DELIVER_RX", shown: "when_enabled" },
@@ -85,6 +86,8 @@ const BUTTONS: ButtonDef[] = [
 
 const BADGES: BadgeDef[] = [
   { stage: "FA-14276", id: "pap.approved", label: "Approved", when: (d) => scenarioFacts(d.flowType).isFreeDrug && d.papStatus === "active" },
+  { stage: "PA-14274", id: "pa.patient_notified", label: "Patient notified", when: (d) => scenarioFacts(d.flowType).agentSendsBridge && d.bridgeStatus !== undefined },
+  { stage: "A-14275", id: "appeal.patient_notified", label: "Patient notified", when: (d) => scenarioFacts(d.flowType).agentStartsSecondShipment && d.dispenseLeg === 2 },
   { stage: "PT-14282", id: "provider_transfer.transferred", label: "Transferred", when: (d) => d.providerTransferStatus === "notified" },
 ];
 

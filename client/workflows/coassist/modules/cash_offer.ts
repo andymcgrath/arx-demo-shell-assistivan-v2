@@ -9,14 +9,8 @@ export const BRIDGE_TEXT_MS = 2000;
 
 const BRIDGE = { module: "cash_offer", props: { variant: "bridge" } } as const;
 
-/**
- * Who sends the bridge text. The block's `trigger` prop wins. Without it the intake channel decides (rule 11):
- * `erx` already holds everything, so the text is a `system` step. `fax` needs a person, so it is an `agent` click.
- */
-export const bridgeTrigger = (s: { intake: "erx" | "fax" | "esign"; recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): "system" | "agent" => {
-  const set = s.recipe?.modules.find((m) => m.id === "cash_offer" && m.props?.variant === "bridge")?.props?.trigger;
-  return set === "system" || set === "agent" ? set : s.intake === "erx" ? "system" : "agent";
-};
+import { bridgeTrigger } from "../triggers";
+export { bridgeTrigger };
 
 /** The denial. Both variants share the precondition and the data change. The bridge adds its automatic text. */
 const denyPa = (id: string, variant: "pa_denied" | "bridge"): CoaRule => ({
