@@ -243,8 +243,8 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "enrollment",
     lane: "patient",
     needs: ["referralReceived"],
-    // The `hcp_patient` variant is started by the HCP's web enrollment, then the patient's own submit starts BI.
-    needsWhen: [{ props: { variant: "hcp_patient" }, needs: ["fork:bi"] }],
+    // The `hcp_patient` variant is started by the web enrollment (the HCP's, or the patient's own: the `audience` fork), and that submit starts BI.
+    needsWhen: [{ props: { variant: "hcp_patient" }, needs: ["fork:audience", "fork:bi"] }],
     demoProps: { capture: [["signature", "upload_insurance"]] },
     // With `capture`, consent is verified only after the signature and the insurance upload.
     sets: ["consentVerified"],

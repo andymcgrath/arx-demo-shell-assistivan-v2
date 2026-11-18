@@ -41,7 +41,9 @@ import { usePatientToastStore } from "@/store/patientToastStore";
 import { coassistStageEvents, type CoassistLadderFlow } from "./coassistLadders";
 import { forkStageList } from "@/engine/workflow/forks";
 import { webIsDesktopSite } from "@/portals/web/hcp/desktop";
-import { biForkFor } from "@/workflows/coassist/forks";
+import { audienceOf, biForkFor } from "@/workflows/coassist/forks";
+import { entryOf } from "@/workflows/standard/forks";
+import HcpSite from "@/portals/web/hcp/HcpSite";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { scenarioFor } from "@/workflows/scenarios";
 import { iassistStageEvents, type IassistLadderFlow } from "./iassistLadders";
@@ -158,8 +160,13 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
  * The tab a flow opens on. A fax case starts in the CRM, like the Standard flow, even when its scenario is an eRx one that
  * starts in the EHR: the demo's intake decides (see `DemoRecipe.intake`). Every other flow opens where FLOW_START_PORTAL says.
  */
-export function startPortalFor(flowType: FlowType): PortalId {
-  return scenarioFor(flowType)?.intake === "fax" ? "crm" : FLOW_START_PORTAL[flowType];
+export function startPortalFor(flowType: FlowType, choices?: Record<string, string>): PortalId {
+  // PrES, an extra entry point on the Standard flow: the HCP enrolls on the engagement site, which is the Provider tab.
+  if (scenarioFacts(flowType).hasEngagementEntry && entryOf({ choices: choices ?? {} }) === "pres") return "provider";
+  if (scenarioFor(flowType)?.intake === "fax") return "crm";
+  // The two-site scenario (PrES then PES): a patient-start demo opens on the PES site, which is the Patient tab.
+  if (scenarioFacts(flowType).isPesSite && audienceOf({ choices: choices ?? {} }) === "patient") return "patient";
+  return FLOW_START_PORTAL[flowType];
 }
 
 function getProviderPortalLabel(flowType: string): string {
@@ -194,7 +201,7 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "rules",     color: "#c026d3" },
 ];
 
-function getPortals(flowType: string) {
+function getPortals(flowType: string, choices?: Record<string, string>) {
   // Covers both WF4 (iAssist_PA_Approved) and WF5 (iAssist_PAP) — the latter
   // is a structural clone of the former, same tab layout.
   const { isIassistSource: isIAssistFlow, isFaxPap: isPapFlow, isWebSource, isHcpEnrollment, hasWebCrm, isPesSite } = scenarioFacts(flowType);
@@ -214,6 +221,8 @@ function getPortals(flowType: string) {
     // the Patient tab. It has no separate web tab.
     if (p.id === "web") return isWebSource && !isPesSite;
     if (isWebSource && !isPesSite && p.id === "provider") return false;
+    // A patient-start demo has no HCP, so the PrES site (the Provider tab) has no part in it.
+    if (isPesSite && p.id === "provider" && audienceOf({ choices: choices ?? {} }) === "patient") return false;
     if (isWebSource && !hasWebCrm && (p.id === "crm" || p.id === "client" || p.id === "rules")) return false;
     // Show provider for workflows 1, 3, and 5, hide for workflow 4 (iAssist —
     // it has its own dedicated "iAssist" tab instead) and workflow 2
@@ -251,6 +260,19 @@ function getPortals(flowType: string) {
   });
 }
 
+/**
+ * The Provider tab. The PES-site scenario shows the PrES site there. A case that can start on the engagement site (the `entry` fork)
+ * shows the HCP's enrollment form until BI is back, then the provider's own screens for the PA.
+ */
+function ProviderTab({ flowType }: { flowType: string }) {
+  const { workflowData: w } = usePersonaState("provider");
+  const resetNonce = useDemoStore((s) => s.resetNonce);
+  const facts = scenarioFacts(flowType);
+  if (facts.isPesSite) return <WebPortal />;
+  if (facts.hasEngagementEntry && entryOf(w) === "pres" && w.biStatus !== "complete") return <HcpSite key={resetNonce} submitEvent="PRES_SUBMIT" />;
+  return <ProviderPortal key={flowType} />;
+}
+
 /** Renders the portal component for the given id */
 function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) {
   switch (id) {
@@ -261,7 +283,7 @@ function PortalComponent({ id, flowType }: { id: PortalId; flowType?: string }) 
     case "insights":  return <InsightsPortal />;
     case "field":     return <FieldPortal />;
     // The PrES site (the HCP's enrollment form) is the provider's page in the PES site scenario.
-    case "provider":  return scenarioFacts(flowType ?? "").isPesSite ? <WebPortal /> : <ProviderPortal key={flowType} />;
+    case "provider":  return <ProviderTab flowType={flowType ?? ""} />;
     case "iassist":   return <IAssistPortal />;
     case "rules":     return <RulesPortal />;
     case "web":       return <WebPortal />;
@@ -460,7 +482,7 @@ interface PanelProps {
 }
 
 function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }: PanelProps) {
-  const portals = getPortals(flowType);
+  const portals = getPortals(flowType, usePersonaState("patient").workflowData.choices);
   const info = portals.find((p) => p.id === portal);
 
   // If portal is no longer available in this flow, don't render
@@ -711,7 +733,7 @@ export default function DemoShell() {
   // Also redirect URL in 1up mode if the current portal is no longer available
   // Update multi-panel state when flow changes
   useEffect(() => {
-    const availablePortals = getPortals(flowType).map(p => p.id);
+    const availablePortals = getPortals(flowType, forkChoices).map(p => p.id);
     setPanels((prev) =>
       prev.map((panel) => {
         if (!availablePortals.includes(panel.portal)) {
@@ -724,7 +746,7 @@ export default function DemoShell() {
 
   // In 1up mode, redirect if current URL portal is filtered out
   useEffect(() => {
-    const availablePortals = getPortals(flowType).map(p => p.id);
+    const availablePortals = getPortals(flowType, forkChoices).map(p => p.id);
     if (layout === "1up" && !availablePortals.includes(urlPortal)) {
       const fallbackPortal = availablePortals[0] || "crm";
       // Replace, so Back does not return to a tab this scenario does not have.
@@ -795,7 +817,7 @@ export default function DemoShell() {
   // independent local state that navigate() alone
   // doesn't touch, so reset both explicitly.
   setLayout("1up");
-  const startPortal = startPortalFor(flowType);
+  const startPortal = startPortalFor(flowType, forkChoices);
   setPanels([{ portal: startPortal }]);
   navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
   }
@@ -888,7 +910,7 @@ export default function DemoShell() {
 
     // Standard (Fax_QS_PA_Approved) and PAP (Fax_PAP_Audit, PrES_PAP): the ladders live in
     // faxLadders.ts so the headless tests run the same event lists.
-    for (const event of faxStageEvents(isPapFlow ? 'pap' : 'standard', stage)) {
+    for (const event of faxStageEvents(isPapFlow ? 'pap' : 'standard', stage, forkChoices)) {
       actor.send(event as any);
     }
   }, [resetDemo, flowType, isIAssistFlow, isIAssistPapFlow, isPapFlow, isCoverageFlow, isCoaFlow, forkChoices]);
@@ -901,7 +923,7 @@ export default function DemoShell() {
         <div className="flex items-stretch">
           {/* Portal tabs (single-panel mode: clicking selects that portal) */}
           <nav className="flex items-stretch flex-1 overflow-x-auto border-l border-white/10">
-            {getPortals(flowType).map((tab) => {
+            {getPortals(flowType, forkChoices).map((tab) => {
               // Provider is already excluded from getPortals() for
               // Fax_PAP_Audit (WF2) and iAssist (WF4) — no separate
               // per-tab hiding needed here now.
@@ -972,7 +994,7 @@ export default function DemoShell() {
                   startDemo(demo);
                   // Navigate to this flow's canonical opening screen
                   setLayout("1up");
-                  const startPortal = startPortalFor(demo.flow);
+                  const startPortal = startPortalFor(demo.flow, demo.choices);
                   setPanels([{ portal: startPortal }]);
                   navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
                 }}
@@ -1053,9 +1075,9 @@ export default function DemoShell() {
                     // selected branch (workflows/coassist/forks.ts). The events
                     // behind each rung are the same list resetActorToStage sends.
                     : scenarioHasModule(flowType, "pap_transfer")
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
                     : isCoverageFlow
-                    ? forkStageList(biForkFor(flowType), { choices: forkChoices ?? {} })
+                    ? forkStageList(biForkFor(flowType, forkChoices ?? {}), { choices: forkChoices ?? {} })
                     // CoA_DTP/CoA_Copay — own list, not the generic WF1 one
                     // below. That shared list used to call stage 4 "Prior
                     // Authorization" while resetActorToStage's old generic
@@ -1125,11 +1147,11 @@ export default function DemoShell() {
         {layout === "1up" && PERSONAS[urlPortal] && (
           <div
             className="flex items-center px-4 py-2 border-t border-white/10"
-            style={{ backgroundColor: `${getPortals(flowType).find((p) => p.id === urlPortal)?.color ?? "#64748b"}26` }}
+            style={{ backgroundColor: `${getPortals(flowType, forkChoices).find((p) => p.id === urlPortal)?.color ?? "#64748b"}26` }}
           >
             <PersonaChip
               portal={urlPortal}
-              color={getPortals(flowType).find((p) => p.id === urlPortal)?.color ?? "#64748b"}
+              color={getPortals(flowType, forkChoices).find((p) => p.id === urlPortal)?.color ?? "#64748b"}
             />
           </div>
         )}
@@ -1142,7 +1164,7 @@ export default function DemoShell() {
 
       {/* ── Portal panels ──────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden" style={{ paddingTop: 0, paddingBottom: 0 }}>
-        {getPortals(flowType).map((portalInfo) => {
+        {getPortals(flowType, forkChoices).map((portalInfo) => {
           const isActive = activePanels.some(
             (p) => p.portal === portalInfo.id
           );

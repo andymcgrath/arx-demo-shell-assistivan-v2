@@ -67,6 +67,9 @@
     "PATIENT_SETS_ADDRESS": [
       "scheduling.patient_sets_address"
     ],
+    "PES_SUBMIT": [
+      "hcp_patient.patient_submit"
+    ],
     "READY_RX": [
       "tracking.ready_rx"
     ],
@@ -251,6 +254,9 @@
     ],
     "hcp_enroll.submit": [
       "CoA_HCP_Enroll"
+    ],
+    "hcp_patient.patient_submit": [
+      "CoA_Web_HCP_Patient"
     ],
     "hcp_patient.referral": [
       "CoA_Web_HCP_Patient"

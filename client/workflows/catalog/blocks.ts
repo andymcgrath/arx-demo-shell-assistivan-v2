@@ -56,11 +56,11 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
       {
         id: "hcp_patient",
         label: "HCP enrolls on the client's PrES site, and benefits checking starts",
-        summary: "The HCP completes the enrollment form on the client's PrES site, on the Provider tab. The submit enrolls the case and starts benefits checking. The patient is not texted yet. The patient's steps come later, on the client's PES site.",
+        summary: "The client has two web sites and the demo's pick decides who starts. An HCP completes the enrollment form on the PrES site, on the Provider tab. Or the patient enrolls themself on the PES site, on the Patient tab. Either submit enrolls the case and starts benefits checking. The patient is not texted yet. The patient's remaining steps come later, on the PES site.",
         apps: ["web", "crm"],
         lane: "hcp",
         trigger: "click",
-        steps: [step("HCP completes the enrollment form on the client's PrES site", "hcp", "click"), step("Benefits checking starts", "system", "automatic")],
+        steps: [step("HCP completes the enrollment form on the client's PrES site, or the patient enrolls on the PES site", "hcp", "click"), step("Benefits checking starts", "system", "automatic")],
       },
       {
         id: "no_rx",

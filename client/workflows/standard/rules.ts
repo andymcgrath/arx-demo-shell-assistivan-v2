@@ -8,11 +8,25 @@
  * workflow: a completed BI whose result says a PA is required.
  */
 import { INTAKE_RULES, REVEAL_MS, SHIPPING_RULES, type IntakeRule } from "../shared/intake";
+import { entryOf } from "./forks";
 
 const nowIso = () => new Date().toISOString();
 
+/**
+ * The faxed referral belongs to the `fax` entry. PRES_SUBMIT is the other entry: the HCP's enrollment on the engagement site. It
+ * creates the case with the same data, and the invite, consent and BI that follow are shared. Each precondition keeps its event to
+ * its own entry, and the submit is a `system` step (the page fires it).
+ */
+const FAX_ONLY = (r: IntakeRule): IntakeRule => (r.on === "REFERRAL_RECEIVED" ? { ...r, when: (d, e, s) => entryOf(d) === "fax" && (r.when?.(d, e, s) ?? true) } : r);
+
 export const STANDARD_RULES: IntakeRule[] = [
-  ...INTAKE_RULES,
+  ...INTAKE_RULES.map(FAX_ONLY),
+  {
+    on: "PRES_SUBMIT",
+    when: (d) => d.enrollmentStatus === "none" && entryOf(d) === "pres",
+    set: (_d, e) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null }),
+    emit: { portal: "provider", step: 1 },
+  },
 
   // ── Prior Authorization ────────────────────────────────────────────
   {

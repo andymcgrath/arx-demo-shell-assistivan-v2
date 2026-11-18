@@ -7,27 +7,48 @@
  * and starts BI. The patient is not texted yet. The patient's own steps come later, on the PES site, after BI finds no coverage
  * and the agent sends the application update (`income_qualification`).
  *
- * The submit is a `system` step: the web page fires it, not an agent. Its precondition keeps it from firing twice.
+ * The `audience` fork (forks.ts) picks who starts. `hcp` (PrES) is the story above. `patient` (PES) starts on the PES site: the
+ * patient enters the prescription and consents, and PES_SUBMIT enrolls the case with the same data and starts BI the same way.
+ * Everything after is shared: BI, the agent's application update, then the patient's PES pages.
+ *
+ * Each submit is a `system` step: the web page fires it, not an agent. The precondition keeps it from firing twice and keeps it
+ * to the audience that owns the page.
  */
+import { audienceOf } from "../forks";
 import type { CoaRule } from "./shared";
 
 const HCP_PATIENT = { module: "enrollment", props: { variant: "hcp_patient" } } as const;
+
+/** True when the `audience` fork's pick (the demo pins it) is this exit. Without a pick the fork's first exit, `hcp`, applies. */
+const audienceIs = (id: "hcp" | "patient") => (d: Parameters<typeof audienceOf>[0]) => audienceOf(d) === id;
+
+const enrolled = (e: { prescriberNpi?: unknown }) => ({
+  enrollmentStatus: "enrolled" as const,
+  smsVerified: true,
+  otpVerified: true,
+  consentStatus: "confirmed" as const,
+  prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null,
+});
 
 export const HCP_PATIENT_RULES: CoaRule[] = [
   {
     id: "hcp_patient.referral",
     on: "HCP_REFERRAL_SUBMIT",
     scope: HCP_PATIENT,
-    when: (d) => d.enrollmentStatus === "none",
-    set: (_d, e) => ({
-      enrollmentStatus: "enrolled",
-      smsVerified: true,
-      otpVerified: true,
-      consentStatus: "confirmed",
-      prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null,
-    }),
+    when: (d) => d.enrollmentStatus === "none" && audienceIs("hcp")(d),
+    set: (_d, e) => enrolled(e),
     emit: { portal: "provider", step: 1 },
     // BI starts now and waits for the agent to open the BI stage in the CRM.
+    then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
+  },
+  {
+    // PES: the patient enrolls themself on the PES site. Same data, same BI start, no HCP.
+    id: "hcp_patient.patient_submit",
+    on: "PES_SUBMIT",
+    scope: HCP_PATIENT,
+    when: (d) => d.enrollmentStatus === "none" && audienceIs("patient")(d),
+    set: (_d, e) => enrolled(e),
+    emit: { portal: "patient", step: 1 },
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },
 ];

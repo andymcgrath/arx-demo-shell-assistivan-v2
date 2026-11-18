@@ -1,4 +1,5 @@
 import { createWorkflowMachine } from "@/engine/workflow/createWorkflowMachine";
+import { STANDARD_FORKS } from "./forks";
 import { STANDARD_RULES } from "./rules";
 import { STANDARD_PA_APPROVED } from "./scenarios";
 
@@ -7,5 +8,6 @@ export const standardMachine = createWorkflowMachine({
   id: "standard",
   defaultFlowType: "Fax_QS_PA_Approved",
   rules: STANDARD_RULES,
+  forks: STANDARD_FORKS,
   scenarios: { Fax_QS_PA_Approved: STANDARD_PA_APPROVED },
 });

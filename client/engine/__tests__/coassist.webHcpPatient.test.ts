@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import { startPortalFor } from "@/shell/DemoShell";
+import { biForkFor } from "@/workflows/coassist/forks";
+import { forkStageList } from "@/engine/workflow/forks";
 import { REVEAL_MS } from "@/workflows/coassist/modules/shared";
 import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 
@@ -8,9 +11,9 @@ import { SimulatedClock, ctx, runSteps, startFlow, withFrozenClock } from "./har
  * no coverage comes back, and the agent sends the application update from the Fulfillment Center. The patient taps the text and works the
  * PES site (Patient tab): income consent, income, program terms, address, date. The golden path is in scenarios.ts.
  */
-function start() {
+function start(choices: Record<string, string> = {}) {
   const clock = new SimulatedClock();
-  const actor = startFlow("CoA_Web_HCP_Patient", { clock });
+  const actor = startFlow("CoA_Web_HCP_Patient", { clock, choices });
   return { actor, clock, data: () => ctx(actor).workflowData, accepts: (type: string) => actor.getSnapshot().can({ type } as any) };
 }
 const NPI = "1234567893";
@@ -77,6 +80,51 @@ describe("CoA_Web_HCP_Patient", () => {
       expect(accepts("FILL_RX")).toBe(false);
       runSteps(actor, [{ type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" }]);
       expect(accepts("FILL_RX")).toBe(true);
+    });
+  });
+
+  describe("audience fork", () => {
+    it("takes the HCP's submit for PrES and refuses the patient's", () => {
+      const { accepts } = start({ audience: "hcp" });
+      expect(accepts("HCP_REFERRAL_SUBMIT")).toBe(true);
+      expect(accepts("PES_SUBMIT")).toBe(false);
+    });
+
+    it("takes the patient's own submit for PES and refuses the HCP's", () => {
+      const { accepts } = start({ audience: "patient" });
+      expect(accepts("PES_SUBMIT")).toBe(true);
+      expect(accepts("HCP_REFERRAL_SUBMIT")).toBe(false);
+    });
+
+    it("PES enrolls the case with the patient's consent and starts BI, with no text and no HCP", () => {
+      withFrozenClock(() => {
+        const { actor, data, accepts } = start({ audience: "patient" });
+        runSteps(actor, [{ type: "PES_SUBMIT", prescriberNpi: NPI }]);
+        expect(data()).toMatchObject({ enrollmentStatus: "enrolled", consentStatus: "confirmed", enrollmentInviteSent: false, prescriberNpi: NPI, biStatus: "running", papSmsSent: false });
+        expect(accepts("PES_SUBMIT")).toBe(false);
+      });
+    });
+
+    it("both audiences end up in the same place after the submit", () => {
+      withFrozenClock(() => {
+        const seen = (audience: "hcp" | "patient") => {
+          const { actor, clock, data } = start({ audience });
+          runSteps(actor, [{ type: audience === "hcp" ? "HCP_REFERRAL_SUBMIT" : "PES_SUBMIT" }, { type: "VIEW_STAGE", stage: "BI" }]);
+          clock.increment(REVEAL_MS);
+          const { biStatus, papTransferStatus, enrollmentStatus, consentStatus } = data();
+          return { biStatus, papTransferStatus, enrollmentStatus, consentStatus };
+        };
+        expect(seen("patient")).toEqual(seen("hcp"));
+      });
+    });
+
+    it("opens PrES on the Provider tab and PES on the Patient tab, and each has its own rungs before BI", () => {
+      expect(startPortalFor("CoA_Web_HCP_Patient", { audience: "hcp" })).toBe("provider");
+      expect(startPortalFor("CoA_Web_HCP_Patient", { audience: "patient" })).toBe("patient");
+      const rungs = (audience: string) => forkStageList(biForkFor("CoA_Web_HCP_Patient", { audience }), { choices: { audience, bi: "no_coverage_pap" } }).map((r) => r.label);
+      expect(rungs("hcp")).toContain("HCP Enrolled the Patient");
+      expect(rungs("patient")).toContain("Patient Enrolled Themself");
+      expect(rungs("patient")).not.toContain("HCP Enrolled the Patient");
     });
   });
 });

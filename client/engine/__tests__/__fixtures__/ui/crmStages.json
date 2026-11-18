@@ -549,6 +549,556 @@
       }
     ]
   },
+  "fax-standard-pres": {
+    "flowType": "Fax_QS_PA_Approved",
+    "steps": [
+      {
+        "after": "(start)",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting patient consent",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Not Started",
+            "statusDetail": "Waiting for patient consent",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "A-14275",
+            "name": "Appeals",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Pharmacy Notes",
+                "value": null
+              },
+              {
+                "label": "Shipment Date",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "FA-14276",
+            "name": "Financial Assistance",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Financial Program",
+                "value": null
+              },
+              {
+                "label": "Effective Date",
+                "value": null
+              },
+              {
+                "label": "Program Approval Date",
+                "value": null
+              },
+              {
+                "label": "Expiration Date",
+                "value": null
+              },
+              {
+                "label": "Program Denial Reason",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting pharmacy selection",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "PRES_SUBMIT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "INVITE",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_SMS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_OTP",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Complete",
+            "statusDetail": "Enrollment Completed",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Running",
+            "statusDetail": "Investigating patient benefits...",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Complete",
+            "statusDetail": "Patient Has Coverage; Prior Authorization Required",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Letter sent",
+            "statusDetail": "HCP letter mailed for Prior Authorization",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "just now"
+          }
+        ]
+      },
+      {
+        "after": "SUBMIT_PA",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Submitted",
+            "statusDetail": "Awaiting Approval",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "APPROVE_PA",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "PA-14274",
+            "name": "Prior Authorization",
+            "statusLabel": "Complete",
+            "statusDetail": "PA Approved",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "A-14275",
+            "name": "Appeals",
+            "statusLabel": "Not needed",
+            "statusDetail": "PA Approved",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy Notes",
+                "value": null
+              },
+              {
+                "label": "Shipment Date",
+                "value": null
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "FA-14276",
+            "name": "Financial Assistance",
+            "statusLabel": "Not needed",
+            "statusDetail": "Commercial Insurance",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Financial Program",
+                "value": null
+              },
+              {
+                "label": "Effective Date",
+                "value": null
+              },
+              {
+                "label": "Program Approval Date",
+                "value": null
+              },
+              {
+                "label": "Expiration Date",
+                "value": null
+              },
+              {
+                "label": "Program Denial Reason",
+                "value": null
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Pharmacy selected — awaiting dispatch",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Test Pharmacy"
+              },
+              {
+                "label": "Status",
+                "value": "Pharmacy Selected"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "First dispense processing",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Test Pharmacy"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Initiated"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Ready for delivery",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Test Pharmacy"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Ready"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Triage to Pharmacy",
+            "statusLabel": "Complete",
+            "statusDetail": "First dispense shipped",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "Test Pharmacy"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Shipped"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "In Transit",
+            "statusDetail": "First dispense shipped — in transit to patient",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Carrier",
+                "value": "FedEx"
+              },
+              {
+                "label": "Tracking #",
+                "value": "775899987245"
+              },
+              {
+                "label": "Est. Delivery",
+                "value": "Jan 22, 2026"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PA-14274",
+          "A-14275",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Complete",
+            "statusDetail": "First dispense delivered",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Carrier",
+                "value": "FedEx"
+              },
+              {
+                "label": "Tracking #",
+                "value": "775899987245"
+              },
+              {
+                "label": "Delivered",
+                "value": "Jan 15, 2026"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      }
+    ]
+  },
   "fax-standard-pa-denied": {
     "flowType": "Fax_QS_PA_Approved",
     "steps": [
@@ -5580,6 +6130,462 @@
       },
       {
         "after": "HCP_REFERRAL_SUBMIT",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Complete",
+            "statusDetail": "Enrollment Completed",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Running",
+            "statusDetail": "Investigating patient benefits...",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Complete",
+            "statusDetail": "No Coverage Found; Referred to the Patient Support Program",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "PSP-14283",
+            "name": "Patient Support Program Referral",
+            "statusLabel": "Referred",
+            "statusDetail": "Referred to Assistivan; awaiting the patient's confirmation",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Program",
+                "value": "Assistivan"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "SEND_PAP_SMS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "VERIFY_PAP_SMS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "START_INCOME_QUALIFICATION",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "FA-14276",
+            "name": "Income Verification",
+            "statusLabel": "In Progress",
+            "statusDetail": "Awaiting the patient's income form",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Income Verification",
+                "value": "Pending"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "VERIFY_INCOME",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "FA-14276",
+            "name": "Income Verification",
+            "statusLabel": "Complete",
+            "statusDetail": "Income verified; free drug program active",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Income Verification",
+                "value": "Verified"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "PATIENT_SETS_ADDRESS",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Transfer to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Pharmacy selected — awaiting dispatch",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "CVS Pharmacy #3795"
+              },
+              {
+                "label": "Status",
+                "value": "Pharmacy Selected"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": []
+      },
+      {
+        "after": "FILL_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Transfer to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "First dispense processing",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "CVS Pharmacy #3795"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Initiated"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Transfer to Pharmacy",
+            "statusLabel": "In Progress",
+            "statusDetail": "Ready for delivery",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "CVS Pharmacy #3795"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Ready"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "TP-14277",
+            "name": "Transfer to Pharmacy",
+            "statusLabel": "Complete",
+            "statusDetail": "First dispense shipped",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Pharmacy",
+                "value": "CVS Pharmacy #3795"
+              },
+              {
+                "label": "First Dispense",
+                "value": "Shipped"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "In Transit",
+            "statusDetail": "First dispense shipped — in transit to patient",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Carrier",
+                "value": "FedEx"
+              },
+              {
+                "label": "Tracking #",
+                "value": "775899987245"
+              },
+              {
+                "label": "Est. Delivery",
+                "value": "Jan 22, 2026"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Complete",
+            "statusDetail": "First dispense delivered",
+            "isComplete": true,
+            "isNotStarted": false,
+            "fields": [
+              {
+                "label": "Carrier",
+                "value": "FedEx"
+              },
+              {
+                "label": "Tracking #",
+                "value": "775899987245"
+              },
+              {
+                "label": "Delivered",
+                "value": "Jan 15, 2026"
+              }
+            ],
+            "lastUpdated": "1/15/2026",
+            "lastUpdatedAgo": "today"
+          }
+        ]
+      }
+    ]
+  },
+  "coa-web-pes": {
+    "flowType": "CoA_Web_HCP_Patient",
+    "steps": [
+      {
+        "after": "(start)",
+        "order": [
+          "EA-14272",
+          "BI-14273",
+          "PSP-14283",
+          "FA-14276",
+          "TP-14277",
+          "PS-14278"
+        ],
+        "changed": [
+          {
+            "id": "EA-14272",
+            "name": "Enrollment Assistance",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting patient consent",
+            "isComplete": false,
+            "isNotStarted": false,
+            "fields": [],
+            "lastUpdated": "1/11/2026",
+            "lastUpdatedAgo": "4 days ago"
+          },
+          {
+            "id": "BI-14273",
+            "name": "Benefits Investigation",
+            "statusLabel": "Not Started",
+            "statusDetail": "Awaiting case creation",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PSP-14283",
+            "name": "Patient Support Program Referral",
+            "statusLabel": "Stage not started",
+            "statusDetail": "Awaiting Benefits Investigation",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Program",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "FA-14276",
+            "name": "Income Verification",
+            "statusLabel": "Stage not started",
+            "statusDetail": "Awaiting the patient support program referral",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [
+              {
+                "label": "Income Verification",
+                "value": null
+              }
+            ],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "TP-14277",
+            "name": "Transfer to Pharmacy",
+            "statusLabel": "Pending",
+            "statusDetail": "Awaiting pharmacy selection",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          },
+          {
+            "id": "PS-14278",
+            "name": "Pharmacy Status",
+            "statusLabel": "Stage not started",
+            "statusDetail": "No Status available",
+            "isComplete": false,
+            "isNotStarted": true,
+            "fields": [],
+            "lastUpdated": null,
+            "lastUpdatedAgo": null
+          }
+        ]
+      },
+      {
+        "after": "PES_SUBMIT",
         "order": [
           "EA-14272",
           "BI-14273",

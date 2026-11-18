@@ -1,5 +1,7 @@
 import { agentSendsBridge, agentStartsSecondShipment } from "./coassist/triggers";
 import { paVariant } from "./shared/apa";
+import { forkApplies } from "@/engine/workflow/forks";
+import { STANDARD_ENTRY_FORK } from "./standard/forks";
 import type { ScenarioDefinition } from "@/engine/workflow/types";
 import type { ModuleId } from "@/engine/workflow/components";
 import { scenarioFor } from "./scenarios";
@@ -33,6 +35,8 @@ export interface ScenarioFacts {
   /** The web page runs in two parts (the `hcp_patient` enrollment variant): an HCP enrolls the patient, then the patient completes the authorization and the Rx. */
   isHcpThenPatient: boolean;
   /** The patient's pages are the PES site (wide web layout, with the update text on a phone). Same as `isHcpThenPatient`; the legacy PrES uses `isPres`. */
+  /** The case can start from the HCP's enrollment on the engagement site (PrES), as well as a fax. The `entry` fork picks. */
+  hasEngagementEntry: boolean;
   isPesSite: boolean;
   /** The agent sends the application update from the Fulfillment Center once BI finds no coverage (`pap_transfer` variant `agent`). The legacy no-PA intakes do the same, and report it through `isNoPaIntake`. */
   agentSendsPapUpdate: boolean;
@@ -99,6 +103,7 @@ export function scenarioFacts(flowType: string): ScenarioFacts {
     hasWebCrm: recipe?.source === "web" && !!recipe.crm,
     isHcpEnrollment: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp"),
     isHcpThenPatient: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
+    hasEngagementEntry: !!scenario && forkApplies(STANDARD_ENTRY_FORK, scenario.flowType),
     isPesSite: !!recipe?.modules.some((m) => m.id === "enrollment" && m.props?.variant === "hcp_patient"),
     agentSendsPapUpdate: !!recipe?.modules.some((m) => m.id === "pap_transfer" && m.props?.variant === "agent"),
     agentSendsBridge: !!scenario && agentSendsBridge(scenario),

@@ -92,6 +92,8 @@ import { PHONE_SCREENS } from "./phoneScreens";
 import NetworkPharmacySelection from "./pages/NetworkPharmacySelection";
 import PharmacySelectionConfirmation from "./pages/PharmacySelectionConfirmation";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import { audienceOf } from "@/workflows/coassist/forks";
+import PesSite from "@/portals/web/pes/PesSite";
 
 
 /** True when the patient should stay on this screen. Each workflow marks its `sticky` screens in workflows/<name>/screens.ts. */
@@ -264,6 +266,12 @@ function PatientRoutes() {
 
 export default function PatientPortal() {
   const actor = useWorkflowActor();
+  const { workflowData } = usePersonaState("patient");
+  const resetNonce = useDemoStore((s) => s.resetNonce);
+  // PES, patient start: the patient's own site opens the case. Once the agent sends the application update, the PES pages take over.
+  if (scenarioFacts(workflowData.flowType).isPesSite && audienceOf(workflowData) === "patient" && !workflowData.papSmsSent) {
+    return <PesSite key={resetNonce} />;
+  }
   const initialPath = derivePatientRoute(actor.getSnapshot().context);
   // Mirrors PatientRoutes' own isWideFlow check just below — this outer
   // root div needs the same min-h-full-instead-of-h-full treatment for WF5,

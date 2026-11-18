@@ -17,11 +17,13 @@
  * 6 filling, 7 shipped, 8 delivered.
  */
 import type { LadderEvent } from "./coassistLadders";
+import { entryOf } from "@/workflows/standard/forks";
 
 const ev = (type: string, portal: string, extra: Record<string, unknown> = {}): LadderEvent => ({ type, portal, ...extra });
 
-const ENROLLED: LadderEvent[] = [
-  ev("REFERRAL_RECEIVED", "crm"),
+/** The case's first event follows how it started: a faxed referral, or the HCP's enrollment on the engagement site (the `entry` fork). */
+const enrolled = (entry: "fax" | "pres"): LadderEvent[] => [
+  entry === "pres" ? ev("PRES_SUBMIT", "provider") : ev("REFERRAL_RECEIVED", "crm"),
   ev("INVITE", "crm"),
   ev("VERIFY_SMS", "patient"),
   ev("VERIFY_OTP", "patient"),
@@ -32,11 +34,11 @@ const STANDARD_PHARMACY = { name: "Accredo Health Group Inc.", address: "789 Pha
 const PAP_PHARMACY = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
 
 /** Every event to send, in order, to land a RESET actor on `stage` (2 to 8). Stage 1 is the reset itself. */
-export function faxStageEvents(workflow: "standard" | "pap", stage: number): LadderEvent[] {
+export function faxStageEvents(workflow: "standard" | "pap", stage: number, choices: Record<string, string> = {}): LadderEvent[] {
   const out: LadderEvent[] = [];
   const upTo = (n: number) => stage >= n;
 
-  if (upTo(2)) out.push(...ENROLLED);
+  if (upTo(2)) out.push(...enrolled(entryOf({ choices })));
 
   if (workflow === "pap") {
     if (upTo(4)) {

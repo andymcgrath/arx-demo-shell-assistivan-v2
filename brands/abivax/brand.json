@@ -70,11 +70,21 @@
       "description": "The prescriber completes the PA form. After the approval the patient qualifies for the free drug program, then chooses it or the copay program."
     },
     {
-      "id": "web-pres-pes",
-      "flow": "CoA_Web_HCP_Patient",
-      "label": "5. PrES + PES",
-      "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
+      "id": "standard-pres",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "5. PrES (HCP enrolls)",
+      "description": "The HCP completes the enrollment form on the client's engagement site (PrES) and the case is created, as a faxed referral would create it. The agent texts the patient into the patient app, and the case runs the Standard flow: BI, PA, pharmacy triage and delivery.",
       "choices": {
+        "entry": "pres"
+      }
+    },
+    {
+      "id": "web-pes",
+      "flow": "CoA_Web_HCP_Patient",
+      "label": "6. PES (patient enrolls)",
+      "description": "The patient enrolls on the PES site themself and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
+      "choices": {
+        "audience": "patient",
         "bi": "no_coverage_pap"
       }
     }
@@ -107,6 +117,13 @@
     "dosages": [
       "25 mg"
     ],
+    "copayOffer": {
+      "price": "$0",
+      "unit": "30 capsules / 30 days",
+      "pharmacy": "Any participating pharmacy",
+      "code": "SAVEABIVAX",
+      "details": "Pay as little as $0 with the copay program. No separate insurance approval needed."
+    },
     "indication": {
       "name": "Ulcerative Colitis",
       "icd10": "K51.90",

@@ -168,6 +168,11 @@ export interface BrandConfig {
     /** The product's NDC, shown on the PA form's medication row. Optional. A brand with none shows the drug name only. */
     ndc?: string;
     transferPartner?: { name: string; address?: string; city?: string; state?: string; zip?: string; phone?: string };
+    /**
+     * The copay program's offer, shown on the PES site's Benefit Pricing step. Optional. A brand with none skips that step.
+     * `price` is the amount the patient pays, and `unit` is what it buys (for example "1 pen / 30 days").
+     */
+    copayOffer?: { price: string; unit: string; pharmacy: string; code: string; details: string };
     /** The strengths the EHR's eRx form offers, in order. The first is selected. Optional. A brand with none shows 0.5, 1.0 and 2.4 mg. */
     dosages?: string[];
     /**

@@ -76,6 +76,22 @@ export const SCENARIOS: Scenario[] = [
       ...fulfillment,
     ],
   },
+  // PrES, an extra entry point on Standard (the `entry` fork's `pres` exit): the HCP's enrollment on the engagement site creates the case
+  // the way the faxed referral does. The invite, consent, BI, PA and fulfillment that follow are the fax path's.
+  {
+    name: "fax-standard-pres",
+
+    endsAt: "delivered",
+    flowType: "Fax_QS_PA_Approved",
+    choices: { entry: "pres" },
+    steps: [
+      { type: "PRES_SUBMIT", prescriberNpi: "1234567893" }, { type: "INVITE" }, ...verifyIdentity,
+      { type: "COMPLETE_BI", result: "coverage_found" },
+      { type: "SUBMIT_PA" }, { type: "APPROVE_PA" },
+      { type: "SELECT_PHARMACY", pharmacy: PHARMACY },
+      ...fulfillment,
+    ],
+  },
   {
     name: "fax-standard-pa-denied",
 
@@ -241,8 +257,26 @@ export const SCENARIOS: Scenario[] = [
     name: "coa-web-hcp-patient",
     endsAt: "delivered",
     flowType: "CoA_Web_HCP_Patient",
+    choices: { audience: "hcp", bi: "no_coverage_pap" },
     steps: [
       { type: "HCP_REFERRAL_SUBMIT", prescriberNpi: "1234567893" },
+      { type: "COMPLETE_BI" },
+      { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" },
+      { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },
+      ...addressAndDate,
+      ...fulfillment,
+    ],
+  },
+
+  // PES: the patient enrolls themself on the PES site (the `audience` fork's `patient` exit). Their submit enrolls the case and starts BI the
+  // same way the HCP's does, and everything after it is the PrES path above.
+  {
+    name: "coa-web-pes",
+    endsAt: "delivered",
+    flowType: "CoA_Web_HCP_Patient",
+    choices: { audience: "patient", bi: "no_coverage_pap" },
+    steps: [
+      { type: "PES_SUBMIT", prescriberNpi: "1234567893" },
       { type: "COMPLETE_BI" },
       { type: "SEND_PAP_SMS" }, { type: "VERIFY_PAP_SMS" },
       { type: "START_INCOME_QUALIFICATION" }, { type: "VERIFY_INCOME" },

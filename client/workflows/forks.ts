@@ -3,9 +3,10 @@ import type { ForkDefinition } from "@/engine/workflow/types";
 import { biForkFor, COASSIST_FORKS } from "./coassist/forks";
 import { COASSIST_FLOWS } from "./coassist/scenarios";
 import { IASSIST_FORKS } from "./iassist/forks";
+import { STANDARD_FORKS } from "./standard/forks";
 
 /** Every declared fork. The CRM draws its branch buttons from this, and the brand test checks demo choices against it. */
-export const ALL_FORKS: ForkDefinition[] = [...COASSIST_FORKS, ...IASSIST_FORKS];
+export const ALL_FORKS: ForkDefinition[] = [...COASSIST_FORKS, ...IASSIST_FORKS, ...STANDARD_FORKS];
 
 /**
  * The forks a demo on this flow can pick from. A CoAssist scenario with its own rungs reaches only some `bi` exits

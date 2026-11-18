@@ -431,6 +431,8 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
       case 'REFERRAL_RECEIVED':
       // The HCP's web enrollment (the `hcp_patient` variant) is the referral for a case that starts there.
       case 'HCP_REFERRAL_SUBMIT':
+      case 'PES_SUBMIT':
+      case 'PRES_SUBMIT':
         emails.push({
           ...base,
           subject: `New Patient Enrolled - ${patientName}`,

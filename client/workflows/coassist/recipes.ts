@@ -223,8 +223,8 @@ export const COA_WEB_HCP_PATIENT_RECIPE: ScenarioRecipe = {
   source: "web",
   crm: true,
   hideTabs: ["insights", "rules"],
-  forks: ["bi"],
-  choices: { bi: "no_coverage_pap" },
+  forks: ["audience", "bi"],
+  choices: { audience: "hcp", bi: "no_coverage_pap" },
   panels: ["benefits"],
   modules: [
     { id: "enrollment", props: { variant: "hcp_patient" } },

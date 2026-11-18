@@ -100,10 +100,10 @@ export function coassistStageEvents(
 ): LadderEvent[] {
   if (scenarioFacts(flowType).isHcpEnrollment) return hcpStageEvents(stage);
   // A web scenario with its own rungs after the `bi` fork (Web PAP) reads them from the fork. Web Copay keeps the hand-built ones.
-  if (scenarioFacts(flowType).isWebSource && !biForkFor(flowType).stagesBefore) return webStageEvents(stage);
+  if (scenarioFacts(flowType).isWebSource && !biForkFor(flowType, choices).stagesBefore) return webStageEvents(stage);
   if (isTransferScenario(flowType)) return transferStageEvents(stage);
   // A scenario with its own rungs after the `bi` fork reads them from the fork.
-  const biFork = biForkFor(flowType);
+  const biFork = biForkFor(flowType, choices);
   if (biFork.stagesBefore) return forkStageEvents(biFork, { choices }, stage);
 
   const out: LadderEvent[] = [];

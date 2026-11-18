@@ -184,7 +184,7 @@ export const COA_WEB_PAP: ScenarioDefinition<CoassistContent> = {
 export const COA_WEB_HCP_PATIENT: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_Web_HCP_Patient",
   intake: "erx",
-  choices: { bi: "no_coverage_pap" },
+  choices: { audience: "hcp", bi: "no_coverage_pap" },
   recipe: COA_WEB_HCP_PATIENT_RECIPE,
   content: COA_PAP.content,
 };

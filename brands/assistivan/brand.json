@@ -90,36 +90,46 @@
       }
     },
     {
-      "id": "web-pres-pes",
-      "flow": "CoA_Web_HCP_Patient",
-      "label": "13. PrES + PES",
-      "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
+      "id": "standard-pres",
+      "flow": "Fax_QS_PA_Approved",
+      "label": "13. PrES (HCP enrolls)",
+      "description": "The HCP completes the enrollment form on the client's engagement site (PrES) and the case is created, as a faxed referral would create it. The agent texts the patient into the patient app, and the case runs the Standard flow: BI, PA, pharmacy triage and delivery.",
       "choices": {
+        "entry": "pres"
+      }
+    },
+    {
+      "id": "web-pes",
+      "flow": "CoA_Web_HCP_Patient",
+      "label": "14. PES (patient enrolls)",
+      "description": "The patient enrolls on the PES site themself and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
+      "choices": {
+        "audience": "patient",
         "bi": "no_coverage_pap"
       }
     },
     {
       "id": "iassist-pa-approved",
       "flow": "iAssist_PA_Approved",
-      "label": "14. iAssist",
+      "label": "15. iAssist",
       "description": "Internal iAssist platform workflow with prior authorization approval"
     },
     {
       "id": "iassist-pap",
       "flow": "iAssist_PAP",
-      "label": "15. iAssist Appeal",
+      "label": "16. iAssist Appeal",
       "description": "Structural clone of iAssist (WF4), but the PA is denied instead of approved, sets up the Action Factory appeal-rule demo"
     },
     {
       "id": "iassist-medical-transfer",
       "flow": "iAssist_Medical_Transfer",
-      "label": "16. iAssist Medical Transfer",
+      "label": "17. iAssist Medical Transfer",
       "description": "Medical benefit covers the drug and a PA is required. The Rx transfers to an assigned pharmacy and the order ends there"
     },
     {
       "id": "pres-pap",
       "flow": "PrES_PAP",
-      "label": "17. PrES PAP",
+      "label": "18. PrES PAP",
       "description": "Provider e-signature intake with PAP income-qualification (foundation placeholder, capture screens pending)"
     }
   ],

@@ -88,6 +88,83 @@
       }
     ]
   },
+  "fax-standard-pres": {
+    "flowType": "Fax_QS_PA_Approved",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": []
+      },
+      {
+        "after": "CONFIRM_CONSENT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "SELECT_PHARMACY",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Triage to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
   "fax-standard-pa-denied": {
     "flowType": "Fax_QS_PA_Approved",
     "entries": [
@@ -1509,6 +1586,83 @@
       },
       {
         "after": "HCP_REFERRAL_SUBMIT",
+        "actions": [
+          {
+            "stage": "BI-14273",
+            "id": "bi.check_status",
+            "label": "Check Status",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "COMPLETE_BI",
+        "actions": []
+      },
+      {
+        "after": "PATIENT_SELECTS_SHIP_DATE",
+        "actions": [
+          {
+            "stage": "TP-14277",
+            "id": "triage.dispatch",
+            "label": "Transfer to Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "FILL_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.received",
+            "label": "Mark as Received at Pharmacy",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "READY_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.shipped",
+            "label": "Mark as Shipped",
+            "kind": "primary",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "SHIP_RX",
+        "actions": [
+          {
+            "stage": "PS-14278",
+            "id": "pharmacy.delivered",
+            "label": "Mark as Delivered",
+            "kind": "success",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "after": "DELIVER_RX",
+        "actions": []
+      }
+    ]
+  },
+  "coa-web-pes": {
+    "flowType": "CoA_Web_HCP_Patient",
+    "entries": [
+      {
+        "after": "(start)",
+        "actions": []
+      },
+      {
+        "after": "PES_SUBMIT",
         "actions": [
           {
             "stage": "BI-14273",
