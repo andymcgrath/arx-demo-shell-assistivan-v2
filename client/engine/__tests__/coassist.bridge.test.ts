@@ -258,3 +258,114 @@ describe("cash_offer bridge: $0 copay and delivery", () => {
     });
   });
 });
+
+/**
+ * Two dispense legs (CLAUDE.md rules 4, 8, 12): the Bridge pharmacy ships first, and the commercial pharmacy the HCP picked on
+ * the eRx ships after the appeal is approved. The second leg waits for both.
+ */
+describe("cash_offer bridge: two dispense legs", () => {
+  afterEach(() => setRecipeOverride("CoA_Copay", undefined));
+  const COMMERCIAL = { name: "Commercial Test Pharmacy", address: "1 Main St", city: "Indianapolis", state: "IN", zip: "46240", phone: "(317) 555-0100" };
+  const MODULES: ModuleSpec[] = [
+    { id: "enrollment" }, { id: "pharmacy_selection", props: { variant: "prescriber" } }, { id: "prior_authorization", props: { variant: "auto" } }, { id: "pa_notification" },
+    bridgeModule(), { id: "appeal" }, { id: "financial_assistance", props: { variant: "copay" } }, { id: "scheduling" }, { id: "tracking", props: { variant: "two_legs" } },
+  ];
+  function start(appeal: "approved" | "denied" = "approved") {
+    setRecipeOverride("CoA_Copay", { modules: MODULES, forks: ["bi", "pa", "appeal"] });
+    const clock = new SimulatedClock();
+    const actor = startFlow("CoA_Copay", { clock, choices: { bi: "pharmacy_covered", pa: "denied", appeal } });
+    return { actor, clock, can: (type: string) => actor.getSnapshot().can({ type } as any), data: () => ctx(actor).workflowData };
+  }
+  const THROUGH_DENIAL = [{ type: "REFERRAL_RECEIVED", pharmacy: COMMERCIAL }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }, { type: "COMPLETE_BI" }, { type: "DENY_PA" }];
+  const LEG = [{ type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" }, { type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }];
+
+  /** The Bridge is delivered. The appeal has been filed. */
+  function afterLegOne() {
+    const t = start();
+    runSteps(t.actor, THROUGH_DENIAL);
+    t.clock.increment(BRIDGE_TEXT_MS);
+    runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG]);
+    return t;
+  }
+  const approveAppeal = (t: ReturnType<typeof start>) => {
+    runSteps(t.actor, [{ type: "VIEW_STAGE", stage: "APPEAL" }]);
+    t.clock.increment(5000);
+  };
+
+  it("keeps the HCP's pharmacy pick on the case, and the first leg goes to the non-commercial pharmacy", () => {
+    withFrozenClock(() => {
+      const t = start();
+      runSteps(t.actor, THROUGH_DENIAL);
+      expect(t.data().commercialPharmacy).toEqual(COMMERCIAL);
+      t.clock.increment(BRIDGE_TEXT_MS);
+      runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG.slice(0, 3)]);
+      expect(t.data().selectedPharmacy?.name).not.toBe(COMMERCIAL.name);
+      expect(t.data().commercialPharmacy).toEqual(COMMERCIAL);
+    });
+  });
+
+  it("rejects the second leg until the appeal is approved and the first leg is delivered", () => {
+    withFrozenClock(() => {
+      const t = start();
+      runSteps(t.actor, THROUGH_DENIAL);
+      expect(t.can("START_SECOND_LEG"), "before anything").toBe(false);
+      t.clock.increment(BRIDGE_TEXT_MS);
+      runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG.slice(0, 5)]);
+      approveAppeal(t);
+      expect(t.data().appealStatus).toBe("approved");
+      expect(t.can("START_SECOND_LEG"), "approved but the first leg is only shipped").toBe(false);
+      runSteps(t.actor, [{ type: "DELIVER_RX" }]);
+      expect(t.can("START_SECOND_LEG"), "approved and delivered").toBe(true);
+    });
+  });
+
+  it("rejects the second leg when the appeal is not approved, even after delivery", () => {
+    withFrozenClock(() => {
+      const t = start("denied");
+      runSteps(t.actor, THROUGH_DENIAL);
+      t.clock.increment(BRIDGE_TEXT_MS);
+      runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, ...LEG]);
+      approveAppeal(t);
+      expect(t.data().appealStatus).toBe("denied");
+      expect(t.can("START_SECOND_LEG")).toBe(false);
+    });
+  });
+
+  it("the second leg asks for the address and date again, then the commercial pharmacy receives, ships, and delivers", () => {
+    withFrozenClock(() => {
+      const t = afterLegOne();
+      approveAppeal(t);
+      const firstShipDate = t.data().patientShipDate;
+      const routes = runSteps(t.actor, [{ type: "START_SECOND_LEG" }, ...LEG]).map((r) => r.route);
+      expect(routes).toEqual(["/delivery-address", "/delivery-date", "/enrollment-complete", "/order-tracker", "/order-tracker", "/order-shipped", "/medication-delivered"]);
+      expect(t.data().dispenseLeg).toBe(2);
+      expect(t.data().selectedPharmacy).toEqual(COMMERCIAL);
+      expect(t.data().firstLeg?.shipDate).toBe(firstShipDate);
+      expect(t.data().firstLeg?.pharmacy?.name).not.toBe(COMMERCIAL.name);
+      expect(t.data().pharmacyStatus).toBe("delivered");
+      expect(t.can("START_SECOND_LEG")).toBe(false); // and only once
+    });
+  });
+
+  it("the second leg's own steps wait for the patient's address and date", () => {
+    withFrozenClock(() => {
+      const t = afterLegOne();
+      approveAppeal(t);
+      runSteps(t.actor, [{ type: "START_SECOND_LEG" }]);
+      expect(t.can("FILL_RX")).toBe(false);
+      runSteps(t.actor, [{ type: "PATIENT_SETS_ADDRESS" }]);
+      expect(t.can("FILL_RX")).toBe(false); // and the date
+      runSteps(t.actor, [{ type: "PATIENT_SELECTS_SHIP_DATE" }]);
+      expect(t.can("READY_RX")).toBe(false); // the pharmacy receives only after the transfer
+      expect(t.can("FILL_RX")).toBe(true);
+    });
+  });
+
+  it("a recipe without two_legs ignores the second leg", () => {
+    withFrozenClock(() => {
+      setRecipeOverride("CoA_Copay", { modules: MODULES.map((m) => (m.id === "tracking" ? { id: "tracking" } : m)), forks: ["bi", "pa", "appeal"] });
+      const actor = startFlow("CoA_Copay", { clock: new SimulatedClock(), choices: { bi: "pharmacy_covered", pa: "denied", appeal: "approved" } });
+      expect(actor.getSnapshot().can({ type: "START_SECOND_LEG" } as any)).toBe(false);
+    });
+  });
+});

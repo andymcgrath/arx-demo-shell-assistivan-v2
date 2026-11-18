@@ -366,5 +366,13 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
       step("Case manager marks it shipped", "agent", "click"),
       step("Case manager marks it delivered", "agent", "click"),
     ],
+    variants: [
+      { id: "default", label: "One shipment", summary: "One pharmacy fills the order. The tracker follows it from received to delivered." },
+      {
+        id: "two_legs",
+        label: "Two shipments, after an appeal",
+        summary: "A first pharmacy ships and delivers. When the appeal is approved, the case manager transfers to a second pharmacy. The patient confirms the address and picks a date again, and the tracker runs a second time.",
+      },
+    ],
   },
 };

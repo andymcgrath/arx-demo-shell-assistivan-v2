@@ -101,7 +101,7 @@ describe("CRM actions along the golden paths", () => {
 
   it("every button's event is enabled somewhere along the golden paths", () => {
     // A demo-only button needs a recipe no registered scenario has. coassist.bridge.test.ts covers it.
-    const demoOnly = new Set(["SEND_BRIDGE"]);
+    const demoOnly = new Set(["SEND_BRIDGE", "START_SECOND_LEG"]);
     expect([...enabledSomewhere].sort()).toEqual([...CRM_ACTION_EVENTS].filter((e) => !demoOnly.has(e)).sort());
   });
 

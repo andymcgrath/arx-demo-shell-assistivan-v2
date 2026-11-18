@@ -72,6 +72,8 @@ const BUTTONS: ButtonDef[] = [
   { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled",
     // A web-source case is enrolled by the client's web page (WEB_SUBMIT), so the agent has nothing to enroll.
     appliesTo: (d) => !scenarioFacts(d.flowType).isWebSource },
+  // The second dispense of the denied-PA Bridge: the appeal is approved and the first shipment is delivered.
+  { stage: "TP-14277", id: "triage.second_leg", label: "Transfer to Commercial Pharmacy", kind: "primary", event: "START_SECOND_LEG", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.received", label: "Mark as Received at Pharmacy", kind: "primary", event: "READY_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.shipped", label: "Mark as Shipped", kind: "primary", event: "SHIP_RX", shown: "when_enabled" },
   { stage: "PS-14278", id: "pharmacy.delivered", label: "Mark as Delivered", kind: "success", event: "DELIVER_RX", shown: "when_enabled" },

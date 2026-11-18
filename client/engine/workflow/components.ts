@@ -351,7 +351,13 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "tracking",
     lane: "patient",
     needs: [],
+    // `two_legs`: a second dispense by the commercial pharmacy, after the first is delivered and the appeal is approved.
+    // It needs the appeal decision, and both legs ask the patient for the address and date, so it needs `scheduling`.
+    needsWhen: [{ props: { variant: "two_legs" }, needs: ["fork:appeal"] }],
+    requiresModulesWhen: [{ props: { variant: "two_legs" }, modules: ["appeal", "scheduling"] }],
+    demoVariants: ["two_legs"],
     sets: [],
+    setsWhen: [{ props: { variant: "two_legs" }, sets: ["secondDispense"] }],
     trackerSteps: [],
   },
 };

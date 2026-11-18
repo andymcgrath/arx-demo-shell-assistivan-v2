@@ -630,6 +630,20 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
         });
         break;
 
+      // The denied-PA Bridge: the appeal is approved and the first shipment is delivered, so the commercial pharmacy dispenses next.
+      case 'START_SECOND_LEG':
+        emails.push({
+          ...base,
+          subject: `Second Shipment Started - ${patientName}`,
+          bodyParagraphs: [
+            `The appeal for ${patientName} was approved and the Bridge shipment was delivered. The case transferred to the commercial pharmacy for the next shipment.`,
+            `The patient confirms the delivery address and picks a ship date again.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
       case 'SEND_PA_FORM':
         emails.push({
           ...base,

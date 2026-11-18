@@ -106,6 +106,9 @@
     "START_INCOME_QUALIFICATION": [
       "income_qualification.start_income_qualification"
     ],
+    "START_SECOND_LEG": [
+      "tracking.start_second_leg"
+    ],
     "SUBMIT_PA": [
       "spine.submit_pa"
     ],
@@ -529,6 +532,7 @@
       "CoA_APA_Specialty",
       "CoA_Web_HCP_Patient"
     ],
+    "tracking.start_second_leg": [],
     "web_handoff.check_pricing": [
       "CoA_Web_Copay"
     ],

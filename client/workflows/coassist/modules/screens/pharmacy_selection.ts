@@ -13,6 +13,8 @@ const STORE = { module: "pharmacy_selection", props: { variant: "store" } } as c
 const NETWORK = { module: "pharmacy_selection", props: { variant: "network" } } as const;
 const ASSIGNED = { module: "pharmacy_selection", props: { variant: "assigned" } } as const;
 const PRESCRIBER = { module: "pharmacy_selection", props: { variant: "prescriber" } } as const;
+/** The Bridge shares the prescriber's pharmacy, but a denied PA goes to the Bridge text, not the waiting screen. */
+const BRIDGE = { module: "cash_offer", props: { variant: "bridge" } } as const;
 const SCHEDULED: RuleScope[] = [PRESCRIBER, { module: "scheduling" }];
 /** The assigned pharmacy after a PA: only a scenario with the `pa` fork has the notice and the transfer confirmation. */
 const ASSIGNED_AFTER_PA = [ASSIGNED, { fork: "pa" }];
@@ -46,7 +48,7 @@ export const PHARMACY_SELECTION_ROUTES: CoaRoute[] = [
 
   // The prescriber's pharmacy: wait for the PA, hear it by text and code, see the approval and the way to schedule, pick a
   // date, then the tracker follows the pharmacy. The address step is the screen the approval page links to.
-  { id: "pharmacy_selection.prescriber_waiting", slot: "awaiting", path: "/", scope: PRESCRIBER, when: (d) => d.consentStatus === "confirmed" && d.paStatus !== "approved" },
+  { id: "pharmacy_selection.prescriber_waiting", slot: "awaiting", path: "/", scope: [PRESCRIBER, { not: BRIDGE }], when: (d) => d.consentStatus === "confirmed" && d.paStatus !== "approved" },
   { id: "pharmacy_selection.prescriber_sms", slot: "pa_notice", path: "/pa-approved-sms", scope: PRESCRIBER, when: (d) => d.paStatus === "approved" && !d.paApprovedSmsVerified },
   { id: "pharmacy_selection.prescriber_otp", slot: "pa_notice", path: "/pa-approved-otp", scope: PRESCRIBER, when: (d) => d.paStatus === "approved" && d.paApprovedSmsVerified && !d.paApprovedOtpVerified },
   { id: "pharmacy_selection.prescriber_approved", slot: "pharmacy", path: "/pa-approved", scope: SCHEDULED, when: (d) => d.paApprovedOtpVerified && d.dispatchStatus === "pending_selection" },

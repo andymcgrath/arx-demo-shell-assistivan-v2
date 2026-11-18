@@ -53,13 +53,14 @@
         "forks": ["bi", "pa", "appeal"],
         "modules": [
           { "id": "enrollment" },
+          { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
           { "id": "prior_authorization", "props": { "variant": "auto" } },
           { "id": "pa_notification" },
           { "id": "cash_offer", "props": { "variant": "bridge" } },
           { "id": "appeal" },
           { "id": "financial_assistance", "props": { "variant": "copay" } },
           { "id": "scheduling" },
-          { "id": "tracking" }
+          { "id": "tracking", "props": { "variant": "two_legs" } }
         ]
       }
     }

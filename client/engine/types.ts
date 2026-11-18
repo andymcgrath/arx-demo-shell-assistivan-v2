@@ -142,6 +142,15 @@ export interface WorkflowData {
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;
   /**
+   * `tracking` variant `two_legs` only (the denied-PA Bridge): the commercial pharmacy the HCP picked on the eRx. It stays on the
+   * case so the second dispense reads it, because the first dispense (the non-commercial pharmacy) takes `selectedPharmacy`.
+   */
+  commercialPharmacy?: Pharmacy | null;
+  /** `tracking` variant `two_legs` only: 2 once the commercial dispense has started. Absent during the first. */
+  dispenseLeg?: 2;
+  /** `tracking` variant `two_legs` only: the first dispense, kept once the second starts. */
+  firstLeg?: { pharmacy: Pharmacy | null; shipDate: string | null };
+  /**
    * `cash_offer` variant `bridge` only: the free short supply after a denied PA. `sent` once the text goes out,
    * `active` when the patient opens it and the supply starts. Absent in every other flow.
    */

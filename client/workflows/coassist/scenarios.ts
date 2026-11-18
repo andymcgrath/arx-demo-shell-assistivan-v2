@@ -20,10 +20,18 @@ export interface CoassistContent {
   selfPay: Pharmacy;
   /** The pharmacy a scenario hands the Rx to when it assigns one (the BI fork's `pharmacy_transfer` exit). */
   transferPharmacy: Pharmacy;
+  /** The client's commercial pharmacy, when the eRx names none (a stage jump replays the eRx with no pick). Only the Bridge reads it. */
+  commercial?: Pharmacy;
 }
 
 const MAIL_ORDER: Pharmacy = { name: "FutureScripts Home Delivery", address: "2200 Commerce Pkwy", city: "Fort Worth", state: "TX", zip: "76102", phone: "(866) 555-0199" };
 const SELF_PAY: Pharmacy = { name: "CoAssist Pharmacy", address: "2400 Sand Lake Road, Suite 200", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0175" };
+
+/**
+ * The pharmacy the APA scenario uses when the eRx named none (a stage jump replays the eRx with no pick). It is the
+ * client's own pharmacy when the brand file has one (`program.specialtyPharmacy`), and a placeholder otherwise.
+ */
+const SPECIALTY_PHARMACY: Pharmacy = BRAND.program.specialtyPharmacy ?? { name: "CoAssist Specialty Pharmacy", address: "2400 Sand Lake Road, Suite 300", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0188" };
 
 export const COA_DTP: ScenarioDefinition<CoassistContent> = {
   flowType: "CoA_DTP",
@@ -48,6 +56,7 @@ export const COA_COPAY: ScenarioDefinition<CoassistContent> = {
     mailOrder: MAIL_ORDER,
     selfPay: SELF_PAY,
     transferPharmacy: TRANSFER_PHARMACY,
+    commercial: SPECIALTY_PHARMACY,
   },
 };
 
@@ -123,12 +132,6 @@ export const COA_PAP: ScenarioDefinition<CoassistContent> = {
     transferPharmacy: TRANSFER_PHARMACY,
   },
 };
-
-/**
- * The pharmacy the APA scenario uses when the eRx named none (a stage jump replays the eRx with no pick). It is the
- * client's own pharmacy when the brand file has one (`program.specialtyPharmacy`), and a placeholder otherwise.
- */
-const SPECIALTY_PHARMACY: Pharmacy = BRAND.program.specialtyPharmacy ?? { name: "CoAssist Specialty Pharmacy", address: "2400 Sand Lake Road, Suite 300", city: "Orlando", state: "FL", zip: "32809", phone: "(800) 555-0188" };
 
 /**
  * The prescriber completes the PA form (APA) and the pharmacy benefit covers it. The prescriber picked the pharmacy on

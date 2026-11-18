@@ -140,8 +140,8 @@ describe("catalog palette cards", () => {
       expect(c.steps.length, c.label).toBeGreaterThan(0);
       expect(c.apps.length, c.label).toBeGreaterThan(0);
     }
-    expect(cards.filter((c) => c.moduleId === "tracking")).toHaveLength(1);
-    expect(cards.find((c) => c.moduleId === "tracking")!.variantId).toBeUndefined();
+    // Tracking has a plain card and the two-shipment variant (the denied-PA Bridge).
+    expect(cards.filter((c) => c.moduleId === "tracking").map((c) => c.variantId)).toEqual([undefined, "two_legs"]);
   });
 
   it("gives a plain module's card one step built from its own lane and trigger", () => {

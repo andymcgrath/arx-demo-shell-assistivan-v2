@@ -1,6 +1,7 @@
 /**
  * Enrollment: the patient verifies their phone and consents. BI starts off the eRx alone, so it does not wait for them.
  */
+import { hasBridge } from "./financial_assistance";
 import type { CoaRule } from "./shared";
 import { assignment, prePicked, prescriberPharmacy } from "./shared";
 
@@ -9,8 +10,9 @@ export const ENROLLMENT_RULES: CoaRule[] = [
     id: "enrollment.referral_received",
     on: "REFERRAL_RECEIVED",
     when: (d) => d.enrollmentStatus === "none",
-    // The pharmacy the prescriber picked on the eRx stays with the case when the recipe uses it.
-    set: (_d, e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(prescriberPharmacy(s) && e.pharmacy ? { selectedPharmacy: e.pharmacy } : {}) }),
+    // The pharmacy the prescriber picked on the eRx stays with the case when the recipe uses it. With a Bridge it is the commercial
+    // pharmacy of the second dispense, so it is kept apart (the first dispense takes `selectedPharmacy`).
+    set: (_d, e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(prescriberPharmacy(s) && e.pharmacy ? { selectedPharmacy: e.pharmacy } : {}), ...(hasBridge(s) ? { commercialPharmacy: e.pharmacy ?? s.content.commercial ?? null } : {}) }),
     emit: { portal: "crm", step: 1 },
     // BI runs off the eRx alone. It does not wait for the patient.
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
