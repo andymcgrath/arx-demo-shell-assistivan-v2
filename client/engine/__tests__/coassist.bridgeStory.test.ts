@@ -11,6 +11,7 @@ import { SECOND_LEG_MS } from "@/workflows/coassist/modules/tracking";
 import { BRIDGE_TEXT_MS } from "@/workflows/coassist/modules/cash_offer";
 import { REVEAL_MS } from "@/workflows/coassist/modules/shared";
 import { stepBarModel } from "@/shell/stepBar";
+import { STAGE_BUILDERS } from "@/portals/crm/stages/builders";
 import { crmActions } from "@/portals/crm/stages/actions";
 import fs from "node:fs";
 import path from "node:path";
@@ -102,6 +103,7 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(route("SHIP_RX")).toBe("/order-shipped");
       route("DELIVER_RX");
       expect(data().selectedPharmacy).toEqual(BRIDGE_PHARMACY);
+      expect(STAGE_BUILDERS["PS-14278"].standard(data()).statusDetail).toBe("First dispense delivered");
       expect(actor.getSnapshot().can({ type: "START_SECOND_LEG" })).toBe(false); // the appeal is still open
 
       // 7. The appeal is approved and the patient is told. The case manager then transfers to the commercial pharmacy (Triage to Pharmacy).
@@ -121,7 +123,12 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(buttons()).toContain("triage.dispatch");
       route("FILL_RX");
       expect(data().selectedPharmacy).toEqual(COMMERCIAL);
-      runSteps(actor, [{ type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }]);
+      runSteps(actor, [{ type: "READY_RX" }, { type: "SHIP_RX" }]);
+      // The CRM stages follow the second shipment, not the first (Triage and Pharmacy Status agree).
+      expect(STAGE_BUILDERS["PS-14278"].standard(data()).statusDetail).toBe("Second dispense shipped — in transit to patient");
+      expect(STAGE_BUILDERS["TP-14277"].bridge(data()).statusDetail).toBe("Second dispense shipped");
+      runSteps(actor, [{ type: "DELIVER_RX" }]);
+      expect(STAGE_BUILDERS["PS-14278"].standard(data()).statusDetail).toBe("Second dispense delivered");
 
       // The end state: both shipments delivered, each by its own pharmacy.
       expect(data().pharmacyStatus).toBe("delivered");
