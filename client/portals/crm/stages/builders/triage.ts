@@ -3,6 +3,7 @@ import { dateFromToday } from "@/lib/relativeDate";
 import type { Stage } from "../types";
 import { patientFirstNameFor } from "../../patientFacts";
 import { TRANSFER_NOT_NEEDED_DETAIL, notNeeded } from "./coverage";
+import { triageLabel } from "@/workflows/vocabulary";
 
 /** Triage to Pharmacy. The variants are the ways a scenario dispenses: a pharmacy chain, a site of care, or outside AssistRx. */
 
@@ -81,7 +82,7 @@ const dispatchedOutside = (d: WorkflowData): Stage =>
     ? { id: ID, name: NAME, statusLabel: "In Progress", statusDetail: "Pharmacy selected — awaiting dispatch", isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: pharmacyField(d) }, { label: "Status", value: "Pharmacy Selected" }], lastUpdated: today(), lastUpdatedAgo: "today" }
     : { id: ID, name: NAME, statusLabel: "Complete", statusDetail: d.pricingOption === "retail" ? "Dispatched to retail pharmacy — filled outside AssistRx" : "Dispatched via Mail Order — filled outside AssistRx", isComplete: true, isNotStarted: false, fields: [{ label: "Pharmacy", value: pharmacyField(d) }, { label: "Status", value: "Dispatched" }], lastUpdated: today(), lastUpdatedAgo: "today" };
 
-export const TRIAGE_BUILDERS = {
+const BUILDERS = {
   standard,
   prescriber,
   bridge,
@@ -92,3 +93,14 @@ export const TRIAGE_BUILDERS = {
   /** Coverage with the medical benefit covered: fulfillment goes to the provider. */
   transfer_not_needed: (): Stage => notNeeded({ id: ID, name: NAME }, TRANSFER_NOT_NEEDED_DETAIL),
 };
+
+/**
+ * The stage is named by how the referral arrived: "Transfer to Pharmacy" for eRx, "Triage to Pharmacy" for fax. A variant that
+ * renames the stage itself (the free drug program's "Triage to Site of Care") keeps its own name.
+ */
+const named = (build: (d: WorkflowData) => Stage) => (d: WorkflowData): Stage => {
+  const stage = build(d);
+  return stage.name === NAME ? { ...stage, name: triageLabel(d.flowType) } : stage;
+};
+
+export const TRIAGE_BUILDERS = Object.fromEntries(Object.entries(BUILDERS).map(([variant, build]) => [variant, named(build)])) as Record<keyof typeof BUILDERS, (d: WorkflowData) => Stage>;

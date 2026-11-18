@@ -14,6 +14,7 @@
  * Only one roster row (Keanu Dixon) is backed by the live workflow actor,
  * same as CoA — everyone else is static decoy data from ../data/samplePatients.
  */
+import { triageLabel } from "@/workflows/vocabulary";
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { usePersonaState } from "@/engine/WorkflowProvider";
@@ -85,7 +86,7 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
       // into "Appeal Filed" below even though the site of care was already
       // selected, so "Reset → Stage 6" visibly resolved to Stage 5.
       if (workflowData.selectedPharmacy !== null) {
-        return { label: "Triage to Pharmacy", color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
+        return { label: triageLabel(workflowData.flowType), color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
       }
       return { label: "Appeal Filed", color: "warning", dots: ["completed", "completed", "completed", "pending", "pending", "disabled"] };
     }

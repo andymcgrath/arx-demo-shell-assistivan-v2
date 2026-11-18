@@ -6,6 +6,7 @@
  * `engine/__tests__/stepBar.test.ts` pins them against a fixture.
  */
 import type { WorkflowData } from "@/engine/types";
+import { withTriageLabel } from "@/workflows/vocabulary";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { pspStepBar } from "./pspStepBar";
 import { isBuyAndBillScenario } from "./buyAndBillLadders";
@@ -504,7 +505,8 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
     : { processing: stepNumberOf(labels, "Rx Processing"), shipped: stepNumberOf(labels, "Rx Shipped") };
 
   return {
-    labels,
+    // The hand-off step is named by how the referral arrived: "Transfer to Pharmacy" for eRx, "Triage to Pharmacy" for fax.
+    labels: labels.map((label) => withTriageLabel(label, flowType)),
     stepDone,
     workflowStep,
     // Only paProcessing stays WF1/CoA-only: Fax_PAP_Audit and PrES_PAP never leave paStatus "none".

@@ -1,5 +1,6 @@
 import type { WorkflowData } from "@/engine/types";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import { triageLabel } from "@/workflows/vocabulary";
 
 /**
  * The buttons and badges a CRM stage shows, as data. `enabled` comes from the machine (`snapshot.can`), so a button
@@ -34,7 +35,8 @@ export interface CrmAction {
 interface ButtonDef {
   stage: string;
   id: string;
-  label: string;
+  /** A function when the wording depends on the scenario (for example eRx and fax name the pharmacy hand-off differently). */
+  label: string | ((d: WorkflowData) => string);
   kind: "primary" | "success";
   event: string;
   /**
@@ -68,7 +70,7 @@ const BUTTONS: ButtonDef[] = [
   // The bridge replaces the cash offer. It shows only where the recipe has it and the PA is denied (the `fax` trigger).
   { stage: "CO-14281", id: "cash_offer.send_bridge", label: "Send Bridge Supply", kind: "primary", event: "SEND_BRIDGE", shown: "when_enabled" },
   { stage: "CO-14281", id: "cash_offer.verify", label: "Verify Payment", kind: "primary", event: "VERIFY_PAYMENT", shown: "always" },
-  { stage: "TP-14277", id: "triage.dispatch", label: "Triage to Pharmacy", kind: "primary", event: "FILL_RX", shown: "when_enabled" },
+  { stage: "TP-14277", id: "triage.dispatch", label: (d) => triageLabel(d.flowType), kind: "primary", event: "FILL_RX", shown: "when_enabled" },
   { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled",
     // A web-source case is enrolled by the client's web page (WEB_SUBMIT), so the agent has nothing to enroll.
     appliesTo: (d) => !scenarioFacts(d.flowType).isWebSource },
@@ -94,7 +96,7 @@ export function crmActions(workflowData: WorkflowData, stageId: string, can: Crm
     const event: CrmEvent = { type: b.event, portal: "crm" };
     const enabled = can(event);
     if (b.shown === "when_enabled" && !enabled) continue;
-    out.push({ id: b.id, label: b.label, kind: b.kind, event, enabled });
+    out.push({ id: b.id, label: typeof b.label === "function" ? b.label(workflowData) : b.label, kind: b.kind, event, enabled });
   }
   for (const b of BADGES) {
     if (b.stage === stageId && b.when(workflowData)) out.push({ id: b.id, label: b.label, kind: "badge", event: null, enabled: false });

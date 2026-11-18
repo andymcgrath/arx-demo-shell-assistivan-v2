@@ -308,7 +308,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -507,7 +507,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -706,7 +706,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -962,7 +962,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1161,7 +1161,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1282,7 +1282,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1396,7 +1396,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1452,7 +1452,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1529,7 +1529,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1652,7 +1652,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -1795,7 +1795,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2019,7 +2019,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2038,7 +2038,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2152,7 +2152,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2237,7 +2237,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2322,7 +2322,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2476,7 +2476,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2623,7 +2623,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2708,7 +2708,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2793,7 +2793,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }
@@ -2878,7 +2878,7 @@
           {
             "stage": "TP-14277",
             "id": "triage.dispatch",
-            "label": "Triage to Pharmacy",
+            "label": "Transfer to Pharmacy",
             "kind": "primary",
             "enabled": true
           }

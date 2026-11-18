@@ -1,3 +1,4 @@
+import { triageLabel } from "@/workflows/vocabulary";
 import { ChevronDown, Settings, ListTodo, ArrowLeft, Calendar, Users, AlertCircle, CheckSquare, Clock, Zap, Shield, Mail } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -395,7 +396,7 @@ export default function FieldPortal() {
     stageName: item.id === "missing-information" ? "Enrollment"
       : item.id === "pa-submission-required" ? "Prior Authorization"
       : item.id === "appeal-review" ? "Appeals"
-      : "Triage to Pharmacy",
+      : triageLabel(state.flow_type),
   }));
 
   // The one case behind this patient's live tasks — same onboarding/PA

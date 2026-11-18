@@ -50,6 +50,7 @@ import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "
 import { isBuyAndBillScenario, buyAndBillStageEvents, BUY_AND_BILL_STAGE_LABELS, isFreeDrugScenario, freeDrugStageEvents, FREE_DRUG_STAGE_LABELS } from "./buyAndBillLadders";
 import { faxStageEvents } from "./faxLadders";
 import { PERSONAS, PersonaChip } from "./personas";
+import { withTriageLabel } from "@/workflows/vocabulary";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -1103,7 +1104,7 @@ export default function DemoShell() {
                         idx > 0 && "border-t border-indigo-400/30"
                       )}
                     >
-                      <span className="text-indigo-300 font-semibold">Stage {stage}:</span> {label}
+                      <span className="text-indigo-300 font-semibold">Stage {stage}:</span> {withTriageLabel(label, flowType)}
                     </button>
                   ))}
                 </div>

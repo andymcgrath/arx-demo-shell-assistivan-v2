@@ -8,6 +8,7 @@ import type { WorkflowData } from "@/engine/types";
 import { SF_SECTION_BG, FieldRow } from "./SfPrimitives";
 import { FC_BLUE } from "./SfControls";
 import { Zap } from "lucide-react";
+import { triageVerb } from "@/workflows/vocabulary";
 import { PharmacyModal } from "./PharmacyModal";
 
 interface TriageDetailProps {
@@ -70,7 +71,7 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
                 style={{ background: FC_BLUE }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                Triage to Pharmacy
+                {action("triage.dispatch")!.label}
               </button>
             )}
           </div>
@@ -92,7 +93,7 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
                   dispatches to a site of care instead of a pharmacy. */}
               <div className="border border-[#dddbda] rounded">
                 <div className="px-3 py-2 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                  <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Site of Care Details" : "Triage Pharmacy Details"}</span>
+                  <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Site of Care Details" : `${triageVerb(workflowData.flowType)} Pharmacy Details`}</span>
                 </div>
                 <div className="space-y-0">
                   <FieldRow label={facts.dispensesAtSiteOfCare ? "Site of Care Name" : "Pharmacy Name"} value={selectedPharmacy?.name || ""} />
@@ -109,7 +110,7 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
             <div>
               <div className="border border-[#dddbda] rounded flex flex-col">
                 <div className="px-4 py-3 border-b border-[#dddbda]" style={{ background: SF_SECTION_BG }}>
-                  <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Select Site of Care" : "Select Triage Pharmacy"}</span>
+                  <span className="text-[12px] font-semibold text-[#3e3e3c]">{facts.dispensesAtSiteOfCare ? "Select Site of Care" : `Select ${triageVerb(workflowData.flowType)} Pharmacy`}</span>
                 </div>
                 <div className="flex flex-col items-center justify-center p-4 gap-4">
                   {facts.dispensesAtSiteOfCare ? (
