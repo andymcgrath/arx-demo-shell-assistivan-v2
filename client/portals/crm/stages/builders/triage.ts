@@ -41,6 +41,26 @@ const prescriber = (d: WorkflowData): Stage => {
 };
 
 /**
+ * The denied-PA Bridge dispenses twice: the non-commercial pharmacy first, then the commercial one after the appeal. The PA is
+ * denied, so nothing waits on an approval. Each leg waits for the patient's address and date, then the agent transfers it.
+ */
+const bridge = (d: WorkflowData): Stage => {
+  const leg = d.dispenseLeg === 2 ? "Second" : "First";
+  const waiting = (detail: string, status: string): Stage =>
+    ({ id: ID, name: NAME, statusLabel: "In Progress", statusDetail: detail, isComplete: false, isNotStarted: false, fields: [{ label: "Pharmacy", value: pharmacyField(d) }, { label: "Status", value: status }], lastUpdated: today(), lastUpdatedAgo: "today" });
+  if (d.dispatchStatus === "none")
+    return d.dispenseLeg === 2
+      ? waiting("Appeal approved — awaiting the patient's delivery address and date", "Awaiting Patient")
+      : d.bridgeStatus === "active" && d.copayEnrolled
+      ? waiting("Awaiting the patient's delivery address and date", "Awaiting Patient")
+      : pending("Awaiting the patient's Bridge enrollment");
+  if (d.dispatchStatus === "selected" || d.dispatchStatus === "pending_selection")
+    return d.patientShipDate === null ? waiting("Awaiting the patient's delivery date", "Awaiting Patient") : waiting(`Delivery scheduled — ready to transfer to ${d.selectedPharmacy?.name ?? "the pharmacy"}`, "Ready to Transfer");
+  const base = standard(d);
+  return { ...base, statusDetail: base.statusDetail.replace("First dispense", `${leg} dispense`), fields: base.fields.map((f) => (f.label === "First Dispense" ? { ...f, label: `${leg} Dispense` } : f)) };
+};
+
+/**
  * The drug goes to a site of care, not a pharmacy shipment. This is the scenario's last step: it completes the moment a
  * site of care is picked, with no Rx Processing, Shipped or Delivered chain to wait on.
  */
@@ -64,6 +84,7 @@ const dispatchedOutside = (d: WorkflowData): Stage =>
 export const TRIAGE_BUILDERS = {
   standard,
   prescriber,
+  bridge,
   site_of_care: siteOfCare(() => "Awaiting site of care selection"),
   /** Free drug: the same, but the patient's appointment date comes first, and the stage is renamed. */
   free_drug: siteOfCare((d) => (d.infusionDate === null ? "Awaiting the patient's appointment date" : "Awaiting site of care selection"), "Triage to Site of Care"),

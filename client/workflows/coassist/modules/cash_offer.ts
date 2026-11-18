@@ -80,7 +80,9 @@ export const CASH_OFFER_RULES: CoaRule[] = [
     on: "SEND_BRIDGE",
     scope: BRIDGE,
     when: (d) => d.paStatus === "denied" && d.bridgeStatus === undefined,
-    set: () => ({ bridgeStatus: "sent" }),
+    // The Bridge is dispensed by the non-commercial pharmacy. The CRM's Triage card shows it from the first text, and the HCP's
+    // eRx pick (the commercial pharmacy) waits on the case for the second shipment (`commercialPharmacy`).
+    set: (_d, _e, s) => ({ bridgeStatus: "sent", selectedPharmacy: s.content.transferPharmacy }),
     emit: { portal: "crm", step: 9 },
   },
   {

@@ -128,7 +128,14 @@ function StateDrivenNav() {
   const undoNonce = useDemoStore((s) => s.undoNonce);
   const lastUndoNonceRef = useRef(undoNonce);
 
+  // The denied-PA Bridge ships twice. When the second shipment starts, the order resets and the patient confirms the address
+  // and date again, but the tracker screens are sticky. The start of the second shipment moves the patient on anyway.
+  const dispenseLeg = useSelector(actor, (snapshot) => snapshot.context.workflowData.dispenseLeg);
+  const lastLegRef = useRef(dispenseLeg);
+
   useEffect(() => {
+    const legStarted = dispenseLeg !== lastLegRef.current;
+    lastLegRef.current = dispenseLeg;
     const isUndo = undoNonce !== lastUndoNonceRef.current;
     lastUndoNonceRef.current = undoNonce;
     const isReset = resetNonce !== lastResetNonceRef.current || isUndo;
@@ -141,11 +148,11 @@ function StateDrivenNav() {
     // Don't interrupt delivery/order flows — user may have manually navigated.
     // A reset overrides this: the screen must always land on the correct step.
     const data = actor.getSnapshot().context.workflowData;
-    if (!isReset && isStaying(data.flowType, pathnameRef.current)) return;
+    if (!isReset && !legStarted && isStaying(data.flowType, pathnameRef.current)) return;
 
     // A Reset or an Undo starts the history again. Any other move adds an entry, so Back returns to the screen before.
     navigate(targetRoute, isReset ? { reset: true } : undefined);
-  }, [targetRoute, navigate, resetNonce, undoNonce, actor]);
+  }, [targetRoute, navigate, resetNonce, undoNonce, dispenseLeg, actor]);
 
   return null;
 }

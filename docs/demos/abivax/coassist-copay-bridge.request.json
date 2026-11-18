@@ -2,7 +2,7 @@
   "version": 1,
   "client": "abivax",
   "slug": "coassist-copay-bridge",
-  "title": "CoAssist Copay Bridge",
+  "title": "CoAssist Denied PA Bridge",
   "workflow": "coassist",
   "intake": "erx",
   "apps": [
@@ -15,13 +15,17 @@
   "forks": [
     "bi",
     "pa",
-    "copay",
-    "pricing"
+    "appeal"
   ],
   "cards": [
     {
       "kind": "block",
       "moduleId": "enrollment"
+    },
+    {
+      "kind": "block",
+      "moduleId": "pharmacy_selection",
+      "variantId": "prescriber"
     },
     {
       "kind": "block",
@@ -35,11 +39,11 @@
     {
       "kind": "block",
       "moduleId": "cash_offer",
-      "variantId": "pa_denied"
+      "variantId": "bridge"
     },
     {
       "kind": "block",
-      "moduleId": "payment"
+      "moduleId": "appeal"
     },
     {
       "kind": "block",
@@ -48,25 +52,23 @@
     },
     {
       "kind": "block",
-      "moduleId": "pharmacy_selection",
-      "variantId": "store"
-    },
-    {
-      "kind": "block",
       "moduleId": "scheduling"
     },
     {
       "kind": "block",
-      "moduleId": "tracking"
+      "moduleId": "tracking",
+      "variantId": "two_legs"
     }
   ],
   "demos": [
     {
       "id": "coassist-copay-bridge",
-      "label": "CoAssist Copay Bridge",
+      "label": "6. CoAssist Denied PA Bridge",
+      "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
       "choices": {
         "bi": "pharmacy_covered",
-        "pa": "approved"
+        "pa": "denied",
+        "appeal": "approved"
       }
     }
   ],
@@ -76,6 +78,6 @@
     "sourceUrl": "https://www.abivax.com/",
     "documents": []
   },
-  "winTheme": "One eRx starts everything: patient onboarding, prior authorization, prior authorization result text, cash offer and pricing options, with no re-keying between apps.",
+  "winTheme": "One eRx starts everything. A denied PA starts the appeal and a free Bridge supply on its own, and the commercial pharmacy takes over when the appeal is approved, with no re-keying between apps.",
   "openQuestions": []
 }

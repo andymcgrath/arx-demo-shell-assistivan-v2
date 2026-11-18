@@ -86,6 +86,7 @@ export const COASSIST_STAGES: StageMap = {
     { id: "tp.coverage.transfer", stage: S.TP.id, variant: "transfer_not_needed", scope: COVERAGE, when: (d) => biComplete(d) && medicalCovered(d) },
     { id: "tp.coverage.retail", stage: S.TP.id, variant: "dispatched_outside", scope: COVERAGE, when: coverageRetail },
     { id: "tp.copay.outside", stage: S.TP.id, variant: "dispatched_outside", scope: COPAY, when: copayFilledOutside },
+    { id: "tp.bridge", stage: S.TP.id, variant: "bridge", scope: BRIDGE },
     { id: "tp.prescriber", stage: S.TP.id, variant: "prescriber", scope: PRESCRIBER_PHARMACY },
     { id: "tp.standard", stage: S.TP.id, variant: "standard" },
 

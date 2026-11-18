@@ -52,6 +52,17 @@ export function TriageDetail({ workflowData, stage, action, onAction, deliveryAd
             </span>
             {/* Shown while the machine accepts FILL_RX. A flow that dispatches on its own when a site of care is
                 picked (the free drug program) never reaches a state where it does. */}
+            {/* The second shipment of the denied-PA Bridge: the appeal is approved and the first shipment is delivered. */}
+            {action("triage.second_leg") && (
+              <button
+                onClick={() => onAction(action("triage.second_leg")!)}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: FC_BLUE }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                {action("triage.second_leg")!.label}
+              </button>
+            )}
             {action("triage.dispatch") && (
               <button
                 onClick={() => onAction(action("triage.dispatch")!)}
