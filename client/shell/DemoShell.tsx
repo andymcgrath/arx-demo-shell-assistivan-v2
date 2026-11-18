@@ -269,7 +269,7 @@ function ProviderTab({ flowType }: { flowType: string }) {
   const resetNonce = useDemoStore((s) => s.resetNonce);
   const facts = scenarioFacts(flowType);
   if (facts.isPesSite) return <WebPortal />;
-  if (facts.hasEngagementEntry && entryOf(w) === "pres" && w.biStatus !== "complete") return <HcpSite key={resetNonce} submitEvent="PRES_SUBMIT" />;
+  if (facts.hasEngagementEntry && entryOf(w) === "pres" && w.biStatus !== "complete") return <HcpSite key={resetNonce} submitEvent="PRES_SUBMIT" startOver linkText={false} />;
   return <ProviderPortal key={flowType} />;
 }
 
