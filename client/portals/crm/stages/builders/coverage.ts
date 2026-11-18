@@ -115,7 +115,41 @@ const coaCashOffer = (schedulingDone: (d: WorkflowData) => boolean) => (d: Workf
   };
 };
 
+/**
+ * The Bridge (the `cash_offer` block's `bridge` variant): a free supply while the PA appeal runs. It replaces the cash offer, so
+ * the stage is named for the supply and shows no price or payment. It keeps the stage id, so the CRM and the signals stay the same.
+ */
+const BRIDGE = { id: "CO-14281", name: "Bridge Supply" };
+const bridge = (d: WorkflowData): Stage => {
+  const shown = d.bridgeStatus !== undefined;
+  return {
+    ...BRIDGE,
+    statusLabel: d.bridgeStatus === "active" ? "Active" : d.bridgeStatus === "sent" ? "Offer Sent" : d.paStatus === "denied" ? "Ready to send" : "Stage not started",
+    statusDetail:
+      d.bridgeStatus === "active"
+        ? d.copayEnrolled
+          ? "Free supply active — enrolled in $0 copay"
+          : "Free supply active — awaiting $0 copay enrollment"
+        : d.bridgeStatus === "sent"
+        ? "Bridge text sent — awaiting the patient"
+        : d.paStatus === "denied"
+        ? "PA denied — Bridge supply ready to send while the appeal runs"
+        : "Awaiting PA denial",
+    isComplete: d.bridgeStatus === "active" && d.copayEnrolled,
+    isNotStarted: !shown && d.paStatus !== "denied",
+    fields: [
+      { label: "Bridge Status", value: d.bridgeStatus === "active" ? "Active" : d.bridgeStatus === "sent" ? "Sent" : null },
+      { label: "Copay", value: d.copayEnrolled ? "$0 enrolled" : null },
+      { label: "Ship Date", value: d.patientShipDate ? new Date(d.patientShipDate).toLocaleDateString() : null },
+    ],
+    lastUpdated: shown ? new Date().toLocaleDateString() : null,
+    lastUpdatedAgo: shown ? "today" : null,
+  };
+};
+
 export const CASH_OFFER_BUILDERS = {
+  /** A denied PA with a Bridge: a free supply, no cash offer. */
+  bridge,
   /** Coverage with neither benefit covered. */
   coverage: cashOffer,
   coverage_not_needed: (d: WorkflowData): Stage =>

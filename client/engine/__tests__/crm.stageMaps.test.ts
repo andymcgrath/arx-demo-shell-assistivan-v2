@@ -38,8 +38,10 @@ describe("CRM stage maps", () => {
     for (const scenario of ALL_SCENARIOS) {
       for (const { stage, variant } of stageVariantsFor(stageMapFor(scenario.flowType), scenario.flowType)) used.add(`${stage}.${variant}`);
     }
+    // The Bridge's stages are drawn only by a demo's recipe (the denied-PA Bridge), which no registered scenario has.
+    const demoOnly = new Set(["PA-14274.bridge", "CO-14281.bridge"]);
     const unused = Object.entries(STAGE_BUILDERS).flatMap(([stage, variants]) =>
-      Object.keys(variants).filter((v) => !used.has(`${stage}.${v}`)).map((v) => `${stage}.${v}`),
+      Object.keys(variants).filter((v) => !used.has(`${stage}.${v}`) && !demoOnly.has(`${stage}.${v}`)).map((v) => `${stage}.${v}`),
     );
     expect(unused).toEqual([]);
   });

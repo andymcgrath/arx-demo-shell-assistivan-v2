@@ -1,4 +1,6 @@
-import { ArrowRight, Phone } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Loader2, Phone } from "lucide-react";
+import { usePatientToastStore } from "@/store/patientToastStore";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
@@ -12,8 +14,22 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 export default function BridgeSupply() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
+  const showPatientToast = usePatientToastStore((s) => s.show);
+  const [isVerifying, setIsVerifying] = useState(false);
   // The Bridge is free drug, dispensed by the non-commercial pharmacy (`program.transferPartner`), not the commercial one.
   const pharmacy = PROGRAM.transferPartner;
+
+  // Same beat as the Copay enrollment screen: a verification check, a confirming toast, then on to the delivery address.
+  // The enrollment is recorded when the check ends, so the route does not move while the button spins.
+  function enroll() {
+    setIsVerifying(true);
+    setTimeout(() => {
+      dispatch("SELECT_SELF_PAY", { portal: "patient" });
+      setIsVerifying(false);
+      showPatientToast(`You're enrolled in the ${PROGRAM.drugDisplayName} Copay Program`);
+      navigate("/delivery-address");
+    }, 1800);
+  }
   const where = [pharmacy?.address, pharmacy?.city && pharmacy?.state ? `${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip ?? ""}`.trim() : undefined].filter(Boolean);
 
   return (
@@ -28,21 +44,30 @@ export default function BridgeSupply() {
             While we appeal your insurer's decision, {pharmacy?.name ?? "our pharmacy"} will provide {PROGRAM.drugDisplayName} at no cost to you. There is nothing to pay.
           </p>
           <p className="text-sm leading-relaxed text-arx-body-copy">
-            The supply continues until your appeal is decided. We'll text you as soon as we have an update.
+            The supply continues while your appeal is being reviewed.
           </p>
           <div className="rounded-xl p-4 mt-4 border border-arx-borders">
             <p className="font-bold text-arx-slate">{PROGRAM.drugDisplayName} Copay Program</p>
             <p className="text-2xl font-bold text-arx-slate">$0<span className="text-sm font-semibold">/shipment</span></p>
           </div>
           <button
-            onClick={() => {
-              dispatch("SELECT_SELF_PAY", { portal: "patient" });
-              navigate("/delivery-address");
-            }}
-            className="w-full mt-4 bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors"
+            onClick={enroll}
+            disabled={isVerifying}
+            className={`w-full mt-4 bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+              isVerifying ? "cursor-not-allowed opacity-90" : "hover:bg-arx-action-hover"
+            }`}
           >
-            <span>Enroll at $0 and confirm delivery</span>
-            <ArrowRight className="w-4 h-4" />
+            {isVerifying ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Verifying enrollment…</span>
+              </>
+            ) : (
+              <>
+                <span>Enroll at $0</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
 

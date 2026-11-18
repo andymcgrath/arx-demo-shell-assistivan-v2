@@ -11,6 +11,9 @@ import { COA_DTP } from "@/workflows/coassist/scenarios";
 import { setRecipeOverride } from "@/engine/workflow/recipeOverride";
 import { crmActions } from "@/portals/crm/stages/actions";
 import { CASH_OFFER_SCREENS } from "@/workflows/coassist/modules/screens/cash_offer";
+import { stageVariantsFor } from "@/engine/workflow/stages";
+import { stageMapFor } from "@/workflows/stageMaps";
+import { STAGE_BUILDERS } from "@/portals/crm/stages/builders";
 import { ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 import { afterEach } from "vitest";
 
@@ -415,6 +418,34 @@ describe("enrollment capture", () => {
       expect(t.can("CAPTURE_SIGNATURE")).toBe(false);
       expect(t.can("UPLOAD_INSURANCE")).toBe(false);
       expect(t.can("CONFIRM_CONSENT")).toBe(true);
+    });
+  });
+});
+
+/**
+ * The CRM's Stage Quick View for a Bridge demo: the cash offer is replaced by the Bridge Supply, and the PA stage no longer
+ * says the patient is eligible for a cash offer.
+ */
+describe("cash_offer bridge: CRM stages", () => {
+  afterEach(() => setRecipeOverride("CoA_Copay", undefined));
+  const variantFor = (stage: string) => stageVariantsFor(stageMapFor("CoA_Copay"), "CoA_Copay").find((v) => v.stage === stage)?.variant;
+
+  it("draws the Bridge Supply and a PA stage with no cash offer wording", () => {
+    withFrozenClock(() => {
+      setRecipeOverride("CoA_Copay", { modules: [{ id: "enrollment" }, { id: "prior_authorization", props: { variant: "auto" } }, bridgeModule(), { id: "appeal" }, { id: "tracking" }], forks: ["bi", "pa", "appeal"] });
+      expect(variantFor("CO-14281")).toBe("bridge");
+      expect(variantFor("PA-14274")).toBe("bridge");
+      const actor = startFlow("CoA_Copay", { clock: new SimulatedClock(), choices: { bi: "pharmacy_covered", pa: "denied", appeal: "approved" } });
+      runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }, { type: "COMPLETE_BI" }, { type: "DENY_PA" }]);
+      const d = ctx(actor).workflowData;
+      const co = STAGE_BUILDERS["CO-14281"].bridge(d);
+      const pa = STAGE_BUILDERS["PA-14274"].bridge(d);
+      expect(co.name).toBe("Bridge Supply");
+      expect(co.statusDetail).toMatch(/Bridge supply ready to send/);
+      expect(pa.statusDetail).toBe("PA Denied — appeal filed, Bridge supply offered");
+      for (const text of [co.name, co.statusLabel, co.statusDetail, pa.statusDetail]) expect(text).not.toMatch(/cash/i);
+      runSteps(actor, [{ type: "SEND_BRIDGE" }, { type: "VERIFY_BRIDGE_SMS" }]);
+      expect(STAGE_BUILDERS["CO-14281"].bridge(ctx(actor).workflowData).statusLabel).toBe("Active");
     });
   });
 });

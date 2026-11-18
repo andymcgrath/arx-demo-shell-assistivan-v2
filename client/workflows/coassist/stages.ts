@@ -23,6 +23,8 @@ const PRICING: Scope = { fork: "pricing" };
 const COPAY: Scope = { fork: "copay" };
 const COVERAGE: Scope = { module: "provider_transfer" };
 const PSP: Scope = { module: "pap_transfer" };
+/** A denied PA offers the Bridge (a free supply) in place of a cash offer. */
+const BRIDGE: Scope = { module: "cash_offer", props: { variant: "bridge" } };
 /** The medical transfer scenario: a PA fork, and the pharmacy assigned to the case. The PAP scenario has no PA fork. */
 /** The pharmacy came from the prescriber's eRx. The agent dispatches to it once the patient has scheduled. */
 const PRESCRIBER_PHARMACY: Scope = { module: "pharmacy_selection", props: { variant: "prescriber" } };
@@ -59,6 +61,7 @@ export const COASSIST_STAGES: StageMap = {
     // Outcomes with no PA: both benefits covered, or neither. Only pharmacy-only coverage submits one.
     { id: "pa.coverage.not_needed", stage: S.PA.id, variant: "not_needed", scope: COVERAGE, when: (d) => biComplete(d) && (medicalCovered(d) || !pharmacyCovered(d)) },
     { id: "pa.coverage", stage: S.PA.id, variant: "standard", scope: COVERAGE },
+    { id: "pa.bridge", stage: S.PA.id, variant: "bridge", scope: BRIDGE },
     { id: "pa.coa", stage: S.PA.id, variant: "coa", scope: PRICING },
     { id: "pa.standard", stage: S.PA.id, variant: "standard" },
 
@@ -67,6 +70,7 @@ export const COASSIST_STAGES: StageMap = {
 
     { id: "co.coverage.not_needed", stage: S.CO.id, variant: "coverage_not_needed", scope: COVERAGE, when: (d) => biComplete(d) && (medicalCovered(d) || pharmacyCovered(d)) },
     { id: "co.coverage", stage: S.CO.id, variant: "coverage", scope: COVERAGE },
+    { id: "co.bridge", stage: S.CO.id, variant: "bridge", scope: BRIDGE },
     { id: "co.copay", stage: S.CO.id, variant: "coa_copay", scope: COPAY },
     { id: "co.pricing", stage: S.CO.id, variant: "coa", scope: PRICING },
 

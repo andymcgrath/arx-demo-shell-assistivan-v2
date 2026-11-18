@@ -43,6 +43,12 @@ const coa = (d: WorkflowData): Stage => ({
   lastUpdatedAgo: d.paStatus !== "none" ? "today" : null,
 });
 
+/** CoAssist with a Bridge: a denial files the appeal and offers a free supply, not a cash offer. */
+const bridge = (d: WorkflowData): Stage => {
+  const base = coa(d);
+  return d.paStatus === "denied" ? { ...base, statusDetail: "PA Denied — appeal filed, Bridge supply offered" } : base;
+};
+
 /**
  * APA (the `prior_authorization` block's `apa` and `apa_skip` variants): the system emails the prescriber a secure form
  * link, and the stage follows the form until the PA is submitted. Other scenarios never set `paFormStatus`, so their
@@ -86,4 +92,4 @@ const notNeeded = (d: WorkflowData): Stage => ({
   lastUpdatedAgo: "today",
 });
 
-export const PA_BUILDERS = { standard: withPaForm(standard), coa: withPaForm(coa), not_needed: notNeeded };
+export const PA_BUILDERS = { standard: withPaForm(standard), coa: withPaForm(coa), bridge: withPaForm(bridge), not_needed: notNeeded };

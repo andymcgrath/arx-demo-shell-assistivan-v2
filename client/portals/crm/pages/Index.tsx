@@ -24,6 +24,8 @@ import { CaseListView } from "../components/CaseListView";
 import { ProductDetailModal } from "../components/ProductDetailModal";
 import { EnrollmentFormView } from "../components/EnrollmentFormView";
 import { CashOfferDetail } from "../components/CashOfferDetail";
+import { BridgeSupplyDetail } from "../components/BridgeSupplyDetail";
+import { scenarioFor } from "@/workflows/scenarios";
 import { BiDetail } from "../components/BiDetail";
 import { TriageDetail } from "../components/TriageDetail";
 import { PharmacyStatusDetail } from "../components/PharmacyStatusDetail";
@@ -109,6 +111,8 @@ export default function Index() {
   const paApprovedAt = workflowData.paApprovedAt;
   const dispatchStatus = workflowData.dispatchStatus;
   const facts = scenarioFacts(flowType);
+  // The recipe has the Bridge: a denied PA offers a free supply, not a cash offer.
+  const bridge = !!scenarioFor(workflowData.flowType)?.recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "bridge");
 
   // Summary of Benefits — only appears in Related Documents once the PA is
   // actually approved (not just submitted). Dated to the live PA approval
@@ -272,7 +276,7 @@ export default function Index() {
   const stageActions = activeStage ? crmActions(workflowData, activeStage.id, can) : [];
   const action = (id: string) => stageActions.find((a) => a.id === id);
   // The record view of a resolved PA or appeal (stages/records.ts), drawn by one shell.
-  const record = activeStage ? stageRecord(activeStage.id, workflowData, { patientName, caseNumber, payer }, facts.hasPricingFork) : null;
+  const record = activeStage ? stageRecord(activeStage.id, workflowData, { patientName, caseNumber, payer }, facts.hasPricingFork && !bridge) : null;
   const caseActions = crmActions(workflowData, CASE_HOME, can);
   const caseAction = (id: string) => caseActions.find((a) => a.id === id);
   const send = (a: CrmAction) => a.event && dispatch(a.event.type, { portal: a.event.portal });
@@ -407,8 +411,13 @@ export default function Index() {
         </>
       ) : activeStage ? (
         activeStage.id === "CO-14281" ? (
-          /* ── Cash Offer Detail View (COA flow) ────────────────────────── */
-          <CashOfferDetail workflowData={workflowData} stage={activeStage} action={action} onAction={send} />
+          bridge ? (
+            /* ── Bridge Supply Detail View (denied PA, free supply) ───────── */
+            <BridgeSupplyDetail workflowData={workflowData} stage={activeStage} action={action} onAction={send} />
+          ) : (
+            /* ── Cash Offer Detail View (COA flow) ────────────────────────── */
+            <CashOfferDetail workflowData={workflowData} stage={activeStage} action={action} onAction={send} />
+          )
         ) : record ? (
           <RecordStageView content={record} />
         ) : activeStage.id === "BI-14273" && biStatus === "complete" ? (
