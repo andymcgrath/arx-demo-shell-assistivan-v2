@@ -10,6 +10,7 @@ export const PHONE_SCREENS = new Set([
   "/pes-pap-update-sms",
   "/appointment-confirmation",
   "/cash-offer-sms",
+  "/bridge-sms",
   "/provider-transfer-sms",
   "/pap-transfer-sms",
 ]);

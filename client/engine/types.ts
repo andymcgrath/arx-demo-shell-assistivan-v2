@@ -141,6 +141,11 @@ export interface WorkflowData {
   /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;
+  /**
+   * `cash_offer` variant `bridge` only: the free short supply after a denied PA. `sent` once the text goes out,
+   * `active` when the patient opens it and the supply starts. Absent in every other flow.
+   */
+  bridgeStatus?: 'sent' | 'active';
   /** iAssist_Buy_And_Bill only: the HCP ran eMedBV on the medical benefit. Absent in every other flow. */
   medbvStatus?: 'complete';
   /** iAssist_Buy_And_Bill only: the copay claims the HCP filed, oldest first. Absent until the first claim. */

@@ -194,7 +194,8 @@ export function computeCoaWorkflowStep(workflowData: WorkflowData): number {
   // Prior Authorization step); only once the cash-offer alternative is
   // actually in motion (SEND_CASH_OFFER) does the denied path count as
   // "PA resolved" and advance into Payment.
-  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
+  // A bridge supply (the `cash_offer` bridge variant) resolves the denied PA the way a sent cash offer does.
+  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none' || workflowData.bridgeStatus !== undefined;
 
   if (pharmacyStatus === 'delivered') return 10;
   if (pharmacyStatus === 'shipped') return 8;
@@ -231,7 +232,8 @@ export function computeCoaStepDone(workflowData: WorkflowData): boolean[] {
   const { enrollmentStatus, consentStatus, biStatus, paStatus, cashOfferStatus, patientShipDate, pharmacyStatus } = workflowData;
   // Matches computeCoaWorkflowStep's own thresholds exactly — see that
   // function's comments for why each one is defined the way it is.
-  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none';
+  // A bridge supply (the `cash_offer` bridge variant) resolves the denied PA the way a sent cash offer does.
+  const paResolved = paStatus === 'approved' || cashOfferStatus !== 'none' || workflowData.bridgeStatus !== undefined;
   const paymentDone = patientShipDate !== null;
   // CoA_Copay's Retail/Mail Order paths flip pharmacyStatus to "processing"
   // via the exact same FILL_RX handler every other pricing option uses (see

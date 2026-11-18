@@ -196,6 +196,11 @@ export const CATALOG_BLOCKS: Record<ModuleId, CatalogBlock> = {
     variants: [
       { id: "pa_denied", label: "After a denied PA", summary: "The PA is denied, the case manager sends the cash offer from the CRM, and the patient sees it.", trigger: "click" },
       { id: "sms", label: "No coverage, offered by text", summary: "Neither benefit covers it, so a text offers cash pay. The patient opens it and accepts." },
+      {
+        id: "bridge",
+        label: "Bridge supply while the appeal runs",
+        summary: "The PA is denied, so a text offers a free supply from the client's white-label pharmacy while the appeal runs. It replaces the cash offer: no price, no cash pay. The text goes out on its own for an eRx referral, and the case manager sends it from the CRM for a fax referral.",
+      },
     ],
   },
   financial_assistance: {

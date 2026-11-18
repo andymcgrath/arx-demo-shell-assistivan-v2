@@ -83,6 +83,8 @@ import ProviderTransfer from "./pages/ProviderTransfer";
 import PharmacyTransfer from "./pages/PharmacyTransfer";
 import ApprovedContactPhysician from "./pages/ApprovedContactPhysician";
 import CashOfferSms from "./pages/CashOfferSms";
+import BridgeSms from "./pages/BridgeSms";
+import BridgeSupply from "./pages/BridgeSupply";
 import ProviderTransferSms from "./pages/ProviderTransferSms";
 import PapTransferSms from "./pages/PapTransferSms";
 import { PHONE_SCREENS } from "./phoneScreens";
@@ -237,6 +239,8 @@ function PatientRoutes() {
           <Route path="/pharmacy-transfer"        element={<PharmacyTransfer />} />
           <Route path="/approved-contact-physician" element={<ApprovedContactPhysician />} />
           <Route path="/cash-offer-sms"           element={<CashOfferSms />} />
+          <Route path="/bridge-sms"               element={<BridgeSms />} />
+          <Route path="/bridge-supply"            element={<BridgeSupply />} />
           <Route path="/provider-transfer-sms"         element={<ProviderTransferSms />} />
           <Route path="/pap-transfer-sms"              element={<PapTransferSms />} />
           <Route path="/network-pharmacy-selection" element={<NetworkPharmacySelection />} />

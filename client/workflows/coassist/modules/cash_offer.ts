@@ -3,16 +3,46 @@
  */
 import type { CoaRule } from "./shared";
 
+/** How long after the denial the automatic bridge text goes out (`system` trigger). */
+export const BRIDGE_TEXT_MS = 2000;
+
+const BRIDGE = { module: "cash_offer", props: { variant: "bridge" } } as const;
+
+/**
+ * Who sends the bridge text. The block's `trigger` prop wins. Without it the intake channel decides (rule 11):
+ * `erx` already holds everything, so the text is a `system` step. `fax` needs a person, so it is an `agent` click.
+ */
+export const bridgeTrigger = (s: { intake: "erx" | "fax" | "esign"; recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): "system" | "agent" => {
+  const set = s.recipe?.modules.find((m) => m.id === "cash_offer" && m.props?.variant === "bridge")?.props?.trigger;
+  return set === "system" || set === "agent" ? set : s.intake === "erx" ? "system" : "agent";
+};
+
+/** The denial. Both variants share the precondition and the data change. The bridge adds its automatic text. */
+const denyPa = (id: string, variant: "pa_denied" | "bridge"): CoaRule => ({
+  id,
+  on: "DENY_PA",
+  scope: { module: "cash_offer", props: { variant } },
+  when: (d) => d.paStatus === "submitted",
+  set: () => ({ paStatus: "denied" }),
+  emit: { portal: "provider", step: 9 },
+  ...(variant === "bridge"
+    ? {
+        // The precondition is the denial either way. SEND_BRIDGE ignores it unless the PA is denied.
+        then: {
+          trigger: "system" as const,
+          id: "bridge-text",
+          after: BRIDGE_TEXT_MS,
+          when: (_d, _e, s) => bridgeTrigger(s) === "system",
+          send: () => ({ type: "SEND_BRIDGE" }),
+        },
+      }
+    : {}),
+});
+
 export const CASH_OFFER_RULES: CoaRule[] = [
-  {
-    // Coverage has no denial branch: the PA is a formality.
-    id: "cash_offer.deny_pa",
-    on: "DENY_PA",
-    scope: { module: "cash_offer", props: { variant: "pa_denied" } },
-    when: (d) => d.paStatus === "submitted",
-    set: () => ({ paStatus: "denied" }),
-    emit: { portal: "provider", step: 9 },
-  },
+  // Coverage has no denial branch: the PA is a formality.
+  denyPa("cash_offer.deny_pa", "pa_denied"),
+  denyPa("cash_offer.deny_pa.bridge", "bridge"),
   {
     id: "cash_offer.verify_sms",
     on: "VERIFY_CASH_OFFER_SMS",
@@ -38,5 +68,22 @@ export const CASH_OFFER_RULES: CoaRule[] = [
     when: (d) => d.paStatus === "denied" && d.cashOfferStatus === "none",
     set: () => ({ cashOfferStatus: "sent" }),
     emit: { portal: "crm", step: 9 },
+  },
+  {
+    // The bridge replaces the cash offer. No offer, no price. The text starts the free supply.
+    id: "cash_offer.send_bridge",
+    on: "SEND_BRIDGE",
+    scope: BRIDGE,
+    when: (d) => d.paStatus === "denied" && d.bridgeStatus === undefined,
+    set: () => ({ bridgeStatus: "sent" }),
+    emit: { portal: "crm", step: 9 },
+  },
+  {
+    id: "cash_offer.verify_bridge",
+    on: "VERIFY_BRIDGE_SMS",
+    scope: BRIDGE,
+    when: (d) => d.bridgeStatus === "sent",
+    set: () => ({ bridgeStatus: "active" }),
+    emit: { portal: "patient", step: 9 },
   },
 ];

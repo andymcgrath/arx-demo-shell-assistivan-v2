@@ -1,4 +1,5 @@
 import type { FlowType } from "@/engine/types";
+import { MODULE_CONTRACTS, type ModuleId } from "./components";
 import { forkApplies } from "./forks";
 import { withRecipeOverride } from "./recipeOverride";
 import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from "./types";
@@ -13,6 +14,13 @@ const propsMatch = (have: Record<string, unknown> | undefined, want: Record<stri
   !want || Object.entries(want).every(([key, value]) => have?.[key] === value);
 
 const listOf = (scope: Scope): RuleScope[] => (Array.isArray(scope) ? scope : [scope]);
+
+/** True when the module's contract declares the variant the scope names, with no other props. A demo may run it before any scenario does. */
+const declaredVariant = (scope: { module: string; props?: Record<string, unknown> }): boolean => {
+  const variants = MODULE_CONTRACTS[scope.module as ModuleId]?.demoVariants;
+  const keys = Object.keys(scope.props ?? {});
+  return !!variants && keys.length === 1 && keys[0] === "variant" && variants.includes(String(scope.props!.variant));
+};
 
 /** True when the scenario falls inside the scope. A list of scopes needs all of them. */
 export function inScope(scope: Scope, scenario: ScenarioDefinition<any>, forks: ForkDefinition[]): boolean {
@@ -68,7 +76,7 @@ export function scopeProblems(rules: Rule<any, any>[], scenarios: ScenarioDefini
         else if (scope.exit && !declared.some((f) => f.exits.some((e) => e.id === scope.exit))) {
           problems.push(`rule "${name}" is scoped to exit "${scope.exit}", which fork "${scope.fork}" does not have`);
         }
-      } else if (!scenarios.some((s) => inScope(scope, s, forks))) {
+      } else if (!scenarios.some((s) => inScope(scope, s, forks)) && !declaredVariant(scope)) {
         problems.push(`rule "${name}" is scoped to module "${scope.module}", which no scenario recipe lists with those props`);
       }
     }

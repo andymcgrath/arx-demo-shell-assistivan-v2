@@ -370,6 +370,8 @@ const NON_EMAIL_EVENT_TYPES = new Set([
   // SMS's own tap-through (CashOfferSms.tsx). SEND_CASH_OFFER_SMS still
   // falls through to the default case below.
   'VERIFY_CASH_OFFER_SMS',
+  // The bridge text's tap-through (BridgeSms.tsx). SEND_BRIDGE has its own email below.
+  'VERIFY_BRIDGE_SMS',
   // CoA_Coverage Scenario 2 only — same reasoning, mirrored for the provider transfer
   // SMS's own tap-through (ProviderTransferSms.tsx). NOTIFY_PROVIDER_TRANSFER
   // (the CRM action that sends it) still falls through to the default case
@@ -608,6 +610,20 @@ export function getGeneratedEmails(input: GeneratedEmailInputs): GeneratedEmail[
           bodyParagraphs: [
             `AssistRx sent ${patientName} a text letting them know no coverage was found under either benefit, but a cash-pay option is available for their CGM sensor.`,
             `No action is needed from you unless the patient reports an issue receiving it.`,
+          ],
+          linkedItemId: LIVE_CASE_ID,
+          linkedItemLabel: 'View Case',
+        });
+        break;
+
+      // The bridge variant of `cash_offer`: a free supply while the PA appeal runs, sent by text after the denial.
+      case 'SEND_BRIDGE':
+        emails.push({
+          ...base,
+          subject: `Bridge Supply Offered - ${patientName}`,
+          bodyParagraphs: [
+            `The PA for ${patientName} was denied. AssistRx texted the patient an offer of a free supply from the program's pharmacy while the appeal runs.`,
+            `No payment is collected. The supply continues until the appeal is decided.`,
           ],
           linkedItemId: LIVE_CASE_ID,
           linkedItemLabel: 'View Case',

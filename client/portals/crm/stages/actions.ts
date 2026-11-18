@@ -65,6 +65,8 @@ const BUTTONS: ButtonDef[] = [
     // The coverage scenario shows the price to the patient in the app. It has no cash offer to send.
     appliesTo: (d) => !scenarioFacts(d.flowType).isCoverageScenario,
   },
+  // The bridge replaces the cash offer. It shows only where the recipe has it and the PA is denied (the `fax` trigger).
+  { stage: "CO-14281", id: "cash_offer.send_bridge", label: "Send Bridge Supply", kind: "primary", event: "SEND_BRIDGE", shown: "when_enabled" },
   { stage: "CO-14281", id: "cash_offer.verify", label: "Verify Payment", kind: "primary", event: "VERIFY_PAYMENT", shown: "always" },
   { stage: "TP-14277", id: "triage.dispatch", label: "Triage to Pharmacy", kind: "primary", event: "FILL_RX", shown: "when_enabled" },
   { stage: CASE_HOME, id: "enroll", label: "Enroll Patient", kind: "primary", event: "REFERRAL_RECEIVED", shown: "when_enabled",

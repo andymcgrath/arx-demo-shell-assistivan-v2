@@ -22,7 +22,8 @@
       "tracking.deliver_rx"
     ],
     "DENY_PA": [
-      "cash_offer.deny_pa"
+      "cash_offer.deny_pa",
+      "cash_offer.deny_pa.bridge"
     ],
     "FILL_RX": [
       "tracking.fill_rx"
@@ -77,6 +78,9 @@
       "financial_assistance.select_self_pay.copay",
       "cash_offer.select_self_pay.coverage"
     ],
+    "SEND_BRIDGE": [
+      "cash_offer.send_bridge"
+    ],
     "SEND_CASH_OFFER": [
       "cash_offer.send_cash_offer"
     ],
@@ -97,6 +101,9 @@
     ],
     "SUBMIT_PA_FORM": [
       "prior_authorization.submit_pa_form"
+    ],
+    "VERIFY_BRIDGE_SMS": [
+      "cash_offer.verify_bridge"
     ],
     "VERIFY_CASH_OFFER_SMS": [
       "cash_offer.verify_sms"
@@ -153,14 +160,17 @@
       "CoA_Copay",
       "CoA_Web_Copay"
     ],
+    "cash_offer.deny_pa.bridge": [],
     "cash_offer.select_self_pay.coverage": [
       "CoA_Coverage"
     ],
+    "cash_offer.send_bridge": [],
     "cash_offer.send_cash_offer": [
       "CoA_DTP",
       "CoA_Copay",
       "CoA_Web_Copay"
     ],
+    "cash_offer.verify_bridge": [],
     "cash_offer.verify_sms": [
       "CoA_Coverage"
     ],

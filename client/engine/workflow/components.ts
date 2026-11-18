@@ -62,6 +62,11 @@ export interface ModuleContract {
   setsWhen?: { props: Record<string, unknown>; sets: string[] }[];
   /** Steps the module adds to the tracker. Tracking shows the steps of the modules that ran. */
   trackerSteps: string[];
+  /**
+   * Variants only a demo runs so far. A rule scoped to a listed variant is valid even when no registered scenario
+   * lists it yet, because a demo can lay a recipe over a scenario (see recipeOverride.ts). Leave it out to keep the check strict.
+   */
+  demoVariants?: string[];
 }
 
 /** One module in a recipe, with the props the scenario supplies (price, variant, method). */
@@ -89,6 +94,18 @@ export interface FinancialAssistanceProps extends Record<string, unknown> {
 export interface IncomeQualificationProps extends Record<string, unknown> {
   trigger?: "system" | "agent";
   activate?: "on_qualify" | "on_choose";
+}
+
+/**
+ * Props for `cash_offer`. `variant` picks the story: `pa_denied` (cash offer after a denied PA), `sms` (no coverage, offered
+ * by text), or `bridge` (a free short supply while the PA appeal runs, no cash pay and no price).
+ * - `trigger` (bridge only): who sends the bridge text. `system` fires after the denial. `agent` waits for a click in the CRM.
+ *   Absent: it defaults from the scenario's intake channel (`erx` is `system`, `fax` is `agent`). The precondition is the
+ *   same either way: the PA is denied.
+ */
+export interface CashOfferProps extends Record<string, unknown> {
+  variant?: "pa_denied" | "sms" | "bridge";
+  trigger?: "system" | "agent";
 }
 
 export interface PaymentProps extends Record<string, unknown> {
@@ -249,7 +266,11 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "cash_offer",
     lane: "patient",
     needs: ["fork:bi"],
+    // The bridge replaces the cash offer: it sends no offer and shows no price. It is sent after a denied PA.
+    needsWhen: [{ props: { variant: "bridge" }, needs: ["fork:pa"] }],
+    demoVariants: ["bridge"],
     sets: ["cashOffered"],
+    setsWhen: [{ props: { variant: "bridge" }, sets: ["bridgeSupplied"] }],
     trackerSteps: ["Cash offer sent"],
   },
   financial_assistance: {
