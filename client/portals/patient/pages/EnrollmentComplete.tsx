@@ -8,8 +8,9 @@ export default function EnrollmentComplete() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const hcpAdministered = !!useRecipeModule("copay");
-  // The Bridge's confirmation (after the address and date) is a one-time stop too. "Got it" goes to the order tracker.
-  const bridge = useBridge();
+  // The Bridge has two stops on this screen. After onboarding, "Got it" returns to Home like every other scenario. After the
+  // delivery address and date (the ship date is set), it is the order confirmation, and "Got it" opens the order tracker.
+  const bridgeOrderPlaced = useBridge() && workflowData.patientShipDate !== null;
 
   // CoA_Copay (WF4) Mail Order path only — this screen is a one-time
   // "Thanks! Your details were received" stop right after the delivery
@@ -75,7 +76,7 @@ export default function EnrollmentComplete() {
           <button
             onClick={() => {
               dispatch('REFERRAL_RECEIVED', { portal: 'patient' });
-              navigate(isCopayMailOrder || bridge ? "/order-tracker" : "/");
+              navigate(isCopayMailOrder || bridgeOrderPlaced ? "/order-tracker" : "/");
             }}
             className="w-full bg-arx-white text-arx-brand font-semibold py-4 rounded-lg hover:bg-arx-primary-30 transition-colors"
           >
