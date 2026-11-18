@@ -32,9 +32,9 @@ import {
   KEANU_SITE_OF_CARE_FACTS,
 } from "@/engine/WorkflowEngine";
 import { daysFromToday, formatShortDate } from "@/lib/relativeDate";
-import { enrollmentFormDocument, paFormDocument, summaryOfBenefitsDocument } from "@/brand/documents";
 import { scenarioHasModule } from "@/workflows/scenarios";
 import { caseDocuments } from "@/brand/caseDocuments";
+import { caseDocumentOptions } from "@/workflows/caseDocumentOptions";
 import { usePersonaState } from "@/engine/WorkflowProvider";
 import type { BrandDocument } from "@/brand/schema";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
@@ -208,9 +208,7 @@ export default function FieldPortal() {
   const biStatus = state.bi_status;
   const biResult = state.bi_result;
   const pharmacyStatus = state.pharmacy_status;
-  // The Enrollment Application fax only exists for the two fax-intake
-  // flows — same gate CRM's Related Documents tab uses (isFaxFlow there).
-  const { isFax: isFaxFlow, isNoPaIntake: isPapFlow, isFreeDrug } = scenarioFacts(state.flow_type);
+  const { isFreeDrug } = scenarioFacts(state.flow_type);
   const [selectedTab, setSelectedTab] = useState("DASHBOARD");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -1914,35 +1912,22 @@ export default function FieldPortal() {
               })()}
 
               {/* Related Docs — the seeded patients have no document
-                  records (nothing to show, same as before). The live
-                  patient's Enrollment Application fax exists once enrolled
-                  on a fax-intake flow, same gate as CRM's Related
-                  Documents tab (isFaxFlow) and the same file both portals
-                  point at, so dropping a real PDF into public/ lights up
-                  the preview in both places at once. */}
+                  records. The live patient's list is caseDocuments(), the
+                  same list the CRM's Related Documents tab and iAssist
+                  show, so a document captured in one app appears in the
+                  others with the same id, name, and date. */}
               {patientTab === "RELATED DOCS" && (() => {
                 const isLivePatient = selectedPatient.id === "AS-164543" && enrollmentStatus === "enrolled";
-                // Same lists as CRM: the enrollment form on fax flows, the brand's PA form on every non-PAP flow.
-                const enrollmentForm = enrollmentFormDocument();
-                const paForm = paFormDocument();
-                const docs: { fileId: string; doc: BrandDocument; type: string; pages: string; received: string }[] = [
-                  // HCP-administered cases (Buy and Bill, free drug) show the one list iAssist and the CRM show.
-                  ...(isLivePatient && (isBuyAndBill || isFreeDrug)
-                    ? caseDocuments(workflowDataNow, isFreeDrug).map((c) => ({
-                        fileId: c.id,
-                        doc: { file: c.file, fileName: c.name },
-                        type: c.type,
-                        pages: String(c.pages),
-                        received: daysFromToday(0),
-                      }))
-                    : []),
-                  ...(isLivePatient && isFaxFlow
-                    ? [{ fileId: "FAX-2026-00431", doc: enrollmentForm, type: "Enrollment Form", pages: "3", received: daysFromToday(-4) }]
-                    : []),
-                  ...(isLivePatient && paForm && !isPapFlow
-                    ? [{ fileId: "FAX-2026-00433", doc: paForm, type: "Prior Authorization Form", pages: "5", received: daysFromToday(-2) }]
-                    : []),
-                ];
+                // Every scenario shows the one list the CRM and iAssist show (brand/caseDocuments.ts).
+                const docs: { fileId: string; doc: BrandDocument; type: string; pages: string; received: string }[] = isLivePatient
+                  ? caseDocuments(workflowDataNow, caseDocumentOptions(state.flow_type)).map((c) => ({
+                      fileId: c.id,
+                      doc: { file: c.file, fileName: c.name },
+                      type: c.type,
+                      pages: String(c.pages),
+                      received: daysFromToday(-c.daysAgo),
+                    }))
+                  : [];
                 if (docs.length === 0) {
                   return <p className="text-sm text-slate-400 text-center py-10">No documents</p>;
                 }

@@ -145,6 +145,8 @@ export interface WorkflowData {
   signatureCaptured?: boolean;
   /** `enrollment` with `capture` only: the patient uploaded the insurance documents. */
   insuranceUploaded?: boolean;
+  /** iAssist: names of the files the HCP attached in the case wizard (chart notes, Letter of Medical Necessity, PA attachments). Set by the referral. Nothing uploads. */
+  submittedDocuments?: string[];
   /**
    * `tracking` variant `two_legs` only (the denied-PA Bridge): the commercial pharmacy the HCP picked on the eRx. It stays on the
    * case so the second dispense reads it, because the first dispense (the non-commercial pharmacy) takes `selectedPharmacy`.

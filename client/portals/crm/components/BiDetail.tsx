@@ -155,7 +155,7 @@ export function BiDetail({ workflowData, patientName, drugName, caseNumber, phon
                   <FieldRow label="Status" value="Active" />
                   <FieldRow label="Reimbursement Plan" value="" />
                   <FieldRow label="Sub-Status" value="" />
-                  <FieldRow label="Insured?" value={facts.isNoPaIntake ? "No" : "Yes"} />
+                  <FieldRow label="Insured?" value={facts.isNoPaIntake ? NOT_APPLICABLE : "Yes"} />
                   <FieldRow label="Prior Authorization Phone #" value={phone} />
                   <FieldRow label="Subscriber Name" value="Dr. Sarah Chen" />
                   <FieldRow label="Internal Comments" value="" />

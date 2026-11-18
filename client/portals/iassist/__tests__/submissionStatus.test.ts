@@ -17,7 +17,7 @@ describe("iAssist patient view status", () => {
     const data = d({ enrollmentStatus: "enrolled", biStatus: "running" });
     expect(card(data, "enrollment").body).toContain("Waiting on Sam's consent");
     expect(card(data, "prior_authorization").state).toBe("pending");
-    expect(deriveDocuments(data).map((x) => x.name)).toEqual(["EnrollmentForm.pdf"]);
+    expect(deriveDocuments(data).map((x) => x.name)).toEqual(["Enrollment_Form_KDixon_051526.pdf"]);
   });
 
   it("shows the approved PA with an authorization number and a one-year expiration", () => {
@@ -31,7 +31,7 @@ describe("iAssist patient view status", () => {
     const data = d({ enrollmentStatus: "enrolled", medbvStatus: "complete", paStatus: "submitted", copayEnrolled: true, copayClaims: [{}, {}] });
     expect(card(data, "copay").body).toContain("2 claims filed");
     expect(submissionSummary(data)).toBe("Enrollment, MedBV, PA, Copay");
-    expect(deriveDocuments(data).map((x) => x.name)).toEqual(["EnrollmentForm.pdf", "SummaryOfBenefits.pdf", "PriorAuthorizationForm.pdf"]);
+    expect(deriveDocuments(data).map((x) => x.name)).toEqual(["Enrollment_Form_KDixon_051526.pdf", "SummaryOfBenefits.pdf", "PriorAuthorizationForm.pdf"]);
   });
 
   it("closes the loop when the patient consents by text and confirms income", () => {

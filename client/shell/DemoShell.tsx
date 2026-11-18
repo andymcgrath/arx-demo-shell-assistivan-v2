@@ -49,6 +49,7 @@ import { scenarioHasModule } from "@/workflows/scenarios";
 import { isTransferScenario, transferStageEvents, TRANSFER_STAGE_LABELS } from "./transferLadders";
 import { isBuyAndBillScenario, buyAndBillStageEvents, BUY_AND_BILL_STAGE_LABELS, isFreeDrugScenario, freeDrugStageEvents, FREE_DRUG_STAGE_LABELS } from "./buyAndBillLadders";
 import { faxStageEvents } from "./faxLadders";
+import { PERSONAS, PersonaChip } from "./personas";
 
 // ── Portal registry ───────────────────────────────────────────────────────────
 
@@ -162,8 +163,9 @@ function getProviderPortalLabel(flowType: string): string {
 // label "Analytics") is a newer, separate placeholder tab — sits directly to
 // the left of Workforce, visible in every workflow.
 const PORTALS_BASE: { id: PortalId; color: string }[] = [
+  // Every tab has its own hue. No two tabs share a color, so the persona color tells panels apart.
   // The client's web page and the gateway view exist only in a web-source scenario (see getPortals).
-  { id: "web",       color: "#2563eb" },
+  { id: "web",       color: "#e11d48" },
   { id: "crm",       color: "#0176d3" },
   // "Client" — a straight duplicate of the HUB/CRM tab (same portal
   // component, same shared workflow state), placed directly to its right.
@@ -176,12 +178,11 @@ const PORTALS_BASE: { id: PortalId; color: string }[] = [
   { id: "provider",  color: "#7c3aed" },
   { id: "iassist",   color: "#d97706" },
   { id: "field",     color: "#14b8a6" },
-  { id: "insights",  color: "#2563eb" },
-  { id: "analytics", color: "#d97706" },
-  // New Salesforce-Lightning "Product Mgmt" / Action Factory demo — Salesforce
-  // blue to visually hint what it is. Visible in every workflow (no
-  // flowType-based filtering below), same as "insights".
-  { id: "rules",     color: "#0070d2" },
+  // The "insights" tab (label "Analytics") is suppressed until it is implemented. Its portal
+  // component and slug stay, so restoring it means adding the entry back here.
+  { id: "analytics", color: "#65a30d" },
+  // "Product Mgmt" / Action Factory demo. Visible in every workflow (no flowType-based filtering below).
+  { id: "rules",     color: "#c026d3" },
 ];
 
 function getPortals(flowType: string) {
@@ -475,14 +476,19 @@ function Panel({ portal, onChangePortal, showSelector, headerHeight, flowType }:
       {/* Per-panel portal selector (multi-panel mode only) */}
       {showSelector && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/80 border-b border-slate-700/50 shrink-0">
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ background: info.color }}
-          />
+          {PERSONAS[portal] ? (
+            <PersonaChip portal={portal} color={info.color} />
+          ) : (
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ background: info.color }}
+            />
+          )}
           <select
             value={portal}
             onChange={(e) => onChangePortal(e.target.value as PortalId)}
-            className="flex-1 text-[11px] bg-transparent text-white/80 border-0 focus:outline-none cursor-pointer"
+            aria-label="Portal"
+            className="flex-1 min-w-0 text-[11px] bg-transparent text-white/60 border-0 focus:outline-none cursor-pointer text-right"
           >
             {portals.map((p) => (
               <option key={p.id} value={p.id} className="bg-[#1e293b] text-white">
@@ -898,10 +904,11 @@ export default function DemoShell() {
                     if (layout !== "1up") return;
                     navigate(`/${PORTAL_SLUG[tab.id]}`);
                   }}
+                  style={isActive ? { borderBottomColor: tab.color, backgroundColor: `${tab.color}26` } : undefined}
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium border-b-2 transition-all whitespace-nowrap",
                     isActive
-                      ? "text-white border-indigo-400 bg-white/5"
+                      ? "text-white"
                       : layout === "1up"
                         ? "text-white/50 border-transparent hover:text-white/80 hover:bg-white/5 cursor-pointer"
                         : "text-white/30 border-transparent cursor-default"
@@ -1104,6 +1111,19 @@ export default function DemoShell() {
             </div>
           </div>
         </div>
+
+        {/* Persona strip (single-panel mode): who the presenter is acting as in the active tab. Split modes show it per panel. */}
+        {layout === "1up" && PERSONAS[urlPortal] && (
+          <div
+            className="flex items-center px-4 py-2 border-t border-white/10"
+            style={{ backgroundColor: `${getPortals(flowType).find((p) => p.id === urlPortal)?.color ?? "#64748b"}26` }}
+          >
+            <PersonaChip
+              portal={urlPortal}
+              color={getPortals(flowType).find((p) => p.id === urlPortal)?.color ?? "#64748b"}
+            />
+          </div>
+        )}
 
         {/* Step progress bar */}
         <div className="px-2 py-4">

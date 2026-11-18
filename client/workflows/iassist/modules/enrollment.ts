@@ -12,7 +12,7 @@ export const ENROLLMENT_RULES: IaRule[] = [
     // Buy and Bill: the HCP runs eMedBV and enrolls the patient in copay first, then submits.
     when: (d, _e, s) => d.enrollmentStatus === "none" && (!hcpPreparesFirst(s) || (d.medbvStatus === "complete" && (d.copayEnrolled || !hcpEnrollsCopay(s)))),
     // `hcp_signs`: the HCP captured consent and income on the form, so the patient has nothing to consent to.
-    set: (d, _e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(asksHousehold(s) ? { householdRequested: true } : {}), ...(consentByHcp(d) ? { consentStatus: "confirmed" as const, incomeStatus: "verified" as const } : {}) }),
+    set: (d, e, s) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, ...(Array.isArray(e.documents) ? { submittedDocuments: e.documents.filter((n: unknown): n is string => typeof n === "string") } : {}), ...(asksHousehold(s) ? { householdRequested: true } : {}), ...(consentByHcp(d) ? { consentStatus: "confirmed" as const, incomeStatus: "verified" as const } : {}) }),
     emit: { portal: "crm", step: 1 },
     then: { trigger: "system", send: () => ({ type: "RUN_BI" }) },
   },

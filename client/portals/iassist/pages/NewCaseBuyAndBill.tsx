@@ -8,7 +8,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowDispatch, usePersonaState } from "@/engine/WorkflowProvider";
-import { useCaseWizardStore, prescriberNameById } from "@/store/caseWizardStore";
+import { useCaseWizardStore, prescriberNameById, wizardDocumentNames } from "@/store/caseWizardStore";
 import { usePatientStore } from "@/store/patientStore";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
@@ -62,7 +62,7 @@ export default function NewCaseBuyAndBill() {
   const officeSite = siteByName(office) ?? SITES_OF_CARE[0];
 
   function submit() {
-    dispatch("REFERRAL_RECEIVED", { portal: "provider" });
+    dispatch("REFERRAL_RECEIVED", { portal: "provider", documents: wizardDocumentNames(useCaseWizardStore.getState()) });
     resetCaseWizard();
     navigate("/patient");
   }

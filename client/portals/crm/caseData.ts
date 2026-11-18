@@ -1,7 +1,5 @@
 import { KEANU_SITE_OF_CARE_FACTS } from "@/engine/WorkflowEngine";
-import { daysFromToday } from "@/lib/relativeDate";
 import { BRAND } from "@/brand";
-import { enrollmentFormDocument, paFormDocument } from "@/brand/documents";
 
 // The CRM case page's tab lists, related-document list, and pharmacy and site-of-care options.
 export const CASE_TABS = [
@@ -28,29 +26,7 @@ export interface RelatedDocument {
   href?: string;
 }
 
-export const FAX_DOCUMENTS: RelatedDocument[] = [
-  {
-    fileId: "FAX-2026-00431",
-    fileName: enrollmentFormDocument().fileName,
-    dateReceived: daysFromToday(-4),
-    type: "Enrollment Form",
-    pages: 3,
-  },
-];
-
-// PA form. Only a brand that sets `program.documents.paForm` has one. It opens in a new tab like the
-// Summary of Benefits. Shown on every flow except the PAP flows.
-export const PA_FORM = paFormDocument();
-export const PA_FORM_DOCUMENT: RelatedDocument | null = PA_FORM
-  ? {
-      fileId: "FAX-2026-00433",
-      fileName: PA_FORM.fileName,
-      dateReceived: daysFromToday(-2),
-      type: "Prior Authorization Form",
-      pages: 5,
-      href: PA_FORM.file,
-    }
-  : null;
+// The related-document list itself is `caseDocuments()` in brand/caseDocuments.ts, shared with the Field portal and iAssist.
 
 export interface PharmacyOption {
   name: string;

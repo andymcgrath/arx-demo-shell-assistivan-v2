@@ -26,7 +26,7 @@ import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { X, Info, Plus } from "lucide-react";
 import StepRail from "../components/StepRail";
 import { IAssistLogo } from "../components/IAssistSidebar";
-import { useCaseWizardStore, prescriberNameById, expandStateAbbreviation, AUTO_SIG } from "@/store/caseWizardStore";
+import { useCaseWizardStore, prescriberNameById, expandStateAbbreviation, AUTO_SIG, wizardDocumentNames } from "@/store/caseWizardStore";
 import { usePatientStore } from "@/store/patientStore";
 
 const FORM_OPTIONS = ["Tablet", "Capsule", "Injection", "Solution", "Gel"];
@@ -105,7 +105,7 @@ export default function NewCaseRx() {
   // submit keeps the next case from inheriting this one's answers.
   const resetCaseWizard = useCaseWizardStore((s) => s.resetCaseWizard);
   function finishCase() {
-    dispatch("REFERRAL_RECEIVED", { portal: "provider" });
+    dispatch("REFERRAL_RECEIVED", { portal: "provider", documents: wizardDocumentNames(useCaseWizardStore.getState()) });
     resetCaseWizard();
     navigate("/");
   }

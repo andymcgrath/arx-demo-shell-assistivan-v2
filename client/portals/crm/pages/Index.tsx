@@ -6,7 +6,6 @@ import { usePersonaState, useWorkflowActor, useWorkflowDispatch } from "@/engine
 import { dateFromToday, formatShortDate } from "@/lib/relativeDate";
 import { useSelector } from "@xstate/react";
 import { useRulesPortalStore } from "@/store/rulesPortalStore";
-import { summaryOfBenefitsDocument } from "@/brand/documents";
 import { SfLink, SF_BLUE } from "../components/SfPrimitives";
 import { scenarioHasModule } from "@/workflows/scenarios";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
@@ -15,11 +14,12 @@ import { stageMapFor } from "@/workflows/stageMaps";
 import { buildCrmStages } from "../stages/buildStages";
 import type { Stage } from "../stages/types";
 import { caseDocuments } from "@/brand/caseDocuments";
+import { caseDocumentOptions } from "@/workflows/caseDocumentOptions";
 import { FileText, X } from "lucide-react";
 import { RecordStageView } from "../components/RecordStageView";
 import { stageRecord } from "../stages/records";
 import { CASE_HOME, crmActions, type CrmAction, type CrmCan } from "../stages/actions";
-import { type RelatedDocument, FAX_DOCUMENTS, PA_FORM_DOCUMENT } from "../caseData";
+import { type RelatedDocument } from "../caseData";
 import { CaseListView } from "../components/CaseListView";
 import { ProductDetailModal } from "../components/ProductDetailModal";
 import { EnrollmentFormView } from "../components/EnrollmentFormView";
@@ -108,48 +108,30 @@ export default function Index() {
   const flowType = workflowData.flowType;
   const biStatus = workflowData.biStatus;
   const paStatus = workflowData.paStatus;
-  const paApprovedAt = workflowData.paApprovedAt;
   const dispatchStatus = workflowData.dispatchStatus;
   const facts = scenarioFacts(flowType);
   // The recipe has the Bridge: a denied PA offers a free supply, not a cash offer.
   const bridge = !!scenarioFor(workflowData.flowType)?.recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "bridge");
 
-  // Summary of Benefits — only appears in Related Documents once the PA is
-  // actually approved (not just submitted). Dated to the live PA approval
-  // timestamp so it tracks whenever the demo operator actually clicks
-  // through, per the relativeDate.ts "sliding window" convention.
-  const sobDateLabel = formatShortDate(paApprovedAt ? new Date(paApprovedAt) : dateFromToday(0));
-  const sobDocuments: RelatedDocument[] = paStatus === "approved"
-    ? [{
-        fileId: "SOB-2026-00512",
-        fileName: `${patientName}-SOB-${sobDateLabel}.pdf`,
-        dateReceived: sobDateLabel,
-        type: "Summary of Benefits",
-        pages: 2,
-        href: summaryOfBenefitsDocument().file,
-      }]
-    : [];
   const enrollmentFormTabOpen = useDemoStore((s) => s.enrollmentFormTabOpen);
   const closeEnrollmentFormTab = useDemoStore((s) => s.closeEnrollmentFormTab);
   const openEnrollmentFormTab = useDemoStore((s) => s.openEnrollmentFormTab);
   // Related Documents: the enrollment form (fax flows), the brand's PA form (non-PAP flows), and the
   // Summary of Benefits once the PA is approved.
   // An HCP-administered case (eMedBV in iAssist) shows the same documents iAssist and the Field portal show.
-  const sharedCaseDocs = scenarioHasModule(flowType, "benefit_verification")
-    ? caseDocuments(workflowData, scenarioHasModule(flowType, "financial_assistance")).map((c): RelatedDocument => ({
-        fileId: c.id,
-        fileName: c.name,
-        dateReceived: formatShortDate(dateFromToday(0)),
-        type: c.type,
-        pages: c.pages,
-        href: c.file,
-      }))
-    : null;
-  const relatedDocuments: RelatedDocument[] = sharedCaseDocs ?? [
-    ...(facts.isFax ? FAX_DOCUMENTS : []),
-    ...(PA_FORM_DOCUMENT && !facts.isNoPaIntake ? [PA_FORM_DOCUMENT] : []),
-    ...sobDocuments,
-  ];
+  // Every scenario reads the one list the Field portal reads (brand/caseDocuments.ts).
+  // The faxed enrollment form has no link: it opens the enrollment-form subtab viewer.
+  const docOptions = caseDocumentOptions(flowType);
+  const relatedDocuments: RelatedDocument[] = caseDocuments(workflowData, docOptions).map((c): RelatedDocument => ({
+    fileId: c.id,
+    fileName: c.name,
+    dateReceived: formatShortDate(dateFromToday(-c.daysAgo)),
+    type: c.type,
+    pages: c.pages,
+    href: docOptions.fax && c.type === "Enrollment Form" ? undefined : c.file,
+  }));
+  // The faxed enrollment form's tab is named by its id in the shared document list.
+  const enrollmentFormId = relatedDocuments.find((r) => r.type === "Enrollment Form")?.fileId ?? "";
   const [productDetailModalOpen, setProductDetailModalOpen] = useState(false);
   const copayClaimsNow = workflowData.copayClaims ?? [];
   const [openCopayClaimId, setOpenCopayClaimId] = useState<string | null>(null);
@@ -323,7 +305,7 @@ export default function Index() {
       {activeTopTab === HOME_TAB ? (
         /* ── Patient view with sub-tabs */
         <>
-          {/* Sub-tab strip: Onboarding | FAX-2026-00431 */}
+          {/* Sub-tab strip: Onboarding | the faxed enrollment form (named by its case document id) */}
           <div className="border-b border-[#dddbda] flex items-end px-2 gap-0 bg-white">
             {openSubTabs.includes("onboarding") && (
               <button
@@ -369,7 +351,7 @@ export default function Index() {
                   <FileText size={9} className="text-white" />
                 </div>
                 <span className="flex flex-col leading-none text-left gap-0">
-                  <span>FAX-2026-00431</span>
+                  <span>{enrollmentFormId}</span>
                   <span className="text-[10px] text-[#706e6b] font-normal">Enrollment Form</span>
                 </span>
                 <span

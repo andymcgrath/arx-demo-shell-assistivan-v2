@@ -378,6 +378,11 @@ function buildInitialState() {
   return { patient, medication, insurance, selectedInsurance: null as SelectedInsurance | null, clinical, pa, rx };
 }
 
+/** Names of every file the HCP attached across the wizard: chart notes, the Letter of Medical Necessity, and PA attachments. Sent with the referral so the CRM and Field list them. */
+export function wizardDocumentNames(s: { clinical: ClinicalData; pa: PAData }): string[] {
+  return [...s.clinical.documents, ...s.pa.lmnFiles, ...s.pa.documents];
+}
+
 interface CaseWizardStore {
   patient: PatientData;
   medication: MedicationData;
