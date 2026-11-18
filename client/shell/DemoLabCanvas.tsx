@@ -59,6 +59,7 @@ export default function CanvasLab() {
   const [insertAt, setInsertAt] = useState<number | null>(null);
   const [showRequest, setShowRequest] = useState(false);
   const [shownFork, setShownFork] = useState<string | null>(null);
+  const [hideSkipped, setHideSkipped] = useState(false);
   // On a narrow window the two side panels would leave the cards no room, so they start collapsed.
   const roomy = typeof window === "undefined" || window.innerWidth >= 1100;
   const [listOpen, setListOpen] = useState(roomy);
@@ -120,6 +121,10 @@ export default function CanvasLab() {
   const newCardCount = canvas.cards.filter((c) => c.kind === "ghost").length;
   const index = Math.min(cardIndex, Math.max(canvas.cards.length - 1, 0));
   const card = canvas.cards[index];
+  // Cards the picked outcomes skip. Hiding only removes them from view: numbers stay, nothing is deleted, and the selected card stays.
+  const skippedCount = canvas.cards.filter((c) => c.disabled.length > 0).length;
+  const hidden = (c: (typeof canvas.cards)[number], i: number) => hideSkipped && c.disabled.length > 0 && i !== index;
+  const hiddenCount = canvas.cards.filter(hidden).length;
 
   // Clicking a fork's name only shows where it sits: select its owner card, light up the fork, scroll to it. No edit.
   const showFork = (forkId: string) => {
@@ -223,9 +228,16 @@ export default function CanvasLab() {
               <div>
                 <ForkToggles canvas={canvas} edit={edit} onShow={showFork} shown={shownFork} />
                 {canvas.cards.length === 0 && <p className="mb-2 text-sm" style={{ color: MUTED }}>No cards yet. Use + to add the first one.</p>}
+                {skippedCount > 0 && (
+                  <label className="mb-2 flex items-center gap-2 text-xs font-semibold" data-testid="hide-skipped">
+                    <input type="checkbox" checked={hideSkipped} onChange={(e) => setHideSkipped(e.target.checked)} />
+                    Hide skipped cards ({skippedCount})
+                    {hideSkipped && hiddenCount > 0 && <span className="font-normal" style={{ color: MUTED }}>{hiddenCount} hidden. Card numbers stay the same.</span>}
+                  </label>
+                )}
                 <div className="flex flex-col items-start pb-4" data-testid="canvas-timeline">
                   <AddButton at={0} />
-                  {canvas.cards.map((c, i) => (
+                  {canvas.cards.map((c, i) => hidden(c, i) ? null : (
                     <div key={i} className="flex w-full flex-col items-start">
                       <div className="flex w-full flex-col items-start gap-4 lg:flex-row">
                         <div className="w-full max-w-xl" id={`canvas-card-${i}`}>
@@ -291,7 +303,7 @@ export default function CanvasLab() {
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: MUTED }}>Outline</h4>
               {canvas.cards.length === 0 && <p className="text-xs" style={{ color: MUTED }}>No cards yet.</p>}
               <ol className="space-y-0.5">
-                {canvas.cards.map((c, i) => (
+                {canvas.cards.map((c, i) => hidden(c, i) ? null : (
                   <li key={i}>
                     <button type="button" data-testid="outline-card" aria-current={i === index ? "step" : undefined} onClick={() => goToCard(i)} className="flex w-full items-baseline gap-2 rounded px-2 py-1 text-left text-sm" style={{ background: i === index ? INK : "transparent", color: i === index ? "#ffffff" : INK, opacity: c.disabled.length > 0 ? 0.5 : 1 }}>
                       <span className="w-5 shrink-0 text-xs font-bold">{i + 1}.</span>

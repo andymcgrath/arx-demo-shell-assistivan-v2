@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import CanvasLab from "@/shell/DemoLabCanvas";
 import { DraftProvider } from "@/shell/DemoLabDraft";
+import { skippedBecause } from "@/shell/DemoLabCanvasParts";
 
 /** The canvas draws a row of cards, a detail panel for the picked card, and the forks under their owner cards. */
 
@@ -287,6 +288,33 @@ describe("editing on the canvas", () => {
     // The medical outcome needs a transfer block the draft lacks, so the pick is refused and nothing changes.
     expect(off()).toBe(before);
     expect(cards(view)).toHaveLength(total);
+  });
+
+  it("hides skipped cards on request, keeps the numbers, and shows them again", () => {
+    const view = open(/CoAssist Copay/i);
+    const total = cards(view).length;
+    // Let the story play a denied PA, which skips the cards that only an approval feeds.
+    const pa = view.getByTestId("canvas-fork-pa");
+    fireEvent.click(within(within(pa).getAllByTestId("canvas-exit").find((e) => e.getAttribute("data-exit") === "denied")!).getByRole("button"));
+    const off = cards(view).filter((c) => c.getAttribute("data-disabled") === "true").length;
+    expect(off).toBeGreaterThan(0);
+    const box = within(view.getByTestId("hide-skipped"));
+    expect(box.getByText(new RegExp(`Hide skipped cards \\(${off}\\)`))).toBeDefined();
+    const nums = () => cards(view).map((c) => c.textContent?.match(/^\d+/)?.[0]);
+    fireEvent.click(box.getByRole("checkbox"));
+    expect(cards(view)).toHaveLength(total - off);
+    expect(within(view.getByTestId("outline")).getAllByTestId("outline-card")).toHaveLength(total - off);
+    expect(nums().length).toBe(total - off);
+    fireEvent.click(box.getByRole("checkbox"));
+    expect(cards(view)).toHaveLength(total);
+  });
+
+  it("says on a skipped card which decision skips it", () => {
+    expect(skippedBecause(['Prior authorization decision: "Denied" does not work with this block.'])).toBe("Skipped: Prior authorization decision plays Denied");
+    expect(skippedBecause(['A: "x" does not work with this block.', 'B: "y" does not work with this block.'])).toBe("Skipped: A plays x; B plays y");
+    expect(skippedBecause(["something else"])).toBe("Skipped: something else");
+    const view = open(/CoAssist Copay/i);
+    for (const t of view.queryAllByTestId("card-skipped")) expect(t.textContent).toMatch(/^Skipped: /);
   });
 
   it("sets a patient fork's branch to always play in the demo, and lets the patient choose again", () => {

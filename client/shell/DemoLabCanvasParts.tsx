@@ -58,6 +58,12 @@ export function Chip({ children, strong }: { children: React.ReactNode; strong?:
   );
 }
 
+/** "Skipped: Prior authorization decision plays Denied", from the reasons the canvas gives. Says what the card is waiting on, in one line. */
+export function skippedBecause(reasons: string[]): string {
+  const parts = reasons.map((r) => r.match(/^(.*): "(.*)" does not work with this block\.$/)).map((m, i) => (m ? `${m[1]} plays ${m[2]}` : reasons[i]));
+  return `Skipped: ${parts.join("; ")}`;
+}
+
 export function CardView({ card, selected, onSelect }: { card: CanvasCard; selected: boolean; onSelect: () => void }) {
   const off = card.disabled.length > 0;
   const ghost = card.kind === "ghost";
@@ -106,7 +112,11 @@ export function CardView({ card, selected, onSelect }: { card: CanvasCard; selec
           <Chip key={a}>{APP_LABEL[a]}</Chip>
         ))}
       </span>
-      {off && <span className="mt-1 block text-[11px] font-semibold">Disabled for this outcome</span>}
+      {off && (
+        <span className="mt-1 block text-[11px] font-semibold" data-testid="card-skipped">
+          {skippedBecause(card.disabled)}
+        </span>
+      )}
       {card.issues.length > 0 && <span className="mt-1 block rounded px-1.5 py-0.5 text-[11px] font-bold text-white" style={{ background: INK }} data-testid="card-issue">Fix before export: {card.issues[0]}</span>}
     </button>
   );
