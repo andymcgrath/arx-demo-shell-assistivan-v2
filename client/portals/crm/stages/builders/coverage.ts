@@ -129,7 +129,7 @@ const bridge = (d: WorkflowData): Stage => {
       d.bridgeStatus === "active"
         ? d.copayEnrolled
           ? "Free supply active — enrolled in $0 copay"
-          : "Free supply active — awaiting $0 copay enrollment"
+          : "Free supply active — awaiting enrollment"
         : d.bridgeStatus === "sent"
         ? "Bridge text sent — awaiting the patient"
         : d.paStatus === "denied"

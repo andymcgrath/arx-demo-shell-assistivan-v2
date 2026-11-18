@@ -7,10 +7,9 @@
         "prescriberNpi": "1234567893"
       },
       "accepted": true,
-      "route": "/sms-message",
+      "route": "/lock-screen",
       "changed": {
         "enrollmentStatus": "enrolled",
-        "enrollmentInviteSent": true,
         "prescriberNpi": "1234567893"
       },
       "newEvents": [
@@ -26,6 +25,7 @@
       "accepted": true,
       "route": "/sms-message",
       "changed": {
+        "enrollmentInviteSent": true,
         "patientInvited": true
       },
       "newEvents": [

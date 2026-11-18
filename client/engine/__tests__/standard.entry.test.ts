@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 import { startPortalFor } from "@/shell/DemoShell";
 import { faxStageEvents } from "@/shell/faxLadders";
+import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ctx, runSteps, startFlow } from "./harness";
 
 /**
@@ -34,7 +35,8 @@ describe("Fax_QS_PA_Approved entry fork", () => {
     const pres = start("pres");
     runSteps(pres.actor, [{ type: "PRES_SUBMIT", prescriberNpi: "1234567893" }]);
     const pick = (d: ReturnType<typeof fax.data>) => ({ enrollmentStatus: d.enrollmentStatus, enrollmentInviteSent: d.enrollmentInviteSent, patientInvited: d.patientInvited, biStatus: d.biStatus });
-    expect(pick(pres.data())).toEqual(pick(fax.data()));
+    // The fax's referral texts the patient. PrES texts nothing until the agent's invite (see the last describe).
+    expect(pick(pres.data())).toEqual({ ...pick(fax.data()), enrollmentInviteSent: false });
     expect(pres.data().prescriberNpi).toBe("1234567893");
     expect(pres.accepts("PRES_SUBMIT")).toBe(false);
     expect(pres.accepts("INVITE")).toBe(true);
@@ -46,5 +48,35 @@ describe("Fax_QS_PA_Approved entry fork", () => {
     expect(faxStageEvents("standard", 2, { entry: "pres" })[0].type).toBe("PRES_SUBMIT");
     expect(faxStageEvents("standard", 2, { entry: "fax" })[0].type).toBe("REFERRAL_RECEIVED");
     expect(faxStageEvents("standard", 2)[0].type).toBe("REFERRAL_RECEIVED");
+  });
+});
+
+describe("PrES entry: the patient's text waits for the agent's invite", () => {
+  it("keeps the patient's app locked until the invite, then shows the text", () => {
+    const { actor } = start("pres");
+    runSteps(actor, [{ type: "PRES_SUBMIT", prescriberNpi: "1234567893" }]);
+    expect(derivePatientRoute(ctx(actor))).toBe("/lock-screen");
+    runSteps(actor, [{ type: "INVITE" }]);
+    expect(derivePatientRoute(ctx(actor))).toBe("/sms-message");
+  });
+
+  it("refuses the patient's steps before the invite, so nothing can run ahead of it", () => {
+    const { actor, accepts } = start("pres");
+    runSteps(actor, [{ type: "PRES_SUBMIT" }]);
+    expect(accepts("VERIFY_SMS")).toBe(false);
+    expect(accepts("VERIFY_OTP")).toBe(false);
+    expect(accepts("CONFIRM_CONSENT")).toBe(false);
+  });
+
+  // The loop this guards against: onboarding screens that come back after the patient finished them.
+  it("never returns to an onboarding screen once the patient has consented", () => {
+    const { actor } = start("pres");
+    const onboarding = ["/lock-screen", "/sms-message", "/otp-verification", "/confirm-details"];
+    runSteps(actor, [{ type: "PRES_SUBMIT" }, { type: "INVITE" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }]);
+    expect(onboarding).not.toContain(derivePatientRoute(ctx(actor)));
+    for (const step of [{ type: "DISMISS_WELCOME" }, { type: "VIEW_STAGE", stage: "BI" }]) {
+      runSteps(actor, [step]);
+      expect(onboarding).not.toContain(derivePatientRoute(ctx(actor)));
+    }
   });
 });

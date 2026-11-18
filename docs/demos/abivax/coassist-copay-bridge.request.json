@@ -30,7 +30,7 @@
     {
       "kind": "block",
       "moduleId": "prior_authorization",
-      "variantId": "auto"
+      "variantId": "apa"
     },
     {
       "kind": "block",

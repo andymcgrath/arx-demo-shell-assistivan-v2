@@ -7,7 +7,7 @@
       "id": "coassist-copay-bridge",
       "flow": "CoA_Copay",
       "label": "1. CoAssist Denied PA Bridge",
-      "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
+      "description": "The HCP picks the client's pharmacy on the eRx. The agent emails the HCP the PA form, and the HCP's submit starts the PA. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
       "choices": {
         "bi": "pharmacy_covered",
         "pa": "denied",
@@ -18,7 +18,7 @@
         "modules": [
           { "id": "enrollment", "props": { "capture": ["signature", "upload_insurance"] } },
           { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
-          { "id": "prior_authorization", "props": { "variant": "auto" } },
+          { "id": "prior_authorization", "props": { "variant": "apa" } },
           { "id": "pa_notification" },
           { "id": "cash_offer", "props": { "variant": "bridge" } },
           { "id": "appeal" },
@@ -44,7 +44,7 @@
         "modules": [
           { "id": "enrollment", "props": { "capture": ["signature", "upload_insurance"] } },
           { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
-          { "id": "prior_authorization", "props": { "variant": "auto" } },
+          { "id": "prior_authorization", "props": { "variant": "apa" } },
           { "id": "pa_notification" },
           { "id": "cash_offer", "props": { "variant": "bridge" } },
           { "id": "appeal" },
@@ -159,11 +159,11 @@
     },
     "specialtyPharmacy": {
       "name": "Abivax Direct Pharmacy",
-      "address": "8200 Ridge Pointe Drive, Suite 120",
-      "city": "Indianapolis",
-      "state": "IN",
-      "zip": "46240",
-      "phone": "(317) 555-0134"
+      "address": "1800 Maitland Commerce Way, Suite 120",
+      "city": "Maitland",
+      "state": "FL",
+      "zip": "32751",
+      "phone": "(407) 555-0134"
     },
     "documents": {
       "letterOfNecessity": {

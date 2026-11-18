@@ -8,7 +8,7 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * The bridge variant of `cash_offer`: the free supply is active while the PA appeal runs. No price and no payment. The patient
- * enrolls in the copay program here, at $0, and moves on to the delivery address.
+ * is enrolled in the bridge program here, at $0, and moves on to the delivery address.
  * The pharmacy is the brand's transfer partner (`program.transferPartner`), and a generic name shows when the brand has none.
  */
 export default function BridgeSupply() {
@@ -26,7 +26,7 @@ export default function BridgeSupply() {
     setTimeout(() => {
       dispatch("SELECT_SELF_PAY", { portal: "patient" });
       setIsVerifying(false);
-      showPatientToast(`You're enrolled in the ${PROGRAM.drugDisplayName} Copay Program`);
+      showPatientToast(`You're enrolled in the ${PROGRAM.drugDisplayName} Bridge Program`);
       navigate("/delivery-address");
     }, 1800);
   }
@@ -39,7 +39,7 @@ export default function BridgeSupply() {
           <div className="mb-4">
             <ProgramLogo variant="colors" />
           </div>
-          <h2 className="text-xl font-bold leading-snug text-arx-slate mb-3">Your free supply is on its way</h2>
+          <h2 className="text-xl font-bold leading-snug text-arx-slate mb-3">Your free supply is almost on its way</h2>
           <p className="text-sm leading-relaxed mb-4 text-arx-body-copy">
             While we appeal your insurer's decision, {pharmacy?.name ?? "our pharmacy"} will provide {PROGRAM.drugDisplayName} at no cost to you. There is nothing to pay.
           </p>
@@ -47,7 +47,7 @@ export default function BridgeSupply() {
             The supply continues while your appeal is being reviewed.
           </p>
           <div className="rounded-xl p-4 mt-4 border border-arx-borders">
-            <p className="font-bold text-arx-slate">{PROGRAM.drugDisplayName} Copay Program</p>
+            <p className="font-bold text-arx-slate">{PROGRAM.drugDisplayName} Bridge Program</p>
             <p className="text-2xl font-bold text-arx-slate">$0<span className="text-sm font-semibold">/shipment</span></p>
           </div>
           <button
@@ -64,7 +64,7 @@ export default function BridgeSupply() {
               </>
             ) : (
               <>
-                <span>Enroll at $0</span>
+                <span>Continue</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

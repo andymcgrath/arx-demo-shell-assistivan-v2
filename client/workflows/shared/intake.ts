@@ -32,7 +32,8 @@ export const INTAKE_RULES: IntakeRule[] = [
   {
     on: "INVITE",
     when: (d) => d.enrollmentStatus === "enrolled" && !d.patientInvited,
-    set: () => ({ patientInvited: true }),
+    // The invite is the text. A case that was created without one (the HCP's PrES enrollment) shows the patient's text from here.
+    set: () => ({ patientInvited: true, enrollmentInviteSent: true }),
     emit: { portal: "crm", step: 2 },
   },
   {

@@ -1076,7 +1076,7 @@ function IncomeVerifyStep({ onBack, onCancel, onNext }: { onBack: () => void; on
 // his real workflow state — not static demo data like everyone else's row —
 // drives his status, and he moves to the top of the default list.
 
-function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
+export function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   if (workflowData.enrollmentStatus === "none") return null;
 
   // Second dot represents patient consent. It used to be safe to hardcode
@@ -1126,6 +1126,13 @@ function deriveKeanuStatus(workflowData: WorkflowData): PatientStatus | null {
   // CoA_DTP's live flow always approves (see coaDtp.ts / CRM Index.tsx), so
   // this is unreachable today.
   if (workflowData.paStatus === "denied") {
+    // The appeal follows the denial in the flows that have one (Bridge, PAP). The roster says where it stands.
+    if (workflowData.appealStatus === "approved") {
+      return { label: "Appeal Approved", color: "success", dots: ["completed", consentDot, "completed", "completed", "pending", "disabled"] };
+    }
+    if (workflowData.appealStatus === "initiated") {
+      return { label: "Appeal Filed", color: "warning", dots: ["completed", consentDot, "completed", "pending", "pending", "disabled"] };
+    }
     return { label: "PA Denied", color: "error", dots: ["completed", consentDot, "completed", "attention", "disabled", "disabled"] };
   }
   if (workflowData.paStatus === "submitted") {
@@ -3274,6 +3281,7 @@ export default function ProviderPortal() {
       {step === "pa-questions" && (
         <PaQuestionsStep
           isCoA={false}
+          showLetterOfNecessity
           onBack={() => setStep("login")}
           onCancel={() => setStep("login")}
           onNext={() => setStep("pa-submitted")}

@@ -43,7 +43,7 @@ const COMMONLY_PRESCRIBED = [
 // WorkflowData fields (enrollmentStatus/pharmacyStatus/paStatus/biStatus)
 // that iAssist.ts's machine sets identically to workflowMachine.ts/coaDtp.ts,
 // so this logic is compatible with iAssist's actor unchanged.
-function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | null {
+export function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | null {
   if (workflowData.enrollmentStatus === "none") return null;
 
   if (workflowData.pharmacyStatus === "delivered") {
@@ -85,7 +85,8 @@ function deriveActivePatientStatus(workflowData: WorkflowData): PatientStatus | 
       // in crm/pages/Index.tsx. Without this check, Stage 6 fell straight
       // into "Appeal Filed" below even though the site of care was already
       // selected, so "Reset → Stage 6" visibly resolved to Stage 5.
-      if (workflowData.selectedPharmacy !== null) {
+      // The Bridge sets the pharmacy at its first text, while the appeal is still running. That case stays on the appeal.
+      if (workflowData.selectedPharmacy !== null && workflowData.bridgeStatus === undefined) {
         return { label: triageLabel(workflowData.flowType), color: "success", dots: ["completed", "completed", "completed", "completed", "completed", "completed"] };
       }
       return { label: "Appeal Filed", color: "warning", dots: ["completed", "completed", "completed", "pending", "pending", "disabled"] };

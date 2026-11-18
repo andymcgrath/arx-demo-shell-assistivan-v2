@@ -21,6 +21,8 @@ import { caseDocuments } from "@/brand/caseDocuments";
 import { caseDocumentOptions } from "@/workflows/caseDocumentOptions";
 import { triageLabel } from "@/workflows/vocabulary";
 import { startPortalFor } from "@/shell/DemoShell";
+import { deriveKeanuStatus } from "@/portals/provider";
+import { deriveActivePatientStatus } from "@/portals/iassist/pages/Dashboard";
 import { ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
@@ -33,6 +35,8 @@ const COMMERCIAL = abivax.program.specialtyPharmacy;
 // The scenario's own content: the brand's transfer partner (ARx under Abivax, a placeholder under the test brand).
 const BRIDGE_PHARMACY = COA_COPAY.content.transferPharmacy;
 const TP = "TP-14277";
+// The HCP opens the emailed PA form, verifies by NPI, and submits it. The submit starts the PA.
+const PA_FORM_STEPS = [{ type: "OPEN_PA_FORM_LINK" }, { type: "VERIFY_PRESCRIBER", npi: "1234567890", pin: "4321" }, { type: "SUBMIT_PA_FORM" }];
 
 describe("the denied-PA Bridge story, eRx to the second delivery", () => {
   afterEach(() => setRecipeOverride("CoA_Copay", undefined));
@@ -75,9 +79,13 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       route("UPLOAD_INSURANCE"); // the Upload page sends this and CONFIRM_CONSENT together
       expect(route("CONFIRM_CONSENT")).toBe("/enrollment-complete");
 
-      // 3. The case manager opens BI: covered, PA required, and the PA fires on its own. Opening the PA denies it.
+      // 3. The case manager opens BI: covered, PA required. The PA does not start on its own. The HCP gets the form by email,
+      // opens it, verifies, and submits. Opening the PA then denies it.
       runSteps(actor, [{ type: "VIEW_STAGE", stage: "BI" }]);
       clock.increment(REVEAL_MS);
+      expect(data().paFormStatus).toBe("sent");
+      expect(data().paStatus).toBe("none");
+      runSteps(actor, PA_FORM_STEPS);
       expect(data().paStatus).toBe("submitted");
       runSteps(actor, [{ type: "VIEW_STAGE", stage: "PA" }]);
       clock.increment(REVEAL_MS);
@@ -89,6 +97,9 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(data().bridgeStatus).toBe("sent");
       expect(data().cashOfferStatus).toBe("none");
       expect(data().selectedPharmacy).toEqual(BRIDGE_PHARMACY); // ARx, from the first text
+      // The HCP's roster follows the denial. It says Appeal Filed, not a pharmacy hand-off, while the appeal runs.
+      expect(deriveKeanuStatus(data())?.label).toBe("Appeal Filed");
+      expect(deriveActivePatientStatus(data())?.label).toBe("Appeal Filed");
       // The offered Bridge resolves the denied PA, so the step bar moves on to Triage to Pharmacy (step 5).
       expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5);
 
@@ -204,6 +215,8 @@ describe("the denied-PA Bridge story, started by a fax", () => {
       runSteps(actor, [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CAPTURE_SIGNATURE" }, { type: "UPLOAD_INSURANCE" }, { type: "CONFIRM_CONSENT" }]);
       runSteps(actor, [{ type: "VIEW_STAGE", stage: "BI" }]);
       clock.increment(REVEAL_MS);
+      expect(data().paStatus).toBe("none"); // the HCP submits the PA from the emailed form
+      runSteps(actor, PA_FORM_STEPS);
       runSteps(actor, [{ type: "VIEW_STAGE", stage: "PA" }]);
       clock.increment(REVEAL_MS);
       expect(data().paStatus).toBe("denied");

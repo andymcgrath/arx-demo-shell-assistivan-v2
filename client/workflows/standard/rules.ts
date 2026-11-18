@@ -24,7 +24,9 @@ export const STANDARD_RULES: IntakeRule[] = [
   {
     on: "PRES_SUBMIT",
     when: (d) => d.enrollmentStatus === "none" && entryOf(d) === "pres",
-    set: (_d, e) => ({ enrollmentStatus: "enrolled", enrollmentInviteSent: true, prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null }),
+    // No text yet: the agent's invite (INVITE) sends it. Until then the patient's app stays locked. If it showed the text here, the
+    // patient could tap through while the invite was still missing, and every step would be refused (VERIFY_SMS needs the invite).
+    set: (_d, e) => ({ enrollmentStatus: "enrolled", prescriberNpi: typeof e.prescriberNpi === "string" ? e.prescriberNpi : null }),
     emit: { portal: "provider", step: 1 },
   },
 

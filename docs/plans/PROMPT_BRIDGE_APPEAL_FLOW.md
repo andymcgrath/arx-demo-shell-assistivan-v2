@@ -18,7 +18,7 @@ Pharmacies:
 
 - **ARx, non-commercial (Bridge, free drug):** `program.transferPartner` in `brands/abivax/brand.json`. Already set to ARx Patient Solutions Pharmacy.
 - **Abivax Direct, commercial:** `program.specialtyPharmacy`. It is empty. Andy approved a made-up, realistic US address. Fill it with this representative data (the 555 phone number is a reserved fictional range):
-  - Abivax Direct Pharmacy, 8200 Ridge Pointe Drive, Suite 120, Indianapolis, IN 46240, (317) 555-0134.
+  - Abivax Direct Pharmacy, 1800 Maitland Commerce Way, Suite 120, Maitland, FL 32751, (407) 555-0134.
 
 ## What tag 12 built
 
