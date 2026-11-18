@@ -63,7 +63,7 @@
   "demos": [
     {
       "id": "coassist-copay-bridge",
-      "label": "6. CoAssist Denied PA Bridge",
+      "label": "1. CoAssist Denied PA Bridge",
       "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
       "choices": {
         "bi": "pharmacy_covered",

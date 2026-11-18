@@ -19,6 +19,12 @@ export interface DemoRecipe {
   modules: ModuleSpec[];
   /** Ids of the forks the demo passes through. Absent keeps the scenario's list. */
   forks?: string[];
+  /**
+   * How the referral reaches the platform, when the demo starts differently from its scenario (rule 11: a scenario may override
+   * the intake channel). `fax` starts the case in the CRM, like the Standard flow. The triggers that default from intake
+   * (the Bridge text, the second shipment) and the wording follow it. Absent keeps the scenario's intake.
+   */
+  intake?: "erx" | "fax" | "esign";
 }
 
 const overrides = new Map<FlowType, DemoRecipe>();
@@ -40,5 +46,5 @@ export function composeRecipe(base: ScenarioRecipe, demo: DemoRecipe): ScenarioR
 export function withRecipeOverride<S extends ScenarioDefinition<any>>(scenario: S): S {
   const override = overrides.get(scenario.flowType);
   if (!override || !scenario.recipe) return scenario;
-  return { ...scenario, recipe: composeRecipe(scenario.recipe, override) };
+  return { ...scenario, ...(override.intake ? { intake: override.intake } : {}), recipe: composeRecipe(scenario.recipe, override) };
 }

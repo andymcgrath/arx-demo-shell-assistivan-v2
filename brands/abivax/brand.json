@@ -4,16 +4,55 @@
   "title": "Abivax Demo",
   "demos": [
     {
-      "id": "coa-dtp",
-      "flow": "CoA_DTP",
-      "label": "1. CoAssist DTP",
-      "description": "Cash-pay direct-to-patient workflow via CoAssist"
+      "id": "coassist-copay-bridge",
+      "flow": "CoA_Copay",
+      "label": "1. CoAssist Denied PA Bridge",
+      "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "denied",
+        "appeal": "approved"
+      },
+      "recipe": {
+        "forks": ["bi", "pa", "appeal"],
+        "modules": [
+          { "id": "enrollment", "props": { "capture": ["signature", "upload_insurance"] } },
+          { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
+          { "id": "prior_authorization", "props": { "variant": "auto" } },
+          { "id": "pa_notification" },
+          { "id": "cash_offer", "props": { "variant": "bridge" } },
+          { "id": "appeal" },
+          { "id": "financial_assistance", "props": { "variant": "copay" } },
+          { "id": "scheduling" },
+          { "id": "tracking", "props": { "variant": "two_legs" } }
+        ]
+      }
     },
     {
-      "id": "coa-copay",
+      "id": "coassist-copay-bridge-fax",
       "flow": "CoA_Copay",
-      "label": "2. CoAssist Copay",
-      "description": "CoAssist Copay Program variation, currently a direct copy of CoAssist DTP (WF3), pending its own divergent behavior"
+      "label": "2. CoAssist Denied PA Bridge (Fax)",
+      "description": "The same story as the eRx Bridge, but the referral arrives by fax, so the case starts in the CRM like the Standard flow. The case manager enrolls the patient, sends the Bridge text, and transfers to the commercial pharmacy by hand.",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "denied",
+        "appeal": "approved"
+      },
+      "recipe": {
+        "intake": "fax",
+        "forks": ["bi", "pa", "appeal"],
+        "modules": [
+          { "id": "enrollment", "props": { "capture": ["signature", "upload_insurance"] } },
+          { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
+          { "id": "prior_authorization", "props": { "variant": "auto" } },
+          { "id": "pa_notification" },
+          { "id": "cash_offer", "props": { "variant": "bridge" } },
+          { "id": "appeal" },
+          { "id": "financial_assistance", "props": { "variant": "copay" } },
+          { "id": "scheduling" },
+          { "id": "tracking", "props": { "variant": "two_legs" } }
+        ]
+      }
     },
     {
       "id": "coa-pap",
@@ -37,31 +76,6 @@
       "description": "The HCP completes the enrollment form on the PrES site and BI starts. No coverage is found, the agent sends the application update, and the patient completes the PES site: income consent, income, program terms, address and date. The agent then triages to the pharmacy.",
       "choices": {
         "bi": "no_coverage_pap"
-      }
-    },
-    {
-      "id": "coassist-copay-bridge",
-      "flow": "CoA_Copay",
-      "label": "6. CoAssist Denied PA Bridge",
-      "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
-      "choices": {
-        "bi": "pharmacy_covered",
-        "pa": "denied",
-        "appeal": "approved"
-      },
-      "recipe": {
-        "forks": ["bi", "pa", "appeal"],
-        "modules": [
-          { "id": "enrollment", "props": { "capture": ["signature", "upload_insurance"] } },
-          { "id": "pharmacy_selection", "props": { "variant": "prescriber" } },
-          { "id": "prior_authorization", "props": { "variant": "auto" } },
-          { "id": "pa_notification" },
-          { "id": "cash_offer", "props": { "variant": "bridge" } },
-          { "id": "appeal" },
-          { "id": "financial_assistance", "props": { "variant": "copay" } },
-          { "id": "scheduling" },
-          { "id": "tracking", "props": { "variant": "two_legs" } }
-        ]
       }
     }
   ],

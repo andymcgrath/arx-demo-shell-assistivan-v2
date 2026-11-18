@@ -17,6 +17,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { validateDemoRequest } from "@/workflows/catalog/request";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
+import { caseDocuments } from "@/brand/caseDocuments";
+import { caseDocumentOptions } from "@/workflows/caseDocumentOptions";
+import { triageLabel } from "@/workflows/vocabulary";
+import { startPortalFor } from "@/shell/DemoShell";
 import { ctx, runSteps, startFlow, withFrozenClock } from "./harness";
 
 /**
@@ -139,3 +143,108 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
     });
   });
 });
+
+/**
+ * The same story, started by a fax. The referral reaches the platform by fax, so the case starts in the CRM like the Standard flow
+ * (`intake: "fax"` on the demo's recipe, rule 11). Everything the intake decides follows it: the Bridge text and the second
+ * shipment wait for the case manager, and the pharmacy hand-off is called "Triage to Pharmacy".
+ */
+const FAX_DEMO = abivax.demos.find((d) => d.id === "coassist-copay-bridge-fax")! as any;
+
+describe("the Abivax demo list", () => {
+  it("is numbered in dropdown order, and the Bridge is first", () => {
+    const labels = abivax.demos.map((d) => d.label);
+    expect(labels.map((l, i) => l.startsWith(`${i + 1}. `))).toEqual(labels.map(() => true));
+    expect(abivax.demos[0].id).toBe("coassist-copay-bridge");
+    expect(abivax.demos.map((d) => d.id)).not.toContain("coa-dtp");
+    expect(abivax.demos.map((d) => d.id)).not.toContain("coa-copay");
+  });
+
+  it("the fax demo differs from the eRx demo only by its intake and its words", () => {
+    const { intake, ...faxRecipe } = FAX_DEMO.recipe;
+    expect(intake).toBe("fax");
+    expect(faxRecipe).toEqual(DEMO.recipe);
+    expect(FAX_DEMO.flow).toBe(DEMO.flow);
+    expect(FAX_DEMO.choices).toEqual(DEMO.choices);
+    expect(DEMO.recipe.intake).toBeUndefined();
+  });
+});
+
+describe("the denied-PA Bridge story, started by a fax", () => {
+  afterEach(() => setRecipeOverride("CoA_Copay", undefined));
+
+  it("starts in the CRM, and the eRx demo still starts in the EHR", () => {
+    setRecipeOverride("CoA_Copay", FAX_DEMO.recipe);
+    expect(startPortalFor("CoA_Copay")).toBe("crm");
+    setRecipeOverride("CoA_Copay", DEMO.recipe);
+    expect(startPortalFor("CoA_Copay")).toBe("provider");
+  });
+
+  it("runs end to end, with the case manager doing what the eRx case does on its own", () => {
+    withFrozenClock(() => {
+      setRecipeOverride("CoA_Copay", FAX_DEMO.recipe);
+      const clock = new SimulatedClock();
+      const actor = startFlow("CoA_Copay", { clock, choices: FAX_DEMO.choices });
+      const data = () => ctx(actor).workflowData;
+      const can = (e: { type: string }) => actor.getSnapshot().can(e as any);
+      const buttons = (stage: string) => crmActions(data(), stage, can as any).map((a) => ({ id: a.id, label: a.label }));
+      const route = (type: string, extra: Record<string, unknown> = {}) => runSteps(actor, [{ type, ...extra }])[0].route;
+
+      // The wording follows the intake.
+      expect(triageLabel("CoA_Copay")).toBe("Triage to Pharmacy");
+
+      // 1. The faxed enrollment: the case manager enrolls the patient in the CRM. No EHR pick, so the client's own pharmacy is used.
+      expect(buttons("case").map((b) => b.id)).toContain("enroll");
+      route("REFERRAL_RECEIVED", { portal: "crm" });
+      expect(data().commercialPharmacy).toEqual(COA_COPAY.content.commercial);
+      const docs = caseDocuments(data(), caseDocumentOptions("CoA_Copay"));
+      expect(docs.find((x) => x.type.startsWith("Enrollment Form"))?.id).toMatch(/^FAX-/); // the faxed form is on the case
+
+      // 2 and 3. Onboarding, BI, and the PA, as in the eRx demo.
+      runSteps(actor, [{ type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CAPTURE_SIGNATURE" }, { type: "UPLOAD_INSURANCE" }, { type: "CONFIRM_CONSENT" }]);
+      runSteps(actor, [{ type: "VIEW_STAGE", stage: "BI" }]);
+      clock.increment(REVEAL_MS);
+      runSteps(actor, [{ type: "VIEW_STAGE", stage: "PA" }]);
+      clock.increment(REVEAL_MS);
+      expect(data().paStatus).toBe("denied");
+      clock.increment(APPEAL_START_MS);
+      expect(data().appealStatus).toBe("initiated"); // the appeal still starts on its own
+
+      // 4. The Bridge text waits for the case manager's click. Nothing goes out by itself.
+      clock.increment(BRIDGE_TEXT_MS * 5);
+      expect(data().bridgeStatus).toBeUndefined();
+      expect(buttons("CO-14281").map((b) => b.id)).toContain("cash_offer.send_bridge");
+      route("SEND_BRIDGE");
+      expect(data().bridgeStatus).toBe("sent");
+
+      // 5 and 6. The patient enrolls at $0 and schedules, and the case manager transfers to the first pharmacy.
+      expect(route("VERIFY_BRIDGE_SMS")).toBe("/bridge-supply");
+      route("SELECT_SELF_PAY");
+      route("PATIENT_SETS_ADDRESS");
+      route("PATIENT_SELECTS_SHIP_DATE");
+      expect(buttons(TP).find((b) => b.id === "triage.dispatch")?.label).toBe("Triage to Pharmacy");
+      runSteps(actor, [{ type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }]);
+      expect(data().selectedPharmacy).toEqual(BRIDGE_PHARMACY);
+
+      // 7. The appeal is approved. The second shipment waits for the case manager's transfer.
+      runSteps(actor, [{ type: "VIEW_STAGE", stage: "APPEAL" }]);
+      clock.increment(APPEAL_DECISION_MS);
+      expect(data().appealStatus).toBe("approved");
+      clock.increment(SECOND_LEG_MS * 5);
+      expect(data().dispenseLeg).toBeUndefined();
+      expect(buttons(TP).find((b) => b.id === "triage.second_leg")?.label).toBe("Transfer to Commercial Pharmacy");
+      expect(route("START_SECOND_LEG")).toBe("/appeal-approved-sms");
+      route("PATIENT_SETS_ADDRESS");
+      route("PATIENT_SELECTS_SHIP_DATE");
+      runSteps(actor, [{ type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" }]);
+
+      // The same end state as the eRx demo.
+      expect(data().pharmacyStatus).toBe("delivered");
+      expect(data().dispenseLeg).toBe(2);
+      expect(data().firstLeg?.pharmacy).toEqual(BRIDGE_PHARMACY);
+      expect(data().selectedPharmacy).toEqual(COA_COPAY.content.commercial);
+      expect(data().paStatus).toBe("denied");
+    });
+  });
+});
+

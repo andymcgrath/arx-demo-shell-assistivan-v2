@@ -154,6 +154,14 @@ export const FLOW_START_PORTAL: Record<FlowType, PortalId> = {
   PrES_PAP: "provider",
 };
 
+/**
+ * The tab a flow opens on. A fax case starts in the CRM, like the Standard flow, even when its scenario is an eRx one that
+ * starts in the EHR: the demo's intake decides (see `DemoRecipe.intake`). Every other flow opens where FLOW_START_PORTAL says.
+ */
+export function startPortalFor(flowType: FlowType): PortalId {
+  return scenarioFor(flowType)?.intake === "fax" ? "crm" : FLOW_START_PORTAL[flowType];
+}
+
 function getProviderPortalLabel(flowType: string): string {
   return "Provider";
 }
@@ -787,7 +795,7 @@ export default function DemoShell() {
   // independent local state that navigate() alone
   // doesn't touch, so reset both explicitly.
   setLayout("1up");
-  const startPortal = FLOW_START_PORTAL[flowType];
+  const startPortal = startPortalFor(flowType);
   setPanels([{ portal: startPortal }]);
   navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
   }
@@ -964,7 +972,7 @@ export default function DemoShell() {
                   startDemo(demo);
                   // Navigate to this flow's canonical opening screen
                   setLayout("1up");
-                  const startPortal = FLOW_START_PORTAL[demo.flow];
+                  const startPortal = startPortalFor(demo.flow);
                   setPanels([{ portal: startPortal }]);
                   navigate(`/${PORTAL_SLUG[startPortal]}`, { replace: true });
                 }}
