@@ -33,7 +33,7 @@ export interface DemoState {
   copay_enrolled: boolean;
   // iAssist_PAP (WF5) only — see engine/types.ts's WorkflowData.appealStatus.
   // Stays "none" for every other flow.
-  appeal_status: "none" | "initiated" | "approved";
+  appeal_status: "none" | "initiated" | "approved" | "denied";
   // iAssist_PAP (WF5) only — see engine/types.ts's WorkflowData.infusionDate.
   // Null for every other flow.
   infusion_date: string | null;

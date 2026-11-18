@@ -15,10 +15,12 @@ const propsMatch = (have: Record<string, unknown> | undefined, want: Record<stri
 
 const listOf = (scope: Scope): RuleScope[] => (Array.isArray(scope) ? scope : [scope]);
 
-/** True when the module's contract declares the variant the scope names, with no other props. A demo may run it before any scenario does. */
+/** True when the module's contract says only a demo runs it (`demoModule`), or declares the one variant the scope names (`demoVariants`). */
 const declaredVariant = (scope: { module: string; props?: Record<string, unknown> }): boolean => {
-  const variants = MODULE_CONTRACTS[scope.module as ModuleId]?.demoVariants;
+  const contract = MODULE_CONTRACTS[scope.module as ModuleId];
   const keys = Object.keys(scope.props ?? {});
+  if (keys.length === 0) return !!contract?.demoModule;
+  const variants = contract?.demoVariants;
   return !!variants && keys.length === 1 && keys[0] === "variant" && variants.includes(String(scope.props!.variant));
 };
 

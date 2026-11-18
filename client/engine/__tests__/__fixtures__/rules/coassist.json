@@ -3,6 +3,9 @@
     "ACTIVATE_PAP": [
       "income_qualification.activate_pap"
     ],
+    "APPROVE_APPEAL": [
+      "appeal.approve"
+    ],
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
@@ -21,6 +24,9 @@
     "DELIVER_RX": [
       "tracking.deliver_rx"
     ],
+    "DENY_APPEAL": [
+      "appeal.deny"
+    ],
     "DENY_PA": [
       "cash_offer.deny_pa",
       "cash_offer.deny_pa.bridge"
@@ -34,9 +40,13 @@
     "HCP_REFERRAL_SUBMIT": [
       "hcp_patient.referral"
     ],
+    "INITIATE_APPEAL": [
+      "appeal.initiate"
+    ],
     "LEAVE_STAGE": [
       "spine.leave_stage.bi",
       "spine.leave_stage.pa",
+      "appeal.leave_stage",
       "provider_transfer.leave_stage"
     ],
     "NOTIFY_PROVIDER_TRANSFER": [
@@ -147,6 +157,7 @@
     "VIEW_STAGE": [
       "spine.view_stage.bi",
       "spine.view_stage.pa",
+      "appeal.view_stage",
       "provider_transfer.view_stage"
     ],
     "WEB_SUBMIT": [
@@ -154,6 +165,11 @@
     ]
   },
   "applies": {
+    "appeal.approve": [],
+    "appeal.deny": [],
+    "appeal.initiate": [],
+    "appeal.leave_stage": [],
+    "appeal.view_stage": [],
     "assistance.choose": [],
     "cash_offer.deny_pa": [
       "CoA_DTP",

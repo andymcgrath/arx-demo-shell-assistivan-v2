@@ -137,7 +137,7 @@ export interface WorkflowData {
    *  APPROVE_APPEAL/updateApproveAppeal there) — it only changes what the
    *  Appeals stage detail view displays, not what's already unlocked. Stays
    *  'none' for every other flow. */
-  appealStatus: 'none' | 'initiated' | 'approved';
+  appealStatus: 'none' | 'initiated' | 'approved' | 'denied';
   /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;

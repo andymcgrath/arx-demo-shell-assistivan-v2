@@ -67,6 +67,11 @@ export interface ModuleContract {
    * lists it yet, because a demo can lay a recipe over a scenario (see recipeOverride.ts). Leave it out to keep the check strict.
    */
   demoVariants?: string[];
+  /**
+   * True when a workflow may scope a rule to this module before any of its registered scenarios lists it, because only a
+   * demo's recipe runs it (see recipeOverride.ts). The same loosening as `demoVariants`, for a module with no variant.
+   */
+  demoModule?: boolean;
 }
 
 /** One module in a recipe, with the props the scenario supplies (price, variant, method). */
@@ -338,6 +343,7 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     id: "appeal",
     lane: "system",
     needs: ["consentVerified", "fork:pa"],
+    demoModule: true,
     sets: ["appealResolved"],
     trackerSteps: ["Appeal filed", "Appeal decided"],
   },

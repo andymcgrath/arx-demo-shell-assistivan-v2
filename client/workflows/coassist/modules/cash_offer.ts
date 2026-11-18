@@ -1,6 +1,7 @@
 /**
  * Cash offer: a denied PA gets a cash offer (DTP and Copay), and no coverage gets a cash-offer SMS (Coverage).
  */
+import { appealStart } from "./appeal";
 import type { CoaRule } from "./shared";
 
 /** How long after the denial the automatic bridge text goes out (`system` trigger). */
@@ -25,18 +26,22 @@ const denyPa = (id: string, variant: "pa_denied" | "bridge"): CoaRule => ({
   when: (d) => d.paStatus === "submitted",
   set: () => ({ paStatus: "denied" }),
   emit: { portal: "provider", step: 9 },
-  ...(variant === "bridge"
-    ? {
-        // The precondition is the denial either way. SEND_BRIDGE ignores it unless the PA is denied.
-        then: {
-          trigger: "system" as const,
-          id: "bridge-text",
-          after: BRIDGE_TEXT_MS,
-          when: (_d, _e, s) => bridgeTrigger(s) === "system",
-          send: () => ({ type: "SEND_BRIDGE" }),
-        },
-      }
-    : {}),
+  // The denial starts the appeal when the recipe has one (modules/appeal.ts), and the bridge text when it is automatic.
+  then: [
+    ...(variant === "bridge"
+      ? [
+          {
+            // The precondition is the denial either way. SEND_BRIDGE ignores it unless the PA is denied.
+            trigger: "system" as const,
+            id: "bridge-text",
+            after: BRIDGE_TEXT_MS,
+            when: (_d: unknown, _e: unknown, s: Parameters<typeof bridgeTrigger>[0]) => bridgeTrigger(s) === "system",
+            send: () => ({ type: "SEND_BRIDGE" }),
+          },
+        ]
+      : []),
+    appealStart,
+  ],
 });
 
 export const CASH_OFFER_RULES: CoaRule[] = [

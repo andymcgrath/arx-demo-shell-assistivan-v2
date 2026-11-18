@@ -70,6 +70,8 @@ export const COASSIST_STAGES: StageMap = {
     { id: "co.copay", stage: S.CO.id, variant: "coa_copay", scope: COPAY },
     { id: "co.pricing", stage: S.CO.id, variant: "coa", scope: PRICING },
 
+    // A demo's appeal block (the denied-PA Bridge). The stage shows the filed appeal and its decision.
+    { id: "appeal.block", stage: S.A.id, variant: "standard", scope: { module: "appeal" } },
     { id: "appeal.medical_transfer", stage: S.A.id, variant: "standard", scope: MEDICAL_TRANSFER },
 
     { id: "psp.referral", stage: S.PSP.id, variant: "standard", scope: PSP },

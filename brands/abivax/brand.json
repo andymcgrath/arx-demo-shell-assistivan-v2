@@ -46,14 +46,17 @@
       "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
       "choices": {
         "bi": "pharmacy_covered",
-        "pa": "denied"
+        "pa": "denied",
+        "appeal": "approved"
       },
       "recipe": {
+        "forks": ["bi", "pa", "appeal"],
         "modules": [
           { "id": "enrollment" },
           { "id": "prior_authorization", "props": { "variant": "auto" } },
           { "id": "pa_notification" },
           { "id": "cash_offer", "props": { "variant": "bridge" } },
+          { "id": "appeal" },
           { "id": "tracking" }
         ]
       }

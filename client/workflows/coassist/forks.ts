@@ -236,6 +236,24 @@ export const PA_FORK: ForkDefinition = {
 };
 
 /**
+ * The appeal decision after a denied PA. The story picks it, and a demo in the brand file pins an exit: `approved` hands the
+ * case to the commercial pharmacy, `denied` leaves the patient on the Bridge. Both exits require the `appeal` block.
+ * The decision lands when the agent opens the Appeals stage (modules/appeal.ts).
+ */
+export const APPEAL_FORK: ForkDefinition = {
+  id: "appeal",
+  label: "Appeal decision",
+  chooser: "story",
+  // The denied-PA Bridge demo runs on Copay. Another scenario joins when it has an appeal.
+  scenarios: ["CoA_Copay"],
+  resolved: (d) => d.appealStatus === "approved" || d.appealStatus === "denied",
+  exits: [
+    { id: "approved", label: "Approved", description: "The appeal is approved and the payer overturns the denial.", data: { appealStatus: "approved" }, requires: ["appeal"] },
+    { id: "denied", label: "Denied", description: "The appeal is denied and the patient stays on the Bridge.", data: { appealStatus: "denied" }, requires: ["appeal"] },
+  ],
+};
+
+/**
  * What the patient picks on the pricing screens. Exit ids match `pricingOption`, so no read site changes.
  * The patient's pick is read from the data (`picked`), not stored in `choices`: `choices` survives RESET.
  * The pharmacy each exit names comes from scenario content (rules.ts), because exit data is static.
@@ -327,6 +345,7 @@ export const ASSISTANCE_FORK: ForkDefinition = assistanceFork(["CoA_APA_Assistan
 export const COASSIST_FORKS: ForkDefinition[] = [
   BI_FORK,
   PA_FORK,
+  APPEAL_FORK,
   DTP_PRICING_FORK,
   COPAY_FORK,
   COPAY_PRICING_FORK,
