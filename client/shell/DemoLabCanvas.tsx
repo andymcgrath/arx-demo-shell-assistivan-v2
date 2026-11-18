@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { GitFork, Hammer, Sparkles } from "lucide-react";
+import { CheckCircle2, GitFork, Hammer, Sparkles } from "lucide-react";
 import { BRAND } from "@/brand";
 import { useItems, type Item } from "./DemoLabItems";
 import { buildCanvas, canvasFromDraft } from "@/workflows/catalog/canvas";
@@ -68,7 +68,7 @@ export default function CanvasLab() {
   // The list number ("1. CoAssist DTP") orders the dropdown. It is not part of the demo's name or its file name.
   // The demo entry keeps its original label and id, so applying still replaces the brand file's entry.
   const fromItem = (it: Item) => {
-    const d = draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices });
+    const d = draftFromScenario(it.flow, { title: it.title, client: BRAND.slug, brand: requestBrand(BRAND), choices: it.choices, recipe: it.recipe });
     const name = it.title.replace(/^\d+\.\s*/, "");
     return d && name && name !== it.title ? { ...d, title: name, slug: slugOf(name) } : d;
   };
@@ -332,18 +332,21 @@ export default function CanvasLab() {
               </button>
               {newCardCount === 0 ? (
                 <div className="mt-3" data-testid="build-now">
-                  <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy || building} onClick={build} className="inline-flex items-center gap-1.5 rounded border-2 px-3 py-1.5 text-sm font-semibold disabled:opacity-40" style={{ borderColor: INK }}>
+                  <button type="button" disabled={canvas.exportProblems.length > 0 || clashes.length > 0 || busy || building || !!built?.ok} onClick={build} className="inline-flex items-center gap-1.5 rounded border-2 px-3 py-1.5 text-sm font-semibold disabled:opacity-40" style={{ borderColor: INK }}>
                     <Hammer size={14} aria-hidden />
-                    {building ? "Building" : "Build it now"}
+                    {building ? "Building" : built?.ok ? "Built. Commit it to build again" : "Build it now"}
                   </button>
                   <p className="mt-1 text-[11px]" style={{ color: MUTED }}>
                     Exports the files, then applies the request to <code>brands/{draft.client.trim() || "<client>"}/brand.json</code> and runs the brand test. Needs a short-lived branch and no uncommitted changes to that file. It never commits.
                   </p>
                   {built && (
                     <div role={built.ok ? "status" : "alert"} className="mt-2 rounded border p-2 text-xs" style={{ borderColor: built.ok ? INK : "#b91c1c" }} data-testid="build-result" data-ok={built.ok}>
-                      <p className="mb-1 font-bold">{built.ok ? "Built." : "Not built."}</p>
+                      <p className="mb-1 flex items-center gap-1.5 text-sm font-bold" style={{ color: built.ok ? "#166534" : "#b91c1c" }}>
+                        {built.ok && <CheckCircle2 size={16} aria-hidden />}
+                        {built.ok ? "Built" : "Not built"}
+                      </p>
                       <ul className="list-disc space-y-0.5 pl-4">{built.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                      {built.ok && <p className="mt-1" style={{ color: MUTED }}>Review the diff and commit it. Reload the page if the demo is not in the list yet.</p>}
+                      {built.ok && <p className="mt-1" style={{ color: MUTED }}>Review the diff and commit it. The page reloads on its own so the lists show the new demo.</p>}
                     </div>
                   )}
                 </div>

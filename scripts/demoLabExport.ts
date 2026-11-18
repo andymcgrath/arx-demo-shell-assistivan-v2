@@ -3,7 +3,7 @@ import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import type { DemoRequest, RequestResult } from "../client/workflows/catalog/request";
-import { APPLY_ROUTE, handleBuild, realGit, realRun } from "./demoLabApply";
+import { APPLY_ROUTE, handleBuild, handleLast, realGit, realRun } from "./demoLabApply";
 
 /**
  * The Demo Lab's export endpoint. Dev only: the plugin applies to `vite serve`, so a build has no route and no code for
@@ -104,6 +104,10 @@ export function demoLabExportPlugin(root: string): Plugin {
           res.end(JSON.stringify(json));
         };
         try {
+          if (req.method === "GET") {
+            const r = handleLast({ remoteAddress: req.socket.remoteAddress });
+            return send(r.status, r.json);
+          }
           const body = req.method === "POST" ? await readBody(req) : "";
           const [{ validateDemoRequest, ghostCards }, { buildPrompt }] = await Promise.all([
             server.ssrLoadModule("/client/workflows/catalog/request.ts"),

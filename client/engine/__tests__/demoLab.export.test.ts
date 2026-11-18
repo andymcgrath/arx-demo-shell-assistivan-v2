@@ -6,6 +6,7 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { createServer, resolveConfig } from "vite";
 import { demoLabExportPlugin, handleExport, writeDemoRequest, EXPORT_ROUTE, type ExportModules } from "../../../scripts/demoLabExport";
+import { resolveBrand } from "../../brand/resolve";
 import { validateDemoRequest, type DemoRequest } from "@/workflows/catalog/request";
 import { buildPrompt } from "@/workflows/catalog/prompt";
 
@@ -108,6 +109,8 @@ describe("the dev server route", () => {
       root: process.cwd(),
       logLevel: "silent",
       appType: "custom",
+      // The app inlines the brand at build time. This bare server has no config, so it gets one the same way.
+      define: { __BRAND__: JSON.stringify(resolveBrand(path.resolve(process.cwd(), "brands"), "assistivan")) },
       resolve: { alias: { "@": path.resolve(process.cwd(), "client") } },
       server: { middlewareMode: true },
       plugins: [demoLabExportPlugin(root)],

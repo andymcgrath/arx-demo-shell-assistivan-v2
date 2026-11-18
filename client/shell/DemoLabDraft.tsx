@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { canRedo, canUndo, currentDraft, describeChange, jump, record, redo, reset, startHistory, undo, type History, type HistoryEntry } from "@/workflows/catalog/history";
 import { BRAND } from "@/brand";
 import type { DemoRequest } from "@/workflows/catalog/request";
@@ -42,6 +42,9 @@ interface DraftContext {
   jumpTo: (pos: number) => void;
 }
 
+/** A build older than this is not shown again after a reload. */
+const RECENT_BUILD_MS = 2 * 60_000;
+
 const Ctx = createContext<DraftContext | null>(null);
 
 export const useDraft = (): DraftContext => {
@@ -59,6 +62,21 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [built, setBuilt] = useState<Built>();
   const [building, setBuilding] = useState(false);
   const draft = currentDraft(hist);
+
+  // A build rewrites the brand file, so the page reloads to pick it up. The server remembers the latest build, so the
+  // lab can still say what happened. Only a recent one counts.
+  useEffect(() => {
+    if (typeof fetch !== "function") return;
+    let live = true;
+    fetch("/__demo-lab/apply")
+      .then((r) => r.json())
+      .then((json) => {
+        const last = json?.last;
+        if (live && last && Date.now() - last.at < RECENT_BUILD_MS) setBuilt({ ok: !!last.ok, lines: last.lines ?? [], written: last.written });
+      })
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, []);
 
   const edit = (fn: (d: DemoRequest) => DemoRequest) => {
     setResult(undefined);

@@ -164,9 +164,11 @@ describe("the canvas tab", () => {
 
   it("offers Build it now when there are no new cards, and shows what the build said", async () => {
     const calls: string[] = [];
-    vi.stubGlobal("fetch", async (url: string) => {
+    vi.stubGlobal("fetch", async (url: string, init?: { method?: string }) => {
+      // The lab asks the server for the latest build when it opens (a GET). Only the POST is the build.
+      if (init?.method !== "POST") return { ok: true, json: async () => ({ ok: true }) };
       calls.push(url);
-      return { ok: true, json: async () => ({ ok: true, written: ["a", "b"], lines: ["Wrote brands/x/brand.json. The brand test passes."] }) };
+      return { ok: true, json: async () => ({ ok: true, written: ["a", "b"], lines: ["brands/x/brand.json: 9 lines added, 0 removed.", "Wrote brands/x/brand.json. The brand test passes."] }) };
     });
     try {
       const view = open(/CoAssist Copay/i);
@@ -176,6 +178,32 @@ describe("the canvas tab", () => {
       expect(calls).toEqual(["/__demo-lab/apply"]);
       expect(view.getByTestId("build-result").getAttribute("data-ok")).toBe("true");
       expect(view.getByTestId("build-result").textContent).toMatch(/brand test passes/);
+      expect(view.getByTestId("build-result").textContent).toMatch(/^Built/);
+      expect(view.getByTestId("build-result").textContent).toMatch(/9 lines added/);
+      // Once built, the button says so and cannot be clicked again until the draft changes.
+      const again = within(box).getByRole("button", { name: /built\. commit it to build again/i }) as HTMLButtonElement;
+      expect(again.disabled).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("shows the latest build again after the page reloads", async () => {
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => ({ ok: true, last: { at: Date.now(), ok: true, lines: ["Wrote it."] } }) }));
+    try {
+      const view = open(/CoAssist Copay/i);
+      await waitFor(() => expect(view.getByTestId("build-result").textContent).toMatch(/Wrote it/));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("ignores an old build after a reload", async () => {
+    vi.stubGlobal("fetch", async () => ({ ok: true, json: async () => ({ ok: true, last: { at: Date.now() - 10 * 60_000, ok: true, lines: ["Wrote it."] } }) }));
+    try {
+      const view = open(/CoAssist Copay/i);
+      await new Promise((r) => setTimeout(r, 20));
+      expect(view.queryByTestId("build-result")).toBeNull();
     } finally {
       vi.unstubAllGlobals();
     }

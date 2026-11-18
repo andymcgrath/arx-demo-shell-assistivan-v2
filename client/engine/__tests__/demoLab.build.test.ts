@@ -5,6 +5,7 @@ import path from "node:path";
 import { createServer, resolveConfig } from "vite";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
+import { resolveBrand } from "../../brand/resolve";
 import { demoLabExportPlugin } from "../../../scripts/demoLabExport";
 import { APPLY_ROUTE, gitProblems, handleBuild, type ApplyEnv, type ApplyModules, type GitRunner } from "../../../scripts/demoLabApply";
 import { ghostCards, validateDemoRequest } from "@/workflows/catalog/request";
@@ -135,6 +136,8 @@ describe("the dev server route and the production build", () => {
       root: process.cwd(),
       logLevel: "silent",
       appType: "custom",
+      // The app inlines the brand at build time. This bare server has no config, so it gets one the same way.
+      define: { __BRAND__: JSON.stringify(resolveBrand(path.resolve(process.cwd(), "brands"), "assistivan")) },
       resolve: { alias: { "@": path.resolve(process.cwd(), "client") } },
       server: { middlewareMode: true },
       plugins: [demoLabExportPlugin(root)],
@@ -144,8 +147,9 @@ describe("the dev server route and the production build", () => {
     try {
       const url = `http://127.0.0.1:${(srv.address() as AddressInfo).port}${APPLY_ROUTE}`;
       const res = await fetch(url, { method: "POST", body: JSON.stringify(REQUEST) });
-      expect(res.status).toBe(409);
-      expect((await res.json()).problems[0]).toMatch(/not a git checkout/);
+      const body = await res.json();
+      expect(res.status, JSON.stringify(body)).toBe(409);
+      expect(body.problems[0]).toMatch(/not a git checkout/);
       expect(exported()).toEqual([]);
     } finally {
       await new Promise((resolve) => srv.close(resolve));

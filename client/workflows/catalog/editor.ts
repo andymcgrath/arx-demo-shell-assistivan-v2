@@ -1,6 +1,7 @@
 import { MODULE_CONTRACTS, type ModuleId, type ScenarioRecipe, type SourceId } from "@/engine/workflow/components";
 import { recipeProblems } from "@/engine/workflow/recipe";
 import type { FlowType } from "@/engine/types";
+import type { DemoRecipe } from "@/engine/workflow/recipeOverride";
 import type { ForkDefinition } from "@/engine/workflow/types";
 import { forksForScenario } from "@/engine/workflow/forks";
 import { ALL_FORKS } from "../forks";
@@ -105,14 +106,18 @@ export function suggestWinTheme(d: Pick<DemoRequest, "intake" | "cards">): strin
 }
 
 /** A ready-made draft from a scenario's recipe, and a demo's picks over it. Undefined for a scenario with no recipe. */
-export function draftFromScenario(flow: FlowType, opts: { title: string; client?: string; brand?: RequestBrand; choices?: Record<string, string> }): DemoRequest | undefined {
+export function draftFromScenario(
+  flow: FlowType,
+  opts: { title: string; client?: string; brand?: RequestBrand; choices?: Record<string, string>; /** A brand demo's own blocks (and forks), laid over the scenario's recipe. */ recipe?: DemoRecipe },
+): DemoRequest | undefined {
   const scenario = scenarioFor(flow);
   const recipe = scenario?.recipe;
   if (!scenario || !recipe) return undefined;
   const workflow: EditorWorkflow = recipe.source === "iassist" ? "iassist" : "coassist";
-  const forks = [...new Set([...(scenarioHasBi(flow) ? ["bi"] : []), ...recipe.forks])];
+  const modules = opts.recipe?.modules ?? recipe.modules;
+  const forks = [...new Set([...(scenarioHasBi(flow) ? ["bi"] : []), ...(opts.recipe?.forks ?? recipe.forks)])];
   const choices = Object.fromEntries(Object.entries({ ...recipe.choices, ...scenario.choices, ...opts.choices }).filter(([k]) => forks.includes(k)));
-  const cards = recipe.modules.map((m): RequestCard => ({ kind: "block", moduleId: m.id, ...(typeof m.props?.variant === "string" ? { variantId: m.props.variant } : {}) }));
+  const cards = modules.map((m): RequestCard => ({ kind: "block", moduleId: m.id, ...(typeof m.props?.variant === "string" ? { variantId: m.props.variant } : {}) }));
   return withApps({
     ...blankDraft(workflow, opts.client, opts.brand),
     title: opts.title,

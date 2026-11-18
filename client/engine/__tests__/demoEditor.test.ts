@@ -45,6 +45,16 @@ describe("a ready-made draft from every recipe", () => {
     });
   }
 
+  it("draws a brand demo's own blocks and forks, not the scenario's recipe, so the canvas matches the brand file", () => {
+    const flow = "CoA_Copay" as const;
+    const base = draftFromScenario(flow, { title: "Base" })!;
+    const own = { modules: base.cards.flatMap((c) => (c.kind === "block" ? [{ id: c.moduleId }] : [])).slice(0, 3), forks: ["bi"] };
+    const d = draftFromScenario(flow, { title: "Own", recipe: own })!;
+    expect(d.cards.map((c) => (c.kind === "block" ? c.moduleId : "ghost"))).toEqual(own.modules.map((m) => m.id));
+    expect(d.forks).toEqual(["bi"]);
+    expect(d.cards.length).toBeLessThan(base.cards.length);
+  });
+
   it("is undefined for a scenario with no recipe", () => {
     const none = ALL_SCENARIOS.find((s) => !s.recipe)!.flowType;
     expect(draftFromScenario(none, { title: "x" })).toBeUndefined();

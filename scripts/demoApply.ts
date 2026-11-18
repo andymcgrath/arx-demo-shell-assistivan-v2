@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ApplyResult } from "../client/workflows/catalog/apply";
 import type { DemoRequest } from "../client/workflows/catalog/request";
+import { formatBrandJson, replaceDemos } from "./formatBrandJson";
 
 /**
  * `pnpm demo:apply <client>/<slug>` (or just `<slug>` when only one client has it).
@@ -59,7 +60,8 @@ export function runApply(root: string, arg: string, deps: ApplyDeps, opts: { dry
 
   const brandFile = path.join(root, "brands", request.client, "brand.json");
   const before = fs.existsSync(brandFile) ? fs.readFileSync(brandFile, "utf8") : undefined;
-  const plan = deps.planApply(request, before === undefined ? undefined : JSON.parse(before));
+  const existing = before === undefined ? undefined : (JSON.parse(before) as Record<string, unknown>);
+  const plan = deps.planApply(request, existing);
   if (!plan.ok) return { ok: false, lines: plan.problems };
 
   const summary = [
@@ -69,7 +71,9 @@ export function runApply(root: string, arg: string, deps: ApplyDeps, opts: { dry
   if (opts.dry) return { ok: true, lines: [`Dry run. Would write brands/${request.client}/brand.json.`, ...summary] };
 
   fs.mkdirSync(path.dirname(brandFile), { recursive: true });
-  fs.writeFileSync(brandFile, `${JSON.stringify(plan.brand, null, 2)}\n`);
+  // An existing file keeps its layout: only the demos list changes in the text. A new file is written whole.
+  const text = before !== undefined && existing ? replaceDemos(before, existing, plan.brand as Record<string, unknown>) : undefined;
+  fs.writeFileSync(brandFile, text ?? formatBrandJson(plan.brand));
   const test = deps.runBrandTest();
   if (!test.ok) {
     if (before === undefined) fs.rmSync(path.dirname(brandFile), { recursive: true, force: true });

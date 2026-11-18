@@ -36,7 +36,7 @@ export interface ApplyEnv {
 
 export interface BuildReply {
   status: number;
-  json: { ok: boolean; written?: string[]; lines?: string[]; problems?: string[] };
+  json: { ok: boolean; written?: string[]; lines?: string[]; problems?: string[]; last?: LastBuild };
 }
 
 export const realGit =
@@ -65,6 +65,30 @@ const isLoopback = (addr: string | undefined) => addr === "127.0.0.1" || addr ==
 
 let running = false;
 
+/** The latest build that reached the apply script. It outlives a page reload, so the lab can still say what happened. */
+export interface LastBuild {
+  at: number;
+  ok: boolean;
+  lines: string[];
+  written?: string[];
+}
+let last: LastBuild | undefined;
+const doneListeners = new Set<() => void>();
+
+export const isBuilding = () => running;
+export const lastBuild = () => last;
+/** Called once a build that wrote the brand file has finished. Returns a function that stops listening. */
+export function onBuildDone(cb: () => void): () => void {
+  doneListeners.add(cb);
+  return () => doneListeners.delete(cb);
+}
+
+/** GET: the latest build, for the lab to show after the page reloads with the new brand file. */
+export function handleLast(call: { remoteAddress?: string }): BuildReply {
+  if (!isLoopback(call.remoteAddress)) return { status: 403, json: { ok: false, problems: ["only this machine may ask"] } };
+  return { status: 200, json: { ok: true, last } };
+}
+
 /** The route's logic, apart from the HTTP plumbing, so a test can drive it. */
 export async function handleBuild(
   root: string,
@@ -89,6 +113,7 @@ export async function handleBuild(
   }
   if (running) return { status: 409, json: { ok: false, problems: ["Another build is running. Wait for it to finish."] } };
   running = true;
+  let ran = false;
   try {
     const blocked = gitProblems(request.client, env.git);
     if (blocked.length) return { status: 409, json: { ok: false, problems: blocked } };
@@ -99,9 +124,20 @@ export async function handleBuild(
       return { status: 400, json: { ok: false, problems: [(e as Error).message] } };
     }
     const out = await env.run(`${request.client}/${request.slug}`);
+    ran = true;
+    // What the build changed, from git: a plain count, so an unexpected rewrite of the file shows at once.
+    if (out.ok) {
+      const brandFile = `brands/${request.client}/brand.json`;
+      const stat = env.git(["diff", "--numstat", "--", brandFile]);
+      const m = stat.status === 0 ? stat.stdout.trim().split(/\s+/) : [];
+      if (m.length >= 2) out.lines = [`${brandFile}: ${m[0]} line${m[0] === "1" ? "" : "s"} added, ${m[1]} removed.`, ...out.lines];
+    }
+    last = { at: Date.now(), ok: out.ok, lines: out.lines, written };
     return { status: out.ok ? 200 : 422, json: { ok: out.ok, written, lines: out.lines } };
   } finally {
     running = false;
+    // Let the reply go out first, then tell listeners (the page reloads to pick up the brand file).
+    if (ran) setTimeout(() => doneListeners.forEach((cb) => cb()), 300);
   }
 }
 
