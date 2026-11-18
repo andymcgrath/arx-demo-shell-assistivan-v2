@@ -209,3 +209,52 @@ describe("cash_offer bridge: the patient's screens (end to end)", () => {
     });
   });
 });
+
+/**
+ * The Bridge step: the text unlocks the $0 copay, then the address and date, the confirmation, and the tracker. Copay waits for the
+ * Bridge text, not for a PA approval a denial never reaches.
+ */
+describe("cash_offer bridge: $0 copay and delivery", () => {
+  afterEach(() => setRecipeOverride("CoA_Copay", undefined));
+  const MODULES: ModuleSpec[] = [
+    { id: "enrollment" }, { id: "prior_authorization", props: { variant: "auto" } }, { id: "pa_notification" }, bridgeModule(), { id: "appeal" },
+    { id: "financial_assistance", props: { variant: "copay" } }, { id: "scheduling" }, { id: "tracking" },
+  ];
+  const start = () => {
+    setRecipeOverride("CoA_Copay", { modules: MODULES, forks: ["bi", "pa", "appeal"] });
+    const clock = new SimulatedClock();
+    const actor = startFlow("CoA_Copay", { clock, choices: { bi: "pharmacy_covered", pa: "denied", appeal: "approved" } });
+    runSteps(actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CONFIRM_CONSENT" }, { type: "COMPLETE_BI" }, { type: "DENY_PA" }]);
+    return { actor, clock, can: (type: string) => actor.getSnapshot().can({ type } as any), data: () => ctx(actor).workflowData };
+  };
+
+  it("rejects copay, address, date, and fill until each precondition holds (rule 12)", () => {
+    withFrozenClock(() => {
+      const t = start();
+      t.clock.increment(BRIDGE_TEXT_MS); // text sent, not yet opened
+      for (const e of ["SELECT_SELF_PAY", "PATIENT_SETS_ADDRESS", "PATIENT_SELECTS_SHIP_DATE", "FILL_RX"]) expect(t.can(e), `${e} before the text is opened`).toBe(false);
+      runSteps(t.actor, [{ type: "VERIFY_BRIDGE_SMS" }]);
+      for (const e of ["PATIENT_SETS_ADDRESS", "PATIENT_SELECTS_SHIP_DATE", "FILL_RX"]) expect(t.can(e), `${e} before copay`).toBe(false);
+      expect(t.can("SELECT_SELF_PAY")).toBe(true);
+      runSteps(t.actor, [{ type: "SELECT_SELF_PAY" }]);
+      expect(t.data().copayEnrolled).toBe(true);
+      expect(t.can("PATIENT_SELECTS_SHIP_DATE")).toBe(false); // address first
+      expect(t.can("FILL_RX")).toBe(false); // and the date
+    });
+  });
+
+  it("walks the patient from the text to the tracker, each screen in the menu", () => {
+    withFrozenClock(() => {
+      const t = start();
+      t.clock.increment(BRIDGE_TEXT_MS);
+      const routes = runSteps(t.actor, [
+        { type: "VERIFY_BRIDGE_SMS" }, { type: "SELECT_SELF_PAY" }, { type: "PATIENT_SETS_ADDRESS" }, { type: "PATIENT_SELECTS_SHIP_DATE" },
+        { type: "FILL_RX" }, { type: "READY_RX" }, { type: "SHIP_RX" }, { type: "DELIVER_RX" },
+      ]).map((r) => r.route);
+      expect(routes).toEqual(["/bridge-supply", "/delivery-address", "/delivery-date", "/enrollment-complete", "/order-tracker", "/order-tracker", "/order-shipped", "/order-tracker"]);
+      expect(t.data().pricingOption).toBeNull();
+      expect(t.data().cashOfferStatus).toBe("none");
+      expect(t.data().pharmacyStatus).toBe("delivered");
+    });
+  });
+});

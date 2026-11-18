@@ -1,12 +1,17 @@
-import { Phone } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
+import { useNavigate } from "@/lib/portalRouter";
+import { useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import ProgramLogo from "@/portals/patient/components/brand/ProgramLogo";
 import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
- * The bridge variant of `cash_offer`: the free supply is active while the PA appeal runs. No price and no payment.
+ * The bridge variant of `cash_offer`: the free supply is active while the PA appeal runs. No price and no payment. The patient
+ * enrolls in the copay program here, at $0, and moves on to the delivery address.
  * The pharmacy is the brand's transfer partner (`program.transferPartner`), and a generic name shows when the brand has none.
  */
 export default function BridgeSupply() {
+  const navigate = useNavigate();
+  const dispatch = useWorkflowDispatch();
   // The Bridge is free drug, dispensed by the non-commercial pharmacy (`program.transferPartner`), not the commercial one.
   const pharmacy = PROGRAM.transferPartner;
   const where = [pharmacy?.address, pharmacy?.city && pharmacy?.state ? `${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip ?? ""}`.trim() : undefined].filter(Boolean);
@@ -25,6 +30,20 @@ export default function BridgeSupply() {
           <p className="text-sm leading-relaxed text-arx-body-copy">
             The supply continues until your appeal is decided. We'll text you as soon as we have an update.
           </p>
+          <div className="rounded-xl p-4 mt-4 border border-arx-borders">
+            <p className="font-bold text-arx-slate">{PROGRAM.drugDisplayName} Copay Program</p>
+            <p className="text-2xl font-bold text-arx-slate">$0<span className="text-sm font-semibold">/shipment</span></p>
+          </div>
+          <button
+            onClick={() => {
+              dispatch("SELECT_SELF_PAY", { portal: "patient" });
+              navigate("/delivery-address");
+            }}
+            className="w-full mt-4 bg-arx-action text-arx-on-action font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-arx-action-hover transition-colors"
+          >
+            <span>Enroll at $0 and confirm delivery</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
 
         {pharmacy?.name && (

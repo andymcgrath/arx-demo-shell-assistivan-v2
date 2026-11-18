@@ -8,6 +8,7 @@ import type { CoaRoute } from "../slots";
 
 const PA_DENIED = { module: "cash_offer", props: { variant: "pa_denied" } } as const;
 const BRIDGE = { module: "cash_offer", props: { variant: "bridge" } } as const;
+const SCHEDULING = { module: "scheduling" } as const;
 const SMS = { module: "cash_offer", props: { variant: "sms" } } as const;
 
 export const CASH_OFFER_SCREENS: Screen[] = [
@@ -25,7 +26,14 @@ export const CASH_OFFER_ROUTES: CoaRoute[] = [
   // PA denied with a bridge: no cash offer. The text, then the free supply. Until the text goes out the patient waits on home.
   { id: "cash_offer.bridge_waiting", slot: "cash_offer", path: "/", scope: BRIDGE, when: (d) => d.paStatus === "denied" && d.bridgeStatus === undefined },
   { id: "cash_offer.bridge_sms", slot: "cash_offer", path: "/bridge-sms", scope: BRIDGE, when: (d) => d.paStatus === "denied" && d.bridgeStatus === "sent" },
-  { id: "cash_offer.bridge_supply", slot: "cash_offer", path: "/bridge-supply", scope: BRIDGE, when: (d) => d.paStatus === "denied" && d.bridgeStatus === "active" },
+  // The supply screen offers the $0 copay. Enrolling opens the order: address, date, confirmation, tracker.
+  { id: "cash_offer.bridge_supply", slot: "cash_offer", path: "/bridge-supply", scope: BRIDGE, when: (d) => d.paStatus === "denied" && d.bridgeStatus === "active" && !d.copayEnrolled },
+  { id: "cash_offer.bridge_address", slot: "address", path: "/delivery-address", scope: [BRIDGE, SCHEDULING], when: (d) => d.bridgeStatus === "active" && d.copayEnrolled && d.dispatchStatus === "none" },
+  { id: "cash_offer.bridge_date", slot: "date", path: "/delivery-date", scope: [BRIDGE, SCHEDULING], when: (d) => d.bridgeStatus === "active" && d.dispatchStatus === "selected" && d.patientShipDate === null },
+  { id: "cash_offer.bridge_confirmed", slot: "tracking", path: "/enrollment-complete", scope: BRIDGE, when: (d) => d.bridgeStatus === "active" && d.patientShipDate !== null && d.pharmacyStatus === "none" },
+  { id: "cash_offer.bridge_processing", slot: "tracking", path: "/order-tracker", scope: BRIDGE, when: (d) => d.bridgeStatus === "active" && (d.pharmacyStatus === "processing" || d.pharmacyStatus === "ready") },
+  { id: "cash_offer.bridge_shipped", slot: "tracking", path: "/order-shipped", scope: BRIDGE, when: (d) => d.bridgeStatus === "active" && d.pharmacyStatus === "shipped" },
+  { id: "cash_offer.bridge_delivered", slot: "tracking", path: "/order-tracker", scope: BRIDGE, when: (d) => d.bridgeStatus === "active" && d.pharmacyStatus === "delivered" },
 
   // Neither covered. The SMS flips to sent in the same step BI completes. Until then, home.
   { id: "cash_offer.coverage_waiting_for_sms", slot: "cash_offer", path: "/", scope: SMS, when: (d) => neitherCovered(d) && !d.cashOfferSmsSent },

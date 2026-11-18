@@ -15,7 +15,9 @@ export const nowIso = () => new Date().toISOString();
 
 /** Order tail: pricing is chosen (or payment cleared) and Rx is not yet in fulfillment. */
 export const inFulfillmentTail = (d: WorkflowData) =>
-  d.pharmacyStatus === "none" && (d.pricingOption !== null || d.dispatchStatus !== "none" || d.paymentVerified);
+  d.pharmacyStatus === "none" &&
+  // The Bridge has no pricing: enrolling in $0 copay inside the Bridge text opens the order.
+  (d.pricingOption !== null || d.dispatchStatus !== "none" || d.paymentVerified || (d.bridgeStatus === "active" && d.copayEnrolled));
 
 /**
  * The recipe's pharmacy comes from the prescriber (`pharmacy_selection` variant `prescriber`): the eRx names it, the
@@ -29,7 +31,10 @@ export const prescriberPharmacy = (s: { recipe?: { modules: { id: string; props?
  * prescriber's pharmacy, and for a free drug program recipe that has the `scheduling` block.
  */
 export const waitsForShipDate = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }): boolean =>
-  prescriberPharmacy(s) || (!!s.recipe?.modules.some((m) => m.id === "scheduling") && !!s.recipe?.modules.some((m) => m.id === "income_qualification"));
+  prescriberPharmacy(s) ||
+  (!!s.recipe?.modules.some((m) => m.id === "scheduling") && !!s.recipe?.modules.some((m) => m.id === "income_qualification")) ||
+  // The Bridge ships what the patient scheduled.
+  (!!s.recipe?.modules.some((m) => m.id === "scheduling") && !!s.recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "bridge"));
 
 export const neitherCovered = (d: WorkflowData) =>
   d.pharmacyBenefitStatus === "not_covered" && d.medicalBenefitStatus === "not_covered";

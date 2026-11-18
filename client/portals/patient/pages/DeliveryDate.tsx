@@ -1,3 +1,4 @@
+import { useBridge } from "@/hooks/useBridge";
 import { useState } from "react";
 import { useNavigate } from "@/lib/portalRouter";
 import { CalendarDays, Check } from "lucide-react";
@@ -34,6 +35,7 @@ export default function DeliveryDate() {
   const dispatch = useWorkflowDispatch();
   const { workflowData } = usePersonaState('patient');
   const flowType = workflowData.flowType;
+  const bridge = useBridge();
   const { isStandardFaxPa, hasPricingFork, isIassistStandardPa, isNoPaIntake, isCoverageScenario, isWideFlow, pharmacyFromPrescriber } = scenarioFacts(flowType);
   // CoA_Coverage reaches this screen for both its fulfillment scenarios (Scenario
   // 1 — Retail/Mail, pharmacy covered; Scenario 3 — self-pay, neither
@@ -88,8 +90,8 @@ export default function DeliveryDate() {
       navigate(isWideFlow ? "/pes-confirmation" : "/pap-enrollment-complete");
       return;
     }
-    // No price and no payment: the date ends the patient's part, and the route moves to the order confirmation.
-    if (pharmacyFromPrescriber) {
+    // No price and no payment (and the Bridge's $0 copay): the date ends the patient's part, and the route moves to the order confirmation.
+    if (pharmacyFromPrescriber || bridge) {
       navigate("/enrollment-complete");
       return;
     }

@@ -4,7 +4,8 @@
  * recipe, copay still enrolls and approves.
  *
  * Needs: a verified patient. In a recipe with a PA notice (`pa_notification`) the offer waits for the PA approval to be
- * verified, as the Copay scenarios do today. Sets: `copayEnrolled`.
+ * verified, as the Copay scenarios do today. In a recipe with the Bridge (`cash_offer` variant `bridge`) the PA is denied, so
+ * the offer waits for the Bridge text to be verified instead, and the copay is $0. Sets: `copayEnrolled`.
  * Triggers: the patient's tap (`patient`). The scope is the block being in the recipe, not a fork id.
  */
 import type { WorkflowData } from "@/engine/types";
@@ -16,8 +17,12 @@ const COPAY: { module: "financial_assistance"; props: { variant: "copay" } } = {
 export const waitsForPaNotice = (s: { recipe?: { modules: { id: string }[] } }) => !!s.recipe?.modules.some((m) => m.id === "pa_notification");
 
 /** The patient may enroll: verified, and past the PA notice when the recipe has one. */
-export const copayUnlocked = (d: WorkflowData, s: { recipe?: { modules: { id: string }[] } }) =>
-  d.consentStatus === "confirmed" && (!waitsForPaNotice(s) || d.paApprovedOtpVerified);
+/** The recipe has the Bridge. A denied PA never reaches an approval notice, so the Bridge text unlocks the copay. */
+export const hasBridge = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }) =>
+  !!s.recipe?.modules.some((m) => m.id === "cash_offer" && m.props?.variant === "bridge");
+
+export const copayUnlocked = (d: WorkflowData, s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }) =>
+  d.consentStatus === "confirmed" && (hasBridge(s) ? d.bridgeStatus === "active" : !waitsForPaNotice(s) || d.paApprovedOtpVerified);
 
 export const FINANCIAL_ASSISTANCE_RULES: CoaRule[] = [
   {

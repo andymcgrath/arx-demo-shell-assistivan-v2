@@ -57,6 +57,8 @@
           { "id": "pa_notification" },
           { "id": "cash_offer", "props": { "variant": "bridge" } },
           { "id": "appeal" },
+          { "id": "financial_assistance", "props": { "variant": "copay" } },
+          { "id": "scheduling" },
           { "id": "tracking" }
         ]
       }
