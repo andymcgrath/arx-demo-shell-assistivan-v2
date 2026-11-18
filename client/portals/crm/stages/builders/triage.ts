@@ -54,7 +54,7 @@ const bridge = (d: WorkflowData): Stage => {
       ? waiting("Appeal approved — awaiting the patient's delivery address and date", "Awaiting Patient")
       : d.bridgeStatus === "active" && d.copayEnrolled
       ? waiting("Awaiting the patient's delivery address and date", "Awaiting Patient")
-      : pending("");
+      : { ...pending("No Status available"), statusLabel: "Stage not started" };
   if (d.dispatchStatus === "selected" || d.dispatchStatus === "pending_selection")
     return d.patientShipDate === null ? waiting("Awaiting the patient's delivery date", "Awaiting Patient") : waiting(`Delivery scheduled — ready to transfer to ${d.selectedPharmacy?.name ?? "the pharmacy"}`, "Ready to Transfer");
   const base = standard(d);
