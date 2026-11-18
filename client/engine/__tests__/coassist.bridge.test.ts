@@ -369,3 +369,52 @@ describe("cash_offer bridge: two dispense legs", () => {
     });
   });
 });
+
+/**
+ * Patient onboarding with `capture` (CLAUDE.md rules 4 and 8): the signature and the insurance upload come after the confirmed
+ * details, and enrollment completes only after both. A recipe without `capture` keeps the combined screen.
+ */
+describe("enrollment capture", () => {
+  afterEach(() => setRecipeOverride("CoA_Copay", undefined));
+  const withCapture = (capture: boolean) => {
+    setRecipeOverride("CoA_Copay", { modules: [capture ? { id: "enrollment", props: { capture: ["signature", "upload_insurance"] } } : { id: "enrollment" }, { id: "tracking" }], forks: ["bi"] });
+    const actor = startFlow("CoA_Copay", { clock: new SimulatedClock(), choices: { bi: "pharmacy_covered" } });
+    return { actor, can: (type: string) => actor.getSnapshot().can({ type } as any), data: () => ctx(actor).workflowData };
+  };
+
+  it("holds consent until the signature and the upload are both in", () => {
+    withFrozenClock(() => {
+      const t = withCapture(true);
+      const routes = runSteps(t.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }]).map((r) => r.route);
+      expect(routes[2]).toBe("/confirm-details");
+      expect(t.can("CONFIRM_CONSENT"), "before the signature").toBe(false);
+      expect(t.can("UPLOAD_INSURANCE"), "upload before the signature").toBe(false);
+      runSteps(t.actor, [{ type: "CAPTURE_SIGNATURE" }]);
+      expect(t.can("CAPTURE_SIGNATURE")).toBe(false); // only once
+      expect(t.can("CONFIRM_CONSENT"), "signed but no upload").toBe(false);
+      runSteps(t.actor, [{ type: "UPLOAD_INSURANCE" }]);
+      expect(t.can("CONFIRM_CONSENT")).toBe(true);
+      const [done] = runSteps(t.actor, [{ type: "CONFIRM_CONSENT" }]);
+      expect(t.data().consentStatus).toBe("confirmed");
+      expect(done.route).toBe("/enrollment-complete");
+    });
+  });
+
+  it("routes the patient to the upload once they have signed", () => {
+    withFrozenClock(() => {
+      const t = withCapture(true);
+      const [, , , sign] = runSteps(t.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }, { type: "CAPTURE_SIGNATURE" }]);
+      expect(sign.route).toBe("/upload-insurance");
+    });
+  });
+
+  it("a recipe without capture keeps today's flow: consent confirms at once and the capture events are ignored", () => {
+    withFrozenClock(() => {
+      const t = withCapture(false);
+      runSteps(t.actor, [{ type: "REFERRAL_RECEIVED" }, { type: "VERIFY_SMS" }, { type: "VERIFY_OTP" }]);
+      expect(t.can("CAPTURE_SIGNATURE")).toBe(false);
+      expect(t.can("UPLOAD_INSURANCE")).toBe(false);
+      expect(t.can("CONFIRM_CONSENT")).toBe(true);
+    });
+  });
+});

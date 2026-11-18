@@ -1,6 +1,7 @@
 import type { FlowType } from "@/engine/types";
 import { MODULE_CONTRACTS, type ModuleId } from "./components";
 import { forkApplies } from "./forks";
+import { propValueEquals } from "./props";
 import { withRecipeOverride } from "./recipeOverride";
 import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from "./types";
 
@@ -11,17 +12,19 @@ import type { ForkDefinition, Rule, RuleScope, ScenarioDefinition, Scope } from 
  */
 
 const propsMatch = (have: Record<string, unknown> | undefined, want: Record<string, unknown> | undefined) =>
-  !want || Object.entries(want).every(([key, value]) => have?.[key] === value);
+  !want || Object.entries(want).every(([key, value]) => propValueEquals(have?.[key], value));
 
 const listOf = (scope: Scope): RuleScope[] => (Array.isArray(scope) ? scope : [scope]);
 
 /** True when the module's contract says only a demo runs it (`demoModule`), or declares the one variant the scope names (`demoVariants`). */
 const declaredVariant = (scope: { module: string; props?: Record<string, unknown> }): boolean => {
   const contract = MODULE_CONTRACTS[scope.module as ModuleId];
-  const keys = Object.keys(scope.props ?? {});
-  if (keys.length === 0) return !!contract?.demoModule;
-  const variants = contract?.demoVariants;
-  return !!variants && keys.length === 1 && keys[0] === "variant" && variants.includes(String(scope.props!.variant));
+  const entries = Object.entries(scope.props ?? {});
+  if (entries.length === 0) return !!contract?.demoModule;
+  // Every prop must be a value the contract says only a demo runs: a variant in `demoVariants`, or a value in `demoProps`.
+  return entries.every(([key, value]) =>
+    key === "variant" ? !!contract?.demoVariants?.includes(String(value)) : !!contract?.demoProps?.[key]?.some((v) => propValueEquals(v, value)),
+  );
 };
 
 /** True when the scenario falls inside the scope. A list of scopes needs all of them. */

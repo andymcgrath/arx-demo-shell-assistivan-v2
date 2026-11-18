@@ -4,6 +4,7 @@ import { usePatientCase } from "@/hooks/usePatientCase";
 import { usePersonaState, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { PenLine, ChevronRight } from "lucide-react";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
+import { useEnrollmentCapture } from "@/hooks/useEnrollmentCapture";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
 
 export default function Signature() {
@@ -15,6 +16,8 @@ export default function Signature() {
   // "Upload Insurance" step doesn't apply to them. Header.tsx's own nav list
   // already sends them to Income Verification next; this just matches it.
   const { isFaxPap } = scenarioFacts(workflowData.flowType);
+  // A recipe with `capture` records the signature, and the upload that follows confirms consent.
+  const capture = useEnrollmentCapture();
   const nextPath = isFaxPap ? "/income-qualification" : "/upload-insurance";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -128,6 +131,7 @@ export default function Signature() {
                 // where CONFIRM_CONSENT fires — dispatch it here instead so
                 // consentStatus still flips to 'confirmed' for this flow.
                 if (isFaxPap) dispatch('CONFIRM_CONSENT', { portal: 'patient' });
+                if (capture) dispatch('CAPTURE_SIGNATURE', { portal: 'patient' });
                 navigate(nextPath);
               }}
               disabled={!hasSignature}

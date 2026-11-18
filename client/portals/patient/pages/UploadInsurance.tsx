@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/portalRouter";
 import { useWorkflowActor, useWorkflowDispatch } from "@/engine/WorkflowProvider";
 import { derivePatientRoute } from "@/engine/WorkflowEngine";
 import { ClipboardList, Camera, Check } from "lucide-react";
+import { useEnrollmentCapture } from "@/hooks/useEnrollmentCapture";
 import EnrollmentShell from "@/portals/patient/components/enrollment/EnrollmentShell";
 
 interface UploadedFile {
@@ -14,6 +15,7 @@ export default function UploadInsurance() {
   const navigate = useNavigate();
   const dispatch = useWorkflowDispatch();
   const actor = useWorkflowActor();
+  const capture = useEnrollmentCapture();
   const frontRef = useRef<HTMLInputElement>(null);
   const backRef = useRef<HTMLInputElement>(null);
   const [frontFile, setFrontFile] = useState<UploadedFile | null>(null);
@@ -31,6 +33,8 @@ export default function UploadInsurance() {
   // navigation guard leaves /enrollment-complete alone, so a hard-coded navigate() there
   // would strand a patient whose PA was approved while they were still enrolling.
   function finishEnrollment() {
+    // A recipe with `capture` records the upload first. Consent confirms only after it.
+    if (capture) dispatch('UPLOAD_INSURANCE', { portal: 'patient' });
     dispatch('CONFIRM_CONSENT', { portal: 'patient' });
     const route = derivePatientRoute(actor.getSnapshot().context as any);
     navigate(route === "/" || route === "/enrollment-complete" ? "/enrollment-complete" : route);

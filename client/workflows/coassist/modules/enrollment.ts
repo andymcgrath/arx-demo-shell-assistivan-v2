@@ -1,9 +1,17 @@
 /**
  * Enrollment: the patient verifies their phone and consents. BI starts off the eRx alone, so it does not wait for them.
  */
+import { propValueEquals } from "@/engine/workflow/props";
+import { ENROLLMENT_CAPTURE_FULL } from "@/engine/workflow/components";
 import { hasBridge } from "./financial_assistance";
 import type { CoaRule } from "./shared";
 import { assignment, prePicked, prescriberPharmacy } from "./shared";
+
+/** The recipe's enrollment block captures the signature and the insurance upload (`capture`). */
+export const hasCapture = (s: { recipe?: { modules: { id: string; props?: Record<string, unknown> }[] } }) =>
+  !!s.recipe?.modules.some((m) => m.id === "enrollment" && propValueEquals(m.props?.capture, ENROLLMENT_CAPTURE_FULL));
+
+const CAPTURE = { module: "enrollment", props: { capture: ENROLLMENT_CAPTURE_FULL } } as const;
 
 export const ENROLLMENT_RULES: CoaRule[] = [
   {
@@ -37,13 +45,31 @@ export const ENROLLMENT_RULES: CoaRule[] = [
     // exist for a patient who is away when the decision lands.
     id: "enrollment.confirm_consent",
     on: "CONFIRM_CONSENT",
-    when: (d) => d.otpVerified && d.consentStatus === "pending",
+    // With `capture`, the signature and the upload come first.
+    when: (d, _e, s) => d.otpVerified && d.consentStatus === "pending" && (!hasCapture(s) || (!!d.signatureCaptured && !!d.insuranceUploaded)),
     set: (d, _e, s) => ({
       consentStatus: "confirmed",
       ...(d.paStatus === "approved"
         ? { paApprovedSmsVerified: true, paApprovedOtpVerified: true, ...assignment(d, s), ...prePicked(d, s) }
         : {}),
     }),
+    emit: { portal: "patient", step: 5 },
+  },
+  {
+    // The patient signs. Only a recipe with `capture` asks for it, and only after onboarding has reached consent.
+    id: "enrollment.capture_signature",
+    on: "CAPTURE_SIGNATURE",
+    scope: CAPTURE,
+    when: (d, _e, s) => hasCapture(s) && d.otpVerified && d.consentStatus === "pending" && !d.signatureCaptured,
+    set: () => ({ signatureCaptured: true }),
+    emit: { portal: "patient", step: 5 },
+  },
+  {
+    id: "enrollment.upload_insurance",
+    on: "UPLOAD_INSURANCE",
+    scope: CAPTURE,
+    when: (d, _e, s) => hasCapture(s) && d.consentStatus === "pending" && !!d.signatureCaptured && !d.insuranceUploaded,
+    set: () => ({ insuranceUploaded: true }),
     emit: { portal: "patient", step: 5 },
   },
 ];

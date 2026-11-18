@@ -1,3 +1,4 @@
+import { propValueEquals } from "./props";
 import {
   MODULE_CONTRACTS,
   SOURCES,
@@ -38,7 +39,7 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
     }
     if (seen.includes(spec.id)) problems.push(`module "${spec.id}" appears twice`);
 
-    const matchesProps = (props: Record<string, unknown>) => Object.entries(props).every(([k, v]) => spec.props?.[k] === v);
+    const matchesProps = (props: Record<string, unknown>) => Object.entries(props).every(([k, v]) => propValueEquals(spec.props?.[k], v));
     const needs = [...contract.needs, ...(contract.needsWhen ?? []).filter((n) => matchesProps(n.props)).flatMap((n) => n.needs)];
     for (const key of needs) {
       if (!provided.has(key)) problems.push(`${spec.id} needs "${key}", and nothing before it provides it`);
@@ -50,7 +51,7 @@ export function recipeProblems(recipe: ScenarioRecipe, forks?: ForkDefinition[])
       if (ids.includes(m) && !seen.includes(m)) problems.push(`${spec.id} must come after ${m}`);
     }
     for (const rule of contract.requiresModulesWhen ?? []) {
-      const matches = Object.entries(rule.props).every(([k, v]) => spec.props?.[k] === v);
+      const matches = Object.entries(rule.props).every(([k, v]) => propValueEquals(spec.props?.[k], v));
       if (!matches) continue;
       for (const m of rule.modules) {
         if (!ids.includes(m)) problems.push(`${spec.id} with ${JSON.stringify(rule.props)} requires ${m} in the recipe`);

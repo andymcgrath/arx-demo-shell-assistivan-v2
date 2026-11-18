@@ -1,11 +1,14 @@
 /** Enrollment screens and route rules. Every CoAssist scenario has them. */
 import type { Screen } from "@/engine/workflow/screens";
+import { ENROLLMENT_CAPTURE_FULL } from "@/engine/workflow/components";
 import { assignedWithoutPa } from "../shared";
 import { TRANSFER_JOURNEY, PRICING_JOURNEY, type CoaRoute } from "../slots";
 
 const WEB = { module: "enrollment", props: { variant: "web" } } as const;
 /** The web page collected consent and verified the patient, so the SMS, phone, code and consent screens never show. */
 const NOT_WEB = { not: WEB } as const;
+/** The recipe captures the signature and the insurance upload after the confirmed details. They reuse the Fax Standard pages. */
+const CAPTURE = { module: "enrollment", props: { capture: ENROLLMENT_CAPTURE_FULL } } as const;
 
 export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/", label: "Home", group: "", scope: NOT_WEB },
@@ -15,6 +18,9 @@ export const ENROLLMENT_SCREENS: Screen[] = [
   { path: "/phone-verification", label: "Phone Verification", group: "Enrollment", sticky: true, scope: NOT_WEB },
   { path: "/otp-verification", label: "OTP Verification", group: "Enrollment", scope: NOT_WEB },
   { path: "/confirm-details", label: "Confirm Details & Consent", group: "Enrollment", scope: NOT_WEB },
+  { path: "/consent", label: "Consent", group: "Enrollment", sticky: true, scope: CAPTURE },
+  { path: "/signature", label: "Signature", group: "Enrollment", sticky: true, scope: CAPTURE },
+  { path: "/upload-insurance", label: "Upload Insurance", group: "Enrollment", sticky: true, scope: CAPTURE },
   { path: "/coverage-summary", label: "Coverage Summary", group: "Enrollment", scope: WEB },
   { path: "/enrollment-complete", label: "Enrollment Complete", group: "Enrollment", sticky: true },
 ];
@@ -25,6 +31,8 @@ export const ENROLLMENT_ROUTES: CoaRoute[] = [
   { id: "enrollment.web_waiting_on_page", slot: "gate", path: "/lock-screen", scope: WEB, when: (d) => (d.paStatus === "none" || d.paStatus === "submitted") && !assignedWithoutPa(d) },
   { id: "enrollment.sms", slot: "gate", path: "/sms-message", scope: NOT_WEB, when: (d) => d.enrollmentInviteSent && !d.smsVerified },
   { id: "enrollment.otp", slot: "gate", path: "/otp-verification", scope: NOT_WEB, when: (d) => d.smsVerified && !d.otpVerified },
+  // With capture, the signature is in and the documents are next. Consent confirms after the upload.
+  { id: "enrollment.capture_upload", slot: "gate", path: "/upload-insurance", scope: [NOT_WEB, CAPTURE], when: (d) => d.otpVerified && d.consentStatus === "pending" && !!d.signatureCaptured && !d.insuranceUploaded },
   { id: "enrollment.confirm_details", slot: "gate", path: "/confirm-details", scope: NOT_WEB, when: (d) => d.otpVerified && d.consentStatus === "pending" },
 
   // The PA approved while the patient was on the client's page. They see the coverage summary first, and Check Pricing

@@ -72,6 +72,8 @@ export interface ModuleContract {
    * demo's recipe runs it (see recipeOverride.ts). The same loosening as `demoVariants`, for a module with no variant.
    */
   demoModule?: boolean;
+  /** Prop values (other than `variant`) only a demo runs so far, by prop name. Same loosening as `demoVariants`. */
+  demoProps?: Record<string, unknown[]>;
 }
 
 /** One module in a recipe, with the props the scenario supplies (price, variant, method). */
@@ -79,6 +81,21 @@ export interface ModuleSpec<Props extends Record<string, unknown> = Record<strin
   id: ModuleId;
   props?: Props;
 }
+
+/** What the enrollment block captures after the confirmed details and consent. */
+export type EnrollmentCapture = "signature" | "upload_insurance";
+
+/**
+ * Props for `enrollment`. `capture` adds the signature and the insurance upload to the patient's onboarding, after consent and
+ * before the enrollment confirmation. Leave it out for the combined Confirm Details and Consent screen CoAssist has today.
+ * The two come together: the signature, then the upload.
+ */
+export interface EnrollmentProps extends Record<string, unknown> {
+  variant?: "web" | "hcp" | "hcp_patient";
+  capture?: EnrollmentCapture[];
+}
+
+export const ENROLLMENT_CAPTURE_FULL: EnrollmentCapture[] = ["signature", "upload_insurance"];
 
 export type FinancialAssistanceVariant = "pap" | "copay";
 export type PaymentMethod = "retail" | "mail_order" | "self_pay";
@@ -218,7 +235,10 @@ export const MODULE_CONTRACTS: Record<ModuleId, ModuleContract> = {
     needs: ["referralReceived"],
     // The `hcp_patient` variant is started by the HCP's web enrollment, then the patient's own submit starts BI.
     needsWhen: [{ props: { variant: "hcp_patient" }, needs: ["fork:bi"] }],
+    demoProps: { capture: [["signature", "upload_insurance"]] },
+    // With `capture`, consent is verified only after the signature and the insurance upload.
     sets: ["consentVerified"],
+    setsWhen: [{ props: { capture: ["signature", "upload_insurance"] }, sets: ["signatureCaptured", "insuranceUploaded"] }],
     trackerSteps: ["Enrolled"],
   },
   // ── Buy and Bill blocks (HCP side, in iAssist). `system` lane: the patient never sees them. ──

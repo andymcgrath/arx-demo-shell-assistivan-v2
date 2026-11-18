@@ -9,6 +9,9 @@
     "APPROVE_PA": [
       "spine.approve_pa"
     ],
+    "CAPTURE_SIGNATURE": [
+      "enrollment.capture_signature"
+    ],
     "CHECK_PRICING": [
       "web_handoff.check_pricing"
     ],
@@ -115,6 +118,9 @@
     "SUBMIT_PA_FORM": [
       "prior_authorization.submit_pa_form"
     ],
+    "UPLOAD_INSURANCE": [
+      "enrollment.upload_insurance"
+    ],
     "VERIFY_BRIDGE_SMS": [
       "cash_offer.verify_bridge"
     ],
@@ -193,6 +199,7 @@
     "cash_offer.verify_sms": [
       "CoA_Coverage"
     ],
+    "enrollment.capture_signature": [],
     "enrollment.confirm_consent": [
       "CoA_DTP",
       "CoA_Copay",
@@ -215,6 +222,7 @@
       "CoA_APA_Specialty",
       "CoA_Web_HCP_Patient"
     ],
+    "enrollment.upload_insurance": [],
     "enrollment.verify_otp": [
       "CoA_DTP",
       "CoA_Copay",

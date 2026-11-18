@@ -141,6 +141,10 @@ export interface WorkflowData {
   /** iAssist_PAP only: the "Initiate Appeal on PA denial" automation rule was created and activated in the
    *  Rules portal. The CRM reports it with SET_APPEAL_RULE. While true, a denied PA files its appeal on its own. */
   appealRuleActive?: boolean;
+  /** `enrollment` with `capture` only: the patient signed. Consent confirms only after the signature and the upload. */
+  signatureCaptured?: boolean;
+  /** `enrollment` with `capture` only: the patient uploaded the insurance documents. */
+  insuranceUploaded?: boolean;
   /**
    * `tracking` variant `two_legs` only (the denied-PA Bridge): the commercial pharmacy the HCP picked on the eRx. It stays on the
    * case so the second dispense reads it, because the first dispense (the non-commercial pharmacy) takes `selectedPharmacy`.
