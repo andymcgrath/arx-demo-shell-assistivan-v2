@@ -4,10 +4,11 @@ import { PROGRAM } from "@/portals/patient/config/branding";
 
 /**
  * The bridge variant of `cash_offer`: the free supply is active while the PA appeal runs. No price and no payment.
- * The pharmacy is the brand's own (`program.specialtyPharmacy`), and a generic name shows when the brand has none.
+ * The pharmacy is the brand's transfer partner (`program.transferPartner`), and a generic name shows when the brand has none.
  */
 export default function BridgeSupply() {
-  const pharmacy = PROGRAM.specialtyPharmacy;
+  // The Bridge is free drug, dispensed by the non-commercial pharmacy (`program.transferPartner`), not the commercial one.
+  const pharmacy = PROGRAM.transferPartner;
   const where = [pharmacy?.address, pharmacy?.city && pharmacy?.state ? `${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip ?? ""}`.trim() : undefined].filter(Boolean);
 
   return (

@@ -38,6 +38,25 @@
       "choices": {
         "bi": "no_coverage_pap"
       }
+    },
+    {
+      "id": "coassist-copay-bridge",
+      "flow": "CoA_Copay",
+      "label": "6. CoAssist Denied PA Bridge",
+      "description": "The HCP picks the client's pharmacy on the eRx. The PA is denied and the appeal starts on its own. The patient gets a free Bridge supply from the non-commercial pharmacy. When the appeal is approved, the commercial pharmacy dispenses.",
+      "choices": {
+        "bi": "pharmacy_covered",
+        "pa": "denied"
+      },
+      "recipe": {
+        "modules": [
+          { "id": "enrollment" },
+          { "id": "prior_authorization", "props": { "variant": "auto" } },
+          { "id": "pa_notification" },
+          { "id": "cash_offer", "props": { "variant": "bridge" } },
+          { "id": "tracking" }
+        ]
+      }
     }
   ],
   "showClientTab": false,
@@ -65,7 +84,9 @@
     "drugDisplayName": "Obefazimod (microRNA-124 Enhancer)",
     "description": "Once daily",
     "dosageForm": "Capsule",
-    "dosages": ["25 mg"],
+    "dosages": [
+      "25 mg"
+    ],
     "indication": {
       "name": "Ulcerative Colitis",
       "icd10": "K51.90",
@@ -100,12 +121,12 @@
       "phone": "(866) 930-4146"
     },
     "specialtyPharmacy": {
-      "name": "",
-      "address": "",
-      "city": "",
-      "state": "",
-      "zip": "",
-      "phone": ""
+      "name": "Abivax Direct Pharmacy",
+      "address": "8200 Ridge Pointe Drive, Suite 120",
+      "city": "Indianapolis",
+      "state": "IN",
+      "zip": "46240",
+      "phone": "(317) 555-0134"
     },
     "documents": {
       "letterOfNecessity": {
@@ -166,7 +187,9 @@
         "label": "Ulcerative colitis, unspecified, without complications"
       }
     ],
-    "strengths": ["25 mg"],
+    "strengths": [
+      "25 mg"
+    ],
     "submitted": "The enrollment is submitted. {patient} is receiving a text message to review and consent.",
     "submittedLink": "Thank you for submitting {patient}'s referral to the {drug} Patient Assistance Program. The patient will get a link to finish their income verification and complete enrollment from their own portal."
   }

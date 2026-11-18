@@ -43,7 +43,7 @@ export default function BridgeSms() {
         <div className="flex justify-start">
           <div className="bg-gray-700 text-white rounded-2xl rounded-tl-none px-4 py-2 max-w-xs text-sm leading-relaxed">
             <p className="mb-2">
-              Your insurer denied coverage for {PROGRAM.drugDisplayName}, but we're filing an appeal. In the meantime, you can get a free supply from {PROGRAM.specialtyPharmacy?.name ?? PROGRAM.name} while the appeal runs. Tap to claim it:
+              Your insurer denied coverage for {PROGRAM.drugDisplayName}, but we're filing an appeal. In the meantime, you can get a free supply from {PROGRAM.transferPartner?.name ?? PROGRAM.name} while the appeal runs. Tap to claim it:
             </p>
             <button
               onClick={handleTapMessage}
