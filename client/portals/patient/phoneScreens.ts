@@ -11,6 +11,7 @@ export const PHONE_SCREENS = new Set([
   "/appointment-confirmation",
   "/cash-offer-sms",
   "/bridge-sms",
+  "/appeal-approved-sms",
   "/provider-transfer-sms",
   "/pap-transfer-sms",
 ]);

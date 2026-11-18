@@ -340,7 +340,7 @@ describe("cash_offer bridge: two dispense legs", () => {
       approveAppeal(t);
       const firstShipDate = t.data().patientShipDate;
       const routes = runSteps(t.actor, [{ type: "START_SECOND_LEG" }, ...LEG]).map((r) => r.route);
-      expect(routes).toEqual(["/delivery-address", "/delivery-date", "/enrollment-complete", "/order-tracker", "/order-tracker", "/order-shipped", "/medication-delivered"]);
+      expect(routes).toEqual(["/appeal-approved-sms", "/delivery-date", "/enrollment-complete", "/order-tracker", "/order-tracker", "/order-shipped", "/medication-delivered"]);
       expect(t.data().dispenseLeg).toBe(2);
       expect(t.data().selectedPharmacy).toEqual(COMMERCIAL);
       expect(t.data().firstLeg?.shipDate).toBe(firstShipDate);

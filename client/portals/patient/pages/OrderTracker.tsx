@@ -4,6 +4,7 @@ import { usePersonaState } from "@/engine/WorkflowProvider";
 import { daysFromToday } from "@/lib/relativeDate";
 import { PROGRAM } from "@/portals/patient/config/branding";
 import { scenarioFacts } from "@/workflows/scenarioFacts";
+import { useBridge } from "@/hooks/useBridge";
 const ORDER_NUMBER = "428046573";
 const ORDER_DATE = daysFromToday(-4);
 
@@ -45,9 +46,9 @@ function StepRow({ step, onClick }: { step: StepDef; onClick?: () => void }) {
   );
 }
 
-function buildSteps(workflowStep: number, pharmacyStatus: string): StepDef[] {
+function buildSteps(workflowStep: number, pharmacyStatus: string, placed: string = ORDER_DATE, delivered: string = ORDER_DATE): StepDef[] {
   const steps: StepDef[] = [
-    { n: 1, label: "Order received",       sub: ORDER_DATE,  status: "pending" },
+    { n: 1, label: "Order received",       sub: placed,      status: "pending" },
     { n: 2, label: "Routing to pharmacy",  sub: null,         status: "pending" },
     { n: 3, label: "Preparing medication", sub: null,         status: "pending" },
     { n: 4, label: "In transit",           sub: null,         status: "pending" },
@@ -89,7 +90,7 @@ function buildSteps(workflowStep: number, pharmacyStatus: string): StepDef[] {
   // Delivered is done when delivered
   if (pharmacyStatus === "delivered") {
     steps[4].status = "done";
-    steps[4].sub = ORDER_DATE;
+    steps[4].sub = delivered;
   }
 
   return steps;
@@ -206,21 +207,30 @@ export default function OrderTracker() {
     );
   }
 
-  const steps = buildSteps(0, pharmacyStatus);
+  // The denied-PA Bridge places each shipment today (the case is not four days old when the patient picks the date), and it
+  // ships twice. The second shipment is a new order from the commercial pharmacy.
+  const bridge = useBridge();
+  const secondShipment = bridge && workflowData.dispenseLeg === 2;
+  const today = daysFromToday(0);
+  const steps = bridge ? buildSteps(0, pharmacyStatus, today, today) : buildSteps(0, pharmacyStatus);
+  const orderDate = bridge ? today : ORDER_DATE;
   return (
     <main className="flex-grow pt-5 pb-8">
         <div className="max-w-lg mx-auto px-4 space-y-5">
           <div className="bg-arx-white rounded-2xl shadow-sm p-5 border border-arx-borders">
             <div className="flex items-start justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold leading-snug text-arx-slate">
-                Your first fill order is being processed
+                {secondShipment ? "Your second shipment is being processed" : "Your first fill order is being processed"}
               </h2>
               <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-arx-tile">
                 <span className="text-lg font-bold text-arx-on-tile">Rx</span>
               </div>
             </div>
-            <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{ORDER_NUMBER}</span></p>
-            <p className="text-sm mb-4 text-arx-slate">Placed on <span className="font-bold">{ORDER_DATE}</span></p>
+            <p className="text-sm mb-0.5 text-arx-slate">Order <span className="font-bold">#{secondShipment ? `${ORDER_NUMBER}-2` : ORDER_NUMBER}</span></p>
+            <p className="text-sm mb-4 text-arx-slate">Placed on <span className="font-bold">{orderDate}</span></p>
+            {bridge && workflowData.selectedPharmacy?.name && (
+              <p className="text-sm mb-4 text-arx-slate">Shipping from <span className="font-bold">{workflowData.selectedPharmacy.name}</span></p>
+            )}
             <p className="text-sm leading-relaxed text-arx-body-copy">
               Track each step below. We'll keep this tracker updated as your medication moves forward and notify you by text when it ships.
             </p>

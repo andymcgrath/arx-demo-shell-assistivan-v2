@@ -9,6 +9,7 @@ import { COA_COPAY } from "@/workflows/coassist/scenarios";
 import { APPEAL_DECISION_MS, APPEAL_START_MS } from "@/workflows/coassist/modules/appeal";
 import { BRIDGE_TEXT_MS } from "@/workflows/coassist/modules/cash_offer";
 import { REVEAL_MS } from "@/workflows/coassist/modules/shared";
+import { stepBarModel } from "@/shell/stepBar";
 import { crmActions } from "@/portals/crm/stages/actions";
 import fs from "node:fs";
 import path from "node:path";
@@ -81,6 +82,8 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       expect(data().bridgeStatus).toBe("sent");
       expect(data().cashOfferStatus).toBe("none");
       expect(data().selectedPharmacy).toEqual(BRIDGE_PHARMACY); // ARx, from the first text
+      // The offered Bridge resolves the denied PA, so the step bar moves on to Triage to Pharmacy (step 5).
+      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5);
 
       // 5. The patient enrolls at $0, confirms the address, and picks a date.
       expect(route("VERIFY_BRIDGE_SMS")).toBe("/bridge-supply");
@@ -104,7 +107,10 @@ describe("the denied-PA Bridge story, eRx to the second delivery", () => {
       clock.increment(APPEAL_DECISION_MS);
       expect(data().appealStatus).toBe("approved");
       expect(buttons()).toContain("triage.second_leg");
-      expect(route("START_SECOND_LEG")).toBe("/delivery-address"); // the patient confirms again
+      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(9); // the first shipment is delivered
+      expect(route("START_SECOND_LEG")).toBe("/appeal-approved-sms"); // the patient gets a text, then confirms again
+      // The second shipment restarts at Triage to Pharmacy. It never drops back to Prior Authorization (step 4).
+      expect(stepBarModel("CoA_Copay", data()).workflowStep).toBe(5);
       expect(buttons()).not.toContain("triage.second_leg");
       expect(route("PATIENT_SETS_ADDRESS")).toBe("/delivery-date");
       expect(data().patientShipDate).toBeNull(); // the date is a fresh pick

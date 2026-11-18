@@ -471,6 +471,9 @@ export function stepBarModel(flowType: string, workflowData: WorkflowData): Step
     if (p === 'processing' || p === 'ready') return 6;
     if (d === 'pending_selection' || d === 'selected' || d === 'dispatched') return 5;
     if (pa === 'approved') return 5;
+    // The Bridge resolves a denied PA: the free supply is offered, so the case is at Triage to Pharmacy. This also holds when the
+    // second shipment resets the order, so the bar restarts the shipment at Triage, not back at Prior Authorization.
+    if (workflowData.bridgeStatus !== undefined) return 5;
     if (pa === 'submitted' || pa === 'denied') return 4;
     if (bi === 'running' || bi === 'submitted') return 3;
     if (bi === 'complete') return 4;
